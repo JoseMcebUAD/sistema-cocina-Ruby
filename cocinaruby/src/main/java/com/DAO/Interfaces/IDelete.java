@@ -1,7 +1,6 @@
 package com.DAO.Interfaces;
 
 import java.sql.SQLException;
-import java.util.List;
 /**
  * Cuarto principio de SOLID para implementar las interfazes del CRUD
  * interfaz para el DELETE de una tupla

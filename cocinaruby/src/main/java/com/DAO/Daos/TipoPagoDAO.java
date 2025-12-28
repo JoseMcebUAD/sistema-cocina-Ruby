@@ -1,6 +1,5 @@
 package com.DAO.Daos;
 
-import com.DAO.Interfaces.ICrud;
 import com.DAO.Interfaces.IRead;
 import com.Config.CConexion;
 import com.Model.ModeloTipoPago;

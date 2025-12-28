@@ -2,7 +2,6 @@ package com.DAO.Interfaces;
 
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Optional;
 /**
  * Cuarto principio de SOLID para implementar las interfazes del CRUD
  * interfaz leer tuplas de la base de datos
