@@ -1,1 +1,11 @@
 *.class
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Intellij IDEA
+.idea/
+*.iml
+#Maven 
+target/
