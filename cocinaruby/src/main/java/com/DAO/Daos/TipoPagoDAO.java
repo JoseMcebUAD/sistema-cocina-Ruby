@@ -1,0 +1,67 @@
+package com.DAO.Daos;
+
+import com.DAO.Interfaces.ICrud;
+import com.DAO.Interfaces.IRead;
+import com.Config.CConexion;
+import com.Model.ModeloTipoPago;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class TipoPagoDAO implements IRead<ModeloTipoPago> {
+
+    private CConexion conector;
+
+    public TipoPagoDAO() {
+        this.conector = new CConexion();
+    }
+
+    public TipoPagoDAO(CConexion conector) {
+        this.conector = conector;
+    }
+
+    private Connection getConnection() {
+        return conector.establecerConexionDb();
+    }
+
+    @Override
+    public ModeloTipoPago find(int id) throws SQLException {
+        String sql = "SELECT * FROM tipo_pago WHERE id_tipo_pago = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public List<ModeloTipoPago> all() throws SQLException {
+        List<ModeloTipoPago> tipos = new ArrayList<>();
+        String sql = "SELECT * FROM tipo_pago";
+
+        try (Connection conn = getConnection();
+             Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+
+            while (rs.next()) {
+                tipos.add(mapRow(rs));
+            }
+        }
+        return tipos;
+    }
+
+    private ModeloTipoPago mapRow(ResultSet rs) throws SQLException {
+        ModeloTipoPago tipo = new ModeloTipoPago();
+        tipo.setIdTipoPago(rs.getInt("id_tipo_pago"));
+        tipo.setNombreTipoPago(rs.getString("nombre_tipo_pago"));
+        return tipo;
+    }
+}
