@@ -57,7 +57,7 @@ public class CConexion {
         return prop;
     }
 
-    private Connection establecerConexionDb(){
+    public Connection establecerConexionDb(){
         try {
             conectar = DriverManager.getConnection(cadena, usuario, contrasena);
         } catch (SQLException e) {
