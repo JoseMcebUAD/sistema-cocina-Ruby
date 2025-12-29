@@ -1,0 +1,98 @@
+package util.impresoraTermica;
+
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import com.github.anastaciocintra.escpos.EscPos;
+import com.github.anastaciocintra.escpos.EscPosConst;
+import com.github.anastaciocintra.escpos.Style;
+
+import com.Config.Constants;
+import com.Model.ModeloDetalleOrden;
+import com.Model.DTO.ModeloFactura;
+import util.FormatearFactura;
+
+/**
+ * Clase para generar facturas de órdenes en impresora térmica.
+ * Ejemplo: https://github.com/anastaciocintra/escpos-coffee-samples/blob/master/usual/textstyle/src/main/java/TextStyleSample.java
+ */
+public class FacturaOrden {
+
+    private static final DecimalFormat FORMATO_PRECIO = new DecimalFormat("$#,##0.00");
+    private FormatearFactura formatear = new FormatearFactura();
+
+    /**
+     * Genera e imprime la factura de una orden en impresora térmica.
+     *
+     * @param factura Modelo de factura con la información de la orden
+     */
+    public void generarFacturaOrden(ModeloFactura factura) {
+        EscPos escpos = null;
+        try {
+            escpos = new EscPos(PrinterServiceHolder.INSTANCE.get());
+            List<ModeloDetalleOrden> detalleOrden = factura.getOrden().getDetalles();
+
+            // Estilos
+            Style title = new Style()
+                    .setFontSize(Style.FontSize._3, Style.FontSize._3)
+                    .setJustification(EscPosConst.Justification.Center);
+
+            Style subtitle = new Style(escpos.getStyle())
+                    .setBold(true)
+                    .setUnderline(Style.Underline.OneDotThick);
+
+            Style bold = new Style(escpos.getStyle())
+                    .setBold(true);
+
+            // Encabezado
+            escpos.writeLF(title, "COCINA RUBY")
+                    .feed(2)
+                    .write("Cliente: ")
+                    .writeLF(subtitle, factura.getNombreCliente())
+                    .write("Fecha: ")
+                    .writeLF(subtitle, factura.getFechaExpedicion())
+                    .feed(2)
+                    .writeLF(Constants.SEPARADOR_TICKET)
+                    .feed(1);
+
+            // Detalles de la orden
+            for (ModeloDetalleOrden detalle : detalleOrden) {
+                String precio = FORMATO_PRECIO.format(detalle.getPrecioDetalleOrden());
+                String especificaciones = detalle.getEspecificacionesDetalleOrden();
+
+                // Imprimir las líneas del detalle (puede ser múltiples si es muy largo)
+                List<String> lineas = formatear.formatearDetalleOrden(especificaciones, precio);
+                for (String linea : lineas) {
+                    escpos.writeLF(linea);
+                }
+            }
+
+            // Pie de factura
+            double total = factura.getOrden().getOrden().getPrecioOrden();
+            String totalFormateado = FORMATO_PRECIO.format(total);
+
+            escpos.writeLF(Constants.SEPARADOR_TICKET)
+                    .feed(1)
+                    .writeLF(bold, formatear.formatearLineaTotal("TOTAL", totalFormateado))
+                    .writeLF(Constants.SEPARADOR_TICKET)
+                    .feed(5)
+                    .cut(EscPos.CutMode.FULL);
+
+            escpos.close();
+
+        } catch (IOException ex) {
+            Logger.getLogger(FacturaOrden.class.getName()).log(Level.SEVERE, "Error al generar factura", ex);
+        } finally {
+            if (escpos != null) {
+                try {
+                    escpos.close();
+                } catch (IOException e) {
+                    Logger.getLogger(FacturaOrden.class.getName()).log(Level.SEVERE, "Error al cerrar escpos", e);
+                }
+            }
+        }
+    }
+}
