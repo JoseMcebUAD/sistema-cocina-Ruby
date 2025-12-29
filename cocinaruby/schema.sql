@@ -84,15 +84,64 @@ CREATE TABLE IF NOT EXISTS `tipo_pago` (
 -- Table structure for table `orden`
 --
 
-CREATE TABLE `orden` (
+CREATE TABLE IF NOT EXISTS `orden` (
   `id_orden` int(11) NOT NULL,
-  `idRel_cliente` int(11) DEFAULT NULL,
-  `idRel_tipo_pago` int(11) NOT NULL,
-  `nombre_cliente` varchar(50) DEFAULT NULL,
-  `fecha_expedicion_orden` datetime NOT NULL,
+  `id_rel_cliente` int(11) DEFAULT NULL,
+  `id_rel_tipo_pago` int(11) NOT NULL,
+  `fecha_expedicion_orden` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `notas_orden` varchar(100) DEFAULT NULL,
-  `precio_orden` decimal(10,2) NOT NULL
+  `precio_orden` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `facturado` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `detalle_orden`
+--
+
+CREATE TABLE IF NOT EXISTS `detalle_orden` (
+  `id_detalle_orden` int(11) NOT NULL,
+  `id_rel_orden` int(11) NOT NULL,
+  `especificaciones_detalle_orden` varchar(100) DEFAULT NULL,
+  `precio_detalle_orden` decimal(10,2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+DELIMITER $$
+
+CREATE TRIGGER trg_detalle_insert
+AFTER INSERT ON detalle_orden
+FOR EACH ROW
+BEGIN
+  UPDATE orden
+  SET precio_orden = precio_orden + NEW.precio_detalle_orden
+  WHERE id_orden = NEW.id_rel_orden;
+END$$
+
+CREATE TRIGGER trg_detalle_update
+AFTER UPDATE ON detalle_orden
+FOR EACH ROW
+BEGIN
+  UPDATE orden
+  SET precio_orden = precio_orden
+      - OLD.precio_detalle_orden
+      + NEW.precio_detalle_orden
+  WHERE id_orden = NEW.id_rel_orden;
+END$$
+
+CREATE TRIGGER trg_detalle_delete
+AFTER DELETE ON detalle_orden
+FOR EACH ROW
+BEGIN
+  UPDATE orden
+  SET precio_orden = precio_orden - OLD.precio_detalle_orden
+  WHERE id_orden = OLD.id_rel_orden;
+END$$
+
+DELIMITER ;
+
+
+
 
 -- --------------------------------------------------------
 
@@ -137,8 +186,17 @@ ALTER TABLE `tipo_pago`
 --
 ALTER TABLE `orden`
   ADD PRIMARY KEY (`id_orden`),
-  ADD KEY `fk_orden_cliente` (`idRel_cliente`),
-  ADD KEY `fk_orden_tipo_pago` (`idRel_tipo_pago`);
+  ADD KEY `fk_orden_cliente` (`id_rel_cliente`),
+  ADD KEY `fk_orden_tipo_pago` (`id_rel_tipo_pago`),
+  ADD KEY `idx_fecha_expedicion` (`fecha_expedicion_orden`),
+  ADD KEY `idx_facturado` (`facturado`);
+
+--
+-- Indexes for table `detalle_orden`
+--
+ALTER TABLE `detalle_orden`
+  ADD PRIMARY KEY (`id_detalle_orden`),
+  ADD KEY `fk_detalle_orden` (`id_rel_orden`);
 
 -- --------------------------------------------------------
 
@@ -164,6 +222,9 @@ ALTER TABLE `tipo_pago`
 ALTER TABLE `orden`
   MODIFY `id_orden` int(11) NOT NULL AUTO_INCREMENT;
 
+ALTER TABLE `detalle_orden`
+  MODIFY `id_detalle_orden` int(11) NOT NULL AUTO_INCREMENT;
+
 -- --------------------------------------------------------
 
 --
@@ -176,7 +237,9 @@ ALTER TABLE `orden`
 ALTER TABLE `usuario`
   ADD CONSTRAINT `usuario_ibfk_1`
   FOREIGN KEY (`idRel_tipo_usuario`)
-  REFERENCES `tipo_usuario` (`id_tipo_usuario`);
+  REFERENCES `tipo_usuario` (`id_tipo_usuario`)
+  ON DELETE RESTRICT
+  ON UPDATE CASCADE;
 
 --
 -- Constraints for table `cliente`
@@ -184,18 +247,34 @@ ALTER TABLE `usuario`
 ALTER TABLE `cliente`
   ADD CONSTRAINT `cliente_ibfk_1`
   FOREIGN KEY (`idRel_tipo_cliente`)
-  REFERENCES `tipo_cliente` (`id_tipo_cliente`);
+  REFERENCES `tipo_cliente` (`id_tipo_cliente`)
+  ON DELETE RESTRICT
+  ON UPDATE CASCADE;
 
 --
 -- Constraints for table `orden`
 --
 ALTER TABLE `orden`
   ADD CONSTRAINT `orden_ibfk_1`
-  FOREIGN KEY (`idRel_cliente`)
-  REFERENCES `cliente` (`id_cliente`),
+  FOREIGN KEY (`id_rel_cliente`)
+  REFERENCES `cliente` (`id_cliente`)
+  ON DELETE SET NULL
+  ON UPDATE CASCADE,
   ADD CONSTRAINT `orden_ibfk_2`
-  FOREIGN KEY (`idRel_tipo_pago`)
-  REFERENCES `tipo_pago` (`id_tipo_pago`);
+  FOREIGN KEY (`id_rel_tipo_pago`)
+  REFERENCES `tipo_pago` (`id_tipo_pago`)
+  ON DELETE RESTRICT
+  ON UPDATE CASCADE;
+
+--
+-- Constraints for table `detalle_orden`
+--
+ALTER TABLE `detalle_orden`
+  ADD CONSTRAINT `detalle_orden_ibfk_1`
+  FOREIGN KEY (`id_rel_orden`)
+  REFERENCES `orden` (`id_orden`)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE;
 
 COMMIT;
 
