@@ -15,9 +15,14 @@ public class ModeloOrden {
     private Date fechaExpedicionOrden;
     private String notasOrden; //si es media
     private double precioOrden;
+    private boolean facturado;
 
     public int getIdOrden() {
         return idOrden;
+    }
+
+    public boolean getFacturado() {
+        return facturado;
     }
 
     public void setIdOrden(int idOrden) {
@@ -52,6 +57,10 @@ public class ModeloOrden {
         this.nombreCliente = nombreCliente;
     }
 
+    public void setNombreTipoPago(String nombreTipoPago) {
+        this.nombreTipoPago = nombreTipoPago;
+    }
+
     public Date getFechaExpedicionOrden() {
         return fechaExpedicionOrden;
     }
@@ -74,5 +83,12 @@ public class ModeloOrden {
 
     public void setPrecioOrden(double precioOrden) {
         this.precioOrden = precioOrden;
+    }
+    /**
+     * Actualiza una orden si ya se facturó o no
+     * @param facturado 
+     */
+    public void setFacturado(boolean facturado) {
+        this.facturado = facturado;
     }
 }

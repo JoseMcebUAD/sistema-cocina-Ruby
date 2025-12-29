@@ -1,7 +1,9 @@
-package com.Model;
+package com.Model.DTO;
 
 import java.util.Date;
 import java.util.List;
+
+import com.Model.ModeloOrden;
 /**
  * DTO para el formulario de corte de caja
  * Contiene la informacion de todos los pedidos que se hicieron en el dia, así como la cantidad de dinero que se generó
