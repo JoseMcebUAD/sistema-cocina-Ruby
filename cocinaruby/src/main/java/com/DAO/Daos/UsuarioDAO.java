@@ -1,27 +1,14 @@
 package com.DAO.Daos;
 
+import com.DAO.BaseDAO;
 import com.DAO.Interfaces.ICrud;
-import com.Config.CConexion;
 import com.Model.ModeloUsuario;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UsuarioDAO implements ICrud<ModeloUsuario> {
+public class UsuarioDAO  extends BaseDAO implements ICrud<ModeloUsuario> {
 
-    private CConexion conector;
-
-    public UsuarioDAO() {
-        this.conector = new CConexion();
-    }
-
-    public UsuarioDAO(CConexion conector) {
-        this.conector = conector;
-    }
-
-    private Connection getConnection() {
-        return conector.establecerConexionDb();
-    }
 
     @Override
     public ModeloUsuario create(ModeloUsuario model) throws SQLException {

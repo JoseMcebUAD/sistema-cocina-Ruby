@@ -1,32 +1,26 @@
 package com.DAO.Daos;
 
+import com.DAO.BaseDAO;
 import com.DAO.Interfaces.ICrud;
-import com.Config.CConexion;
 import com.Model.ModeloOrden;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class OrdenDAO implements ICrud<ModeloOrden> {
-
-    private CConexion conector;
+public class OrdenDAO extends BaseDAO implements ICrud<ModeloOrden> {
 
     public OrdenDAO() {
-        this.conector = new CConexion();
+        super();
     }
 
-    public OrdenDAO(CConexion conector) {
-        this.conector = conector;
-    }
-
-    private Connection getConnection() {
-        return conector.establecerConexionDb();
+    public OrdenDAO(com.Config.CConexion conector) {
+        super(conector);
     }
 
     @Override
     public ModeloOrden create(ModeloOrden model) throws SQLException {
-        String sql = "INSERT INTO orden (id_rel_cliente, id_rel_tipo_pago, fecha_expedicion_orden, notas_orden, precio_orden) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO orden (id_rel_cliente, id_rel_tipo_pago, fecha_expedicion_orden, notas_orden, precio_orden, facturado) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -40,6 +34,7 @@ public class OrdenDAO implements ICrud<ModeloOrden> {
             ps.setTimestamp(3, new Timestamp(model.getFechaExpedicionOrden().getTime()));
             ps.setString(4, model.getNotasOrden());
             ps.setDouble(5, model.getPrecioOrden());
+            ps.setBoolean(6, model.getFacturado());
             ps.executeUpdate();
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -87,7 +82,7 @@ public class OrdenDAO implements ICrud<ModeloOrden> {
 
     @Override
     public boolean update(int id, ModeloOrden model) throws SQLException {
-        String sql = "UPDATE orden SET id_rel_cliente = ?, id_rel_tipo_pago = ?, fecha_expedicion_orden = ?, notas_orden = ?, precio_orden = ? WHERE id_orden = ?";
+        String sql = "UPDATE orden SET id_rel_cliente = ?, id_rel_tipo_pago = ?, fecha_expedicion_orden = ?, notas_orden = ?, precio_orden = ?, facturado = ? WHERE id_orden = ?";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -101,7 +96,8 @@ public class OrdenDAO implements ICrud<ModeloOrden> {
             ps.setTimestamp(3, new Timestamp(model.getFechaExpedicionOrden().getTime()));
             ps.setString(4, model.getNotasOrden());
             ps.setDouble(5, model.getPrecioOrden());
-            ps.setInt(6, id);
+            ps.setBoolean(6, model.getFacturado());
+            ps.setInt(7, id);
 
             return ps.executeUpdate() > 0;
         }
@@ -191,42 +187,16 @@ public class OrdenDAO implements ICrud<ModeloOrden> {
         }
         return ordenes;
     }
-
-    public double calcularTotalPorFecha(Date fecha) throws SQLException {
-        String sql = "SELECT SUM(precio_orden) as total FROM orden WHERE DATE(fecha_expedicion_orden) = ?";
-
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setDate(1, new java.sql.Date(fecha.getTime()));
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getDouble("total");
-                }
+    /**
+     * Actualiza la orden cuando se factura
+     */
+    public boolean updateFacturado() throws SQLException{
+        String sql = "UPDATE orden SET facturado = 1";
+        try(Connection conn = getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)){
+                return ps.executeUpdate() > 0;
             }
-        }
-        return 0.0;
     }
-
-    public double calcularTotalPorRango(Date desde, Date hasta) throws SQLException {
-        String sql = "SELECT SUM(precio_orden) as total FROM orden WHERE DATE(fecha_expedicion_orden) BETWEEN ? AND ?";
-
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setDate(1, new java.sql.Date(desde.getTime()));
-            ps.setDate(2, new java.sql.Date(hasta.getTime()));
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getDouble("total");
-                }
-            }
-        }
-        return 0.0;
-    }
-
     private ModeloOrden mapRow(ResultSet rs) throws SQLException {
         ModeloOrden orden = new ModeloOrden();
         orden.setIdOrden(rs.getInt("id_orden"));
@@ -240,6 +210,7 @@ public class OrdenDAO implements ICrud<ModeloOrden> {
         orden.setFechaExpedicionOrden(rs.getTimestamp("fecha_expedicion_orden"));
         orden.setNotasOrden(rs.getString("notas_orden"));
         orden.setPrecioOrden(rs.getDouble("precio_orden"));
+        orden.setFacturado(rs.getBoolean("facturado"));
         return orden;
     }
 }

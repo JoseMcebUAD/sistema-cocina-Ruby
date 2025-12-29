@@ -1,27 +1,13 @@
 package com.DAO.Daos;
 
+import com.DAO.BaseDAO;
 import com.DAO.Interfaces.IRead;
-import com.Config.CConexion;
 import com.Model.ModeloTipoPago;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TipoPagoDAO implements IRead<ModeloTipoPago> {
-
-    private CConexion conector;
-
-    public TipoPagoDAO() {
-        this.conector = new CConexion();
-    }
-
-    public TipoPagoDAO(CConexion conector) {
-        this.conector = conector;
-    }
-
-    private Connection getConnection() {
-        return conector.establecerConexionDb();
-    }
+public class TipoPagoDAO extends BaseDAO implements IRead<ModeloTipoPago> {
 
     @Override
     public ModeloTipoPago find(int id) throws SQLException {

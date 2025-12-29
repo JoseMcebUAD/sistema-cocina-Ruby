@@ -1,27 +1,13 @@
 package com.DAO.Daos;
 
+import com.DAO.BaseDAO;
 import com.DAO.Interfaces.IRead;
-import com.Config.CConexion;
 import com.Model.ModeloTipoUsuario;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TipoUsuarioDAO implements IRead<ModeloTipoUsuario> {
-
-    private CConexion conector;
-
-    public TipoUsuarioDAO() {
-        this.conector = new CConexion();
-    }
-
-    public TipoUsuarioDAO(CConexion conector) {
-        this.conector = conector;
-    }
-
-    private Connection getConnection() {
-        return conector.establecerConexionDb();
-    }
+public class TipoUsuarioDAO extends BaseDAO implements IRead<ModeloTipoUsuario> {
 
     @Override
     public ModeloTipoUsuario find(int id) throws SQLException {

@@ -1,28 +1,13 @@
 package com.DAO.Daos;
 
+import com.DAO.BaseDAO;
 import com.DAO.Interfaces.IRead;
-import com.Config.CConexion;
 import com.Model.ModeloTipoCliente;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TipoClienteDAO implements IRead<ModeloTipoCliente> {
-
-    private CConexion conector;
-
-    public TipoClienteDAO() {
-        this.conector = new CConexion();
-    }
-
-    public TipoClienteDAO(CConexion conector) {
-        this.conector = conector;
-    }
-
-    private Connection getConnection() {
-        return conector.establecerConexionDb();
-    }
-
+public class TipoClienteDAO extends BaseDAO implements IRead<ModeloTipoCliente> {
 
     @Override
     public List<ModeloTipoCliente> all() throws SQLException {
