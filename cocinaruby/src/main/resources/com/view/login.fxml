@@ -28,7 +28,7 @@
                         <Font name="Arial" size="18.0" />
                      </font>
                   </Label>
-                  <TextField fx:id="txtUsuario" onKeyTyped="#eventKey" prefHeight="39.0" prefWidth="359.0" promptText="Usuario">
+                  <TextField fx:id="txtUsuario" prefHeight="39.0" prefWidth="359.0" promptText="Usuario">
                      <font>
                         <Font size="18.0" />
                      </font>
@@ -38,7 +38,7 @@
                         <Font name="Arial" size="18.0" />
                      </font>
                   </Label>
-                  <PasswordField fx:id="txtPassword" onKeyTyped="#eventKey" prefHeight="39.0" prefWidth="359.0" promptText="Contraseña">
+                  <PasswordField fx:id="txtContrasena" prefHeight="39.0" prefWidth="359.0" promptText="Contraseña">
                      <font>
                         <Font size="18.0" />
                      </font>
@@ -58,7 +58,7 @@
             </VBox>
          </children>
       </VBox>
-      <VBox alignment="CENTER" onKeyTyped="#eventKey" prefHeight="461.0" prefWidth="358.0" style="-fx-background-color: #30373e;" HBox.hgrow="ALWAYS">
+      <VBox alignment="CENTER" prefHeight="461.0" prefWidth="358.0" style="-fx-background-color: #30373e;" HBox.hgrow="ALWAYS">
          <children>
             <ImageView fitHeight="185.0" fitWidth="198.0" pickOnBounds="true" preserveRatio="true">
                <image>

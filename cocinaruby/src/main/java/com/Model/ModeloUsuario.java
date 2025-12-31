@@ -41,4 +41,6 @@ public class ModeloUsuario {
     public void setContrasenaUsuario(String contrasenaUsuario) {
         this.contrasenaUsuario = contrasenaUsuario;
     }
+
+    
 }

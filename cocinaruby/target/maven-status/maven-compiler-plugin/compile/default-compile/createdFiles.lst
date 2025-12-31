@@ -1,6 +1,7 @@
 com\Config\Constants.class
 com\DAO\Daos\TipoPagoDAO.class
 com\Model\ModeloTipoUsuario.class
+com\Service\UsuarioService.class
 com\Model\ModeloOrden.class
 com\Model\ModeloTipoPago.class
 com\Model\DTO\ModeloFactura.class

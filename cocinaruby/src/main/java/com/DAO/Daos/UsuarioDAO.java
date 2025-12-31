@@ -12,7 +12,8 @@ public class UsuarioDAO  extends BaseDAO implements ICrud<ModeloUsuario> {
 
     @Override
     public ModeloUsuario create(ModeloUsuario model) throws SQLException {
-        String sql = "INSERT INTO usuario (id_rel_tipo_usuario, nombre_usuario, contrasena_usuario) VALUES (?, ?, ?)";
+        //Se modifico id_rel_tipo_usuario y paso a ser idRel_tipo_usuario para que funcione la BD
+        String sql = "INSERT INTO usuario (idRel_tipo_usuario, nombre_usuario, contrasena_usuario) VALUES (?, ?, ?)";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -67,7 +68,7 @@ public class UsuarioDAO  extends BaseDAO implements ICrud<ModeloUsuario> {
 
     @Override
     public boolean update(int id, ModeloUsuario model) throws SQLException {
-        String sql = "UPDATE usuario SET id_rel_tipo_usuario = ?, nombre_usuario = ?, contrasena_usuario = ? WHERE id_usuario = ?";
+        String sql = "UPDATE usuario SET idRel_tipo_usuario = ?, nombre_usuario = ?, contrasena_usuario = ? WHERE id_usuario = ?";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -114,11 +115,9 @@ public class UsuarioDAO  extends BaseDAO implements ICrud<ModeloUsuario> {
         String sql = "SELECT * FROM usuario WHERE nombre_usuario = ? AND contrasena_usuario = ?";
 
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nombreUsuario);
             ps.setString(2, contrasena);
-
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return mapRow(rs);
@@ -130,7 +129,7 @@ public class UsuarioDAO  extends BaseDAO implements ICrud<ModeloUsuario> {
 
     public List<ModeloUsuario> findByTipo(int tipoId) throws SQLException {
         List<ModeloUsuario> usuarios = new ArrayList<>();
-        String sql = "SELECT * FROM usuario WHERE id_rel_tipo_usuario = ?";
+        String sql = "SELECT * FROM usuario WHERE idRel_tipo_usuario = ?";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -149,7 +148,7 @@ public class UsuarioDAO  extends BaseDAO implements ICrud<ModeloUsuario> {
     private ModeloUsuario mapRow(ResultSet rs) throws SQLException {
         ModeloUsuario usuario = new ModeloUsuario();
         usuario.setIdUsuario(rs.getInt("id_usuario"));
-        usuario.setIdRelTipoUsuario(rs.getInt("id_rel_tipo_usuario"));
+        usuario.setIdRelTipoUsuario(rs.getInt("idRel_tipo_usuario"));
         usuario.setNombreUsuario(rs.getString("nombre_usuario"));
         usuario.setContrasenaUsuario(rs.getString("contrasena_usuario"));
         return usuario;

@@ -36,7 +36,7 @@ public class CConexion {
         String puerto = this.config.getProperty("db.puerto");
         String bd = this.config.getProperty("db.nombre");
         
-        this.cadena = "jdbc:mysql://" + host + ":" + puerto + "/" + bd;
+        this.cadena = "jdbc:mariadb://" + host + ":" + puerto + "/" + bd;
 
     }
     /**
