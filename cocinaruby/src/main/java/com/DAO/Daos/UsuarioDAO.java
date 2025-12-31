@@ -16,7 +16,7 @@ public class UsuarioDAO  extends BaseDAO implements ICrud<ModeloUsuario> {
         String sql = "INSERT INTO usuario (idRel_tipo_usuario, nombre_usuario, contrasena_usuario) VALUES (?, ?, ?)";
 
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setInt(1, model.getIdRelTipoUsuario());
             ps.setString(2, model.getNombreUsuario());
