@@ -103,6 +103,7 @@ public class ClienteDAO extends BaseDAO  implements ICrud<ModeloCliente> {
         cliente.setNombreCliente(rs.getString("nombre_cliente"));
         cliente.setDirecciones(rs.getString("direcciones"));
         cliente.setNumeroTarjeta(rs.getString("numero_tarjeta"));
+        cliente.setTelefono(rs.getString("telefono"));
         return cliente;
     }
 }
