@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS `cliente` (
   `nombre_cliente` varchar(50) DEFAULT NULL,
   `direcciones` varchar(400) DEFAULT NULL,
   `numero_tarjeta` varchar(50) DEFAULT NULL
+  `telefono` varchar(25) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
