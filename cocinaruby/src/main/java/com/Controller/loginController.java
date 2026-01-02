@@ -20,7 +20,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.stage.Stage;
 
-public class loginController implements Initializable{
+public class LoginController implements Initializable{
     private UsuarioService usuarioService = new UsuarioService();
 
     @FXML
