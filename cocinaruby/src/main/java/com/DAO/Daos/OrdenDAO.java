@@ -209,8 +209,9 @@ public class OrdenDAO extends BaseDAO implements ICrud<ModeloOrden> {
         orden.setIdRelTipoPago(rs.getInt("id_rel_tipo_pago"));
         orden.setFechaExpedicionOrden(rs.getTimestamp("fecha_expedicion_orden"));
         orden.setNotasOrden(rs.getString("notas_orden"));
-        orden.setPrecioOrden(rs.getDouble("precio_orden"));
         orden.setFacturado(rs.getBoolean("facturado"));
+        orden.setPrecioOrden(rs.getDouble("precio_orden"));
+        orden.setPagoCliente(rs.getDouble("pago_cliente"));
         return orden;
     }
 }

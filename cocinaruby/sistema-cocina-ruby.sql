@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS `orden` (
   `fecha_expedicion_orden` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `notas_orden` varchar(100) DEFAULT NULL,
   `precio_orden` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `pago_cliente` float(5,2) NULL DEFAULT 0.00,
   `facturado` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

@@ -15,6 +15,7 @@ public class ModeloOrden {
     private Date fechaExpedicionOrden;
     private String notasOrden; //si es media
     private double precioOrden;
+    private double pagoCliente;
     private boolean facturado;
 
     public int getIdOrden() {
@@ -90,5 +91,13 @@ public class ModeloOrden {
      */
     public void setFacturado(boolean facturado) {
         this.facturado = facturado;
+    }
+
+    public double getPagoCliente(){
+        return this.pagoCliente;
+    }
+
+    public void setPagoCliente(double pagoCliente){
+        this.pagoCliente = pagoCliente;
     }
 }
