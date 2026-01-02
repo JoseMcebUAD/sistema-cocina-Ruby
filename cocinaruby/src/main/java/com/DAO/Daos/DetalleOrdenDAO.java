@@ -25,7 +25,7 @@ public class DetalleOrdenDAO extends BaseDAO implements ICrud<ModeloDetalleOrden
 
     @Override
     public ModeloDetalleOrden create(ModeloDetalleOrden model) throws SQLException {
-        String sql = "INSERT INTO detalle_orden (id_rel_orden, especificaciones_detalle_orden, precio_detalle_orden) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO detalle_orden (idRel_orden, especificaciones_detalle_orden, precio_detalle_orden) VALUES (?, ?, ?)";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -80,7 +80,7 @@ public class DetalleOrdenDAO extends BaseDAO implements ICrud<ModeloDetalleOrden
 
     @Override
     public boolean update(int id, ModeloDetalleOrden model) throws SQLException {
-        String sql = "UPDATE detalle_orden SET id_rel_orden = ?, especificaciones_detalle_orden = ?, precio_detalle_orden = ? WHERE id_detalle_orden = ?";
+        String sql = "UPDATE detalle_orden SET idRel_orden = ?, especificaciones_detalle_orden = ?, precio_detalle_orden = ? WHERE id_detalle_orden = ?";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -116,7 +116,7 @@ public class DetalleOrdenDAO extends BaseDAO implements ICrud<ModeloDetalleOrden
      */
     public List<ModeloDetalleOrden> findByOrden(int idOrden) throws SQLException {
         List<ModeloDetalleOrden> detalles = new ArrayList<>();
-        String sql = "SELECT * FROM detalle_orden WHERE id_rel_orden = ? ORDER BY id_detalle_orden";
+        String sql = "SELECT * FROM detalle_orden WHERE idRel_orden = ? ORDER BY id_detalle_orden";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -142,7 +142,7 @@ public class DetalleOrdenDAO extends BaseDAO implements ICrud<ModeloDetalleOrden
      * @throws SQLException si hay error en la consulta
      */
     public boolean deleteByOrden(int idOrden) throws SQLException {
-        String sql = "DELETE FROM detalle_orden WHERE id_rel_orden = ?";
+        String sql = "DELETE FROM detalle_orden WHERE idRel_orden = ?";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -162,7 +162,7 @@ public class DetalleOrdenDAO extends BaseDAO implements ICrud<ModeloDetalleOrden
      * @throws SQLException si hay error en la consulta
      */
     public double calcularTotalOrden(int idOrden) throws SQLException {
-        String sql = "SELECT COALESCE(SUM(precio_detalle_orden), 0) AS total FROM detalle_orden WHERE id_rel_orden = ?";
+        String sql = "SELECT COALESCE(SUM(precio_detalle_orden), 0) AS total FROM detalle_orden WHERE idRel_orden = ?";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -186,7 +186,7 @@ public class DetalleOrdenDAO extends BaseDAO implements ICrud<ModeloDetalleOrden
      * @throws SQLException si hay error en la consulta
      */
     public int contarItemsPorOrden(int idOrden) throws SQLException {
-        String sql = "SELECT COUNT(*) AS cantidad FROM detalle_orden WHERE id_rel_orden = ?";
+        String sql = "SELECT COUNT(*) AS cantidad FROM detalle_orden WHERE idRel_orden = ?";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -212,7 +212,7 @@ public class DetalleOrdenDAO extends BaseDAO implements ICrud<ModeloDetalleOrden
     private ModeloDetalleOrden mapRow(ResultSet rs) throws SQLException {
         ModeloDetalleOrden detalle = new ModeloDetalleOrden();
         detalle.setIdDetalleOrden(rs.getInt("id_detalle_orden"));
-        detalle.setIdRelOrden(rs.getInt("id_rel_orden"));
+        detalle.setIdRelOrden(rs.getInt("idRel_orden"));
         detalle.setEspecificacionesDetalleOrden(rs.getString("especificaciones_detalle_orden"));
         detalle.setPrecioDetalleOrden(rs.getDouble("precio_detalle_orden"));
         return detalle;
