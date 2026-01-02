@@ -12,7 +12,7 @@ public class UsuarioDAO  extends BaseDAO implements ICrud<ModeloUsuario> {
 
     @Override
     public ModeloUsuario create(ModeloUsuario model) throws SQLException {
-        //Se modifico id_rel_tipo_usuario y paso a ser idRel_tipo_usuario para que funcione la BD
+        //Se modifico idRel_tipo_usuario y paso a ser idRel_tipo_usuario para que funcione la BD
         String sql = "INSERT INTO usuario (idRel_tipo_usuario, nombre_usuario, contrasena_usuario) VALUES (?, ?, ?)";
 
         try (Connection conn = getConnection();

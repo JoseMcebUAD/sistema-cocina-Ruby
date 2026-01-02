@@ -10,6 +10,7 @@ public class ModeloCliente {
     private String nombreCliente;
     private String direcciones;
     private String numeroTarjeta;
+    private String telefono;
 
     public int getIdCliente() {
         return idCliente;
@@ -49,5 +50,13 @@ public class ModeloCliente {
 
     public void setNumeroTarjeta(String numeroTarjeta) {
         this.numeroTarjeta = numeroTarjeta;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
     }
 }
