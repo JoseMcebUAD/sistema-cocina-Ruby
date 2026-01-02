@@ -20,7 +20,7 @@ public class OrdenDAO extends BaseDAO implements ICrud<ModeloOrden> {
 
     @Override
     public ModeloOrden create(ModeloOrden model) throws SQLException {
-        String sql = "INSERT INTO orden (id_rel_cliente, id_rel_tipo_pago, fecha_expedicion_orden, notas_orden, precio_orden, facturado) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO orden (idRel_cliente, idRel_tipo_pago, fecha_expedicion_orden, notas_orden, precio_orden, facturado) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -82,7 +82,7 @@ public class OrdenDAO extends BaseDAO implements ICrud<ModeloOrden> {
 
     @Override
     public boolean update(int id, ModeloOrden model) throws SQLException {
-        String sql = "UPDATE orden SET id_rel_cliente = ?, id_rel_tipo_pago = ?, fecha_expedicion_orden = ?, notas_orden = ?, precio_orden = ?, facturado = ? WHERE id_orden = ?";
+        String sql = "UPDATE orden SET idRel_cliente = ?, idRel_tipo_pago = ?, fecha_expedicion_orden = ?, notas_orden = ?, precio_orden = ?, facturado = ? WHERE id_orden = ?";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -117,7 +117,7 @@ public class OrdenDAO extends BaseDAO implements ICrud<ModeloOrden> {
 
     public List<ModeloOrden> findByCliente(int clienteId) throws SQLException {
         List<ModeloOrden> ordenes = new ArrayList<>();
-        String sql = "SELECT * FROM orden WHERE id_rel_cliente = ? ORDER BY fecha_expedicion_orden DESC";
+        String sql = "SELECT * FROM orden WHERE idRel_cliente = ? ORDER BY fecha_expedicion_orden DESC";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -172,7 +172,7 @@ public class OrdenDAO extends BaseDAO implements ICrud<ModeloOrden> {
 
     public List<ModeloOrden> findByTipoPago(int tipoPagoId) throws SQLException {
         List<ModeloOrden> ordenes = new ArrayList<>();
-        String sql = "SELECT * FROM orden WHERE id_rel_tipo_pago = ? ORDER BY fecha_expedicion_orden DESC";
+        String sql = "SELECT * FROM orden WHERE idRel_tipo_pago = ? ORDER BY fecha_expedicion_orden DESC";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -201,12 +201,12 @@ public class OrdenDAO extends BaseDAO implements ICrud<ModeloOrden> {
         ModeloOrden orden = new ModeloOrden();
         orden.setIdOrden(rs.getInt("id_orden"));
 
-        int clienteId = rs.getInt("id_rel_cliente");
+        int clienteId = rs.getInt("idRel_cliente");
         if (!rs.wasNull()) {
             orden.setIdRelCliente(clienteId);
         }
 
-        orden.setIdRelTipoPago(rs.getInt("id_rel_tipo_pago"));
+        orden.setIdRelTipoPago(rs.getInt("idRel_tipo_pago"));
         orden.setFechaExpedicionOrden(rs.getTimestamp("fecha_expedicion_orden"));
         orden.setNotasOrden(rs.getString("notas_orden"));
         orden.setFacturado(rs.getBoolean("facturado"));

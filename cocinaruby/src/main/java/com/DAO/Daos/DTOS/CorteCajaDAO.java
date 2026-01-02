@@ -36,8 +36,8 @@ public class CorteCajaDAO extends BaseDAO {
         String sql = """
             SELECT
                 o.id_orden,
-                o.id_rel_cliente,
-                o.id_rel_tipo_pago,
+                o.idRel_cliente,
+                o.idRel_tipo_pago,
                 o.fecha_expedicion_orden,
                 o.notas_orden,
                 o.precio_orden,
@@ -45,8 +45,8 @@ public class CorteCajaDAO extends BaseDAO {
                 COALESCE(c.nombre_cliente, 'Cliente') AS nombre_cliente,
                 tp.nombre_tipo_pago
             FROM orden o
-            LEFT JOIN cliente c ON o.id_rel_cliente = c.id_cliente
-            JOIN tipo_pago tp ON o.id_rel_tipo_pago = tp.id_tipo_pago
+            LEFT JOIN cliente c ON o.idRel_cliente = c.id_cliente
+            JOIN tipo_pago tp ON o.idRel_tipo_pago = tp.id_tipo_pago
             WHERE DATE(o.fecha_expedicion_orden) BETWEEN ? AND ?
             ORDER BY o.fecha_expedicion_orden DESC
         """;
@@ -107,8 +107,8 @@ public class CorteCajaDAO extends BaseDAO {
         String sql = """
             SELECT
                 o.id_orden,
-                o.id_rel_cliente,
-                o.id_rel_tipo_pago,
+                o.idRel_cliente,
+                o.idRel_tipo_pago,
                 o.fecha_expedicion_orden,
                 o.notas_orden,
                 o.precio_orden,
@@ -116,10 +116,10 @@ public class CorteCajaDAO extends BaseDAO {
                 COALESCE(c.nombre_cliente, 'Público General') AS nombre_cliente,
                 tp.nombre_tipo_pago
             FROM orden o
-            LEFT JOIN cliente c ON o.id_rel_cliente = c.id_cliente
-            JOIN tipo_pago tp ON o.id_rel_tipo_pago = tp.id_tipo_pago
+            LEFT JOIN cliente c ON o.idRel_cliente = c.id_cliente
+            JOIN tipo_pago tp ON o.idRel_tipo_pago = tp.id_tipo_pago
             WHERE DATE(o.fecha_expedicion_orden) BETWEEN ? AND ?
-            AND o.id_rel_tipo_pago = ?
+            AND o.idRel_tipo_pago = ?
             ORDER BY o.fecha_expedicion_orden DESC
         """;
 
@@ -186,7 +186,7 @@ public class CorteCajaDAO extends BaseDAO {
         String sqlTiposPago = """
             SELECT DISTINCT tp.id_tipo_pago, tp.nombre_tipo_pago
             FROM orden o
-            JOIN tipo_pago tp ON o.id_rel_tipo_pago = tp.id_tipo_pago
+            JOIN tipo_pago tp ON o.idRel_tipo_pago = tp.id_tipo_pago
             WHERE DATE(o.fecha_expedicion_orden) BETWEEN ? AND ?
             ORDER BY tp.nombre_tipo_pago
         """;
@@ -222,12 +222,12 @@ public class CorteCajaDAO extends BaseDAO {
 
         orden.setIdOrden(rs.getInt("id_orden"));
 
-        int clienteId = rs.getInt("id_rel_cliente");
+        int clienteId = rs.getInt("idRel_cliente");
         if (!rs.wasNull()) {
             orden.setIdRelCliente(clienteId);
         }
 
-        orden.setIdRelTipoPago(rs.getInt("id_rel_tipo_pago"));
+        orden.setIdRelTipoPago(rs.getInt("idRel_tipo_pago"));
         orden.setFechaExpedicionOrden(rs.getTimestamp("fecha_expedicion_orden"));
         orden.setNotasOrden(rs.getString("notas_orden"));
         orden.setPrecioOrden(rs.getDouble("precio_orden"));

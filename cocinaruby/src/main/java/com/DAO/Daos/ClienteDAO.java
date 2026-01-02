@@ -12,7 +12,7 @@ public class ClienteDAO extends BaseDAO  implements ICrud<ModeloCliente> {
 
     @Override
     public ModeloCliente create(ModeloCliente model) throws SQLException {
-        String sql = "INSERT INTO cliente (id_rel_tipo_cliente, nombre_cliente, direcciones, numero_tarjeta) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO cliente (idRel_tipo_cliente, nombre_cliente, direcciones, numero_tarjeta) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -68,7 +68,7 @@ public class ClienteDAO extends BaseDAO  implements ICrud<ModeloCliente> {
 
     @Override
     public boolean update(int id, ModeloCliente model) throws SQLException {
-        String sql = "UPDATE cliente SET id_rel_tipo_cliente = ?, nombre_cliente = ?, direcciones = ?, numero_tarjeta = ? WHERE id_cliente = ?";
+        String sql = "UPDATE cliente SET idRel_tipo_cliente = ?, nombre_cliente = ?, direcciones = ?, numero_tarjeta = ? WHERE id_cliente = ?";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -99,7 +99,7 @@ public class ClienteDAO extends BaseDAO  implements ICrud<ModeloCliente> {
     private ModeloCliente mapRow(ResultSet rs) throws SQLException {
         ModeloCliente cliente = new ModeloCliente();
         cliente.setIdCliente(rs.getInt("id_cliente"));
-        cliente.setIdRelTipoCliente(rs.getInt("id_rel_tipo_cliente"));
+        cliente.setIdRelTipoCliente(rs.getInt("idRel_tipo_cliente"));
         cliente.setNombreCliente(rs.getString("nombre_cliente"));
         cliente.setDirecciones(rs.getString("direcciones"));
         cliente.setNumeroTarjeta(rs.getString("numero_tarjeta"));
