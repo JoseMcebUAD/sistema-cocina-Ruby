@@ -1,5 +1,5 @@
 package com.Controller;
 
-public class RegisterController {
+public class RegisterController{
     
 }
