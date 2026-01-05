@@ -7,7 +7,7 @@ import javax.swing.JOptionPane;
 import com.DAO.Daos.UsuarioDAO;
 import com.Model.ModeloUsuario;
 
-public class UsuarioService {
+public class UserService {
     private UsuarioDAO usuarioDAO= new UsuarioDAO();
 
     public boolean EsUsuariorRegistrado(ModeloUsuario usuario) {
