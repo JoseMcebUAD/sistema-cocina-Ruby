@@ -109,26 +109,85 @@ public class MigrationRunner {
         int batchNumber = migrationRecord.getNextBatchNumber();
         System.out.println("📦 Batch número: " + batchNumber);
         System.out.println("📋 Migraciones a ejecutar: " + pendingMigrations.size() + "\n");
+        System.out.println("⚠ IMPORTANTE: Si alguna migración falla, se revertirán TODAS las del batch.\n");
 
-        int count = 0;
-        for (MigrationLoader.MigrationFile migrationFile : pendingMigrations) {
-            count++;
-            executeMigrationUp(migrationFile, count, pendingMigrations.size(), batchNumber);
+        // Lista para rastrear migraciones ejecutadas exitosamente en este batch
+        List<MigrationLoader.MigrationFile> executedInBatch = new ArrayList<>();
+        boolean batchFailed = false;
+
+        try {
+            int count = 0;
+            for (MigrationLoader.MigrationFile migrationFile : pendingMigrations) {
+                count++;
+                try {
+                    executeMigrationUpSafe(migrationFile, count, pendingMigrations.size(), batchNumber);
+                    executedInBatch.add(migrationFile);
+                } catch (Exception e) {
+                    batchFailed = true;
+                    System.err.println("\n❌ ERROR EN MIGRACIÓN: " + migrationFile.getFullName());
+                    System.err.println("💬 Mensaje: " + e.getMessage());
+
+                    // Rollback manual de todas las migraciones ejecutadas en este batch
+                    if (!executedInBatch.isEmpty()) {
+                        System.err.println("\n⚠⚠⚠ INICIANDO ROLLBACK MANUAL DEL BATCH ⚠⚠⚠");
+                        System.err.println("Revirtiendo " + executedInBatch.size() + " migración(es) ejecutada(s)...\n");
+
+                        rollbackBatch(executedInBatch, batchNumber);
+                    } else {
+                        System.err.println("\nNo hay migraciones que revertir.\n");
+                    }
+
+                    throw e;
+                }
+            }
+
+            if (!batchFailed) {
+                System.out.println("\n✓ Todas las migraciones se ejecutaron exitosamente.");
+            }
+
+        } catch (Exception e) {
+            throw e;
         }
-
-        System.out.println("\n✓ Todas las migraciones se ejecutaron exitosamente.");
     }
 
     /**
-     * Ejecuta una migración individual con transacción
+     * Revierte manualmente todas las migraciones de un batch
      */
-    private void executeMigrationUp(MigrationLoader.MigrationFile migrationFile, int current, int total, int batch) throws Exception {
+    private void rollbackBatch(List<MigrationLoader.MigrationFile> executedMigrations, int batchNumber) {
+        // Revertir en orden inverso
+        for (int i = executedMigrations.size() - 1; i >= 0; i--) {
+            MigrationLoader.MigrationFile migrationFile = executedMigrations.get(i);
+
+            try {
+                System.out.println("  [" + (i + 1) + "/" + executedMigrations.size() + "] Revirtiendo: " + migrationFile.getFullName());
+
+                // Cargar y ejecutar down()
+                Migration migration = migrationLoader.loadMigrationInstance(migrationFile);
+                migration.down();
+
+                // Eliminar registro de la tabla de migraciones
+                migrationRecord.deleteMigration(migrationFile.version, migrationFile.className);
+
+                System.out.println("      ✓ Revertido exitosamente\n");
+
+            } catch (Exception rollbackEx) {
+                System.err.println("      ⚠ Error al revertir: " + rollbackEx.getMessage());
+                System.err.println("      Continuando con el rollback...\n");
+            }
+        }
+
+        System.err.println("✓ Rollback del batch completado.");
+        System.err.println("Todas las tablas creadas han sido eliminadas.");
+        System.err.println("Todos los registros de migraciones del batch han sido eliminados.\n");
+    }
+
+    /**
+     * Ejecuta una migración individual de forma segura, registrando el resultado
+     */
+    private void executeMigrationUpSafe(MigrationLoader.MigrationFile migrationFile, int current, int total, int batch) throws Exception {
         System.out.println("[" + current + "/" + total + "] Ejecutando: " + migrationFile.getFullName());
 
         try {
-            // Iniciar transacción
-            connection.setAutoCommit(false);
-
             long startTime = System.currentTimeMillis();
 
             // Cargar y ejecutar migración
@@ -137,39 +196,18 @@ public class MigrationRunner {
 
             long executionTime = System.currentTimeMillis() - startTime;
 
-            // Registrar migración
+            // Registrar migración exitosa
             migrationRecord.recordMigration(migrationFile.version, migrationFile.className, executionTime, batch);
-
-            // Confirmar transacción
-            connection.commit();
 
             System.out.println("    ✓ Completado en " + executionTime + "ms\n");
 
         } catch (Exception e) {
-            // Rollback en caso de error
-            try {
-                connection.rollback();
-                System.err.println("    ⚠ Transacción revertida (rollback)");
-            } catch (SQLException rollbackEx) {
-                System.err.println("    ⚠ Error al hacer rollback: " + rollbackEx.getMessage());
-            }
-
             // Mostrar error detallado
-            System.err.println("\n❌ ERROR EN MIGRACIÓN: " + migrationFile.getFullName());
-            System.err.println("📄 Archivo: " + migrationFile.file.getAbsolutePath());
-            System.err.println("💬 Mensaje: " + e.getMessage());
+            System.err.println("    📄 Archivo: " + migrationFile.file.getAbsolutePath());
             System.err.println("\nStack trace:");
             e.printStackTrace();
 
             throw new Exception("Fallo en migración: " + migrationFile.getFullName(), e);
-
-        } finally {
-            // Restaurar auto-commit
-            try {
-                connection.setAutoCommit(true);
-            } catch (SQLException e) {
-                System.err.println("⚠ Error al restaurar auto-commit: " + e.getMessage());
-            }
         }
     }
 

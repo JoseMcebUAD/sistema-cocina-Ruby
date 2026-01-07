@@ -16,7 +16,7 @@ public class MigrationExample extends Migration {
     public void up() {
         try {
             // Crear tabla de usuarios
-            Schema.create("usuarios", table -> {
+            MigrationSchema.create("usuarios", table -> {
                 // Columna ID autoincremental (será "id_usuarios")
                 table.id();
 
@@ -57,7 +57,7 @@ public class MigrationExample extends Migration {
     public void down() {
         try {
             // Eliminar la tabla si existe
-            Schema.dropIfExists("usuarios", conexion);
+            MigrationSchema.dropIfExists("usuarios", conexion);
             System.out.println("Tabla 'usuarios' eliminada exitosamente");
 
         } catch (SQLException e) {

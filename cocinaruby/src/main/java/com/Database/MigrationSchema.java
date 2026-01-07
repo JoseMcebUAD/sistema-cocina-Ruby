@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 // Clase para crear y eliminar tablas en la base de datos
-public class Schema {
+public class MigrationSchema {
 
     // Crea una nueva tabla en la base de datos
     public static void create(String tableName, TableCallback callback, Connection conn) throws SQLException {
@@ -46,7 +46,7 @@ public class Schema {
 
         // Crea una columna ID autoincremental
         public TableBuilder id(String name) {
-            columns.add(name + " INT AUTO_INCREMENT PRIMARY KEY");
+            columns.add("id_"+ name + " INT AUTO_INCREMENT PRIMARY KEY");
             return this;
         }
 

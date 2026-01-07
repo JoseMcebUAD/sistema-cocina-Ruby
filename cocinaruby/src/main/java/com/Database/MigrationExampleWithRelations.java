@@ -12,7 +12,7 @@ public class MigrationExampleWithRelations extends Migration {
     public void up() {
         try {
             // 1. Crear tabla categorias (debe crearse primero porque productos la referencia)
-            Schema.create("categorias", table -> {
+            MigrationSchema.create("categorias", table -> {
                 table.id(); // id_categorias
                 table.string("nombre", 100).notNull().unique();
                 table.text("descripcion").nullable();
@@ -21,7 +21,7 @@ public class MigrationExampleWithRelations extends Migration {
             }, conexion);
 
             // 2. Crear tabla productos
-            Schema.create("productos", table -> {
+            MigrationSchema.create("productos", table -> {
                 table.id(); // id_productos
                 table.string("nombre", 200).notNull();
                 table.text("descripcion").nullable();
@@ -40,7 +40,7 @@ public class MigrationExampleWithRelations extends Migration {
             }, conexion);
 
             // 3. Crear tabla ventas
-            Schema.create("ventas", table -> {
+            MigrationSchema.create("ventas", table -> {
                 table.id(); // id_ventas
 
                 // Llave foránea a productos
@@ -73,9 +73,9 @@ public class MigrationExampleWithRelations extends Migration {
     public void down() {
         try {
             // Eliminar en orden inverso por las llaves foráneas
-            Schema.dropIfExists("ventas", conexion);
-            Schema.dropIfExists("productos", conexion);
-            Schema.dropIfExists("categorias", conexion);
+            MigrationSchema.dropIfExists("ventas", conexion);
+            MigrationSchema.dropIfExists("productos", conexion);
+            MigrationSchema.dropIfExists("categorias", conexion);
 
             System.out.println("Tablas eliminadas exitosamente");
 
