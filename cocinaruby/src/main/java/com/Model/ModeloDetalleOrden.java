@@ -9,6 +9,7 @@ public class ModeloDetalleOrden {
     private int idDetalleOrden;
     private int idRelOrden;
     private String especificacionesDetalleOrden;
+    private int cantidad;
     private double precioDetalleOrden;
 
     public int getIdDetalleOrden() {
@@ -21,6 +22,14 @@ public class ModeloDetalleOrden {
 
     public int getIdRelOrden() {
         return idRelOrden;
+    }
+
+    public void setCantidad(int cantidad) {
+        this.cantidad = cantidad;
+    }
+
+    public int getCantida() {
+        return cantidad;
     }
 
     public void setIdRelOrden(int idRelOrden) {
