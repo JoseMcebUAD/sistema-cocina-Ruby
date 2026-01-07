@@ -16,7 +16,7 @@ public class SchemaTest extends BaseTest {
     @Test
     public void testCreateSimpleTable() throws SQLException {
         // Crear una tabla simple
-        Schema.create("test_usuarios", table -> {
+        MigrationSchema.create("test_usuarios", table -> {
             table.id();
             table.string("nombre", 100).notNull();
             table.string("email").unique();
@@ -29,7 +29,7 @@ public class SchemaTest extends BaseTest {
     @Test
     public void testDropTableIfExists() throws SQLException {
         // Crear tabla
-        Schema.create("test_productos", table -> {
+        MigrationSchema.create("test_productos", table -> {
             table.id();
             table.string("nombre");
         }, connection);
@@ -37,7 +37,7 @@ public class SchemaTest extends BaseTest {
         assertTrue("La tabla debe existir", tableExists("test_productos"));
 
         // Eliminar tabla
-        Schema.dropIfExists("test_productos", connection);
+        MigrationSchema.dropIfExists("test_productos", connection);
 
         assertFalse("La tabla no debe existir", tableExists("test_productos"));
     }
@@ -45,7 +45,7 @@ public class SchemaTest extends BaseTest {
     @Test
     public void testDropTableThatDoesNotExist() throws SQLException {
         // Eliminar tabla que no existe (no debe lanzar error)
-        Schema.dropIfExists("tabla_inexistente", connection);
+        MigrationSchema.dropIfExists("tabla_inexistente", connection);
 
         // Si llegamos aquí, el test pasó
         assertTrue(true);
@@ -53,7 +53,7 @@ public class SchemaTest extends BaseTest {
 
     @Test
     public void testCreateTableWithAllColumnTypes() throws SQLException {
-        Schema.create("test_categorias", table -> {
+        MigrationSchema.create("test_categorias", table -> {
             table.id();
             table.string("nombre", 100);
             table.text("descripcion");
@@ -91,7 +91,7 @@ public class SchemaTest extends BaseTest {
 
     @Test
     public void testCreateTableWithModifiers() throws SQLException {
-        Schema.create("test_ventas", table -> {
+        MigrationSchema.create("test_ventas", table -> {
             table.id();
             table.string("codigo").notNull().unique();
             table.decimal("total", 10, 2).notNull();
@@ -106,13 +106,13 @@ public class SchemaTest extends BaseTest {
     @Test(expected = SQLException.class)
     public void testCreateTableThatAlreadyExists() throws SQLException {
         // Crear tabla
-        Schema.create("test_productos", table -> {
+        MigrationSchema.create("test_productos", table -> {
             table.id();
             table.string("nombre");
         }, connection);
 
         // Intentar crear la misma tabla debe fallar
-        Schema.create("test_productos", table -> {
+        MigrationSchema.create("test_productos", table -> {
             table.id();
             table.string("nombre");
         }, connection);
@@ -121,7 +121,7 @@ public class SchemaTest extends BaseTest {
     @Test
     public void testInsertDataAfterCreation() throws SQLException {
         // Crear tabla
-        Schema.create("test_usuarios", table -> {
+        MigrationSchema.create("test_usuarios", table -> {
             table.id();
             table.string("nombre", 100).notNull();
             table.string("email").notNull();
