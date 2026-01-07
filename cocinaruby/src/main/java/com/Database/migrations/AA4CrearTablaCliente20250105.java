@@ -11,13 +11,10 @@ public class AA4CrearTablaCliente20250105 extends Migration {
         try {
             MigrationSchema.create("cliente", table -> {
                 table.id("cliente");
-                table.integer("idRel_tipo_cliente").notNull();
                 table.string("nombre_cliente", 50).nullable();
                 table.string("direcciones", 400).nullable();
                 table.string("numero_tarjeta", 50).nullable();
                 table.string("telefono", 25).nullable();
-
-                table.foreign("idRel_tipo_cliente", "tipo_cliente", "id_tipo_cliente");
             }, conexion);
 
             System.out.println("Tabla 'cliente' creada exitosamente");

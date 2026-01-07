@@ -6,7 +6,6 @@ package com.Model;
  */
 public class ModeloCliente {
     private int idCliente;
-    private int idRelTipoCliente;
     private String nombreCliente;
     private String direcciones;
     private String numeroTarjeta;
@@ -18,14 +17,6 @@ public class ModeloCliente {
 
     public void setIdCliente(int idCliente) {
         this.idCliente = idCliente;
-    }
-
-    public int getIdRelTipoCliente() {
-        return idRelTipoCliente;
-    }
-
-    public void setIdRelTipoCliente(int idRelTipoCliente) {
-        this.idRelTipoCliente = idRelTipoCliente;
     }
 
     public String getNombreCliente() {
