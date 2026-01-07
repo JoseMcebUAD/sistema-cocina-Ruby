@@ -106,7 +106,8 @@ CREATE TABLE IF NOT EXISTS `detalle_orden` (
   `id_detalle_orden` int(11) NOT NULL,
   `idRel_orden` int(11) NOT NULL,
   `especificaciones_detalle_orden` varchar(100) DEFAULT NULL,
-  `precio_detalle_orden` decimal(10,2) NOT NULL
+  `precio_detalle_orden` decimal(10,2) NOT NULL,
+  'cantidad' int(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 DELIMITER $$

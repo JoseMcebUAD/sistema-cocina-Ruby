@@ -1,8 +1,12 @@
 package com.DAO.Daos;
 
+import com.Config.Constants;
 import com.DAO.BaseDAO;
 import com.DAO.Interfaces.ICrud;
 import com.Model.ModeloUsuario;
+
+import at.favre.lib.crypto.bcrypt.BCrypt;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +18,10 @@ public class UsuarioDAO  extends BaseDAO implements ICrud<ModeloUsuario> {
     public ModeloUsuario create(ModeloUsuario model) throws SQLException {
         //Se modifico idRel_tipo_usuario y paso a ser idRel_tipo_usuario para que funcione la BD
         String sql = "INSERT INTO usuario (idRel_tipo_usuario, nombre_usuario, contrasena_usuario) VALUES (?, ?, ?)";
+        String bcryptHashedString = BCrypt.withDefaults().hashToString(Constants.EXP_COS, model.getContrasenaUsuario().toCharArray());
+
+        model.setContrasenaUsuario(bcryptHashedString);
+
 
         try (Connection conn = getConnection();
             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -69,6 +77,9 @@ public class UsuarioDAO  extends BaseDAO implements ICrud<ModeloUsuario> {
     @Override
     public boolean update(int id, ModeloUsuario model) throws SQLException {
         String sql = "UPDATE usuario SET idRel_tipo_usuario = ?, nombre_usuario = ?, contrasena_usuario = ? WHERE id_usuario = ?";
+        String bcryptHashedString = BCrypt.withDefaults().hashToString(Constants.EXP_COS, model.getContrasenaUsuario().toCharArray());
+        model.setContrasenaUsuario(bcryptHashedString);
+
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -114,10 +125,13 @@ public class UsuarioDAO  extends BaseDAO implements ICrud<ModeloUsuario> {
     public ModeloUsuario autenticar(String nombreUsuario, String contrasena) throws SQLException {
         String sql = "SELECT * FROM usuario WHERE nombre_usuario = ? AND contrasena_usuario = ?";
 
+        //hasheamos la contraseña
+        String bcryptHashedString = BCrypt.withDefaults().hashToString(Constants.EXP_COS, contrasena.toCharArray());
+
         try (Connection conn = getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nombreUsuario);
-            ps.setString(2, contrasena);
+            ps.setString(2, bcryptHashedString);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return mapRow(rs);

@@ -3,5 +3,8 @@
 >>>>>>>=Stashed changes
 eclipse.preferences.version=1
 encoding//src/main/java=UTF-8
+<<<<<<< Updated upstream
 encoding//src/main/resources=UTF-8
+=======
+>>>>>>> Stashed changes
 encoding/<project>=UTF-8

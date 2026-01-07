@@ -212,6 +212,7 @@ public class DetalleOrdenDAO extends BaseDAO implements ICrud<ModeloDetalleOrden
     private ModeloDetalleOrden mapRow(ResultSet rs) throws SQLException {
         ModeloDetalleOrden detalle = new ModeloDetalleOrden();
         detalle.setIdDetalleOrden(rs.getInt("id_detalle_orden"));
+        detalle.setCantidad(rs.getInt("cantidad"));
         detalle.setIdRelOrden(rs.getInt("idRel_orden"));
         detalle.setEspecificacionesDetalleOrden(rs.getString("especificaciones_detalle_orden"));
         detalle.setPrecioDetalleOrden(rs.getDouble("precio_detalle_orden"));

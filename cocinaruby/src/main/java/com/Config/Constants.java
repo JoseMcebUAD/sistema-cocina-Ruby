@@ -9,6 +9,10 @@ public final class Constants {
     public static final int ANCHO_TICKET = 40; // Ancho en caracteres del ticket térmico
     public static final String SEPARADOR_TICKET = "----------------------------------------"; // 40 caracteres
 
+
+    //numero de veces que se hashea un string
+    public static final int EXP_COS = 5;
+
     /**
      * Constructor privado para evitar instanciación.
      */
