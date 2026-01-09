@@ -123,18 +123,25 @@ public class UsuarioDAO  extends BaseDAO implements ICrud<ModeloUsuario> {
     }
 
     public ModeloUsuario autenticar(String nombreUsuario, String contrasena) throws SQLException {
-        String sql = "SELECT * FROM usuario WHERE nombre_usuario = ? AND contrasena_usuario = ?";
-
-        //hasheamos la contraseña
-        String bcryptHashedString = BCrypt.withDefaults().hashToString(Constants.EXP_COS, contrasena.toCharArray());
+        // Primero buscar el usuario por nombre
+        String sql = "SELECT * FROM usuario WHERE nombre_usuario = ?";
 
         try (Connection conn = getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nombreUsuario);
-            ps.setString(2, bcryptHashedString);
+
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return mapRow(rs);
+                    // Obtener el hash almacenado en la base de datos
+                    String hashAlmacenado = rs.getString("contrasena_usuario");
+
+                    // Verificar la contraseña usando BCrypt.verifyer()
+                    BCrypt.Result result = BCrypt.verifyer().verify(contrasena.toCharArray(), hashAlmacenado);
+
+                    // Si la verificación es exitosa, retornar el usuario
+                    if (result.verified) {
+                        return mapRow(rs);
+                    }
                 }
             }
         }
