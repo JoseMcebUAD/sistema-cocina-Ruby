@@ -133,6 +133,23 @@ public class OrdenDAO extends BaseDAO implements ICrud<ModeloOrden> {
         return ordenes;
     }
 
+        public List<ModeloOrden> findToday() throws SQLException {
+        List<ModeloOrden> ordenes = new ArrayList<>();
+        String sql = "SELECT * FROM orden WHERE DATE(fecha_expedicion_orden) = CURDATE() ORDER BY fecha_expedicion_orden DESC";
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ordenes.add(mapRow(rs));
+                }
+            }
+        }
+        return ordenes;
+    }
+
     public List<ModeloOrden> findByFecha(Date fecha) throws SQLException {
         List<ModeloOrden> ordenes = new ArrayList<>();
         String sql = "SELECT * FROM orden WHERE DATE(fecha_expedicion_orden) = ? ORDER BY fecha_expedicion_orden DESC";
