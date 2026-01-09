@@ -3,10 +3,8 @@ package com.Controller;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
-
 import com.Model.ModeloUsuario;
 import com.Service.UserService;
-
 import javafx.animation.FadeTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -22,42 +20,31 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
 public class AuthController implements Initializable{
-
+    //Verificar Metodos
     @FXML
     private Hyperlink footerLink;
-
     @FXML
     private Label footerText;
-
     @FXML
     private Button formButton;
-
     @FXML
     private PasswordField txtPassword;
-
     @FXML
     private TextField txtUser;
-
     @FXML
     private Label subtitlelabel;
-
     @FXML
     private Label titlelabel;
-    
     @FXML
     private ImageView exit;
-
     @FXML
     private StackPane authView;
-
     @FXML
     private BorderPane card;
 
@@ -100,14 +87,14 @@ public class AuthController implements Initializable{
     
 
     @FXML
-    private void goToTheMenu(){
+    private void openMenu(){
             try {
             FXMLLoader loader = new FXMLLoader(
             getClass().getResource("/com/view/menu.fxml"));
             Parent root = loader.load();
             Stage stage = (Stage) txtUser.getScene().getWindow();
             stage.setScene(new Scene(root));
-            stage.setFullScreen(true);
+            stage.setMaximized(true);
             stage.setResizable(false);
             stage.show();
             } catch (IOException e) {
@@ -151,13 +138,14 @@ public class AuthController implements Initializable{
     private void login() {
         boolean isUser= userValidation(txtUser,txtPassword);
         if (isUser) {
-        goToTheMenu();
+        openMenu();
         }else{
             //Aun nada
         }
     }
 
     private void register() {
+        //Aun nada
         System.out.println("REGISTER");
     }
 
