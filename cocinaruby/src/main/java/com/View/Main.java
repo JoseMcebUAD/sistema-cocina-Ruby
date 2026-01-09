@@ -13,10 +13,13 @@ public class Main extends Application{
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Parent root= FXMLLoader.load(getClass().getResource("/com/View/auth.fxml"));
+        Parent root= FXMLLoader.load(getClass().getResource("/com/view/menu.fxml"));
         Scene scene = new Scene(root);
         scene.setFill(Color.TRANSPARENT);
         primaryStage.setScene(scene);
+        //Si vas a cargar el login quita setMaximized(true); y setResizable(false);
+        primaryStage.setMaximized(true);
+        primaryStage.setResizable(false);
         primaryStage.setFullScreenExitHint("");
         primaryStage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
         primaryStage.initStyle(StageStyle.TRANSPARENT);
