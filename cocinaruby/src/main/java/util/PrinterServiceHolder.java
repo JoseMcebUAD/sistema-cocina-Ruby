@@ -1,4 +1,7 @@
+package util;
 import javax.print.PrintService;
+
+import com.github.anastaciocintra.output.PrinterOutputStream;
 
 /**
  * Enum para reutilizar la llamda al servicio de la fokin printer
@@ -32,7 +35,7 @@ public enum PrinterServiceHolder {
      * verifica si la impresora esta en linea
      * @return
      */
-    public synchronized PrintService isPrinterActive() {
+    public synchronized boolean isPrinterActive() {
         return printService != null;
     }
     
@@ -50,5 +53,15 @@ public enum PrinterServiceHolder {
      */
     public synchronized void invalidate() {
         printService = null;
+    }
+
+    // Getters
+
+    public synchronized String getPrinterName() {
+        return printerName;
+    }
+
+    public synchronized PrintService getPrintService() {
+        return printService;
     }
 }
