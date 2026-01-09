@@ -17,9 +17,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
-//Verificar Metodos
-public class ResumeController implements Initializable  {
 
+public class SalesController implements Initializable  {
     @FXML 
     private Button ordersButton, dateSearchButton, searchButton;
     @FXML 
@@ -40,18 +39,17 @@ public class ResumeController implements Initializable  {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setupVisibilityLogic();
-        setupSelectionLogic();
+        setUpSelectionLogic();
         insertTestData(); // Datos de prueba
-        toggleSearchMode(false);
-        setupGlobalClickPolicy();
+        setUpSearchDates(false);
+        setUpGlobalClickConfig();
     }
 
     private void setupVisibilityLogic() {
-        dateSearchButton.setOnAction(e -> toggleSearchMode(true));
-        ordersButton.setOnAction(e -> toggleSearchMode(false));
+        dateSearchButton.setOnAction(e -> setUpSearchDates(true));
+        ordersButton.setOnAction(e -> setUpSearchDates(false));
     }
     private void showDetail(boolean visible) {
-    // Animación para la tabla de detalle
     double startOpacity = visible ? 0.0 : 1.0;
     double endOpacity = visible ? 1.0 : 0.0;
     if (visible) {
@@ -70,12 +68,10 @@ public class ResumeController implements Initializable  {
             orderDetailTable.setManaged(false);
         }
     });
-    // Manejo de visibilidad de labels y total
     detailLabel.setVisible(!visible);
     detailLabel.setManaged(!visible);
     grandTotalBar.setVisible(!visible);
     grandTotalBar.setManaged(!visible);
-    // Si estamos ocultando el detalle, aseguramos que los labels tengan opacidad 1
     if (!visible) {
         detailLabel.setOpacity(1.0);
         grandTotalBar.setOpacity(1.0);
@@ -83,7 +79,7 @@ public class ResumeController implements Initializable  {
     fade.play();
     }
 
-    private void setupSelectionLogic() {
+    private void setUpSelectionLogic() {
         //Permite escuchar la fila seleccionada.
         OrderTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             showDetail(newSelection != null);
@@ -96,7 +92,7 @@ public class ResumeController implements Initializable  {
     }
 
 
-    private void setupGlobalClickPolicy() {
+    private void setUpGlobalClickConfig() {
     mainRoot.addEventFilter(MouseEvent.MOUSE_CLICKED, event -> {
         // Obtenemos el componente que recibió el clic
         Node clickedNode = (Node) event.getTarget();
@@ -119,8 +115,7 @@ public class ResumeController implements Initializable  {
     return false;
     }
 
-    private void toggleSearchMode(boolean showDates) {
-    // Manejo de visibilidad y espacio
+    private void setUpSearchDates(boolean showDates) {
     dateBar.setVisible(showDates);
     dateBar.setManaged(showDates);
     searchBar.setVisible(showDates);
@@ -135,30 +130,37 @@ public class ResumeController implements Initializable  {
         }
     }
 
-    //Datos de prueba
     private void insertTestData() {
-        ObservableList<ObservableList<String>> data = FXCollections.observableArrayList();
-        data.add(FXCollections.observableArrayList("101", "$150.00", "$174.00", "Boton"));
-        data.add(FXCollections.observableArrayList("102", "$200.00", "$232.00", "Boton"));
-        
-        for (int i = 0; i < OrderTable.getColumns().size(); i++) {
-            final int colIndex = i;
-            TableColumn<ObservableList<String>, String> col = (TableColumn<ObservableList<String>, String>) OrderTable.getColumns().get(i);
-            col.setCellValueFactory(param -> new javafx.beans.property.SimpleStringProperty(param.getValue().get(colIndex)));
-        }
-        OrderTable.setItems(data);
-
-        ObservableList<ObservableList<String>> detailData = FXCollections.observableArrayList();
-        detailData.add(FXCollections.observableArrayList("Producto A", "2 unidades"));
-        detailData.add(FXCollections.observableArrayList("Producto B", "1 unidad"));
-        
-        for (int i = 0; i < orderDetailTable.getColumns().size(); i++) {
-            final int colIndex = i;
-            TableColumn<ObservableList<String>, String> col = (TableColumn<ObservableList<String>, String>) orderDetailTable.getColumns().get(i);
-            col.setCellValueFactory(param -> new javafx.beans.property.SimpleStringProperty(param.getValue().get(colIndex)));
-        }
-        orderDetailTable.setItems(detailData);
+    // --- TABLA PRINCIPAL ---
+    ObservableList<ObservableList<String>> data = FXCollections.observableArrayList();
+    // Agregamos un 4to elemento para que coincida con tus 4 columnas (Orden, Total, Fecha, Estado)
+    data.add(FXCollections.observableArrayList("101", "$174.00", "2024-05-20", "Impreso","Imprimir"));
+    data.add(FXCollections.observableArrayList("102", "$232.00", "2024-05-20", "No impreso","Imprimir"));
+    
+    for (int i = 0; i < OrderTable.getColumns().size(); i++) {
+        final int colIndex = i;
+        TableColumn<ObservableList<String>, String> col = (TableColumn<ObservableList<String>, String>) OrderTable.getColumns().get(i);
+        col.setCellValueFactory(param -> new javafx.beans.property.SimpleStringProperty(param.getValue().get(colIndex)));
     }
+    OrderTable.setItems(data);
+
+    ObservableList<ObservableList<String>> detailData = FXCollections.observableArrayList();
+    detailData.add(FXCollections.observableArrayList("Producto A", "2 unidades", "$50.00"));
+    detailData.add(FXCollections.observableArrayList("Producto B", "1 unidad", "$100.00"));
+    
+    for (int i = 0; i < orderDetailTable.getColumns().size(); i++) {
+        final int colIndex = i;
+        TableColumn<ObservableList<String>, String> col = (TableColumn<ObservableList<String>, String>) orderDetailTable.getColumns().get(i);
+        col.setCellValueFactory(param -> {
+            if (param.getValue().size() > colIndex) {
+                return new javafx.beans.property.SimpleStringProperty(param.getValue().get(colIndex));
+            } else {
+                return new javafx.beans.property.SimpleStringProperty("");
+            }
+        });
+    }
+    orderDetailTable.setItems(detailData);
+}
 }
 
 

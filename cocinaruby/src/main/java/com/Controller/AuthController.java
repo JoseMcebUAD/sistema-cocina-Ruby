@@ -47,34 +47,23 @@ public class AuthController implements Initializable{
     private StackPane authView;
     @FXML
     private BorderPane card;
+    @FXML
+    private Label errorPasswordLabel;
+    @FXML
+    private Label errorUserLabel;
 
     private boolean registerMode= false;
-    
     private UserService userService = new UserService();
 
     @FXML
     private void handleHyperlink() {
-
-        animateText(titlelabel,
-                registerMode ? "Iniciar Sesión" : "Crear Usuario");
-
-        animateText(subtitlelabel,
-                registerMode ? "Accede con tu usuario" : "Crea un nuevo usuario");
-
-        animateText(formButton,
-                registerMode ? "Entrar" : "Crear");
-
-        footerText.setText(
-                registerMode ? "¿No tienes usuario?" : "¿Ya tienes un usuario?"
-        );
-
-        footerLink.setText(
-                registerMode ? "Crea un usuario" : "Inicia sesión"
-        );
-
+        animateText(titlelabel,registerMode ? "Iniciar Sesión" : "Crear Usuario");
+        animateText(subtitlelabel,registerMode ? "Accede con tu usuario" : "Crea un nuevo usuario");
+        animateText(formButton,registerMode ? "Entrar" : "Crear");
+        footerText.setText(registerMode ? "¿No tienes usuario?" : "¿Ya tienes un usuario?");
+        footerLink.setText(registerMode ? "Crea un usuario" : "Inicia sesión");
         registerMode = !registerMode;
     }
-
 
     @FXML
     private void handleSubmit(ActionEvent event) {
@@ -150,23 +139,10 @@ public class AuthController implements Initializable{
     }
 
     public void setExitButtonConfig(){
-    exit.fitHeightProperty().bind(
-        exit.fitWidthProperty()
-    );
-    //Sirve para hacer el boton mas grande cuando el mouse pasa encima.
-    exit.setOnMouseEntered(e->{
-        exit.setScaleX(1.15);
-        exit.setScaleY(1.15);
-    });
-
-    exit.setOnMouseExited(e ->{
-        exit.setScaleX(1);
-        exit.setScaleY(1);
-    });
-    //Provee la funcionalidad al boton de cerrar la aplicacion.
-    exit.setOnMouseClicked(event -> {
-            System.exit(0);
-        });
+        exit.fitHeightProperty().bind(exit.fitWidthProperty());
+        exit.setOnMouseEntered(e->{exit.setScaleX(1.15); exit.setScaleY(1.15);});
+        exit.setOnMouseExited(e ->{exit.setScaleX(1); exit.setScaleY(1);});
+        exit.setOnMouseClicked(event -> {System.exit(0);});
     }
 
     private void animateText(Labeled node, String newText) {
@@ -186,7 +162,9 @@ public class AuthController implements Initializable{
 
         fadeOut.play();
     }
-
+    private void showErrorMessage(Label label, String message) {
+        
+    }
     private void viewPassword(){
         //Aun nada
     }

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.String?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Hyperlink?>
@@ -31,7 +32,19 @@
                   <VBox fx:id="authForm" prefHeight="301.0" prefWidth="370.0" spacing="12.0">
                      <children>
                         <TextField fx:id="txtUser" promptText="Usuario" styleClass="text-field" stylesheets="@css/styles.css" />
+                        <Label fx:id="errorUserLabel" text="Usuario no valido" visible="false">
+                           <styleClass>
+                              <String fx:value="authlabel" />
+                              <String fx:value="errorlabel" />
+                           </styleClass>
+                        </Label>
                         <PasswordField fx:id="txtPassword" promptText="Contraseña" styleClass="password-field" stylesheets="@css/styles.css" />
+                        <Label fx:id="errorPasswordLabel" text="Contraseña no valida" visible="false">
+                           <styleClass>
+                              <String fx:value="authlabel" />
+                              <String fx:value="errorlabel" />
+                           </styleClass>
+                        </Label>
                         <Button fx:id="formButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSubmit" styleClass="auth-button" stylesheets="@css/styles.css" text="Entrar" />
                      </children>
                   </VBox>
@@ -44,7 +57,7 @@
          <bottom>
             <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                <children>
-                  <Label id="footerText" fx:id="footerText" stylesheets="@css/styles.css" text="No tienes usuario?" />
+                  <Label fx:id="footerText" styleClass="authlabel" stylesheets="@css/styles.css" text="No tienes usuario?" />
                   <Hyperlink fx:id="footerLink" onAction="#handleHyperlink" stylesheets="@css/styles.css" text="Crea un usuario" />
                </children>
                <BorderPane.margin>

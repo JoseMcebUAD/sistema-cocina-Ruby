@@ -2,7 +2,6 @@ package com.Controller;
 
 import java.net.URL;
 import java.util.ResourceBundle;
-
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -18,123 +17,132 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 
-//Verificar metodos
-public class MenuController implements Initializable{
+public class MenuController implements Initializable {
 
-    @FXML
-    private BorderPane menuContainer;
-    @FXML
-    private ImageView exit;
-    @FXML
-    private Label menu;
-    @FXML
-    private AnchorPane slider;
-    @FXML
-    private StackPane content;
-    @FXML
-    private Button btnResume;
+    @FXML private BorderPane menuContainer;
+    @FXML private ImageView exit;
+    @FXML private Label menu;
+    @FXML private AnchorPane slider;
+    @FXML private StackPane content;
+    @FXML private Button btnCorteCaja, ordersButton, salesButton, clientsButton, stopSalesButton;
 
     private double originalWidth;
+    private Button currentActiveButton;
+    private boolean stopSales = false;
 
-    @FXML
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setFontSize();
-        setExitButton();
-        setMenuFunction();
-        setResumeButton();
-        originalWidth = slider.getPrefWidth(); 
-        slider.setMinWidth(0);
+        setUpAllButtons();
+        setUpSliderFunction();
+        loadView("/com/view/order.fxml", ordersButton);
     }
 
-    public void setFontSize(){
-    menuContainer.sceneProperty().addListener((obs, oldScene, scene) -> {
-        if (scene != null) {
-            scene.heightProperty().addListener((o, oldH, newH) -> {
-                double size = newH.doubleValue() / 45;
-                menuContainer.setStyle("-fx-font-size: " + size + "px;");
-            });
-        }
-    });
-    }
-
-    public void setExitButton(){
-    //Sirve para escalar el boton a un tamaño correspondiente a la pantalla completa.
-    exit.fitWidthProperty().bind(
-        menuContainer.widthProperty().multiply(0.025)
-    );
-
-    exit.fitHeightProperty().bind(
-        exit.fitWidthProperty()
-    );
-    //Sirve para hacer el boton mas grande cuando el mouse pasa encima.
-    exit.setOnMouseEntered(e->{
-        exit.setScaleX(1.15);
-        exit.setScaleY(1.15);
-    });
-
-    exit.setOnMouseExited(e ->{
-        exit.setScaleX(1);
-        exit.setScaleY(1);
-    });
-    //Provee la funcionalidad al boton de cerrar la aplicacion.
-    exit.setOnMouseClicked(event -> {
-            System.exit(0);
-        });
-    }
-
-    public void setMenuFunction() {
-        menu.setOnMouseClicked(e -> {
-            animateSlider(!slider.isVisible());
-        });
-    }
-
-    private void loadView(String fxml) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
-            Parent view = loader.load();
+    private void loadView(String fxml, Button sourceButton) {
+    try {
+        URL resource = getClass().getResource(fxml);
+        if (resource == null) return;
+        
+        FXMLLoader loader = new FXMLLoader(resource);
+        Parent view = loader.load();
 
             if (view instanceof javafx.scene.layout.Region region) {
                 region.setMaxWidth(Double.MAX_VALUE);
                 region.setMaxHeight(Double.MAX_VALUE);
             }
-
+            if (fxml.contains("order.fxml") && stopSales) {
+                view.setDisable(true); 
+                //Logica para el pop up por colocar
+            }
             content.getChildren().setAll(view);
+            updateButtonStyle(sourceButton);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void setResumeButton() {
-        btnResume.setOnAction(e -> {
-            loadView("/com/view/resume.fxml");
+    private void updateButtonStyle(Button activeBtn) {
+        if (currentActiveButton != null) {
+            currentActiveButton.getStyleClass().remove("sidebar-item-active");
+        }
+        if (activeBtn != null) {
+            activeBtn.getStyleClass().add("sidebar-item-active");
+            currentActiveButton = activeBtn;
+        }
+    }
+
+    private void setUpSliderFunction() {
+        originalWidth = slider.getPrefWidth();
+        slider.setMinWidth(0);
+    }
+
+    private void setUpExitButton() {
+        exit.fitWidthProperty().bind(menuContainer.widthProperty().multiply(0.025));
+        exit.fitHeightProperty().bind(exit.fitWidthProperty());
+        exit.setOnMouseEntered(e -> { exit.setScaleX(1.15); exit.setScaleY(1.15); });
+        exit.setOnMouseExited(e -> { exit.setScaleX(1); exit.setScaleY(1); });
+        exit.setOnMouseClicked(event -> System.exit(0));
+    }
+
+    public void setUpMenuFunction() {
+        menu.setOnMouseClicked(e -> animateSlider(!slider.isVisible()));
+    }
+
+    private void setUpStopSalesButton(){
+            stopSalesButton.setOnAction(e -> {
+            stopSales = true;
+            if (currentActiveButton == ordersButton) {
+                loadView("/com/view/order.fxml", ordersButton);
+            }
         });
+    }
+    private void setUpOrdersButton(){
+        ordersButton.setOnAction(e -> loadView("/com/view/order.fxml", ordersButton));
+    }
+    
+    private void setUpSalesButton(){
+        salesButton.setOnAction(e -> loadView("/com/view/sales.fxml", salesButton));
+    }
+
+    private void setUpClientButton(){
+        clientsButton.setOnAction(e -> loadView("/com/view/clients.fxml", clientsButton));
+    }
+    private void setUpAllButtons() {
+        setUpExitButton();
+        setUpMenuFunction();
+        setUpOrdersButton();
+        setUpSalesButton();
+        setUpClientButton();
+        setUpStopSalesButton();
     }
 
     private void animateSlider(boolean open) {
-    Timeline timeline = new Timeline();
-    
-    // Si abrimos, el destino es el ancho original. Si cerramos, es 0.
-    double targetWidth = open ? originalWidth : 0;
-
-    if (open) {
-        slider.setVisible(true);
-        slider.setManaged(true);
+        Timeline timeline = new Timeline();
+        double targetWidth = open ? originalWidth : 0;
+        if (open) {
+            slider.setVisible(true);
+            slider.setManaged(true);
+        }
+        KeyValue kv = new KeyValue(slider.prefWidthProperty(), targetWidth);
+        KeyFrame kf = new KeyFrame(Duration.millis(300), kv);
+        timeline.getKeyFrames().add(kf);
+        timeline.setOnFinished(e -> {
+            if (!open) {
+                slider.setVisible(false);
+                slider.setManaged(false);
+            }
+        });
+        timeline.play();
     }
 
-    // Animamos de donde esté ahora hasta el destino
-    KeyValue kv = new KeyValue(slider.prefWidthProperty(), targetWidth);
-    KeyFrame kf = new KeyFrame(Duration.millis(300), kv);
-    
-    timeline.getKeyFrames().add(kf);
-
-    timeline.setOnFinished(e -> {
-        if (!open) {
-            slider.setVisible(false);
-            slider.setManaged(false);
-        }
-    });
-
-    timeline.play();
-}
+    public void setFontSize() {
+        menuContainer.sceneProperty().addListener((obs, oldScene, scene) -> {
+            if (scene != null) {
+                scene.heightProperty().addListener((o, oldH, newH) -> {
+                    double size = newH.doubleValue() / 45; 
+                    menuContainer.setStyle("-fx-font-size: " + size + "px;");
+                });
+            }
+        });
+    }
 }
