@@ -91,9 +91,9 @@ public class AppRunner {
     public void VerificarTokenUsuario() {
         try {
             boolean tokenUsuario = this.tokenSistema.obtenerTokenUsuario();
-            // Si tokenUsuario es true, significa que el token expiró (han pasado 3 horas)
-            // Si es false, significa que el token aún es válido o no hay cierre guardado
-            this.rutaXml = tokenUsuario ? "/com/view/auth.fxml" : "/com/view/menu.fxml";
+            // Si tokenUsuario es false, significa que el token expiró (han pasado 3 horas)
+            // Si es true, significa que el token aún es válido o no hay cierre guardado
+            this.rutaXml = tokenUsuario ? "/com/view/menu.fxml" : "/com/view/auth.fxml";
         } catch (Exception e) {
             // Si hay cualquier error, cargar auth.fxml
             System.err.println("⚠ Error al verificar token: " + e.getMessage());
