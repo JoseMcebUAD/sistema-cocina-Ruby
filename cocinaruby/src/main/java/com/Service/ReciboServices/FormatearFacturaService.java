@@ -1,4 +1,4 @@
-package com.Service;
+package com.Service.ReciboServices;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +9,7 @@ import com.Config.Constants;
  * Clase utilitaria para formatear líneas de factura térmica.
  * Maneja el formato de texto con precios alineados a 40 caracteres.
  */
-public class FormatearFactura {
+public class FormatearFacturaService {
 
     /**
      * Formatea el detalle de una orden, dividiendo en múltiples líneas si es necesario.

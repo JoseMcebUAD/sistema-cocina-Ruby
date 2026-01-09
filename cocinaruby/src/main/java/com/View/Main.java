@@ -49,22 +49,23 @@ public class Main extends Application {
 
     @Override
     public void stop() throws Exception {
-        super.stop();
-
+        
         // Guardar timestamp de cierre de sesión
+        System.out.println("cierre sesión 1");
         if (app != null) {
+            System.out.println("cierre sesión 2");
             try {
                 app.setTokenUsuario();
                 System.out.println("✓ Timestamp de cierre guardado");
             } catch (Exception e) {
                 System.err.println("⚠ Error al guardar timestamp: " + e.getMessage());
             }
-
+            
             // Detener monitor de impresora si está activo
             app.stopPrinterMonitor();
             app.closeDatabase();
         }
-
+        super.stop();
         System.out.println("✓ Aplicación cerrada correctamente");
     }
 

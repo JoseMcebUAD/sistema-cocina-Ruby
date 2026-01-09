@@ -4,19 +4,13 @@ package util;
  * de espera hasta poder hacer un 
  */
 
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
-import java.nio.file.FileSystemException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.Properties;
 
 public class UsuarioTokenSistema {
@@ -29,28 +23,32 @@ public class UsuarioTokenSistema {
     public UsuarioTokenSistema(){
         //deberia regresar C:://.../cocina-ruby
         String direccionActual = System.getProperty("user.dir");
-        String direccionArchivoToken = direccionActual +"/src/main/java/resources/com/UserSession/tokenUsuario.txt";
-        this.rutaArchivo = direccionArchivoToken;
-        this.usuarioTokenProperties = this.cargarConfiguracion("config.tokenUsuario");
+        Path ruta = Path.of(direccionActual, "config.tokenUsuario");
+        this.rutaArchivo = ruta.toString();
+        this.usuarioTokenProperties = this.cargarConfiguracion(this.rutaArchivo);
         
     }
     /*
     *  Verifica si el usuario necesita iniciar sesión si ya ha cerrado el sistema
+    false si ya expiro
+    true si no ha expirado
     */
     public boolean obtenerTokenUsuario() throws IOException{
         String timestamp = this.usuarioTokenProperties.getProperty("cerrarsessiontimestamp");
 
+        System.out.println("timestamp:" + (timestamp));
         if (timestamp == null || timestamp.isEmpty()) {
-            return false; // No hay cierre guardado
+            return false; 
         }
-
+        
         DateTimeFormatter f = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime inicio = LocalDateTime.parse(timestamp, f);
         LocalDateTime fin = LocalDateTime.now();
-
-        long minutos = Duration.between(inicio, fin).toMillis();
-
-        return minutos >= this.tiempoDeVidaUsuario; 
+        
+        long milisecondsPasados = Duration.between(inicio, fin).toMillis();
+        
+        System.out.println("tiempo de vida muerto:" + (milisecondsPasados >= this.tiempoDeVidaUsuario));
+        return milisecondsPasados <= this.tiempoDeVidaUsuario; 
     }
     
     /*
@@ -63,10 +61,11 @@ public class UsuarioTokenSistema {
 
         this.usuarioTokenProperties.setProperty("cerrarsessiontimestamp", timestamp);
 
-        // Guardar al archivo config.tokenUsuario
-        try (FileOutputStream output = new FileOutputStream("config.tokenUsuario")) {
+        // hay que hacer esto pa guardar el properties en el archivo, si no , solo lo guarda en memoria
+
+        try (java.io.FileOutputStream output = new java.io.FileOutputStream(this.rutaArchivo)) {
             this.usuarioTokenProperties.store(output, "Token de sesión del usuario");
-            System.out.println("✓ Token de sesión guardado: " + timestamp);
+            System.out.println("✓ Token guardado: " + timestamp + " en " + this.rutaArchivo);
         }
     } 
 
