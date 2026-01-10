@@ -2,106 +2,123 @@ package com.Controller;
 
 import java.net.URL;
 import java.util.ResourceBundle;
-
+import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class OrderController implements Initializable {
-    @FXML
-    private BorderPane mainRoot;
-    @FXML
-    private VBox clientBar;
-    @FXML
-    private VBox topPanel;
-    @FXML
-    private HBox orderCenter;
-    @FXML
-    private Button addProductButton;
-    @FXML
-    private Button cardButton;
-    @FXML
-    private Button cashButton;
-    @FXML
-    private Button deliveryButton;
-    @FXML
-    private Button dineinButton;
-    @FXML
-    private Button makeOrderButton;
-    @FXML
-    private Button selectClientButton;
-    @FXML
-    private Button transferButton;
-    @FXML
-    private TextField addressField;
-    @FXML
-    private TextField clientNameField;
-    @FXML
-    private TextField phoneNumberField;
-    @FXML
-    private TextField priceField;
-    @FXML
-    private TextField productField;
-    @FXML
-    private TextField quantityField;
-    @FXML
-    private Label grandTotalLabel;
-    @FXML
-    private TableView<?> productsTable;
+    @FXML private BorderPane mainRoot;
+    @FXML private VBox clientBar;
+    @FXML private Button addProductButton, cardButton, cashButton, deliveryButton, dineinButton, 
+    makeOrderButton, selectClientButton, transferButton;
+    @FXML private TextField addressField, clientNameField, phoneNumberField, priceField, 
+    productField, quantityField;
+    @FXML private Label grandTotalLabel;
+    @FXML private TableView<?> productsTable;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        setupViewConfig();
         setUpAllButtons();
+        // Configuraciones iniciales
+        showClientBar(false);
+        selectOrderType(dineinButton);
+        selectPaymentMethod(cashButton);
     }
 
-    private void setupViewConfig(){
+    private void setUpAllButtons() {
+        deliveryButton.setOnAction(e -> {
+            showClientBar(true);
+            selectOrderType(deliveryButton);
+        });
+        
+        dineinButton.setOnAction(e -> {
+            showClientBar(false);
+            selectOrderType(dineinButton);
+        });
 
-    }
-
-    private void setUpAllButtons(){
-        setUpDineInButton();
-        setUpDeliveryButton();
-        setUpSelectClientButton();
-    }
-    private void setUpDeliveryButton(){
-        deliveryButton.setOnAction(e -> showClientBar(true));
-    }
-    
-    private void setUpDineInButton(){
-        dineinButton.setOnAction(e -> showClientBar(false));
-    }
-
-    private void setUpSelectClientButton(){
         selectClientButton.setOnAction(e -> openClientsView());
+        cashButton.setOnAction(e -> selectPaymentMethod(cashButton));
+        cardButton.setOnAction(e -> selectPaymentMethod(cardButton));
+        transferButton.setOnAction(e -> selectPaymentMethod(transferButton));
+        
+        makeOrderButton.setOnAction(e -> {
+            if (cashButton.getStyleClass().contains("order-button-active")) {
+                openCashPopup();
+            } else {
+                openConfirmationView();
+            }
+        });
     }
-    
-    private void openClientsView(){
+
+    private void showClientBar(boolean show) {
+        // Al usar managed(false), el BorderPane ignora este elemento para el cálculo del centro
+        clientBar.setVisible(show);
+        clientBar.setManaged(show);
+        
+        if (show) {
+            FadeTransition fade = new FadeTransition(Duration.millis(300), clientBar);
+            fade.setFromValue(0.0);
+            fade.setToValue(1.0);
+            fade.play();
+        }
+    }
+
+    private void selectOrderType(Button selected) {
+        toggleGroupStyle(selected, dineinButton, deliveryButton); 
+    }
+
+    private void selectPaymentMethod(Button selected) {
+        toggleGroupStyle(selected, cashButton, cardButton, transferButton);
+    }
+
+    private void toggleGroupStyle(Button activeBtn, Button... group) {
+        for (Button btn : group) {
+            btn.getStyleClass().removeAll("order-button", "order-button-active");
+            btn.getStyleClass().add(btn == activeBtn ? "order-button-active" : "order-button");
+        }
+    }
+
+    private void openClientsView() {
+        showModal("/com/view/clients.fxml", "Seleccionar Cliente", 1000, 600);
+    }
+
+    private void openCashPopup() {
+        showModal("/com/view/cashDetails.fxml", "Detalles de Pago", 500, 400);
+    }
+
+    private void openConfirmationView() {
+        showModal("/com/view/confirmOrder.fxml", "Confirmar Pedido", 600, 450);
+    }
+
+    private void showModal(String fxmlPath, String title, double width, double height) {
         try {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/view/clients.fxml")); 
-        Parent root = loader.load();
-            ClientsController controller = loader.getController();
-            controller.setParentController(this);
-            controller.showConfirmBar();
-                Stage stage = new Stage();
-                stage.initModality(Modality.APPLICATION_MODAL);
-                stage.initOwner(mainRoot.getScene().getWindow()); 
-                stage.setScene(new Scene(root));
-                stage.setWidth(1000); 
-                stage.setHeight(600);
-                stage.setResizable(false);
-                stage.show();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+            
+            if (fxmlPath.contains("clients")) {
+                ClientsController controller = loader.getController();
+                controller.setParentController(this);
+                controller.showConfirmBar();
+            }
+
+            Stage stage = new Stage();
+            stage.setTitle(title);
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.initOwner(mainRoot.getScene().getWindow()); 
+            stage.setScene(new Scene(root));
+            stage.setWidth(width); 
+            stage.setHeight(height);
+            stage.setResizable(false);
+            stage.show();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -111,29 +128,5 @@ public class OrderController implements Initializable {
         clientNameField.setText(name);
         addressField.setText(address);
         phoneNumberField.setText(phoneNumber);
-        showClientBar(true);
     }
-
-    private void showClientBar(boolean show) {
-        double startOpacity = show ? 0.0 : 1.0;
-        double endOpacity = show ? 1.0 : 0.0;
-        if (show) {
-            clientBar.setVisible(true);
-            clientBar.setManaged(true);
-            clientBar.setOpacity(0); 
-        }
-        javafx.animation.FadeTransition fade = new javafx.animation.FadeTransition(
-        javafx.util.Duration.millis(300), clientBar
-        );
-        fade.setFromValue(startOpacity);
-        fade.setToValue(endOpacity);
-        fade.setOnFinished(e -> {
-            if (!show) {
-                clientBar.setVisible(false);
-                clientBar.setManaged(false);
-            }
-        });
-        fade.play();
-    }
-    
 }
