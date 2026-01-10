@@ -20,7 +20,10 @@
          <top>
             <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="TOP_RIGHT">
                <children>
-                  <ImageView fitHeight="27.0" fitWidth="37.0" pickOnBounds="true" preserveRatio="true" />
+                  <ImageView fitHeight="330.0" fitWidth="189.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../images/CocinaRubyLogo.png" />
+                     </image></ImageView>
                   <Label id="titlelabel" fx:id="titlelabel" stylesheets="@css/styles.css" text="Iniciar Sesión" />
                   <Label id="subtitlelabel" fx:id="subtitlelabel" stylesheets="@css/styles.css" text="Accede con tu usuario" />
                </children>

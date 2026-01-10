@@ -17,11 +17,11 @@
    <children>
       <BorderPane fx:id="menuContainer" prefHeight="430.0" prefWidth="646.0">
          <top>
-            <AnchorPane maxWidth="1.7976931348623157E308" prefWidth="646.0" style="-fx-background-color: white;" BorderPane.alignment="CENTER">
+            <AnchorPane id="menutopbackground" maxWidth="1.7976931348623157E308" prefWidth="646.0" BorderPane.alignment="CENTER">
                <children>
                   <HBox layoutX="163.0" layoutY="-17.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="60.0">
                      <children>
-                        <Button fx:id="stopSalesButton" contentDisplay="RIGHT" graphicTextGap="10.0" mnemonicParsing="false" prefHeight="56.0" prefWidth="178.0" styleClass="menu-item" stylesheets="@css/styles.css" text="Corte de caja" HBox.hgrow="ALWAYS">
+                        <Button id="stopsales" fx:id="stopSalesButton" contentDisplay="RIGHT" graphicTextGap="10.0" mnemonicParsing="false" prefHeight="56.0" prefWidth="178.0" stylesheets="@css/styles.css" text="Corte de caja" HBox.hgrow="ALWAYS">
                            <HBox.margin>
                               <Insets top="10.0" />
                            </HBox.margin>
@@ -108,13 +108,25 @@
             <StackPane fx:id="content" prefWidth="482.0" BorderPane.alignment="CENTER" />
          </center>
       </BorderPane>
-      <ImageView fx:id="exit" pickOnBounds="true" preserveRatio="true" styleClass="exit" StackPane.alignment="TOP_RIGHT">
-         <image>
-            <Image url="@../images/Salir.png" />
-         </image>
-         <viewport>
-            <Rectangle2D />
-         </viewport>
-      </ImageView>
+      <HBox fx:id="topButtonsBar" alignment="TOP_RIGHT" pickOnBounds="false" prefHeight="100.0" prefWidth="200.0" spacing="10.0">
+         <children>
+            <ImageView fx:id="minimize" pickOnBounds="true" preserveRatio="true" styleClass="exit">
+               <image>
+                  <Image url="@../images/minimizar.png" />
+               </image>
+               <viewport>
+                  <Rectangle2D />
+               </viewport>
+            </ImageView>
+            <ImageView fx:id="exit" fitHeight="47.0" fitWidth="53.0" pickOnBounds="true" preserveRatio="true" styleClass="exit">
+               <image>
+                  <Image url="@../images/Salir.png" />
+               </image>
+               <viewport>
+                  <Rectangle2D />
+               </viewport>
+            </ImageView>
+         </children>
+      </HBox>
    </children>
 </StackPane>
