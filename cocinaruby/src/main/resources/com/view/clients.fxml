@@ -13,9 +13,9 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane id="resumebackground" fx:id="mainRoot" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="555.0" prefWidth="687.0" stylesheets="@css/styles.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.Controller.ClientsController">
+<BorderPane id="clientsbackground" fx:id="mainRoot" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="555.0" prefWidth="687.0" stylesheets="@css/styles.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.Controller.ClientsController">
    <top>
-      <VBox id="resumetopbackground" fx:id="topPanel" prefHeight="103.0" prefWidth="647.0" BorderPane.alignment="CENTER">
+      <VBox id="clientstopbackground" fx:id="topPanel" prefHeight="103.0" prefWidth="647.0" BorderPane.alignment="CENTER">
          <children>
             <HBox fx:id="buttonBar" alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="20.0">
                <children>
@@ -55,12 +55,12 @@
                      </graphic></Button>
                </children>
                <VBox.margin>
-                  <Insets top="20.0" />
+                  <Insets bottom="10.0" top="20.0" />
                </VBox.margin>
             </HBox>
          </children>
          <BorderPane.margin>
-            <Insets left="20.0" right="20.0" top="20.0" />
+            <Insets top="20.0" />
          </BorderPane.margin>
       </VBox>
    </top>
@@ -87,7 +87,7 @@
       </StackPane>
    </center>
    <bottom>
-      <HBox fx:id="confirmBar" alignment="TOP_CENTER" prefHeight="100.0" prefWidth="200.0" visible="false" BorderPane.alignment="CENTER" managed="false">
+      <HBox fx:id="confirmBar" alignment="TOP_CENTER" managed="false" prefHeight="100.0" prefWidth="200.0" visible="false" BorderPane.alignment="CENTER">
          <children>
             <Button fx:id="confirmButton" contentDisplay="RIGHT" mnemonicParsing="false" styleClass="generalbutton" text="Confirmar">
                <graphic>
@@ -99,6 +99,9 @@
                </graphic>
             </Button>
          </children>
+         <BorderPane.margin>
+            <Insets top="10.0" />
+         </BorderPane.margin>
       </HBox>
    </bottom>
 </BorderPane>
