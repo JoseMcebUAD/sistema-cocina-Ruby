@@ -20,7 +20,7 @@ import javafx.scene.layout.StackPane;
 
 public class SalesController implements Initializable  {
     @FXML 
-    private Button ordersButton, dateSearchButton, searchButton;
+    private Button ordersButton, dateSearchButton;
     @FXML 
     private HBox dateBar, searchBar, grandTotalBar;
     @FXML 
@@ -49,6 +49,7 @@ public class SalesController implements Initializable  {
         dateSearchButton.setOnAction(e -> setUpSearchDates(true));
         ordersButton.setOnAction(e -> setUpSearchDates(false));
     }
+
     private void showDetail(boolean visible) {
     double startOpacity = visible ? 0.0 : 1.0;
     double endOpacity = visible ? 1.0 : 0.0;
@@ -116,19 +117,23 @@ public class SalesController implements Initializable  {
     }
 
     private void setUpSearchDates(boolean showDates) {
-    dateBar.setVisible(showDates);
-    dateBar.setManaged(showDates);
-    searchBar.setVisible(showDates);
-    searchBar.setManaged(showDates);
+        dateBar.setVisible(showDates);
+        dateBar.setManaged(showDates);
+        updateTabStyles(showDates);
+    }
 
+    private void updateTabStyles(boolean showDates) {
+        dateSearchButton.getStyleClass().removeAll("sales-tab-button", "sales-tab-active");
+        ordersButton.getStyleClass().removeAll("sales-tab-button", "sales-tab-active");
         if (showDates) {
-        dateSearchButton.setStyle("-fx-background-color: #146886;"); 
-        ordersButton.setStyle("-fx-background-color: #032d4d;");     
+            dateSearchButton.getStyleClass().add("sales-tab-active");
+            ordersButton.getStyleClass().add("sales-tab-button");
         } else {
-        ordersButton.setStyle("-fx-background-color: #146886;");    
-        dateSearchButton.setStyle("-fx-background-color: #032d4d;"); 
+            ordersButton.getStyleClass().add("sales-tab-active");
+            dateSearchButton.getStyleClass().add("sales-tab-button");
         }
     }
+
 
     private void insertTestData() {
     // --- TABLA PRINCIPAL ---

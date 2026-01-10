@@ -20,12 +20,11 @@ import javafx.util.Duration;
 public class MenuController implements Initializable {
 
     @FXML private BorderPane menuContainer;
-    @FXML private ImageView exit;
+    @FXML private ImageView exit,minimize;
     @FXML private Label menu;
     @FXML private AnchorPane slider;
     @FXML private StackPane content;
     @FXML private Button btnCorteCaja, ordersButton, salesButton, clientsButton, stopSalesButton;
-
     private double originalWidth;
     private Button currentActiveButton;
     private boolean stopSales = false;
@@ -35,6 +34,7 @@ public class MenuController implements Initializable {
         setFontSize();
         setUpAllButtons();
         setUpSliderFunction();
+        setUpCursors();
         loadView("/com/view/order.fxml", ordersButton);
     }
 
@@ -84,6 +84,15 @@ public class MenuController implements Initializable {
         exit.setOnMouseClicked(event -> System.exit(0));
     }
 
+    private void setUpMinimizeButton(){
+        minimize.fitWidthProperty().bind(menuContainer.widthProperty().multiply(0.025));
+        minimize.fitHeightProperty().bind(minimize.fitWidthProperty());
+        minimize.setOnMouseEntered(e -> { minimize.setScaleX(1.15); minimize.setScaleY(1.15); });
+        minimize.setOnMouseExited(e -> { minimize.setScaleX(1); minimize.setScaleY(1); });
+        minimize.setOnMouseClicked(event -> {javafx.stage.Stage stage = (javafx.stage.Stage) menuContainer.getScene().getWindow();
+            stage.setIconified(true);});
+    }
+
     public void setUpMenuFunction() {
         menu.setOnMouseClicked(e -> animateSlider(!slider.isVisible()));
     }
@@ -109,6 +118,7 @@ public class MenuController implements Initializable {
     }
     private void setUpAllButtons() {
         setUpExitButton();
+        setUpMinimizeButton();
         setUpMenuFunction();
         setUpOrdersButton();
         setUpSalesButton();
@@ -117,23 +127,26 @@ public class MenuController implements Initializable {
     }
 
     private void animateSlider(boolean open) {
-        Timeline timeline = new Timeline();
-        double targetWidth = open ? originalWidth : 0;
-        if (open) {
-            slider.setVisible(true);
-            slider.setManaged(true);
-        }
-        KeyValue kv = new KeyValue(slider.prefWidthProperty(), targetWidth);
-        KeyFrame kf = new KeyFrame(Duration.millis(300), kv);
-        timeline.getKeyFrames().add(kf);
-        timeline.setOnFinished(e -> {
-            if (!open) {
-                slider.setVisible(false);
-                slider.setManaged(false);
-            }
-        });
-        timeline.play();
+    if (open) {
+        slider.setVisible(true);
+        slider.setManaged(true);
     }
+    
+    Timeline timeline = new Timeline();
+    double targetWidth = open ? originalWidth : 0;
+    
+    KeyValue kv = new KeyValue(slider.prefWidthProperty(), targetWidth);
+    KeyFrame kf = new KeyFrame(Duration.millis(300), kv);
+    
+    timeline.getKeyFrames().add(kf);
+    timeline.setOnFinished(e -> {
+        if (!open) {
+            slider.setVisible(false);
+            slider.setManaged(false);
+        }
+    });
+    timeline.play();
+}
 
     public void setFontSize() {
         menuContainer.sceneProperty().addListener((obs, oldScene, scene) -> {
@@ -145,4 +158,10 @@ public class MenuController implements Initializable {
             }
         });
     }
+
+    private void setUpCursors() {
+    exit.setCursor(javafx.scene.Cursor.HAND);
+    minimize.setCursor(javafx.scene.Cursor.HAND);
+    menu.setCursor(javafx.scene.Cursor.HAND);
+}
 }
