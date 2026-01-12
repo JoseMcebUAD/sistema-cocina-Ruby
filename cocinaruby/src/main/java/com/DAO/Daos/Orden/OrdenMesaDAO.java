@@ -1,0 +1,213 @@
+package com.DAO.Daos.Orden;
+
+import com.DAO.BaseDAO;
+import com.DAO.Interfaces.ICrud;
+import com.Model.ModeloOrden;
+import com.Model.Orden.ModeloOrdenMesa;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+/**
+ * DAO para manejar órdenes de tipo MESA.
+ * Gestiona inserciones/actualizaciones en las tablas 'orden' y 'orden_mesa'.
+ */
+public class OrdenMesaDAO extends BaseDAO implements ICrud<ModeloOrdenMesa>{
+
+    public OrdenMesaDAO() {
+        super();
+    }
+
+    public OrdenMesaDAO(com.Config.CConexion conector) {
+        super(conector);
+    }
+
+    @Override
+    public ModeloOrdenMesa create(ModeloOrdenMesa model) throws SQLException {
+        String sqlMesa = "INSERT INTO orden_mesa (id_orden, numero_mesa) VALUES (?, ?)";
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sqlMesa)) {
+
+            ps.setInt(1, model.getIdOrden());
+            ps.setString(2, model.getNumeroMesa());
+            ps.executeUpdate();
+
+            return model;
+        }
+    }
+
+    @Override
+    public ModeloOrdenMesa find(int id) throws SQLException {
+        String sql = """
+            SELECT o.*, om.numero_mesa
+            FROM orden o
+            INNER JOIN orden_mesa om ON o.id_orden = om.id_orden
+            WHERE o.id_orden = ?
+        """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public List<ModeloOrdenMesa> all() throws SQLException {
+        List<ModeloOrdenMesa> ordenes = new ArrayList<>();
+        String sql = """
+            SELECT o.*, om.numero_mesa
+            FROM orden o
+            INNER JOIN orden_mesa om ON o.id_orden = om.id_orden
+            ORDER BY o.fecha_expedicion_orden DESC
+        """;
+
+        try (Connection conn = getConnection();
+             Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+
+            while (rs.next()) {
+                ordenes.add(mapRow(rs));
+            }
+        }
+        return ordenes;
+    }
+
+    @Override
+    public boolean update(int id, ModeloOrdenMesa model) throws SQLException {
+        String sqlMesa = "UPDATE orden_mesa SET numero_mesa = ? WHERE id_orden = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sqlMesa)) {
+
+            ps.setString(1, model.getNumeroMesa());
+            ps.setInt(2, id);
+
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    @Override
+    public boolean delete(int id) throws SQLException {
+        // El CASCADE en la foreign key se encarga de eliminar orden_mesa automáticamente
+        String sql = "DELETE FROM orden WHERE id_orden = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * Obtiene todas las órdenes de mesa del día actual
+     */
+    public List<ModeloOrdenMesa> findToday() throws SQLException {
+        List<ModeloOrdenMesa> ordenes = new ArrayList<>();
+        String sql = """
+            SELECT o.*, om.numero_mesa
+            FROM orden o
+            INNER JOIN orden_mesa om ON o.id_orden = om.id_orden
+            WHERE DATE(o.fecha_expedicion_orden) = CURDATE()
+            ORDER BY o.fecha_expedicion_orden DESC
+        """;
+
+        try (Connection conn = getConnection();
+             Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+
+            while (rs.next()) {
+                ordenes.add(mapRow(rs));
+            }
+        }
+        return ordenes;
+    }
+
+    /**
+     * Busca órdenes por número de mesa
+     */
+    public List<ModeloOrdenMesa> findByNumeroMesa(String numeroMesa) throws SQLException {
+        List<ModeloOrdenMesa> ordenes = new ArrayList<>();
+        String sql = """
+            SELECT o.*, om.numero_mesa
+            FROM orden o
+            INNER JOIN orden_mesa om ON o.id_orden = om.id_orden
+            WHERE om.numero_mesa = ?
+            ORDER BY o.fecha_expedicion_orden DESC
+        """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, numeroMesa);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ordenes.add(mapRow(rs));
+                }
+            }
+        }
+        return ordenes;
+    }
+
+    /**
+     * Obtiene todas las órdenes activas (no facturadas) por mesa
+     */
+    public List<ModeloOrdenMesa> findActiveByMesa(String numeroMesa) throws SQLException {
+        List<ModeloOrdenMesa> ordenes = new ArrayList<>();
+        String sql = """
+            SELECT o.*, om.numero_mesa
+            FROM orden o
+            INNER JOIN orden_mesa om ON o.id_orden = om.id_orden
+            WHERE om.numero_mesa = ? AND o.facturado = 0
+            ORDER BY o.fecha_expedicion_orden DESC
+        """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, numeroMesa);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ordenes.add(mapRow(rs));
+                }
+            }
+        }
+        return ordenes;
+    }
+
+    /**
+     * Mapea un ResultSet a ModeloOrdenMesa
+     */
+    private ModeloOrdenMesa mapRow(ResultSet rs) throws SQLException {
+        ModeloOrdenMesa orden = new ModeloOrdenMesa();
+
+        // Campos de la tabla 'orden'
+        orden.setIdOrden(rs.getInt("id_orden"));
+        orden.setIdRelTipoPago(rs.getInt("idRel_tipo_pago"));
+        orden.setTipoCliente(rs.getString("tipo_cliente"));
+        orden.setFechaExpedicionOrden(rs.getTimestamp("fecha_expedicion_orden"));
+        orden.setPrecioOrden(rs.getDouble("precio_orden"));
+        orden.setPagoCliente(rs.getDouble("pago_cliente"));
+        orden.setFacturado(rs.getBoolean("facturado"));
+
+        // Campos de la tabla 'orden_mesa'
+        orden.setNumeroMesa(rs.getString("numero_mesa"));
+
+        return orden;
+    }
+
+
+}
