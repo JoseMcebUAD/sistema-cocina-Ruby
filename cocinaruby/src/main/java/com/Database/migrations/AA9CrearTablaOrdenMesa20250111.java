@@ -4,17 +4,19 @@ import com.Database.Migration;
 import com.Database.MigrationSchema;
 import java.sql.SQLException;
 
-public class AA5CrearTablaTipoPago20250105 extends Migration {
+public class AA9CrearTablaOrdenMesa20250111 extends Migration {
 
     @Override
     public void up() {
         try {
-            MigrationSchema.create("tipo_pago", table -> {
-                table.id("tipo_pago");
-                table.string("nombre_tipo_pago", 30).notNull();
+            MigrationSchema.create("orden_mesa", table -> {
+                table.integer("id_orden").notNull().primary();
+                table.string("numero_mesa", 30).nullable();
+
+                table.foreign("id_orden", "orden", "id_orden").onDeleteCascade().onUpdateCascade();
             }, conexion);
 
-            System.out.println("Tabla 'tipo_pago' creada exitosamente");
+            System.out.println("Tabla 'orden_mesa' creada exitosamente");
 
         } catch (SQLException e) {
             System.err.println("Error al crear la tabla: " + e.getMessage());
@@ -25,8 +27,8 @@ public class AA5CrearTablaTipoPago20250105 extends Migration {
     @Override
     public void down() {
         try {
-            MigrationSchema.dropIfExists("tipo_pago", conexion);
-            System.out.println("Tabla 'tipo_pago' eliminada exitosamente");
+            MigrationSchema.dropIfExists("orden_mesa", conexion);
+            System.out.println("Tabla 'orden_mesa' eliminada exitosamente");
 
         } catch (SQLException e) {
             System.err.println("Error al eliminar la tabla: " + e.getMessage());

@@ -4,7 +4,7 @@ import com.Database.Migration;
 import com.Database.MigrationSchema;
 import java.sql.SQLException;
 
-public class AA4CrearTablaCliente20250105 extends Migration {
+public class AA3CrearTablaCliente20250105 extends Migration {
 
     @Override
     public void up() {

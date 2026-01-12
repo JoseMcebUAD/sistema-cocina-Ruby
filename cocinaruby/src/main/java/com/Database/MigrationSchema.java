@@ -121,6 +121,21 @@ public class MigrationSchema {
             return this;
         }
 
+        // Crea una columna de tipo ENUM
+        public TableBuilder enumColumn(String name, String... values) {
+            // Construir la lista de valores entre comillas simples
+            StringBuilder enumValues = new StringBuilder();
+            for (int i = 0; i < values.length; i++) {
+                enumValues.append("'").append(values[i]).append("'");
+                if (i < values.length - 1) {
+                    enumValues.append(",");
+                }
+            }
+
+            columns.add(name + " ENUM(" + enumValues.toString() + ")");
+            return this;
+        }
+
         // Permite que la última columna agregada sea nula
         public TableBuilder nullable() {
             if (!columns.isEmpty()) {
@@ -163,6 +178,16 @@ public class MigrationSchema {
             return this;
         }
 
+        // Marca la última columna como PRIMARY KEY
+        public TableBuilder primary() {
+            if (!columns.isEmpty()) {
+                int lastIndex = columns.size() - 1;
+                String lastColumn = columns.get(lastIndex);
+                columns.set(lastIndex, lastColumn + " PRIMARY KEY");
+            }
+            return this;
+        }
+
         // Crea una llave foránea
         public TableBuilder foreign(String column, String refTable, String refColumn) {
             constraints.add("FOREIGN KEY (" + column + ") REFERENCES " + refTable + "(" + refColumn + ")");
@@ -190,6 +215,16 @@ public class MigrationSchema {
                 int lastIndex = constraints.size() - 1;
                 String lastConstraint = constraints.get(lastIndex);
                 constraints.set(lastIndex, lastConstraint + " ON DELETE SET NULL");
+            }
+            return this;
+        }
+
+        // Al actualizar el registro padre, actualiza los hijos
+        public TableBuilder onUpdateCascade() {
+            if (!constraints.isEmpty()) {
+                int lastIndex = constraints.size() - 1;
+                String lastConstraint = constraints.get(lastIndex);
+                constraints.set(lastIndex, lastConstraint + " ON UPDATE CASCADE");
             }
             return this;
         }

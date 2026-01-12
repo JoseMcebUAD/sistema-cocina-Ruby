@@ -20,7 +20,12 @@ public class AdminSeeder extends Seeder {
             // Insertar usuario administrador
             insertUsuario(1, 1, "admin", "$2a$05$xGhNUHEhe.MxD0LmvW/mAOm5ZqbhEEuan8RP1VFojRZrMWlpX3T6q");
 
-            System.out.println("✓ Usuario administrador insertado exitosamente");
+            //insertar los tipos de pago
+            insertTipoPago(1,"Efectivo");
+            insertTipoPago(2,"Transferencia");
+            insertTipoPago(3,"Tarjeta");
+
+            System.out.println("Seeders ejecutados exitosamente");
 
         } catch (SQLException e) {
             System.err.println("Error al ejecutar seeder: " + e.getMessage());
@@ -40,7 +45,6 @@ public class AdminSeeder extends Seeder {
             ps.setString(4, nombre);
             ps.setString(5, permisos);
             ps.executeUpdate();
-            System.out.println("  - Tipo de usuario insertado: " + nombre);
         }
     }
 
@@ -57,7 +61,20 @@ public class AdminSeeder extends Seeder {
             ps.setString(5, nombreUsuario);
             ps.setString(6, contrasena);
             ps.executeUpdate();
-            System.out.println("  - Usuario insertado: " + nombreUsuario);
         }
+    }
+    
+    private void insertTipoPago(int id, String nombreTipoPago) throws SQLException{
+        String sql = "INSERT INTO tipo_pago (id_tipo_pago, nombre_tipo_pago) " +
+                     "VALUES (?, ?) " +
+                     "ON DUPLICATE KEY UPDATE nombre_tipo_pago = ?";
+    
+        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ps.setString(2, nombreTipoPago);
+            ps.setString(3, nombreTipoPago);
+            ps.executeUpdate();
+        }
+        
     }
 }
