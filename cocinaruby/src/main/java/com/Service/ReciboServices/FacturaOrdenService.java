@@ -14,6 +14,7 @@ import com.github.anastaciocintra.output.PrinterOutputStream;
 
 import com.Config.Constants;
 import com.Model.ModeloDetalleOrden;
+import com.Model.ModeloOrden;
 import com.Model.DTO.ModeloFactura;
 import util.PrinterServiceHolder;
 

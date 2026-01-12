@@ -19,8 +19,8 @@ public abstract class BaseTest {
 
     @Before
     public void setUp() throws SQLException {
-        // Establecer conexión
-        CConexion con = new CConexion();
+        // Establecer conexión usando la base de datos de prueba
+        CConexion con = new CConexion("config-test.properties");
         connection = con.establecerConexionDb();
         migrationRecord = new MigrationRecord(connection);
 
@@ -43,7 +43,9 @@ public abstract class BaseTest {
     }
 
     /**
-     * Limpia todas las tablas de prueba
+     * Limpia todas las tablas de prueba.
+     * Como estamos usando una base de datos separada para tests,
+     * es seguro limpiar TODAS las migraciones.
      */
     protected void cleanupTestData() throws SQLException {
         try (Statement stmt = connection.createStatement()) {
@@ -66,9 +68,9 @@ public abstract class BaseTest {
                 }
             }
 
-            // Limpiar tabla de migraciones
+            // Limpiar TODAS las migraciones (seguro porque estamos en BD de prueba)
             try {
-                stmt.execute("DELETE FROM migrations WHERE version LIKE '9999%'");
+                stmt.execute("DELETE FROM migrations");
             } catch (SQLException e) {
                 // Ignorar si la tabla no existe
             }

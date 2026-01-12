@@ -6,12 +6,12 @@ import java.sql.Statement;
 import com.Database.Migration;
 import com.Database.MigrationSchema;
 
-public class AA10CrearViewOrdenes20260107 extends Migration {
+public class AA10CrearViewVentas20260107 extends Migration {
 
     @Override
     public void up() {
         String viewBuilder = """
-            CREATE OR REPLACE VIEW view_resumen_ordenes AS
+            CREATE OR REPLACE VIEW view_ventas AS
             SELECT 
                 o.id_orden,
                 o.idRel_tipo_pago, 
@@ -88,8 +88,8 @@ public class AA10CrearViewOrdenes20260107 extends Migration {
     @Override
     public void down() {
       try {
-            MigrationSchema.dropIfExists("view_resumen_ordenes", conexion);
-            System.out.println("Tabla 'view_resumen_ordenes' eliminada exitosamente");
+            MigrationSchema.dropIfExists("view_ventas", conexion);
+            System.out.println("Tabla 'view_ventas' eliminada exitosamente");
 
         } catch (SQLException e) {
             System.err.println("Error al eliminar la tabla: " + e.getMessage());

@@ -9,6 +9,9 @@ public final class Constants {
     public static final int ANCHO_TICKET = 40; // Ancho en caracteres del ticket térmico
     public static final String SEPARADOR_TICKET = "----------------------------------------"; // 40 caracteres
 
+    public static final String AUTH_URL = "auth.fxml";
+    public static final String MENU_URL = "menu.fxml";
+
 
     //numero de veces que se hashea un string
     public static final int EXP_COS = 5;
