@@ -5,7 +5,7 @@ import com.Database.MigrationSchema;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class AA7CrearTablaDetalleOrden20250105 extends Migration {
+public class AA6CrearTablaDetalleOrden20250105 extends Migration {
 
     @Override
     public void up() {
