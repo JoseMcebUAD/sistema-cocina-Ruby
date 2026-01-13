@@ -1,12 +1,13 @@
 package com.DAO.Daos;
 
 import com.DAO.BaseDAO;
+import com.DAO.Interfaces.ICreate;
 import com.DAO.Interfaces.IDelete;
 import com.DAO.Interfaces.IUpdate;
 import com.Model.ModeloOrden;
 import java.sql.*;
 
-public class OrdenDAO extends BaseDAO implements IDelete,IUpdate<ModeloOrden> {
+public class OrdenDAO extends BaseDAO implements IDelete,IUpdate<ModeloOrden>,ICreate<ModeloOrden> {
 
     public OrdenDAO() {
         super();
@@ -57,6 +58,30 @@ public class OrdenDAO extends BaseDAO implements IDelete,IUpdate<ModeloOrden> {
             PreparedStatement ps = conn.prepareStatement(sql)){
                 return ps.executeUpdate() > 0;
             }
+    }
+
+    @Override
+    public ModeloOrden create(ModeloOrden model) throws SQLException {
+        String sql = "INSERT INTO orden (idRel_tipo_pago, tipo_cliente, fecha_expedicion_orden, precio_orden, pago_cliente,facturado) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setInt(1, model.getIdRelTipoPago());
+            ps.setString(2, model.getTipoCliente());
+            ps.setTimestamp(3, new Timestamp(model.getFechaExpedicionOrden().getTime()));
+            ps.setDouble(4, model.getPrecioOrden());
+            ps.setDouble(5, model.getPagoCliente());
+            ps.setBoolean(6, model.getFacturado());
+            ps.executeUpdate();
+
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    model.setIdOrden(keys.getInt(1));
+                }
+            }
+        }
+        return model;
     }
 
 }
