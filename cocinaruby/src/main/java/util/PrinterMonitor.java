@@ -10,14 +10,14 @@ import com.Config.Constants;
  * Esta clase funciona para monitorear si la fokin impresora sirve o no, y para restaurar la conexion en dado caso que 
  * se vaya la luz, para no reiniciar el sistema
  */
-public class PrinterMonitor {
+public final class PrinterMonitor {
 
     //hacemos un timeout
     private static final ScheduledExecutorService scheduler =
         Executors.newSingleThreadScheduledExecutor();
 
     //funcionalidad para observar a la impresora
-    public static void start(){
+    public static final void start(){
         scheduler.scheduleAtFixedRate(() -> {
             try{
                 boolean isPrinterOnline = PrinterServiceHolder.INSTANCE.isPrinterActive();

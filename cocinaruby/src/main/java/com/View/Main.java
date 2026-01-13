@@ -8,40 +8,67 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import com.AppRunner;
-import util.UsuarioTokenSistema;
 
 /**
- * Clase Main para iniciar la aplicación Cocina Ruby
- * Usa AppRunner para inicializar la base de datos y utilidades del sistema
+ * Clase Main para iniciar la aplicación Cocina Ruby.
+ *
+ * Flujo de inicialización:
+ * 1. Crear instancia de AppRunner
+ * 2. agregar los config necesarios
+ * 5. (Opcional) Inicializar impresora
+ * 6. Cargar UI
+ * 7. Mostrar ventana
  */
 public class Main extends Application {
 
     private AppRunner app;
-    private UsuarioTokenSistema tokenSistema;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // Determinar vista a cargar
-        String fxmlPath = "/com/view/auth.fxml";
+        app = new AppRunner();
+        //verificamos que exits al base de datos
+        if (!app.initializeDatabase()) {
+            System.err.println("Fallo crítico: No se pudo conectar a la base de datos");
+            System.exit(1);
+            return;
+        }
+        //opcional
+        if (!app.initializeSession()) {
+            System.err.println("⚠ Advertencia: No se pudo inicializar la sesión");
+            System.err.println("   Se cargará la vista de autenticación por defecto");
+        }
 
-        // Inicializar AppRunner (inicializa DB, Parent y Scene)
-        app = new AppRunner(fxmlPath);
+        String fxmlPath = app.determineViewPath();
 
-        // Opcional: Inicializar impresora (descomentar si se necesita)
+        // opional para las impresoras
         // app.initializePrinterService();
         // app.startPrinterMonitor();
 
-        // Obtener Scene de AppRunner
+        // 6. Cargar UI (DESPUÉS de las configuraciones)
+        if (!app.loadUI(fxmlPath)) {
+            System.err.println("   Verifica que el archivo FXML exista: " + fxmlPath);
+            System.exit(1);
+            return;
+        }
+
+        // 7. Obtener Scene y configurar Stage
         Scene scene = app.getScene();
         scene.setFill(Color.TRANSPARENT);
 
-        // Configurar stage
+        // Configurar Stage
         primaryStage.setScene(scene);
-        primaryStage.setMaximized(true);
-        primaryStage.setResizable(false);
         primaryStage.setFullScreenExitHint("");
         primaryStage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
         primaryStage.initStyle(StageStyle.TRANSPARENT);
+
+        // Si carga menu.fxml, maximizar y no permitir redimensionar
+        // Si carga auth.fxml, permitir redimensionar
+        if (fxmlPath.contains("menu.fxml")) {
+            primaryStage.setMaximized(true);
+            primaryStage.setResizable(false);
+        } else {
+            primaryStage.setResizable(true);
+        }
 
         // Mostrar ventana
         primaryStage.show();
@@ -49,24 +76,19 @@ public class Main extends Application {
 
     @Override
     public void stop() throws Exception {
-        
-        // Guardar timestamp de cierre de sesión
-        System.out.println("cierre sesión 1");
+ 
+
         if (app != null) {
-            System.out.println("cierre sesión 2");
-            try {
-                app.setTokenUsuario();
-                System.out.println("✓ Timestamp de cierre guardado");
-            } catch (Exception e) {
-                System.err.println("⚠ Error al guardar timestamp: " + e.getMessage());
-            }
-            
-            // Detener monitor de impresora si está activo
-            app.stopPrinterMonitor();
-            app.closeDatabase();
+            // Guardar timestamp de cierre de sesión
+            app.saveSessionToken();
+
+            // Limpiar recursos (detiene printer monitor, cierra BD)
+            app.cleanup();
         }
+
         super.stop();
         System.out.println("✓ Aplicación cerrada correctamente");
+        System.out.println("========================================\n");
     }
 
     public static void main(String[] args) {

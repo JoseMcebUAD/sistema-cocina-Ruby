@@ -3,12 +3,10 @@ package com.Database;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.Database.MigrationLoader.MigrationFile;
 
 public class SeederLoader {
     private static final Pattern SEEDER_COMPILATION = Pattern.compile("^(.+)\\.java");
