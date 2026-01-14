@@ -13,7 +13,6 @@ public class AA3CrearTablaCliente20250105 extends Migration {
                 table.id("cliente");
                 table.string("nombre_cliente", 50).nullable();
                 table.string("direcciones", 400).nullable();
-                table.string("numero_tarjeta", 50).nullable();
                 table.string("telefono", 25).nullable();
             }, conexion);
 
