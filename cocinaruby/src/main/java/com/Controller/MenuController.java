@@ -2,6 +2,8 @@ package com.Controller;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+
+import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -21,13 +23,15 @@ public class MenuController implements Initializable {
 
     @FXML private BorderPane menuContainer;
     @FXML private ImageView exit,minimize;
-    @FXML private Label menu;
+    @FXML private Label menu,userNameLabel;
     @FXML private AnchorPane slider;
     @FXML private StackPane content;
+    @FXML private StackPane sliderWrapper;
     @FXML private Button btnCorteCaja, ordersButton, salesButton, clientsButton, stopSalesButton;
-    private double originalWidth;
     private Button currentActiveButton;
     private boolean stopSales = false;
+    private double sidebarWidth;
+    private boolean sidebarOpen = true;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -72,9 +76,11 @@ public class MenuController implements Initializable {
     }
 
     private void setUpSliderFunction() {
-        originalWidth = slider.getPrefWidth();
-        slider.setMinWidth(0);
-    }
+    sidebarWidth = slider.getPrefWidth();
+    sliderWrapper.setMinWidth(0);
+    sliderWrapper.setPrefWidth(sidebarWidth);
+    sliderWrapper.setMaxWidth(sidebarWidth);
+    }   
 
     private void setUpExitButton() {
         exit.fitWidthProperty().bind(menuContainer.widthProperty().multiply(0.025));
@@ -94,7 +100,7 @@ public class MenuController implements Initializable {
     }
 
     public void setUpMenuFunction() {
-        menu.setOnMouseClicked(e -> animateSlider(!slider.isVisible()));
+        menu.setOnMouseClicked(e -> animateSlider());
     }
 
     private void setUpStopSalesButton(){
@@ -105,6 +111,7 @@ public class MenuController implements Initializable {
             }
         });
     }
+    
     private void setUpOrdersButton(){
         ordersButton.setOnAction(e -> loadView("/com/view/order.fxml", ordersButton));
     }
@@ -126,27 +133,21 @@ public class MenuController implements Initializable {
         setUpStopSalesButton();
     }
 
-    private void animateSlider(boolean open) {
-    if (open) {
-        slider.setVisible(true);
-        slider.setManaged(true);
-    }
-    
-    Timeline timeline = new Timeline();
-    double targetWidth = open ? originalWidth : 0;
-    
-    KeyValue kv = new KeyValue(slider.prefWidthProperty(), targetWidth);
-    KeyFrame kf = new KeyFrame(Duration.millis(300), kv);
-    
-    timeline.getKeyFrames().add(kf);
-    timeline.setOnFinished(e -> {
-        if (!open) {
-            slider.setVisible(false);
-            slider.setManaged(false);
+    private void animateSlider() {
+    if (sidebarOpen) {
+        Timeline close = new Timeline(new KeyFrame(Duration.millis(300),new KeyValue(slider.translateXProperty(),-slider.getWidth(),Interpolator.EASE_BOTH)
+        ));
+        close.setOnFinished(e -> {menuContainer.setLeft(null);  slider.setTranslateX(0);});
+        close.play();
+        } else {
+            menuContainer.setLeft(sliderWrapper);
+            slider.setTranslateX(-slider.getWidth());
+            Timeline open = new Timeline(new KeyFrame(Duration.millis(300),new KeyValue(slider.translateXProperty(),0,Interpolator.EASE_BOTH)
+            ));
+            open.play();
         }
-    });
-    timeline.play();
-}
+        sidebarOpen = !sidebarOpen;
+    }
 
     public void setFontSize() {
         menuContainer.sceneProperty().addListener((obs, oldScene, scene) -> {
@@ -164,4 +165,5 @@ public class MenuController implements Initializable {
     minimize.setCursor(javafx.scene.Cursor.HAND);
     menu.setCursor(javafx.scene.Cursor.HAND);
 }
+
 }

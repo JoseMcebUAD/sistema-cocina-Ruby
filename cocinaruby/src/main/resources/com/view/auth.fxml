@@ -3,14 +3,12 @@
 <?import java.lang.String?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
@@ -57,17 +55,6 @@
                </padding>
             </StackPane>
          </center>
-         <bottom>
-            <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-               <children>
-                  <Label fx:id="footerText" styleClass="authlabel" stylesheets="@css/styles.css" text="No tienes usuario?" />
-                  <Hyperlink fx:id="footerLink" onAction="#handleHyperlink" stylesheets="@css/styles.css" text="Crea un usuario" />
-               </children>
-               <BorderPane.margin>
-                  <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
-               </BorderPane.margin>
-            </HBox>
-         </bottom>
       </BorderPane>
       <ImageView fx:id="exit" fitHeight="27.0" fitWidth="27.0" pickOnBounds="true" preserveRatio="true" styleClass="exit" StackPane.alignment="TOP_RIGHT">
          <image>

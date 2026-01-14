@@ -19,17 +19,26 @@
          <children>
             <HBox fx:id="buttonBar" alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="20.0">
                <children>
-                  <Label styleClass="generallabel" text="Nombre del cliente: " />
+                  <Label styleClass="generallabel" text="CLIENTE:" />
                   <TextField fx:id="nameField" styleClass="datefield" />
-                  <Label styleClass="generallabel" text="Direccion:" />
+                  <Label styleClass="generallabel" text="DIRECCIÓN" />
                   <TextField fx:id="addressField" styleClass="datefield" />
-                  <Label styleClass="generallabel" text="Telefono:" />
+                  <Label styleClass="generallabel" text="TELÉFONO" />
                   <TextField fx:id="phoneField" styleClass="datefield" />
+                  <Button fx:id="clearButton" contentDisplay="RIGHT" mnemonicParsing="false" styleClass="generalbutton" text="LIMPIAR">
+                     <graphic>
+                        <ImageView fitHeight="27.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/Escoba.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </Button>
                </children>
             </HBox>
             <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="50.0">
                <children>
-                  <Button fx:id="addButton" contentDisplay="RIGHT" mnemonicParsing="false" styleClass="generalbutton" text="Agregar">
+                  <Button fx:id="addButton" contentDisplay="RIGHT" mnemonicParsing="false" styleClass="generalbutton" text="AGREGAR">
                      <graphic>
                         <ImageView fitHeight="27.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -37,7 +46,7 @@
                            </image>
                         </ImageView>
                      </graphic></Button>
-                  <Button fx:id="editButton" contentDisplay="RIGHT" mnemonicParsing="false" styleClass="generalbutton" text="Editar">
+                  <Button fx:id="editButton" contentDisplay="RIGHT" mnemonicParsing="false" styleClass="generalbutton" text="EDITAR">
                      <graphic>
                         <ImageView fitHeight="27.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -45,7 +54,7 @@
                            </image>
                         </ImageView>
                      </graphic></Button>
-                  <Button fx:id="deleteButton" contentDisplay="RIGHT" mnemonicParsing="false" styleClass="generalbutton" text="Eliminar">
+                  <Button fx:id="deleteButton" contentDisplay="RIGHT" mnemonicParsing="false" styleClass="generalbutton" text="ELIMINAR">
                      <graphic>
                         <ImageView fitHeight="27.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -69,9 +78,9 @@
          <children>
             <TableView fx:id="clienteTable" prefHeight="69.0" prefWidth="750.0" styleClass="table">
                <columns>
-                  <TableColumn editable="false" prefWidth="75.0" sortable="false" text="Cliente" />
-                  <TableColumn editable="false" prefWidth="75.0" sortable="false" text="Dirección" />
-                  <TableColumn editable="false" prefWidth="75.0" sortable="false" text="Teléfono" />
+                  <TableColumn editable="false" prefWidth="75.0" sortable="false" text="CLIENTE" />
+                  <TableColumn editable="false" prefWidth="75.0" sortable="false" text="DIRECCIÓN" />
+                  <TableColumn editable="false" prefWidth="75.0" sortable="false" text="TELÉFONO" />
                </columns>
                <StackPane.margin>
                   <Insets top="20.0" />
@@ -89,7 +98,7 @@
    <bottom>
       <HBox fx:id="confirmBar" alignment="TOP_CENTER" managed="false" prefHeight="100.0" prefWidth="200.0" visible="false" BorderPane.alignment="CENTER">
          <children>
-            <Button fx:id="confirmButton" contentDisplay="RIGHT" mnemonicParsing="false" styleClass="generalbutton" text="Confirmar">
+            <Button fx:id="confirmButton" contentDisplay="RIGHT" mnemonicParsing="false" styleClass="generalbutton" text="CONFIRMAR">
                <graphic>
                   <ImageView fitHeight="27.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
                      <image>

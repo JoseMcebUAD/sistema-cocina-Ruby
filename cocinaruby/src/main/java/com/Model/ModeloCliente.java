@@ -8,7 +8,6 @@ public class ModeloCliente {
     private int idCliente;
     private String nombreCliente;
     private String direcciones;
-    private String numeroTarjeta;
     private String telefono;
 
     public int getIdCliente() {
@@ -34,15 +33,7 @@ public class ModeloCliente {
     public void setDirecciones(String direcciones) {
         this.direcciones = direcciones;
     }
-
-    public String getNumeroTarjeta() {
-        return numeroTarjeta;
-    }
-
-    public void setNumeroTarjeta(String numeroTarjeta) {
-        this.numeroTarjeta = numeroTarjeta;
-    }
-
+    
     public String getTelefono() {
         return telefono;
     }

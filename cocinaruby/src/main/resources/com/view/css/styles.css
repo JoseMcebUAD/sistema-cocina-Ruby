@@ -3,7 +3,7 @@
    ========================================= */
 
 .auth-container {
-    -fx-background-color: linear-gradient(to bottom right, #D35400, #E67E22, #F39C12);
+    -fx-background-color: linear-gradient(to bottom right, #d30700, #e62222, #f31912);
     -fx-alignment: center;
     -fx-background-radius: 20;
     -fx-padding: 10;
@@ -36,19 +36,8 @@
     -fx-text-fill: #C0392B;
 }
 
-.hyperlink {
-    -fx-text-fill: #E67E22;
-    -fx-font-weight: bold;
-    -fx-border-color: transparent;
-}
-
-.hyperlink:hover {
-    -fx-text-fill: #A04000;
-    -fx-underline: true;
-}
-
 .auth-button {
-    -fx-background-color: linear-gradient(to right, #E67E22, #D35400);
+    -fx-background-color: linear-gradient(to right, #e62522, #d31900);
     -fx-background-radius: 14;
     -fx-text-fill: white;
     -fx-font-size: 15px;
@@ -71,17 +60,20 @@
    ========================================= */
 
 .menubar-pane {
-    -fx-background-color: #A04000;
+    -fx-background-color: linear-gradient(to bottom, #A04000, #ca2e2e,#bd3535);
     -fx-min-height: 60px;
 }
 
-#menutopbackground{
-
+#menutopbackground {
+-fx-background-color: linear-gradient(to right, #faedd3, #f6deb5,#eec99c);
+    -fx-border-color: #b07a2a;
+    -fx-border-width: 0 0 2 0;
 }
 
 .menulabel {
     -fx-padding: 15 20;
     -fx-font-size: 1.2em;
+    -fx-font-weight: bold;
     -fx-text-fill: #A04000; /* Texto del label 'Menu' */
     -fx-border-color: transparent;
 }
@@ -116,34 +108,37 @@
     -fx-opacity: 0.6;
 }
 
-/* =========================================
-   SIDEBAR (FXML Menu Left)
-   ========================================= */
-
 .sidebar {
-    -fx-background-color: #A04000;
+    -fx-background-color: #B73229;
 }
 
 .sidebar-item {
     -fx-background-color: transparent;
-    -fx-text-fill: #FBEEE6;
+    -fx-text-fill: #FADBD8;
     -fx-font-size: 1.2em;
-    -fx-padding: 15 20;
-    -fx-border-width: 0px 0px 0px 4px;
-    -fx-border-color: transparent;
+    -fx-padding: 15 20 15 25;
     -fx-cursor: hand;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-transition: 0.2s;
+    -fx-font-weight: bold; 
+    -fx-max-width: Infinity;
 }
 
 .sidebar-item:hover {
-    -fx-background-color: #D35400;
-    -fx-border-color: white;
+    -fx-background-color: #F9F1E7; 
+    -fx-text-fill: #B73229;       
+    -fx-background-radius: 30 0 0 30; 
+    -fx-background-insets: 0 0 0 10; 
+    -fx-margin: 0; 
 }
 
 .sidebar-item-active {
-    -fx-background-color: #D35400;
-    -fx-text-fill: white;
-    -fx-border-color: white;
-    -fx-opacity: 1.0;
+    -fx-background-color: #F9F1E7; 
+    -fx-text-fill: #B73229;        
+    -fx-background-radius: 30 0 0 30;
+    -fx-background-insets: 0 0 0 10; 
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, -2, 0);
 }
 
 /* =========================================
@@ -184,7 +179,7 @@
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-background-radius: 10;
-    -fx-padding: 8 20;
+    -fx-padding: 10 10 10 10;
     -fx-cursor: hand;
     -fx-transition: 0.3s;
 }
@@ -260,7 +255,6 @@
 
 .text-field:focused {
     -fx-border-color: #E67E22;
-    -fx-border-width: 1.5;
 }
 
 .text-field:disabled, 
@@ -270,9 +264,8 @@
     -fx-background-color: #F8F9F9; 
 }
 
-/* SALES  */
 #salesbackground,#clientsbackground, #orderbackground {
-    -fx-background-color: rgba(230, 126, 34, 0.05); 
+-fx-background-color: linear-gradient(to bottom, #faedd3, #f6deb5,#eec99c);
 }
 
 #salestopbackground, #clientstopbackground, #ordertopbackground{
@@ -316,10 +309,328 @@
 }
 
 .table .table-row-cell:selected {
-    -fx-background-color: #FDEDEC;
+    -fx-background-color: #ecaf8a;
     -fx-text-fill: #A04000;
 }
 
 .table .table-row-cell:filled:hover {
-    -fx-background-color: #FBEEE6;
+    -fx-background-color: #ecaf8a;
+}
+
+/* =========================================
+   VISTA: DETALLES DE EFECTIVO (CASH)
+   ========================================= */
+
+#cash-root {
+    -fx-background-color: #F9F1E7; 
+    -fx-border-color: #B73229;
+    -fx-border-width: 3;
+}
+
+.cash-label {
+    -fx-font-size: 1.1em;
+    -fx-font-weight: bold;
+    -fx-text-fill: #5D4037;
+    -fx-min-width: 200;
+}
+
+.cash-field-read {
+    -fx-background-color: #EBEDEF;
+    -fx-text-fill: #2E4053;
+    -fx-font-weight: bold;
+    -fx-border-color: #D5C4B0;
+    -fx-border-width: 2; 
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-background-insets: 0;
+}
+
+.cash-field-input {
+    -fx-background-color: white;
+    -fx-text-fill: #2E4053;
+    -fx-font-weight: bold;
+    -fx-border-color: #D5C4B0;
+    -fx-border-width: 2;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-background-insets: 0;
+}
+
+.cash-field-input:focused {
+    -fx-background-color: white;
+    -fx-border-color: #3498DB;
+    -fx-border-width: 2;      
+    -fx-background-insets: 0; 
+    -fx-text-fill: #3498DB;
+}
+
+.cash-btn-confirm {
+    -fx-background-color: #27AE60;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+}
+
+.cash-btn-confirm:hover {
+    -fx-background-color: #1E8449;
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.cash-btn-cancel {
+    -fx-background-color: #C0392B;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+}
+
+.cash-btn-cancel:hover {
+    -fx-background-color: #922B21;
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+/* =========================================
+   VISTA: CORTE DE CAJA (STOPSALES)
+   ========================================= */
+
+#stopSales-root {
+    -fx-background-color: #F9F1E7;
+    -fx-border-color: #B73229;    
+    -fx-border-width: 3;
+    -fx-background-radius: 15;
+    -fx-border-radius: 15;
+}
+
+.stopSales-title {
+    -fx-font-size: 1.4em;
+    -fx-font-weight: bold;
+    -fx-text-fill: #B73229;
+}
+
+.stopSales-text {
+    -fx-font-size: 1.1em;
+    -fx-text-fill: #5D4037;
+    -fx-text-alignment: center;
+}
+
+.stopSales-btn-confirm {
+    -fx-background-color: #27AE60;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10;
+    -fx-border-color: transparent;
+    -fx-border-width: 2;
+    -fx-background-insets: 0;
+    -fx-cursor: hand;
+}
+
+.stopSales-btn-confirm:hover {
+    -fx-background-color: #1E8449;
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.stopSales-btn-cancel {
+    -fx-background-color: #B73229;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10;
+    -fx-border-color: transparent;
+    -fx-border-width: 2;
+    -fx-background-insets: 0;
+    -fx-cursor: hand;
+}
+
+.stopSales-btn-cancel:hover {
+    -fx-background-color: #922B21;
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.stopSales-btn-confirm:focused, .stopSales-btn-cancel:focused {
+    -fx-background-insets: 0;
+    -fx-border-color: #FF8D4D;
+}
+
+/* =========================================
+   VISTA: CONFIRMACIÓN DE ORDEN (confirmOrder)
+   ========================================= */
+
+#confirmOrder-root {
+    -fx-background-color: transparent;
+}
+
+
+#confirmorder-container{
+    -fx-background-color: #f5ead2;
+    -fx-border-color: #B73229;
+    -fx-border-width: 3;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+}
+
+.confirmOrder-header-label {
+    -fx-font-size: 1.3em;
+    -fx-font-weight: bold;
+    -fx-text-fill: #B73229;
+    -fx-alignment: CENTER;
+    -fx-max-width: Infinity;
+    -fx-padding: 0 0 10 0;
+}
+
+.confirmOrder-label {
+    -fx-font-size: 1.1em;
+    -fx-font-weight: bold;
+    -fx-text-fill: #5D4037;
+    -fx-min-width: 180;
+}
+
+.confirmOrder-field-read {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #2E4053;
+    -fx-font-weight: bold;
+    -fx-border-color: #D5C4B0;
+    -fx-border-width: 2;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-background-insets: 0;
+}
+
+.confirmOrder-field-total {
+    -fx-background-color: #FFFDFB;
+    -fx-text-fill: #E67E22;
+    -fx-font-size: 1.2em;
+    -fx-font-weight: bold;
+    -fx-border-color: #E67E22;
+    -fx-border-width: 2;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-background-insets: 0;
+}
+
+.confirmOrder-btn-success {
+    -fx-background-color: #27AE60;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+    -fx-background-insets: 0;
+}
+
+.confirmOrder-btn-success:hover {
+    -fx-background-color: #1E8449;
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.confirmOrder-btn-back {
+    -fx-background-color: #5D4037;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+    -fx-background-insets: 0;
+}
+
+.confirmOrder-btn-back:hover {
+    -fx-background-color: #3E2723;
+}
+
+
+
+
+/* =========================================
+   VISTA: ERROR DE ORDEN (errorOrder)
+   ========================================= */
+
+#errorOrder-root {
+    -fx-background-color: #F9F1E7; 
+    -fx-border-color: #C0392B;     
+    -fx-border-width: 3;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+}
+
+.errorOrder-title {
+    -fx-font-size: 1.3em;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C0392B;
+}
+
+.errorOrder-text {
+    -fx-font-size: 1.12em;
+    -fx-font-weight: bold;
+    -fx-text-fill: #5D4037;
+    -fx-text-alignment: center;
+}
+
+.errorOrder-btn-confirm {
+    -fx-background-color: #E67E22; 
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+    -fx-border-width: 2;
+    -fx-background-insets: 0;
+}
+
+.errorOrder-btn-confirm:hover {
+    -fx-background-color: #D35400;
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.errorOrder-btn-confirm:focused {
+    -fx-background-insets: 0;
+    -fx-border-color: #C0392B;
+}
+
+/* =========================================
+   VISTA: ERROR BASE DE DATOS (errorOrderBD)
+   ========================================= */
+
+#errorBD-root {
+    -fx-background-color: #F9F1E7;
+    -fx-border-color: #922B21;    
+    -fx-border-width: 4;           
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+}
+
+.errorBD-title {
+    -fx-font-size: 1.4em;
+    -fx-font-weight: bold;
+    -fx-text-fill: #922B21; 
+}
+
+.errorBD-text {
+    -fx-font-size: 1.12em;
+    -fx-text-fill: #5D4037; 
+    -fx-text-alignment: center;
+}
+
+.errorBD-btn-action {
+    -fx-background-color: #5D4037;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+    -fx-border-width: 2;
+    -fx-background-insets: 0;
+}
+
+.errorBD-btn-action:hover {
+    -fx-background-color: #3E2723;
+    -fx-scale-x: 1.03;
+    -fx-scale-y: 1.03;
+}
+
+.errorBD-btn-action:focused {
+    -fx-background-insets: 0;
+    -fx-border-color: #FF8D4D; 
 }
