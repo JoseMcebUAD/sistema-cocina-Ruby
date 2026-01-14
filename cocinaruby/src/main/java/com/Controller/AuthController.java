@@ -54,17 +54,7 @@ public class AuthController implements Initializable{
 
     private boolean registerMode= false;
     private UserService userService = new UserService();
-
-    @FXML
-    private void handleHyperlink() {
-        animateText(titlelabel,registerMode ? "Iniciar Sesión" : "Crear Usuario");
-        animateText(subtitlelabel,registerMode ? "Accede con tu usuario" : "Crea un nuevo usuario");
-        animateText(formButton,registerMode ? "Entrar" : "Crear");
-        footerText.setText(registerMode ? "¿No tienes usuario?" : "¿Ya tienes un usuario?");
-        footerLink.setText(registerMode ? "Crea un usuario" : "Inicia sesión");
-        registerMode = !registerMode;
-    }
-
+    
     @FXML
     private void handleSubmit(ActionEvent event) {
         if (registerMode) {
