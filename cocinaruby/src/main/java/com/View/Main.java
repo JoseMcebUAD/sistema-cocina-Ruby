@@ -1,8 +1,6 @@
 package com.View;
 
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.paint.Color;
@@ -23,16 +21,29 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Parent root= FXMLLoader.load(getClass().getResource("/com/view/menu.fxml"));
-        Scene scene = new Scene(root);
+        // Determinar vista a cargar
+        String fxmlPath = "/com/view/auth.fxml";
+
+        // Inicializar AppRunner (inicializa DB, Parent y Scene)
+        app = new AppRunner(fxmlPath);
+
+        // Opcional: Inicializar impresora (descomentar si se necesita)
+        // app.initializePrinterService();
+        // app.startPrinterMonitor();
+
+        // Obtener Scene de AppRunner
+        Scene scene = app.getScene();
         scene.setFill(Color.TRANSPARENT);
+
+        // Configurar stage
         primaryStage.setScene(scene);
-        //Si vas a cargar el login quita setMaximized(true); y setResizable(false);
         primaryStage.setMaximized(true);
         primaryStage.setResizable(false);
         primaryStage.setFullScreenExitHint("");
         primaryStage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
         primaryStage.initStyle(StageStyle.TRANSPARENT);
+
+        // Mostrar ventana
         primaryStage.show();
     }
 
@@ -62,3 +73,4 @@ public class Main extends Application {
         launch(args);
     }
 }
+
