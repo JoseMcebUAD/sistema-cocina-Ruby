@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane id="confirmOrder-root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="481.0" prefWidth="539.0" stylesheets="@../../css/styles.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.Controller.popup.order.confirmOrderController">
+   <center>
+      <VBox id="confirmorder-container" prefWidth="532.0" spacing="15.0" BorderPane.alignment="CENTER">
+         <children>
+            <Label styleClass="confirmOrder-header-label" text="RESUMEN DE CONFIRMACIÓN" />
+            
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+               <children>
+                  <Label styleClass="confirmOrder-label" text="CLIENTE:" />
+                  <TextField fx:id="clientNameField" editable="false" prefHeight="40.0" styleClass="confirmOrder-field-read" HBox.hgrow="ALWAYS" />
+               </children>
+            </HBox>
+            
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+               <children>
+                  <Label styleClass="confirmOrder-label" text="TIPO DE SERVICIO:" />
+                  <TextField fx:id="orderTypeField" editable="false" prefHeight="40.0" prefWidth="200.0" styleClass="confirmOrder-field-read" />
+               </children>
+            </HBox>
+
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+               <children>
+                  <Label styleClass="confirmOrder-label" text="MÉTODO DE PAGO:" />
+                  <ComboBox fx:id="paymentMethodCombo" prefHeight="40.0" prefWidth="200.0" promptText="SELECCIONAR" styleClass="confirmOrder-field-read">
+                     <padding>
+                        <Insets bottom="10.0" top="10.0" />
+                     </padding></ComboBox>
+               </children>
+            </HBox>
+            
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+               <children>
+                  <Label styleClass="confirmOrder-label" text="TOTAL A PAGAR:" />
+                  <TextField fx:id="totalField" alignment="CENTER_RIGHT" editable="false" prefHeight="40.0" prefWidth="200.0" styleClass="confirmOrder-field-total" />
+               </children>
+            </HBox>
+            
+                  <HBox fx:id="cashDetailsBox" alignment="CENTER_LEFT" spacing="10.0" visible="false">
+               <children>
+                  <Label styleClass="confirmOrder-label" text="CLIENTE PAGARÁ con:" />
+                  <TextField fx:id="amountPaidField" prefHeight="40.0" prefWidth="200.0" promptText="0.00" styleClass="confirmOrder-field-read" />
+               </children>
+            </HBox>
+
+            <HBox alignment="CENTER" prefHeight="80.0" prefWidth="550.0" spacing="30.0">
+               <children>
+                  <Button fx:id="confirmButton" mnemonicParsing="false" styleClass="confirmOrder-btn-success" text="CONFIRMAR PEDIDO">
+                     <padding>
+                        <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
+                     </padding>
+                  </Button>
+                  <Button fx:id="backButton" mnemonicParsing="false" styleClass="confirmOrder-btn-back" text="REGRESAR">
+                     <padding>
+                        <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
+                     </padding>
+                  </Button>
+               </children>
+               <VBox.margin>
+                  <Insets bottom="10.0" top="20.0" />
+               </VBox.margin>
+            </HBox>
+         </children>
+         <padding>
+            <Insets left="30.0" right="30.0" top="30.0" />
+         </padding>
+      </VBox>
+   </center>
+</BorderPane>

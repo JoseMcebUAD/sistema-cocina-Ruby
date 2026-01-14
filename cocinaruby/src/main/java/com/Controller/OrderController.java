@@ -18,49 +18,53 @@ import javafx.util.Duration;
 public class OrderController implements Initializable {
     @FXML private BorderPane mainRoot;
     @FXML private VBox clientBar;
-    @FXML private Button addProductButton, cardButton, cashButton, deliveryButton, dineinButton, 
-    makeOrderButton, selectClientButton, transferButton;
+    @FXML private Button addProductButton, deliveryButton, dineinButton, 
+    makeOrderButton, selectClientButton;
     @FXML private TextField addressField, clientNameField, phoneNumberField, priceField, 
     productField, quantityField;
     @FXML private Label grandTotalLabel;
     @FXML private TableView<?> productsTable;
+    private double xOffset = 0;
+    private double yOffset = 0;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setUpAllButtons();
-        // Configuraciones iniciales
+        setUpValidations();
         showClientBar(false);
         selectOrderType(dineinButton);
-        selectPaymentMethod(cashButton);
     }
 
     private void setUpAllButtons() {
-        deliveryButton.setOnAction(e -> {
+        setUpDeliveryButton();
+        setUpDineinButton();
+        setUpselectClientButton();
+        setUpMakeOrderButton();
+    }
+
+    private void setUpDeliveryButton(){
+            deliveryButton.setOnAction(e -> {
             showClientBar(true);
             selectOrderType(deliveryButton);
         });
-        
-        dineinButton.setOnAction(e -> {
-            showClientBar(false);
-            selectOrderType(dineinButton);
-        });
+    }
 
-        selectClientButton.setOnAction(e -> openClientsView());
-        cashButton.setOnAction(e -> selectPaymentMethod(cashButton));
-        cardButton.setOnAction(e -> selectPaymentMethod(cardButton));
-        transferButton.setOnAction(e -> selectPaymentMethod(transferButton));
-        
-        makeOrderButton.setOnAction(e -> {
-            if (cashButton.getStyleClass().contains("order-button-active")) {
-                openCashPopup();
-            } else {
-                openConfirmationView();
-            }
+    private void setUpDineinButton(){
+            dineinButton.setOnAction(e -> {
+            selectOrderType(dineinButton);
         });
     }
 
+    private void setUpselectClientButton(){
+        selectClientButton.setOnAction(e -> openClientsView());
+    }
+
+    private void setUpMakeOrderButton(){
+        makeOrderButton.setOnAction(e-> openConfirmationView());
+    }
+
+
     private void showClientBar(boolean show) {
-        // Al usar managed(false), el BorderPane ignora este elemento para el cálculo del centro
         clientBar.setVisible(show);
         clientBar.setManaged(show);
         
@@ -72,12 +76,12 @@ public class OrderController implements Initializable {
         }
     }
 
-    private void selectOrderType(Button selected) {
-        toggleGroupStyle(selected, dineinButton, deliveryButton); 
+    private void setUpValidations(){
+
     }
 
-    private void selectPaymentMethod(Button selected) {
-        toggleGroupStyle(selected, cashButton, cardButton, transferButton);
+    private void selectOrderType(Button selected) {
+        toggleGroupStyle(selected, dineinButton, deliveryButton); 
     }
 
     private void toggleGroupStyle(Button activeBtn, Button... group) {
@@ -88,33 +92,54 @@ public class OrderController implements Initializable {
     }
 
     private void openClientsView() {
-        showModal("/com/view/clients.fxml", "Seleccionar Cliente", 1000, 600);
-    }
-
-    private void openCashPopup() {
-        showModal("/com/view/cashDetails.fxml", "Detalles de Pago", 500, 400);
+        showView("/com/view/clients.fxml", "Seleccionar Cliente", 1000, 600);
     }
 
     private void openConfirmationView() {
-        showModal("/com/view/confirmOrder.fxml", "Confirmar Pedido", 600, 450);
+        showModal("/com/view/pop-up/order/confirmOrder.fxml", "Detalles de Pago", 539, 481);
     }
 
+
     private void showModal(String fxmlPath, String title, double width, double height) {
+        createStage(fxmlPath, title, width, height, javafx.stage.StageStyle.TRANSPARENT, true);
+    }
+
+    private void showView(String fxmlPath, String title, double width, double height) {
+        createStage(fxmlPath, title, width, height, javafx.stage.StageStyle.DECORATED, true);
+    }
+
+    private void createStage(String fxmlPath, String title, double width, double height, javafx.stage.StageStyle style, boolean isModal) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Parent root = loader.load();
-            
             if (fxmlPath.contains("clients")) {
                 ClientsController controller = loader.getController();
                 controller.setParentController(this);
                 controller.showConfirmBar();
             }
-
             Stage stage = new Stage();
+            if (style == javafx.stage.StageStyle.TRANSPARENT) {
+                stage.initStyle(javafx.stage.StageStyle.TRANSPARENT);
+                Scene scene = new Scene(root);
+                scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
+                stage.setScene(scene);
+                root.setOnMousePressed(event -> {
+                    xOffset = event.getSceneX();
+                    yOffset = event.getSceneY();
+                });
+                root.setOnMouseDragged(event -> {
+                    stage.setX(event.getScreenX() - xOffset);
+                    stage.setY(event.getScreenY() - yOffset);
+                });
+            } else {
+                stage.initStyle(style);
+                stage.setScene(new Scene(root));
+            }
+            if (isModal) {
+                stage.initModality(Modality.APPLICATION_MODAL);
+                stage.initOwner(mainRoot.getScene().getWindow());
+            }
             stage.setTitle(title);
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.initOwner(mainRoot.getScene().getWindow()); 
-            stage.setScene(new Scene(root));
             stage.setWidth(width); 
             stage.setHeight(height);
             stage.setResizable(false);
