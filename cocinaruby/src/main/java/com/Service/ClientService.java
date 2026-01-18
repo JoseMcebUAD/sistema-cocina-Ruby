@@ -70,5 +70,28 @@ public class ClientService {
         }
     }
 
+    public ModeloCliente findOrRegister(ModeloCliente posibleCliente) {
+        try {
+            List<ModeloCliente> clientes = clienteDAO.all();
+            
+            // 1. Buscar si ya existe (Prioridad al Teléfono)
+            for (ModeloCliente c : clientes) {
+                // Verificamos si coincide el teléfono (ignorando vacíos)
+                if (!c.getTelefono().equals("0") && c.getTelefono().equals(posibleCliente.getTelefono())) {
+                    return c;
+                }
+                // Opcional: Verificamos por nombre si el teléfono no coincidió
+                if (c.getNombreCliente().equalsIgnoreCase(posibleCliente.getNombreCliente())) {
+                    return c;
+                }
+            }
+            System.out.println("Cliente nuevo detectado en orden. Registrando...");
+            return clienteDAO.create(posibleCliente);
+
+        } catch (SQLException e) {
+            System.err.println("Error en findOrRegister: " + e.getMessage());
+            return null;
+        }
+    }
 
 }

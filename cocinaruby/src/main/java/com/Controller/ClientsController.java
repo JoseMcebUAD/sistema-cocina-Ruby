@@ -198,7 +198,13 @@ public class ClientsController implements Initializable {
                 String nombreTest = nameField.getText().isEmpty() ? "Cliente de Prueba" : nameField.getText();
                 String dirTest = addressField.getText().isEmpty() ? "Calle Falsa 123" : addressField.getText();
                 String telTest = phoneField.getText().isEmpty() ? "555-0123" : phoneField.getText();
-                parentController.setClientData(nombreTest, dirTest, telTest);
+                int clientId = 0;
+                ModeloCliente selected = clienteTable.getSelectionModel().getSelectedItem();
+                if (selected != null) {
+                    // (Opcional: podrías validar que el nombre en el campo coincida con el de la tabla)
+                    clientId = selected.getIdCliente(); 
+                }
+                parentController.setClientData(clientId,nombreTest, dirTest, telTest);
             }
             Stage stage = (Stage) confirmButton.getScene().getWindow();
             stage.close();
@@ -286,6 +292,7 @@ public class ClientsController implements Initializable {
             return matchName && matchPhone;
         });
     }
+    
 
         
 

@@ -196,7 +196,12 @@ public class OrdenMesaDAO extends BaseDAO implements ICrud<ModeloOrdenMesa>{
         orden.setIdOrden(rs.getInt("id_orden"));
         orden.setIdRelTipoPago(rs.getInt("idRel_tipo_pago"));
         orden.setTipoCliente(rs.getString("tipo_cliente"));
-        orden.setFechaExpedicionOrden(rs.getTimestamp("fecha_expedicion_orden"));
+        Timestamp ts = rs.getTimestamp("fecha_expedicion_orden");
+        if (ts != null) {
+            orden.setFechaExpedicionOrden(ts.toLocalDateTime());
+        } else {
+            orden.setFechaExpedicionOrden(null);
+        }
         orden.setPrecioOrden(rs.getDouble("precio_orden"));
         orden.setPagoCliente(rs.getDouble("pago_cliente"));
         orden.setFacturado(rs.getBoolean("facturado"));

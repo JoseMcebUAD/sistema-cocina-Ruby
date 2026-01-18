@@ -1,10 +1,25 @@
 package com.Controller.popup.order;
-
+import com.Controller.OrderController;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.ResourceBundle;
+
+import com.Model.ModeloDetalleOrden;
+import com.Model.ModeloOrden;
+import com.Model.DTO.ModeloOrdenCompleta;
+import com.Model.Enum.TiposClienteEnum;
+import com.Model.Orden.ModeloOrdenDomicilio;
+import com.Model.Orden.ModeloOrdenMesa;
+import com.Model.Orden.ModeloOrdenMostrador;
+import com.Service.OrderService;
+import com.Model.ModeloTipoPago;
+import com.Model.ModeloCliente;
+import com.Service.ClientService;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
@@ -17,15 +32,23 @@ import javafx.stage.Stage;
 public class confirmOrderController implements Initializable {
     @FXML
     private Button backButton, confirmButton;
-
     @FXML
     private TextField clientNameField, orderTypeField, totalField, amountPaidField;
-
     @FXML
-    private ComboBox<String> paymentMethodCombo;
-
+    private ComboBox<ModeloTipoPago> paymentMethodCombo;
     @FXML
     private HBox cashDetailsBox;
+
+    private List<ModeloDetalleOrden> details;
+    private double total;
+    private String serviceType;
+    private String clientName, clientAddress, clientPhone;
+    private int clientId = 0;
+
+    private OrderService orderService = new OrderService();
+    private ClientService clientService = new ClientService();
+    private OrderController parentController;
+
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -34,54 +57,143 @@ public class confirmOrderController implements Initializable {
         setUpAmountValidation();
     }
 
-    /**
-     * Configura el ComboBox con los 3 métodos de pago y la lógica de visibilidad.
-     */
+    public void setParentController(OrderController parent) {
+        this.parentController = parent;
+    }
 
-        private void setUpPaymentConfig() {
-        paymentMethodCombo.getItems().addAll("Efectivo", "Tarjeta", "Transferencia");
+    public void setOrderData(List<ModeloDetalleOrden> orderDetails, double orderTotal, String orderType,  int clientId, String clientName, String clientAddress, String clientPhone) {
+        this.details = orderDetails;
+        this.total = orderTotal;
+        this.serviceType = orderType;
+        this.clientName = clientName;
+        this.clientAddress = clientAddress;
+        this.clientPhone = clientPhone;
+        this.clientId = clientId;
+
+        totalField.setText(String.format("%.2f", orderTotal));
+        orderTypeField.setText(orderType);
+        clientNameField.setText(clientName.isEmpty() ? "Cliente General" : clientName);
+    }
+
+    private void setUpConfirmButton() {
+        confirmButton.setOnAction(e -> {
+            if (paymentMethodCombo.getValue() == null) {
+                showCustomAlert("WARNING", "Atención", "Seleccione un método de pago.");
+                return;
+            }
+
+            ModeloOrden order = createOrderByType();
+
+            if (order instanceof ModeloOrdenDomicilio) {
+                ModeloOrdenDomicilio domOrder = (ModeloOrdenDomicilio) order;
+
+                if (clientName != null && !clientName.isEmpty() && 
+                    clientPhone != null && !clientPhone.isEmpty()) {
+
+                    ModeloCliente tempClient = new ModeloCliente();
+                    tempClient.setNombreCliente(clientName);
+                    tempClient.setTelefono(clientPhone);
+                    tempClient.setDirecciones(clientAddress);
+
+                    ModeloCliente finalClient = clientService.findOrRegister(tempClient);
+
+                    if (finalClient != null) {
+                        domOrder.setIdRelCliente(finalClient.getIdCliente());
+                        domOrder.setDireccionCliente(finalClient.getDirecciones()); 
+                    }
+                }
+            }
+            order.setFechaExpedicionOrden(LocalDateTime.now());
+            order.setPrecioOrden(this.total);
+            order.setTipoCliente(this.serviceType);
+            order.setFacturado(false);
+
+            if (!configurePayment(order)) return;
+
+            ModeloOrdenCompleta completeOrder = new ModeloOrdenCompleta(order, this.details);
+            if (orderService.addFullOrder(completeOrder)) {
+                double cambio = 0.0;
+                boolean esEfectivo = false;
+                ModeloTipoPago metodo = paymentMethodCombo.getValue();
+                if (metodo != null && "Efectivo".equalsIgnoreCase(metodo.getNombreTipoPago())) {
+                    esEfectivo = true;
+                    cambio = order.getPagoCliente() - this.total;
+                }
+                StringBuilder mensaje = new StringBuilder("Pedido registrado correctamente.");
+                if (esEfectivo) {
+                    mensaje.append("\n\nCambio a entregar: $").append(String.format("%.2f", cambio));
+                }
+                showCustomAlert("SUCCESS", "Venta Exitosa", mensaje.toString());
+                
+                if (parentController != null) parentController.clearOrder();
+                ((Stage) confirmButton.getScene().getWindow()).close();
+            } else {
+                showCustomAlert("ERROR", "Error de Base de Datos", "No se pudo guardar la venta. Verifique la conexión.");
+            }
+        });
+    }
+
+
+    private ModeloOrden createOrderByType() {
+        if (TiposClienteEnum.PAGO_DOMICILIO.equals(this.serviceType)) {
+            ModeloOrdenDomicilio deliveryOrder = new ModeloOrdenDomicilio();
+            deliveryOrder.setNombreCliente(clientName);
+            deliveryOrder.setDireccionCliente(clientAddress);
+            deliveryOrder.setTelefonoCliente(clientPhone);
+            if (this.clientId > 0) {
+                deliveryOrder.setIdRelCliente(this.clientId);
+            }
+            return deliveryOrder;
+        } else if (TiposClienteEnum.PAGO_MESA.equals(this.serviceType)) {
+            ModeloOrdenMesa tableOrder = new ModeloOrdenMesa();
+            tableOrder.setNumeroMesa(clientName.isEmpty() ? "General" : clientName);
+            return tableOrder;
+        } else {
+            ModeloOrdenMostrador dineinOrder = new ModeloOrdenMostrador();
+            dineinOrder.setNombreCliente("Cliente Mostrador");
+            return dineinOrder;
+        }
+    }
+
+    private void setUpPaymentConfig() {
+        List<ModeloTipoPago> tiposPago = orderService.getTiposDePago();
+        paymentMethodCombo.getItems().setAll(tiposPago);
         paymentMethodCombo.setPromptText("Seleccionar...");
-
-        // Definimos cómo se verá cada fila de la lista desplegable
         paymentMethodCombo.setCellFactory(lv -> createCustomCell());
-
-        // Definimos cómo se verá la opción seleccionada (la que queda fija arriba)
         paymentMethodCombo.setButtonCell(createCustomCell());
-
-        // Tu lógica anterior del HBox de efectivo se mantiene igual
         paymentMethodCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
-            boolean isCash = "Efectivo".equals(newVal);
+            if (newVal == null) return;
+            boolean isCash = "Efectivo".equalsIgnoreCase(newVal.getNombreTipoPago());
             cashDetailsBox.setVisible(isCash);
             cashDetailsBox.setManaged(isCash);
             if (!isCash) amountPaidField.clear();
         });
     }
 
-    // Método auxiliar para crear la celda con imagen
-private ListCell<String> createCustomCell() {
-    return new ListCell<String>() {
-        @Override
-        protected void updateItem(String item, boolean empty) {
-            super.updateItem(item, empty);
-            if (empty || item == null) {
-                setText(null);
-                setGraphic(null);
-            } else {
-                setText(item);
-                try {
-                    // Cargamos la imagen según el texto de la opción
-                    String path = "/com/images/" + item.toLowerCase() + ".png";
-                    ImageView icon = new ImageView(new Image(getClass().getResourceAsStream(path)));
-                    icon.setFitHeight(20); // Ajusta el tamaño de la imagen
-                    icon.setFitWidth(20);
-                    setGraphic(icon);
-                } catch (Exception e) {
-                    setGraphic(null); // Si no encuentra la imagen, solo muestra texto
+    private ListCell<ModeloTipoPago> createCustomCell() {
+        return new ListCell<ModeloTipoPago>() {
+            @Override
+            protected void updateItem(ModeloTipoPago item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(item.getNombreTipoPago());
+                    try {
+                        String path = "/com/images/" + item.getNombreTipoPago().toLowerCase() + ".png";
+                        ImageView icon = new ImageView(new Image(getClass().getResourceAsStream(path)));
+                        icon.setFitHeight(20);
+                        icon.setFitWidth(20);
+                        setGraphic(icon);
+                    } catch (Exception e) {
+                        setGraphic(null);
+                    }
                 }
             }
-        }
-    };
-}
+        };
+    }
+
     /**
      * Valida que el campo de pago en efectivo solo acepte números y un punto decimal.
      */
@@ -105,19 +217,98 @@ private ListCell<String> createCustomCell() {
         });
     }
 
-    private void setUpConfirmButton() {
-        confirmButton.setOnAction(e -> {
-            // Lógica para procesar la confirmación del pedido
-            String metodo = paymentMethodCombo.getValue();
-            if (metodo == null || metodo.equals("Seleccionar...")) {
-                // Aquí podrías añadir una alerta si no se ha seleccionado método
-                System.out.println("Debe seleccionar un método de pago.");
-                return;
-            }
 
-            System.out.println("Pedido confirmado con método: " + metodo);
-            Stage stage = (Stage) confirmButton.getScene().getWindow();
-            stage.close();
-        });
+    /**
+     * Configura el pago en la orden según el método seleccionado.
+     * - Si es Efectivo, valida que el monto cubra el total.
+     * - Si es Tarjeta/Transferencia, asume pago completo.
+     * Retorna true si la validación fue exitosa.
+     */
+    private boolean configurePayment(ModeloOrden order) {
+        ModeloTipoPago chosenPaymentOption = paymentMethodCombo.getValue();
+        
+        if (chosenPaymentOption == null) {
+            showCustomAlert("WARNING", "Atención", "Seleccione un método de pago.");
+            return false;
+        }
+
+        order.setIdRelTipoPago(chosenPaymentOption.getIdTipoPago());
+        order.setNombreTipoPago(chosenPaymentOption.getNombreTipoPago()); 
+
+        double precio = this.total;
+        
+        if ("Efectivo".equalsIgnoreCase(chosenPaymentOption.getNombreTipoPago())) {
+            String amountPaidText = amountPaidField.getText();
+            
+            if (amountPaidText == null || amountPaidText.isBlank()) {
+                showCustomAlert("WARNING", "Atención", "Ingrese el monto pagado en efectivo.");
+                return false;
+            }
+            
+            try {
+                double pagado = Double.parseDouble(amountPaidText);
+
+                if (pagado < precio) {
+                    showCustomAlert("WARNING", "Pago Insuficiente", 
+                        "El monto recibido ($" + pagado + ") es menor al total ($" + String.format("%.2f", precio) + ").");
+                    return false;
+                }
+                order.setPagoCliente(pagado);
+                order.setFacturado(true); 
+            } catch (NumberFormatException ex) {
+                showCustomAlert("WARNING", "Formato Inválido", "Por favor ingrese solo números.");
+                return false;
+            }
+        } else {
+            order.setPagoCliente(precio);
+            order.setFacturado(true);
+        }
+        
+        return true;
+    } 
+    /**
+     * Muestra una alerta personalizada con iconos gráficos.
+     * @param type Tipo de alerta: "SUCCESS", "WARNING", "ERROR"
+     * @param title Título de la ventana
+     * @param content Mensaje principal
+     */
+    private void showCustomAlert(String type, String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        String iconName = "";
+        switch (type.toUpperCase()) {
+            case "SUCCESS":
+                alert.setAlertType(Alert.AlertType.INFORMATION);
+                iconName = "Check.png";
+                break;
+            case "WARNING":
+                alert.setAlertType(Alert.AlertType.WARNING);
+                iconName = "Advertencia.png";
+                break;
+            case "ERROR":
+                alert.setAlertType(Alert.AlertType.ERROR);
+                iconName = "Error.png"; 
+                break;
+            default:
+                iconName = "";
+                break;
+        }
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        if (!iconName.isEmpty()) {
+            try {
+                String path = "/com/images/" + iconName;
+                Image image = new Image(getClass().getResourceAsStream(path));
+                ImageView icon = new ImageView(image);
+                icon.setFitHeight(48);
+                icon.setFitWidth(48);
+                alert.setGraphic(icon);
+            } catch (Exception e) {
+                System.err.println("No se pudo cargar el icono: " + iconName);
+            }
+        }
+        alert.showAndWait();
     }
+
+
 }

@@ -9,7 +9,7 @@ import com.Config.Constants;
  * Clase utilitaria para formatear líneas de factura térmica.
  * Maneja el formato de texto con precios alineados a 40 caracteres.
  */
-public class FormatearFacturaService {
+public class FormatearReciboService {
 
     /**
      * Formatea el detalle de una orden, dividiendo en múltiples líneas si es necesario.

@@ -5,7 +5,7 @@ import com.Model.DTO.VIEW.ModeloVentasView;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -113,7 +113,7 @@ public class OrdenViewDAO extends BaseDAO {
      * @param idTipoPago ID del tipo de pago (0 = ignorar filtro)
      * @param nombreCliente Nombre del cliente (null = ignorar filtro)
      */
-    public List<ModeloVentasView> findByFiltroFechas(Date desde, Date hasta, String tipoCliente, int idTipoPago, String nombreCliente) throws SQLException {
+    public List<ModeloVentasView> findByFiltroFechas(LocalDateTime desde, LocalDateTime hasta, String tipoCliente, int idTipoPago, String nombreCliente) throws SQLException {
         String sql = """
             SELECT * FROM view_ventas
             WHERE DATE(fecha_expedicion_orden) BETWEEN ? AND ?
@@ -128,9 +128,9 @@ public class OrdenViewDAO extends BaseDAO {
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            // Filtro por rango de fechas
-            ps.setDate(1, new java.sql.Date(desde.getTime()));
-            ps.setDate(2, new java.sql.Date(hasta.getTime()));
+            // Filtro por rango de fechas (usar Timestamp para LocalDateTime)
+            ps.setTimestamp(1, Timestamp.valueOf(desde));
+            ps.setTimestamp(2, Timestamp.valueOf(hasta));
 
             // Filtro por tipo de pago
             ps.setInt(3, idTipoPago);
@@ -171,14 +171,14 @@ public class OrdenViewDAO extends BaseDAO {
      * @return Total de ventas
      * @throws SQLException si hay error en la consulta
      */
-    public double calcularTotalVentas(Date desde, Date hasta) throws SQLException {
+    public double calcularTotalVentas(LocalDateTime desde, LocalDateTime hasta) throws SQLException {
         String sql = "SELECT SUM(precio_orden) as total FROM view_ventas WHERE DATE(fecha_expedicion_orden) BETWEEN ? AND ?";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setDate(1, new java.sql.Date(desde.getTime()));
-            ps.setDate(2, new java.sql.Date(hasta.getTime()));
+            ps.setTimestamp(1, Timestamp.valueOf(desde));
+            ps.setTimestamp(2, Timestamp.valueOf(hasta));
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -223,7 +223,12 @@ public class OrdenViewDAO extends BaseDAO {
         orden.setIdOrden(rs.getInt("id_orden"));
         orden.setIdRelTipoPago(rs.getInt("idRel_tipo_pago"));
         orden.setTipoCliente(rs.getString("tipo_cliente"));
-        orden.setFechaExpedicionOrden(rs.getTimestamp("fecha_expedicion_orden"));
+        Timestamp ts = rs.getTimestamp("fecha_expedicion_orden");
+        if (ts != null) {
+            orden.setFechaExpedicionOrden(ts.toLocalDateTime());
+        } else {
+            orden.setFechaExpedicionOrden(null);
+        }
         orden.setPrecioOrden(rs.getDouble("precio_orden"));
         orden.setPagoCliente(rs.getDouble("pago_cliente"));
 

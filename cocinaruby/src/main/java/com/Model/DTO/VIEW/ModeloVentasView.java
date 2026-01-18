@@ -1,6 +1,6 @@
 package com.Model.DTO.VIEW;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.Model.ModeloDetalleOrden;
@@ -19,7 +19,7 @@ public class ModeloVentasView {
     private int idOrden;
     private int idRelTipoPago;
     private String tipoCliente; // MOSTRADOR, DOMICILIO, MESA
-    private Date fechaExpedicionOrden;
+    private LocalDateTime fechaExpedicionOrden;
     private double precioOrden;
     private double pagoCliente;
 
@@ -55,11 +55,11 @@ public class ModeloVentasView {
         this.tipoCliente = tipoCliente;
     }
 
-    public Date getFechaExpedicionOrden() {
+    public LocalDateTime getFechaExpedicionOrden() {
         return fechaExpedicionOrden;
     }
 
-    public void setFechaExpedicionOrden(Date fechaExpedicionOrden) {
+    public void setFechaExpedicionOrden(LocalDateTime fechaExpedicionOrden) {
         this.fechaExpedicionOrden = fechaExpedicionOrden;
     }
 

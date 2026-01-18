@@ -2,7 +2,8 @@ package com.Service.ReciboServices;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,25 +15,25 @@ import com.github.anastaciocintra.output.PrinterOutputStream;
 
 import com.Config.Constants;
 import com.Model.ModeloDetalleOrden;
-import com.Model.DTO.ModeloFactura;
+import com.Model.DTO.ModeloRecibo;
 import util.PrinterServiceHolder;
 
 /**
  * Clase para generar facturas de órdenes en impresora térmica.
  * Ejemplo: https://github.com/anastaciocintra/escpos-coffee-samples/blob/master/usual/textstyle/src/main/java/TextStyleSample.java
  */
-public class FacturaOrdenService {
+public class ReciboOrdenService {
 
     private static final DecimalFormat FORMATO_PRECIO = new DecimalFormat("$#,##0.00");
-    private static final SimpleDateFormat FORMATO_FECHA = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-    private FormatearFacturaService formatear = new FormatearFacturaService();
+    private static final DateTimeFormatter FORMATO_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+    private FormatearReciboService formatear = new FormatearReciboService();
 
     /**
      * Genera e imprime la factura de una orden en impresora térmica.
      *
      * @param factura Modelo de factura con la información de la orden
      */
-    public void generarFacturaOrden(ModeloFactura factura) {
+    public void generarFacturaOrden(ModeloRecibo factura) {
         EscPos escpos = null;
         PrinterOutputStream printerOutputStream = null;
         try {
@@ -54,8 +55,12 @@ public class FacturaOrdenService {
             Style bold = new Style(escpos.getStyle())
                     .setBold(true);
 
-            // Convertir fecha a String
-            String fechaFormateada = FORMATO_FECHA.format(factura.getFechaExpedicion());
+            // Convertir fecha a String (proteger nulos)
+            String fechaFormateada = "";
+            LocalDateTime fechaExp = factura != null ? factura.getFechaExpedicion() : null;
+            if (fechaExp != null) {
+                fechaFormateada = fechaExp.format(FORMATO_FECHA);
+            }
 
             // Encabezado
             escpos.writeLF(title, "COCINA RUBY")
@@ -94,20 +99,20 @@ public class FacturaOrdenService {
             escpos.close();
 
         } catch (IOException ex) {
-            Logger.getLogger(FacturaOrdenService.class.getName()).log(Level.SEVERE, "Error al generar factura", ex);
+            Logger.getLogger(ReciboOrdenService.class.getName()).log(Level.SEVERE, "Error al generar factura", ex);
         } finally {
             if (escpos != null) {
                 try {
                     escpos.close();
                 } catch (IOException e) {
-                    Logger.getLogger(FacturaOrdenService.class.getName()).log(Level.SEVERE, "Error al cerrar escpos", e);
+                    Logger.getLogger(ReciboOrdenService.class.getName()).log(Level.SEVERE, "Error al cerrar escpos", e);
                 }
             }
             if (printerOutputStream != null) {
                 try {
                     printerOutputStream.close();
                 } catch (IOException e) {
-                    Logger.getLogger(FacturaOrdenService.class.getName()).log(Level.SEVERE, "Error al cerrar printerOutputStream", e);
+                    Logger.getLogger(ReciboOrdenService.class.getName()).log(Level.SEVERE, "Error al cerrar printerOutputStream", e);
                 }
             }
         }

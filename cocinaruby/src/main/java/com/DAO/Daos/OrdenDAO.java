@@ -6,6 +6,7 @@ import com.DAO.Interfaces.IDelete;
 import com.DAO.Interfaces.IUpdate;
 import com.Model.ModeloOrden;
 import java.sql.*;
+import java.time.LocalDateTime;
 
 public class OrdenDAO extends BaseDAO implements IDelete,IUpdate<ModeloOrden>,ICreate<ModeloOrden> {
 
@@ -22,11 +23,15 @@ public class OrdenDAO extends BaseDAO implements IDelete,IUpdate<ModeloOrden>,IC
         String sql = "UPDATE orden SET idRel_tipo_pago = ?, tipo_cliente = ?, fecha_expedicion_orden = ?, precio_orden = ?, pago_cliente = ?, facturado = ? WHERE id_orden = ?";
 
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, model.getIdRelTipoPago());
             ps.setString(2, model.getTipoCliente());
-            ps.setTimestamp(3, new Timestamp(model.getFechaExpedicionOrden().getTime()));
+            LocalDateTime fecha = model.getFechaExpedicionOrden();
+            if (fecha != null) {
+                ps.setTimestamp(3, Timestamp.valueOf(fecha));
+            } else {
+                ps.setNull(3, Types.TIMESTAMP);
+            }
             ps.setDouble(4, model.getPrecioOrden());
             ps.setDouble(5, model.getPagoCliente());
             ps.setBoolean(6, model.getFacturado());
@@ -69,7 +74,12 @@ public class OrdenDAO extends BaseDAO implements IDelete,IUpdate<ModeloOrden>,IC
 
             ps.setInt(1, model.getIdRelTipoPago());
             ps.setString(2, model.getTipoCliente());
-            ps.setTimestamp(3, new Timestamp(model.getFechaExpedicionOrden().getTime()));
+            LocalDateTime fecha = model.getFechaExpedicionOrden();
+            if (fecha != null) {
+                ps.setTimestamp(3, Timestamp.valueOf(fecha));
+            } else {
+                ps.setNull(3, Types.TIMESTAMP);
+            }
             ps.setDouble(4, model.getPrecioOrden());
             ps.setDouble(5, model.getPagoCliente());
             ps.setBoolean(6, model.getFacturado());

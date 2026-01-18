@@ -1,6 +1,5 @@
 package com.Model;
-
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * Representa la entidad 'orden' de la base de datos.
@@ -13,12 +12,10 @@ public abstract class ModeloOrden {
     private int idRelTipoPago;
     private String nombreTipoPago; // Usado para JOINs, no está en tabla orden
     private String tipoCliente; // ENUM en SQL: 'MOSTRADOR','DOMICILIO','MESA'
-    private Date fechaExpedicionOrden;
+    private LocalDateTime fechaExpedicionOrden;
     private double precioOrden;
     private double pagoCliente;
     private boolean facturado;
-
-    // Getters y Setters
 
     public int getIdOrden() {
         return idOrden;
@@ -52,11 +49,11 @@ public abstract class ModeloOrden {
         this.tipoCliente = tipoCliente;
     }
 
-    public Date getFechaExpedicionOrden() {
+    public LocalDateTime getFechaExpedicionOrden() {
         return fechaExpedicionOrden;
     }
 
-    public void setFechaExpedicionOrden(Date fechaExpedicionOrden) {
+    public void setFechaExpedicionOrden(LocalDateTime fechaExpedicionOrden) {
         this.fechaExpedicionOrden = fechaExpedicionOrden;
     }
 

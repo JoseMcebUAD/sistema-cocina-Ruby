@@ -169,13 +169,18 @@ public class OrdenMostradorDAO extends BaseDAO implements ICrud<ModeloOrdenMostr
         orden.setIdOrden(rs.getInt("id_orden"));
         orden.setIdRelTipoPago(rs.getInt("idRel_tipo_pago"));
         orden.setTipoCliente(rs.getString("tipo_cliente"));
-        orden.setFechaExpedicionOrden(rs.getTimestamp("fecha_expedicion_orden"));
+        Timestamp ts = rs.getTimestamp("fecha_expedicion_orden");
+        if (ts != null) {
+            orden.setFechaExpedicionOrden(ts.toLocalDateTime());
+        } else {
+            orden.setFechaExpedicionOrden(null);
+        }
         orden.setPrecioOrden(rs.getDouble("precio_orden"));
         orden.setPagoCliente(rs.getDouble("pago_cliente"));
         orden.setFacturado(rs.getBoolean("facturado"));
 
         // Campos de la tabla 'orden_mostrador'
-        orden.setNombre(rs.getString("nombre"));
+        orden.setNombreCliente(rs.getString("nombre"));
 
         return orden;
     }

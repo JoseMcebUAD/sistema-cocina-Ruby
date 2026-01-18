@@ -4,7 +4,7 @@ package com.Service;
      */
 
 import java.sql.SQLException;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.DAO.Daos.DTOS.Views.OrdenViewDAO;
@@ -77,7 +77,7 @@ public class VentasService {
      * @param nombreCliente Nombre cliente (null = todos)
      * @return Lista de órdenes en el rango
      */
-    public List<ModeloVentasView> obtenerOrdenesPorFechas(Date desde, Date hasta, String tipoCliente, int idTipoPago, String nombreCliente) {
+    public List<ModeloVentasView> obtenerOrdenesPorFechas(LocalDateTime desde, LocalDateTime hasta, String tipoCliente, int idTipoPago, String nombreCliente) {
         try {
             return ventasDAO.findByFiltroFechas(desde, hasta, tipoCliente, idTipoPago, nombreCliente);
         } catch (SQLException e) {

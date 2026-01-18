@@ -232,7 +232,7 @@
    SEGMENTACIONES VISUALES
    ========================================= */
 
-#clientBar {
+#clientBar,#tablebar {
     -fx-padding: 5 0 10 0;
     -fx-border-color: #E67E22;
     -fx-border-width: 1 0 0 0;

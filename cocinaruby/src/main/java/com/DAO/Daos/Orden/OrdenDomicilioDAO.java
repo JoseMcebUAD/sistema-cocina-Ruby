@@ -27,7 +27,7 @@ public class OrdenDomicilioDAO extends BaseDAO implements ICrud<ModeloOrdenDomic
         String sqlDomicilio = "INSERT INTO orden_domicilio (id_orden, idRel_cliente, direccion) VALUES (?, ?, ?)";
 
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sqlDomicilio)) {
+            PreparedStatement ps = conn.prepareStatement(sqlDomicilio)) {
 
             ps.setInt(1, model.getIdOrden());
 
@@ -38,7 +38,7 @@ public class OrdenDomicilioDAO extends BaseDAO implements ICrud<ModeloOrdenDomic
                 ps.setNull(2, Types.INTEGER);
             }
 
-            ps.setString(3, model.getDireccion());
+            ps.setString(3, model.getDireccionCliente());
             ps.executeUpdate();
 
             return model;
@@ -102,7 +102,7 @@ public class OrdenDomicilioDAO extends BaseDAO implements ICrud<ModeloOrdenDomic
                 } else {
                     ps.setNull(1, Types.INTEGER);
                 }
-                ps.setString(2, model.getDireccion());
+                ps.setString(2, model.getDireccionCliente());
                 ps.setInt(3, id);
                 ps.executeUpdate();
             }
@@ -215,7 +215,12 @@ public class OrdenDomicilioDAO extends BaseDAO implements ICrud<ModeloOrdenDomic
         orden.setIdOrden(rs.getInt("id_orden"));
         orden.setIdRelTipoPago(rs.getInt("idRel_tipo_pago"));
         orden.setTipoCliente(rs.getString("tipo_cliente"));
-        orden.setFechaExpedicionOrden(rs.getTimestamp("fecha_expedicion_orden"));
+        Timestamp ts = rs.getTimestamp("fecha_expedicion_orden");
+        if (ts != null) {
+            orden.setFechaExpedicionOrden(ts.toLocalDateTime());
+        } else {
+            orden.setFechaExpedicionOrden(null);
+        }
         orden.setPrecioOrden(rs.getDouble("precio_orden"));
         orden.setPagoCliente(rs.getDouble("pago_cliente"));
         orden.setFacturado(rs.getBoolean("facturado"));
@@ -225,7 +230,7 @@ public class OrdenDomicilioDAO extends BaseDAO implements ICrud<ModeloOrdenDomic
         if (!rs.wasNull()) {
             orden.setIdRelCliente(clienteId);
         }
-        orden.setDireccion(rs.getString("direccion"));
+        orden.setDireccionCliente(rs.getString("direccion"));
 
         return orden;
     }
