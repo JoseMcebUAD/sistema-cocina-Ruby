@@ -11,6 +11,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.input.MouseEvent;
@@ -20,7 +21,9 @@ import javafx.scene.layout.StackPane;
 
 public class SalesController implements Initializable  {
     @FXML 
-    private Button ordersButton, dateSearchButton;
+    private Button ordersButton;
+    @FXML
+    private MenuItem dateSearchButton;
     @FXML 
     private HBox dateBar, searchBar, grandTotalBar;
     @FXML 
@@ -95,13 +98,10 @@ public class SalesController implements Initializable  {
 
     private void setUpGlobalClickConfig() {
     mainRoot.addEventFilter(MouseEvent.MOUSE_CLICKED, event -> {
-        // Obtenemos el componente que recibió el clic
         Node clickedNode = (Node) event.getTarget();
-        // Verificamos si el clic NO fue dentro de las tablas
         if (!isChildOfTable(clickedNode)) {
             OrderTable.getSelectionModel().clearSelection();
             orderDetailTable.getSelectionModel().clearSelection();
-            // Esto disparará automáticamente tu listener de selección y ocultará el detalle
             }
         });
     }

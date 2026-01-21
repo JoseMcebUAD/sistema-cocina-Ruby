@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane id="errorOrder-root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="250.0" prefWidth="450.0" stylesheets="@../../css/styles.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+   <center>
+      <VBox alignment="CENTER" spacing="15.0" BorderPane.alignment="CENTER">
+         <children>
+            <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../../../images/Error.png" />
+               </image>
+            </ImageView>
+            <VBox alignment="CENTER" spacing="5.0">
+               <children>
+                  <Label styleClass="errorOrder-title" text="DATOS INCOMPLETOS" />
+                  <Label alignment="CENTER" prefWidth="380.0" styleClass="errorOrder-text" text="NO SE HA COLOCADO SUFICIENTE INFORMACIÓN PARA PODER REALIZAR LA ORDEN. POR FAVOR, VERIFICA LOS DATOS." wrapText="true" />
+               </children>
+            </VBox>
+            <Button fx:id="confirmButton" mnemonicParsing="false" styleClass="errorOrder-btn-confirm" text="ENTENDIDO">
+               <padding>
+                  <Insets bottom="10.0" left="40.0" right="40.0" top="10.0" />
+               </padding>
+               <VBox.margin>
+                  <Insets top="10.0" />
+               </VBox.margin>
+            </Button>
+         </children>
+         <padding>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+         </padding>
+      </VBox>
+   </center>
+</BorderPane>
