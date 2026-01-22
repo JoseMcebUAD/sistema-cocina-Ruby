@@ -25,14 +25,16 @@ public class DetalleOrdenDAO extends BaseDAO implements ICrud<ModeloDetalleOrden
 
     @Override
     public ModeloDetalleOrden create(ModeloDetalleOrden model) throws SQLException {
-        String sql = "INSERT INTO detalle_orden (idRel_orden, especificaciones_detalle_orden, precio_detalle_orden) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO detalle_orden (idRel_orden, cantidad, especificaciones_detalle_orden, precio_detalle_orden) VALUES (?,?, ?, ?)";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setInt(1, model.getIdRelOrden());
-            ps.setString(2, model.getEspecificacionesDetalleOrden());
-            ps.setDouble(3, model.getPrecioDetalleOrden());
+            ps.setInt(2, model.getCantidad());
+            ps.setString(3, model.getEspecificacionesDetalleOrden());
+            ps.setDouble(4, model.getPrecioDetalleOrden());
+
             ps.executeUpdate();
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -45,7 +47,7 @@ public class DetalleOrdenDAO extends BaseDAO implements ICrud<ModeloDetalleOrden
     }
 
     @Override
-    public ModeloDetalleOrden find(int id) throws SQLException {
+    public ModeloDetalleOrden read(int id) throws SQLException {
         String sql = "SELECT * FROM detalle_orden WHERE id_detalle_orden = ?";
 
         try (Connection conn = getConnection();
@@ -80,15 +82,16 @@ public class DetalleOrdenDAO extends BaseDAO implements ICrud<ModeloDetalleOrden
 
     @Override
     public boolean update(int id, ModeloDetalleOrden model) throws SQLException {
-        String sql = "UPDATE detalle_orden SET idRel_orden = ?, especificaciones_detalle_orden = ?, precio_detalle_orden = ? WHERE id_detalle_orden = ?";
+        String sql = "UPDATE detalle_orden SET idRel_orden = ?, cantidad = ?, especificaciones_detalle_orden = ?, precio_detalle_orden = ? WHERE id_detalle_orden = ?";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, model.getIdRelOrden());
-            ps.setString(2, model.getEspecificacionesDetalleOrden());
-            ps.setDouble(3, model.getPrecioDetalleOrden());
-            ps.setInt(4, id);
+            ps.setInt(2, model.getCantidad()); 
+            ps.setString(3, model.getEspecificacionesDetalleOrden());
+            ps.setDouble(4, model.getPrecioDetalleOrden());
+            ps.setInt(5, id);
 
             return ps.executeUpdate() > 0;
         }

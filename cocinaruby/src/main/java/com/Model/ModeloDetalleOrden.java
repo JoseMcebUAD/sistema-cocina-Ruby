@@ -28,7 +28,7 @@ public class ModeloDetalleOrden {
         this.cantidad = cantidad;
     }
 
-    public int getCantida() {
+    public int getCantidad() {
         return cantidad;
     }
 

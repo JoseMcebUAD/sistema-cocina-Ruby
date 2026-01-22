@@ -1,21 +1,19 @@
 package com.Model.DTO;
-
-import java.sql.Date;
-
+import java.time.LocalDateTime;
 /**
- * DTO para el general el formato de una factura
- * Contiene la informacion necesaria para imprimir una factura en la impresora termica
+ * DTO para el general el formato de un recibo
+ * Contiene la informacion necesaria para imprimir una recibo en la impresora termica
  * 
  */
-public class ModeloFactura {
-    private Date fechaExpedicion;
+public class ModeloRecibo {
+    private LocalDateTime fechaExpedicion;
     private ModeloOrdenCompleta orden;
 
-    public Date getFechaExpedicion() {
+    public LocalDateTime getFechaExpedicion() {
         return fechaExpedicion;
     }
 
-    public void setFechaExpedicion(Date fechaExpedicion) {
+    public void setFechaExpedicion(LocalDateTime fechaExpedicion) {
         this.fechaExpedicion = fechaExpedicion;
     }
     

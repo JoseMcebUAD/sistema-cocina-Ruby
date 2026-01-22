@@ -11,8 +11,9 @@ import com.Model.ModeloOrden;
 public class ModeloOrdenDomicilio extends ModeloOrden {
 
     private Integer idRelCliente;
-    private String direccion;
+    private String direccionCliente;
     private String nombreCliente;
+    private String telefonoCliente;
 
     public Integer getIdRelCliente() {
         return idRelCliente;
@@ -22,13 +23,26 @@ public class ModeloOrdenDomicilio extends ModeloOrden {
         this.idRelCliente = idRelCliente;
     }
 
-    public String getDireccion() {
-        return direccion;
+    public void setNombreCliente(String nombreCliente) {
+        this.nombreCliente = nombreCliente;
     }
 
-    public void setDireccion(String direccion) {
-        this.direccion = direccion;
+    public void setTelefonoCliente(String telefonoCliente) {
+        this.telefonoCliente = telefonoCliente;
     }
+
+    public void setDireccionCliente(String direccion) {
+        this.direccionCliente = direccion;
+    }
+
+    public String getDireccionCliente() {
+        return direccionCliente;
+    }
+
+    public String getTelefonoCliente(){
+        return telefonoCliente;
+    }
+
 
     @Override
     public String getNombreCliente() {

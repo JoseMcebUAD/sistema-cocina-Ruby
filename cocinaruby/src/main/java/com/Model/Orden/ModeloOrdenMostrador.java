@@ -15,7 +15,7 @@ public class ModeloOrdenMostrador extends ModeloOrden {
         return nombre;
     }
 
-    public void setNombre(String nombre) {
+    public void setNombreCliente(String nombre) {
         this.nombre = nombre;
     }
 

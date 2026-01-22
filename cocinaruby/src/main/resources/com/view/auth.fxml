@@ -33,14 +33,14 @@
                   <VBox fx:id="authForm" prefHeight="301.0" prefWidth="370.0" spacing="12.0">
                      <children>
                         <TextField fx:id="txtUser" promptText="Usuario" styleClass="text-field" stylesheets="@css/styles.css" />
-                        <Label fx:id="errorUserLabel" text="Usuario no valido" visible="false">
+                        <Label fx:id="errorUserLabel" text="Error: Usuario inválido" visible="false" managed="false">
                            <styleClass>
                               <String fx:value="authlabel" />
                               <String fx:value="errorlabel" />
                            </styleClass>
                         </Label>
                         <PasswordField fx:id="txtPassword" promptText="Contraseña" styleClass="password-field" stylesheets="@css/styles.css" />
-                        <Label fx:id="errorPasswordLabel" text="Contraseña no valida" visible="false">
+                        <Label fx:id="errorPasswordLabel" text="Error: Contraseña inválida" visible="false" managed="false">
                            <styleClass>
                               <String fx:value="authlabel" />
                               <String fx:value="errorlabel" />
