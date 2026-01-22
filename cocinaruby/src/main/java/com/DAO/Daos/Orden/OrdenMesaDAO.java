@@ -38,7 +38,7 @@ public class OrdenMesaDAO extends BaseDAO implements ICrud<ModeloOrdenMesa>{
     }
 
     @Override
-    public ModeloOrdenMesa find(int id) throws SQLException {
+    public ModeloOrdenMesa read(int id) throws SQLException {
         String sql = """
             SELECT o.*, om.numero_mesa
             FROM orden o

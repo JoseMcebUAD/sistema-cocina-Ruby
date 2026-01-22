@@ -1,4 +1,4 @@
-package com.Service.ReciboServices;
+package com.Service.TicketServices;
 
 import java.util.ArrayList;
 import java.util.List;

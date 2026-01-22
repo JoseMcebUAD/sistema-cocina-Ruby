@@ -46,7 +46,7 @@ public class OrdenDomicilioDAO extends BaseDAO implements ICrud<ModeloOrdenDomic
     }
 
     @Override
-    public ModeloOrdenDomicilio find(int id) throws SQLException {
+    public ModeloOrdenDomicilio read(int id) throws SQLException {
         String sql = """
             SELECT o.*, od.idRel_cliente, od.direccion
             FROM orden o

@@ -18,10 +18,12 @@ public class ModeloVentasView {
     // Campos de la tabla orden
     private int idOrden;
     private int idRelTipoPago;
+    private String nombreTipoPago; // Nombre del tipo de pago
     private String tipoCliente; // MOSTRADOR, DOMICILIO, MESA
     private LocalDateTime fechaExpedicionOrden;
     private double precioOrden;
     private double pagoCliente;
+    private boolean facturado; // 1 = Impreso, 0 = No Impreso
 
     // Campos normalizados de las tablas especializadas
     private String nombreCliente; // Nombre del cliente, "Mostrador", o "Mesa X"
@@ -85,6 +87,22 @@ public class ModeloVentasView {
 
     public void setNombreCliente(String nombreCliente) {
         this.nombreCliente = nombreCliente;
+    }
+
+    public String getNombreTipoPago() {
+        return nombreTipoPago;
+    }
+
+    public void setNombreTipoPago(String nombreTipoPago) {
+        this.nombreTipoPago = nombreTipoPago;
+    }
+
+    public boolean isFacturado() {
+        return facturado;
+    }
+
+    public void setFacturado(boolean facturado) {
+        this.facturado = facturado;
     }
 
     public List<ModeloDetalleOrden> getDetalleOrden() {

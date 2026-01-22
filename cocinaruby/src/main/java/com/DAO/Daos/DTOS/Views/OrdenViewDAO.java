@@ -61,12 +61,15 @@ public class OrdenViewDAO extends BaseDAO {
      */
     public List<ModeloVentasView> findByCorteDelDia(String tipoCliente, int idTipoPago, String nombreCliente) throws SQLException {
         String sql = """
-            SELECT * FROM view_ventas
-            WHERE DATE(fecha_expedicion_orden) = CURDATE()
-                AND (? = 0 OR idRel_tipo_pago = ?)
-                AND (? IS NULL OR nombre_cliente LIKE ?)
-                AND (? IS NULL OR tipo_cliente = ?)
-            ORDER BY fecha_expedicion_orden DESC
+            SELECT v.*, o.facturado, tp.nombre_tipo_pago
+            FROM view_ventas v
+            LEFT JOIN orden o ON v.id_orden = o.id_orden
+            LEFT JOIN tipo_pago tp ON v.idRel_tipo_pago = tp.id_tipo_pago
+            WHERE DATE(v.fecha_expedicion_orden) = CURDATE()
+                AND (? = 0 OR v.idRel_tipo_pago = ?)
+                AND (? IS NULL OR v.nombre_cliente LIKE ?)
+                AND (? IS NULL OR v.tipo_cliente = ?)
+            ORDER BY v.fecha_expedicion_orden DESC
         """;
 
         List<ModeloVentasView> ordenes = new ArrayList<>();
@@ -115,12 +118,15 @@ public class OrdenViewDAO extends BaseDAO {
      */
     public List<ModeloVentasView> findByFiltroFechas(LocalDateTime desde, LocalDateTime hasta, String tipoCliente, int idTipoPago, String nombreCliente) throws SQLException {
         String sql = """
-            SELECT * FROM view_ventas
-            WHERE DATE(fecha_expedicion_orden) BETWEEN ? AND ?
-                AND (? = 0 OR idRel_tipo_pago = ?)
-                AND (? IS NULL OR nombre_cliente LIKE ?)
-                AND (? IS NULL OR tipo_cliente = ?)
-            ORDER BY fecha_expedicion_orden DESC
+            SELECT v.*, o.facturado, tp.nombre_tipo_pago
+            FROM view_ventas v
+            LEFT JOIN orden o ON v.id_orden = o.id_orden
+            LEFT JOIN tipo_pago tp ON v.idRel_tipo_pago = tp.id_tipo_pago
+            WHERE DATE(v.fecha_expedicion_orden) BETWEEN ? AND ?
+                AND (? = 0 OR v.idRel_tipo_pago = ?)
+                AND (? IS NULL OR v.nombre_cliente LIKE ?)
+                AND (? IS NULL OR v.tipo_cliente = ?)
+            ORDER BY v.fecha_expedicion_orden DESC
         """;
 
         List<ModeloVentasView> ordenes = new ArrayList<>();
@@ -234,11 +240,57 @@ public class OrdenViewDAO extends BaseDAO {
 
         // Campos normalizados
         orden.setNombreCliente(rs.getString("nombre_cliente"));
-
-        //obtener el json como objeto de los detalles de orde
-        orden.setDetalleOrden(orden.obtenerJsonDetalle(rs.getString("detalle_orden")));
         
+        // Obtener nombre del tipo de pago
+        try {
+            String nombreTipoPago = rs.getString("nombre_tipo_pago");
+            orden.setNombreTipoPago(nombreTipoPago != null ? nombreTipoPago : "Desconocido");
+        } catch (SQLException e) {
+            orden.setNombreTipoPago("Desconocido");
+        }
+        
+        // Obtener estado facturado
+        try {
+            orden.setFacturado(rs.getBoolean("facturado"));
+        } catch (SQLException e) {
+            orden.setFacturado(false);
+        }
+
+        // Obtener detalles de la orden desde la tabla detalle_orden
+        try {
+            List<com.Model.ModeloDetalleOrden> detalles = obtenerDetallesOrden(orden.getIdOrden());
+            orden.setDetalleOrden(detalles);
+        } catch (SQLException e) {
+            System.err.println("Error obteniendo detalles de orden " + orden.getIdOrden() + ": " + e.getMessage());
+            orden.setDetalleOrden(new ArrayList<>());
+        }
         
         return orden;
+    }
+
+    /**
+     * Obtiene los detalles de una orden desde la tabla detalle_orden
+     */
+    private List<com.Model.ModeloDetalleOrden> obtenerDetallesOrden(int idOrden) throws SQLException {
+        String sql = "SELECT * FROM detalle_orden WHERE idRel_orden = ?";
+        List<com.Model.ModeloDetalleOrden> detalles = new ArrayList<>();
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, idOrden);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    com.Model.ModeloDetalleOrden detalle = new com.Model.ModeloDetalleOrden();
+                    detalle.setIdDetalleOrden(rs.getInt("id_detalle_orden"));
+                    detalle.setIdRelOrden(rs.getInt("idRel_orden"));
+                    detalle.setEspecificacionesDetalleOrden(rs.getString("especificaciones_detalle_orden"));
+                    detalle.setPrecioDetalleOrden(rs.getDouble("precio_detalle_orden"));
+                    detalle.setCantidad(rs.getInt("cantidad"));
+                    detalles.add(detalle);
+                }
+            }
+        }
+        return detalles;
     }
 }

@@ -10,7 +10,7 @@ import java.util.List;
 public class TipoPagoDAO extends BaseDAO implements IRead<ModeloTipoPago> {
 
     @Override
-    public ModeloTipoPago find(int id) throws SQLException {
+    public ModeloTipoPago read(int id) throws SQLException {
         String sql = "SELECT * FROM tipo_pago WHERE id_tipo_pago = ?";
 
         try (Connection conn = getConnection();

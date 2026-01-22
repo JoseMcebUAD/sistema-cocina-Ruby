@@ -500,15 +500,37 @@
 }
 
 .confirmOrder-field-total {
-    -fx-background-color: #FFFDFB;
+    -fx-background-color: #FFFFFF;
     -fx-text-fill: #E67E22;
     -fx-font-size: 1.2em;
     -fx-font-weight: bold;
-    -fx-border-color: #E67E22;
+    -fx-border-color: #D5C4B0;
     -fx-border-width: 2;
     -fx-background-radius: 8;
     -fx-border-radius: 8;
     -fx-background-insets: 0;
+}
+
+/* Botones de acciones en tablas */
+.table-action-btn {
+    -fx-padding: 5 10;
+    -fx-font-size: 11;
+    -fx-background-color: #27AE60;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+    -fx-border-width: 0;
+}
+
+.table-action-btn:hover {
+    -fx-background-color: #229954;
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.table-action-btn:pressed {
+    -fx-background-color: #1E8449;
 }
 
 .confirmOrder-btn-success {
@@ -633,4 +655,100 @@
 .errorBD-btn-action:focused {
     -fx-background-insets: 0;
     -fx-border-color: #FF8D4D; 
+}
+
+/* =========================================
+   VISTA: EDITAR ORDEN (EditOrderDialog)
+   ========================================= */
+
+#editOrder-root {
+    -fx-background-color: transparent;
+}
+
+#editorder-container {
+    -fx-background-color: #f5ead2;
+    -fx-border-color: #B73229;
+    -fx-border-width: 3;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+}
+
+.editorder-field-editable {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #2E4053;
+    -fx-font-weight: bold;
+    -fx-font-size: 1.0em;
+    -fx-border-color: #B73229;
+    -fx-border-width: 2;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-padding: 8;
+    -fx-background-insets: 0;
+}
+
+.editorder-field-editable:focused {
+    -fx-background-color: #FFFDFB;
+    -fx-border-color: #E67E22;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(230, 126, 34, 0.5), 5, 0, 0, 0);
+}
+
+.editorder-field-editable:disabled {
+    -fx-background-color: #E8E8E8;
+    -fx-text-fill: #999999;
+    -fx-opacity: 0.7;
+}
+
+.editorder-value-label {
+    -fx-text-fill: #2E4053;
+    -fx-font-weight: bold;
+    -fx-font-size: 1.05em;
+    -fx-padding: 5 0;
+}
+
+/* Secciones con bordes en el diálogo de edición */
+.editorder-section {
+    -fx-border-color: #B73229;
+    -fx-border-width: 1;
+    -fx-border-radius: 5;
+    -fx-background-color: #f9f5e8;
+    -fx-background-radius: 5;
+}
+
+/* Separador en el diálogo de edición */
+#editorder-container .separator {
+    -fx-border-color: #B73229;
+    -fx-padding: 0;
+}
+
+#editorder-container .separator:vertical {
+    -fx-border-width: 0 0 2 0;
+}
+
+/* =========================================
+   ESTILOS PARA BOTONES DE BÚSQUEDA EN SALES
+   ========================================= */
+
+.sales-tab-button {
+    -fx-background-color: #E67E22;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10;
+    -fx-padding: 8 20;
+    -fx-cursor: hand;
+}
+
+.sales-tab-button:hover {
+    -fx-background-color: #D35400;
+}
+
+.sales-tab-active {
+    -fx-background-color: #A04000 !important; 
+    -fx-text-fill: white !important;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10;
+    -fx-padding: 8 20;
+    -fx-cursor: hand;
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
 }

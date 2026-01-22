@@ -47,7 +47,7 @@ public class DetalleOrdenDAO extends BaseDAO implements ICrud<ModeloDetalleOrden
     }
 
     @Override
-    public ModeloDetalleOrden find(int id) throws SQLException {
+    public ModeloDetalleOrden read(int id) throws SQLException {
         String sql = "SELECT * FROM detalle_orden WHERE id_detalle_orden = ?";
 
         try (Connection conn = getConnection();

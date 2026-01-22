@@ -1,4 +1,4 @@
-package com.Service.ReciboServices;
+package com.Service.TicketServices;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -17,12 +17,13 @@ import com.Config.Constants;
 import com.Model.ModeloDetalleOrden;
 import com.Model.DTO.ModeloRecibo;
 import util.PrinterServiceHolder;
+import javax.print.PrintService;
 
 /**
  * Clase para generar facturas de órdenes en impresora térmica.
  * Ejemplo: https://github.com/anastaciocintra/escpos-coffee-samples/blob/master/usual/textstyle/src/main/java/TextStyleSample.java
  */
-public class ReciboOrdenService {
+public class TicketOrderService {
 
     private static final DecimalFormat FORMATO_PRECIO = new DecimalFormat("$#,##0.00");
     private static final DateTimeFormatter FORMATO_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
@@ -30,15 +31,39 @@ public class ReciboOrdenService {
 
     /**
      * Genera e imprime la factura de una orden en impresora térmica.
+     * Retorna un estado indicando si la impresión fue exitosa.
      *
      * @param factura Modelo de factura con la información de la orden
+     * @return PrintResultEnum indicando el estado de la impresión
      */
-    public void generarFacturaOrden(ModeloRecibo factura) {
+    public PrintResultEnum printOrderTicket(ModeloRecibo factura) {
+        // Validar que la impresora esté disponible antes de intentar
+        if (!checkPrinterAvailability()) {
+            System.err.println("Error de impresión: Impresora no disponible");
+            return PrintResultEnum.PRINTER_NOT_AVAILABLE;
+        }
+        
+        return generateTicket(factura);
+    }
+    
+    /**
+     * Genera e imprime la factura de una orden en impresora térmica.
+     *
+     * @param factura Modelo de factura con la información de la orden
+     * @return PrintResultEnum indicando el estado de la impresión
+     */
+    private PrintResultEnum generateTicket(ModeloRecibo factura) {
         EscPos escpos = null;
         PrinterOutputStream printerOutputStream = null;
         try {
             // Crear PrinterOutputStream desde el PrintService
-            printerOutputStream = new PrinterOutputStream(PrinterServiceHolder.INSTANCE.get());
+            PrintService printService = PrinterServiceHolder.INSTANCE.get();
+            if (printService == null) {
+                System.err.println("Error de impresión: PrintService es null");
+                return PrintResultEnum.PRINTER_NOT_AVAILABLE;
+            }
+            
+            printerOutputStream = new PrinterOutputStream(printService);
             escpos = new EscPos(printerOutputStream);
 
             List<ModeloDetalleOrden> detalleOrden = factura.getOrden().getDetalles();
@@ -97,24 +122,76 @@ public class ReciboOrdenService {
                     .cut(EscPos.CutMode.FULL);
 
             escpos.close();
+            System.out.println("Ticket impreso correctamente.");
+            return PrintResultEnum.SUCCESS;
 
+        } catch (IllegalStateException ex) {
+            // La impresora no está disponible
+            System.err.println("Error de impresión: Impresora no disponible - " + ex.getMessage());
+            PrinterServiceHolder.INSTANCE.invalidate();
+            return PrintResultEnum.PRINTER_NOT_AVAILABLE;
         } catch (IOException ex) {
-            Logger.getLogger(ReciboOrdenService.class.getName()).log(Level.SEVERE, "Error al generar factura", ex);
+            String errorMsg = ex.getMessage() != null ? ex.getMessage() : "Error desconocido";
+            System.err.println("Error de impresión: " + errorMsg);
+            
+            // Detectar si es por falta de papel
+            if (errorMsg.toLowerCase().contains("paper") || errorMsg.toLowerCase().contains("papel")) {
+                return PrintResultEnum.NO_PAPER;
+            }
+            
+            // Intentar reinicializar la impresora en caso de otros errores
+            PrinterServiceHolder.INSTANCE.invalidate();
+            Logger.getLogger(TicketOrderService.class.getName()).log(Level.SEVERE, "Error al generar factura", ex);
+            return PrintResultEnum.PRINT_ERROR;
         } finally {
             if (escpos != null) {
                 try {
                     escpos.close();
                 } catch (IOException e) {
-                    Logger.getLogger(ReciboOrdenService.class.getName()).log(Level.SEVERE, "Error al cerrar escpos", e);
+                    Logger.getLogger(TicketOrderService.class.getName()).log(Level.SEVERE, "Error al cerrar escpos", e);
                 }
             }
             if (printerOutputStream != null) {
                 try {
                     printerOutputStream.close();
                 } catch (IOException e) {
-                    Logger.getLogger(ReciboOrdenService.class.getName()).log(Level.SEVERE, "Error al cerrar printerOutputStream", e);
+                    Logger.getLogger(TicketOrderService.class.getName()).log(Level.SEVERE, "Error al cerrar printerOutputStream", e);
                 }
             }
+        }
+    }
+    
+    /**
+     * Verifica si la impresora está disponible.
+     * 
+     * @return true si la impresora está activa, false si no
+     */
+    private boolean checkPrinterAvailability() {
+        try {
+            return PrinterServiceHolder.INSTANCE.isPrinterActive();
+        } catch (Exception e) {
+            System.err.println("Error al verificar disponibilidad de impresora: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Enum para los posibles resultados de impresión.
+     */
+    public enum PrintResultEnum {
+        SUCCESS("Impresión exitosa"),
+        PRINTER_NOT_AVAILABLE("Impresora no disponible"),
+        NO_PAPER("Se acabó el papel en la impresora"),
+        PRINT_ERROR("Error al imprimir");
+        
+        private final String mensaje;
+        
+        PrintResultEnum(String mensaje) {
+            this.mensaje = mensaje;
+        }
+        
+        public String getMensaje() {
+            return mensaje;
         }
     }
 }

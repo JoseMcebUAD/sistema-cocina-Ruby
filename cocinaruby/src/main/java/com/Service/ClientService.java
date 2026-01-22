@@ -10,6 +10,10 @@ import com.Model.ModeloCliente;
 public class ClientService {
     private ClienteDAO clienteDAO = new ClienteDAO();
     
+    /**
+     * Agrega un nuevo cliente a la base de datos.
+     * Valida que el cliente no sea duplicado por nombre o teléfono.
+     */
     public ModeloCliente addClient(ModeloCliente cliente){
         try {
         List<ModeloCliente> existingClients = clienteDAO.all();
@@ -33,7 +37,7 @@ public class ClientService {
             clienteDAO.update(cliente.getIdCliente(), cliente);
             return true;
         } catch (SQLException e) {
-            System.err.println("Error al editar: " + e.getMessage());
+            System.err.println("Error al actualizar cliente: " + e.getMessage());
             return false;
         }
     }
@@ -42,8 +46,8 @@ public class ClientService {
         try {
         int id = cliente.getIdCliente();
         if (id == 0) {
-            List<ModeloCliente> todos = clienteDAO.all();
-            for (ModeloCliente c : todos) {
+            List<ModeloCliente> allClients = clienteDAO.all();
+            for (ModeloCliente c : allClients) {
                 if (c.getTelefono().equals(cliente.getTelefono())) {
                     id = c.getIdCliente();
                     break;
@@ -56,37 +60,47 @@ public class ClientService {
             }
             return false;
         } catch (SQLException e) {
-            System.err.println("Error al eliminar: " + e.getMessage());
+            System.err.println("Error al eliminar cliente: " + e.getMessage());
             return false;
         }
     }
 
+    /**
+     * Obtiene todos los clientes de la base de datos.
+     * @return Lista de clientes, o lista vacía si hay error
+     */
     public List<ModeloCliente> getAllClients() {
         try {
             return clienteDAO.all();
         } catch (SQLException e) {
-            System.err.println("Error at getAllClients: " + e.getMessage());
+            System.err.println("Error obteniendo todos los clientes: " + e.getMessage());
             return new ArrayList<>();
         }
     }
 
-    public ModeloCliente findOrRegister(ModeloCliente posibleCliente) {
+    /**
+     * Busca un cliente existente o lo registra si es nuevo.
+     * Prioriza búsqueda por teléfono.
+     * @param possibleClient Cliente a buscar o registrar
+     * @return Cliente encontrado o nuevo cliente registrado
+     */
+    public ModeloCliente findOrRegister(ModeloCliente possibleClient) {
         try {
-            List<ModeloCliente> clientes = clienteDAO.all();
+            List<ModeloCliente> allClients = clienteDAO.all();
             
             // 1. Buscar si ya existe (Prioridad al Teléfono)
-            for (ModeloCliente c : clientes) {
-                // Verificamos si coincide el teléfono (ignorando vacíos)
-                if (!c.getTelefono().equals("0") && c.getTelefono().equals(posibleCliente.getTelefono())) {
+            for (ModeloCliente c : allClients) {
+                // Verificar si coincide el teléfono (ignorando vacíos)
+                if (!c.getTelefono().equals("0") && c.getTelefono().equals(possibleClient.getTelefono())) {
                     return c;
                 }
-                // Opcional: Verificamos por nombre si el teléfono no coincidió
-                if (c.getNombreCliente().equalsIgnoreCase(posibleCliente.getNombreCliente())) {
+                // Opcional: Verificar por nombre si el teléfono no coincidió
+                if (c.getNombreCliente().equalsIgnoreCase(possibleClient.getNombreCliente())) {
                     return c;
                 }
             }
             System.out.println("Cliente nuevo detectado en orden. Registrando...");
-            return clienteDAO.create(posibleCliente);
+            return clienteDAO.create(possibleClient);
 
         } catch (SQLException e) {
             System.err.println("Error en findOrRegister: " + e.getMessage());

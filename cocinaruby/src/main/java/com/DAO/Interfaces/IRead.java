@@ -12,7 +12,7 @@ public interface IRead<T> {
      * @param id llave primaria de la tupla
      * @throws SQLException
      */
-    T find(int id) throws SQLException;
+    T read(int id) throws SQLException;
     /**
      * regresa todos los elementos de una base de datos
      * @return

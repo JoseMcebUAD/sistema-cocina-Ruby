@@ -32,7 +32,7 @@ public class ClienteDAO extends BaseDAO  implements ICrud<ModeloCliente> {
     }
 
     @Override
-    public ModeloCliente find(int id) throws SQLException {
+    public ModeloCliente read(int id) throws SQLException {
         String sql = "SELECT * FROM cliente WHERE id_cliente = ?";
 
         try (Connection conn = getConnection();

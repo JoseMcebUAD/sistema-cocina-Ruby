@@ -41,7 +41,7 @@ public class UsuarioDAO  extends BaseDAO implements ICrud<ModeloUsuario> {
     }
 
     @Override
-    public ModeloUsuario find(int id) throws SQLException {
+    public ModeloUsuario read(int id) throws SQLException {
         String sql = "SELECT * FROM usuario WHERE id_usuario = ?";
 
         try (Connection conn = getConnection();

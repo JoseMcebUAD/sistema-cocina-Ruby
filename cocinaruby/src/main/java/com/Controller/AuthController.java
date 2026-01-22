@@ -25,6 +25,9 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import com.Model.Enum.AuthUIConstants;
+import com.Model.Enum.AnimationConstants;
+
 public class AuthController implements Initializable{
     //Verificar Metodos
     @FXML
@@ -104,7 +107,7 @@ public class AuthController implements Initializable{
     }
 
     private boolean userValidation(TextField txtUser, PasswordField txtPassword){
-        return userService.EsUsuariorRegistrado(createUser(txtUser, txtPassword));
+        return userService.isUserRegistered(createUser(txtUser, txtPassword));
     }
 
     private ModeloUsuario createUser(TextField txtUser, PasswordField txtPassword){
@@ -115,11 +118,26 @@ public class AuthController implements Initializable{
     }
 
     private void login() {
-        boolean isUser= userValidation(txtUser,txtPassword);
-        if (isUser) {
-        openMenu();
-        }else{
-            //Aun nada
+        // Clear previous errors
+        clearErrorMessages();
+        
+        ModeloUsuario usuario = createUser(txtUser, txtPassword);
+        int resultado = userService.authenticate(usuario);
+        
+        if (resultado == 0) {
+            // Éxito
+            openMenu();
+        } else if (resultado == 1) {
+            // Campos vacíos
+            showErrorMessage(errorUserLabel, "Por favor completa todos los campos");
+        } else if (resultado == 2) {
+            // Usuario o contraseña incorrectos - mostrar en ambos
+            showErrorMessage(errorUserLabel, "Usuario o contraseña incorrecto");
+            showErrorMessage(errorPasswordLabel, "Usuario o contraseña incorrecto");
+        } else {
+            // Error de base de datos
+            showErrorMessage(errorUserLabel, "Error en la autenticación, intenta más tarde");
+            showErrorMessage(errorPasswordLabel, "Error en la autenticación, intenta más tarde");
         }
     }
 
@@ -137,11 +155,11 @@ public class AuthController implements Initializable{
 
     private void animateText(Labeled node, String newText) {
         FadeTransition fadeOut = new FadeTransition(
-            Duration.millis(150), node);
+            AnimationConstants.FADE_DURATION_SHORT.getDuration(), node);
         fadeOut.setToValue(0);
 
         FadeTransition fadeIn = new FadeTransition(
-            Duration.millis(150), node);
+            AnimationConstants.FADE_DURATION_SHORT.getDuration(), node);
         fadeIn.setFromValue(0);
         fadeIn.setToValue(1);
 
@@ -153,7 +171,16 @@ public class AuthController implements Initializable{
         fadeOut.play();
     }
     private void showErrorMessage(Label label, String message) {
-        
+        label.setText(message);
+        label.setVisible(true);
+        label.setManaged(true);
+    }
+
+    private void clearErrorMessages() {
+        errorUserLabel.setVisible(false);
+        errorUserLabel.setManaged(false);
+        errorPasswordLabel.setVisible(false);
+        errorPasswordLabel.setManaged(false);
     }
     private void viewPassword(){
         //Aun nada

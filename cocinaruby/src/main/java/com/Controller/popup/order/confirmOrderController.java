@@ -13,6 +13,10 @@ import com.Model.Orden.ModeloOrdenDomicilio;
 import com.Model.Orden.ModeloOrdenMesa;
 import com.Model.Orden.ModeloOrdenMostrador;
 import com.Service.OrderService;
+import com.Service.TicketServices.TicketOrderService;
+import com.Service.TicketServices.TicketOrderService.PrintResultEnum;
+import com.Model.DTO.ModeloRecibo;
+import com.Model.DTO.VIEW.ModeloVentasView;
 import com.Model.ModeloTipoPago;
 import com.Model.ModeloCliente;
 import com.Service.ClientService;
@@ -47,6 +51,7 @@ public class confirmOrderController implements Initializable {
 
     private OrderService orderService = new OrderService();
     private ClientService clientService = new ClientService();
+    private TicketOrderService ticketService = new TicketOrderService();
     private OrderController parentController;
 
 
@@ -70,9 +75,15 @@ public class confirmOrderController implements Initializable {
         this.clientPhone = clientPhone;
         this.clientId = clientId;
 
-        totalField.setText(String.format("%.2f", orderTotal));
-        orderTypeField.setText(orderType);
-        clientNameField.setText(clientName.isEmpty() ? "Cliente General" : clientName);
+        if (totalField != null) {
+            totalField.setText(String.format("%.2f", orderTotal));
+        }
+        if (orderTypeField != null) {
+            orderTypeField.setText(orderType);
+        }
+        if (clientNameField != null) {
+            clientNameField.setText(clientName.isEmpty() ? "Cliente General" : clientName);
+        }
     }
 
     private void setUpConfirmButton() {
@@ -112,6 +123,23 @@ public class confirmOrderController implements Initializable {
 
             ModeloOrdenCompleta completeOrder = new ModeloOrdenCompleta(order, this.details);
             if (orderService.addFullOrder(completeOrder)) {
+                //VERIFICAR ESTA PARTE
+                // Intentar imprimir el ticket
+                int orderId = order.getIdOrden();
+                PrintResultEnum printResult = attemptPrintTicket(orderId);
+                
+                // Actualizar estado de facturado según resultado de impresión
+                if (printResult == PrintResultEnum.SUCCESS) {
+                    order.setFacturado(true);
+                    orderService.updateOrderHeader(order);
+                    System.out.println("Orden marcada como facturada/impresa.");
+                } else {
+                    order.setFacturado(false);
+                    orderService.updateOrderHeader(order);
+                    System.out.println("Orden marcada como NO facturada/impresa.");
+                }
+                
+                // Mostrar mensaje según resultado de impresión
                 double cambio = 0.0;
                 boolean esEfectivo = false;
                 ModeloTipoPago metodo = paymentMethodCombo.getValue();
@@ -119,10 +147,17 @@ public class confirmOrderController implements Initializable {
                     esEfectivo = true;
                     cambio = order.getPagoCliente() - this.total;
                 }
+                
                 StringBuilder mensaje = new StringBuilder("Pedido registrado correctamente.");
                 if (esEfectivo) {
                     mensaje.append("\n\nCambio a entregar: $").append(String.format("%.2f", cambio));
                 }
+                
+                // Agregar información de impresión al mensaje
+                if (printResult != PrintResultEnum.SUCCESS) {
+                    mensaje.append("\n\n AVISO DE IMPRESIÓN: ").append(printResult.getMensaje());
+                }
+                
                 showCustomAlert("SUCCESS", "Venta Exitosa", mensaje.toString());
                 
                 if (parentController != null) parentController.clearOrder();
@@ -131,6 +166,84 @@ public class confirmOrderController implements Initializable {
                 showCustomAlert("ERROR", "Error de Base de Datos", "No se pudo guardar la venta. Verifique la conexión.");
             }
         });
+    }
+    
+    /**
+     * Intenta imprimir el ticket de la orden.
+     * Maneja todos los errores posibles de impresora.
+     * 
+     * @param orderId ID de la orden a imprimir
+     * @return PrintResultEnum indicando el resultado de la impresión
+     */
+    private PrintResultEnum attemptPrintTicket(int orderId) {
+        try {
+            // Obtener orden usando OrderService
+            ModeloVentasView ventasView = orderService.getOrderWithDetails(orderId);
+            
+            if (ventasView == null) {
+                System.err.println("Error: No se pudo obtener la orden ID: " + orderId);
+                return PrintResultEnum.PRINT_ERROR;
+            }
+            
+            // Convertir ModeloVentasView a ModeloOrdenCompleta
+            ModeloOrden ordenBase = createOrderFromSale(ventasView);
+            
+            // Obtener detalles a través del servicio
+            List<ModeloDetalleOrden> detalles = orderService.getOrderDetails(orderId);
+            
+            // Crear el modelo de recibo
+            ModeloRecibo recibo = new ModeloRecibo();
+            recibo.setOrden(new ModeloOrdenCompleta(ordenBase, detalles));
+            recibo.setFechaExpedicion(ordenBase.getFechaExpedicionOrden());
+            
+            // Intentar imprimir
+            PrintResultEnum resultado = ticketService.printOrderTicket(recibo);
+            
+            // Log detallado del resultado
+            switch(resultado) {
+                case SUCCESS:
+                    System.out.println("✓ Ticket impreso exitosamente para orden ID: " + orderId);
+                    break;
+                case PRINTER_NOT_AVAILABLE:
+                    System.err.println("✗ Impresora no disponible - Orden ID: " + orderId);
+                    break;
+                case NO_PAPER:
+                    System.err.println("✗ Sin papel en la impresora - Orden ID: " + orderId);
+                    break;
+                case PRINT_ERROR:
+                    System.err.println("✗ Error al imprimir - Orden ID: " + orderId);
+                    break;
+            }
+            
+            return resultado;
+        } catch (Exception ex) {
+            System.err.println("Excepción al intentar imprimir: " + ex.getMessage());
+            ex.printStackTrace();
+            return PrintResultEnum.PRINT_ERROR;
+        }
+    }
+    
+    /**
+     * Crea un objeto ModeloOrden a partir de un ModeloVentasView
+     */
+    private ModeloOrden createOrderFromSale(com.Model.DTO.VIEW.ModeloVentasView venta) {
+        ModeloOrdenMostrador orden = new ModeloOrdenMostrador();
+        orden.setIdOrden(venta.getIdOrden());
+        orden.setIdRelTipoPago(venta.getIdRelTipoPago());
+        orden.setNombreTipoPago(venta.getNombreTipoPago());
+        orden.setTipoCliente(venta.getTipoCliente());
+        
+        // Asignar fecha directamente ya que es LocalDateTime
+        if (venta.getFechaExpedicionOrden() != null) {
+            orden.setFechaExpedicionOrden(venta.getFechaExpedicionOrden());
+        } else {
+            orden.setFechaExpedicionOrden(LocalDateTime.now());
+        }
+        
+        orden.setPrecioOrden(venta.getPrecioOrden());
+        orden.setPagoCliente(venta.getPagoCliente());
+        orden.setFacturado(venta.isFacturado());
+        return orden;
     }
 
 
@@ -146,7 +259,12 @@ public class confirmOrderController implements Initializable {
             return deliveryOrder;
         } else if (TiposClienteEnum.PAGO_MESA.equals(this.serviceType)) {
             ModeloOrdenMesa tableOrder = new ModeloOrdenMesa();
-            tableOrder.setNumeroMesa(clientName.isEmpty() ? "General" : clientName);
+            // Si clientName viene como "Mesa X", extraer solo la X
+            String numeroMesa = clientName;
+            if (clientName.startsWith("Mesa ")) {
+                numeroMesa = clientName.substring(5); // Quitar "Mesa "
+            }
+            tableOrder.setNumeroMesa(numeroMesa.isEmpty() ? "General" : numeroMesa);
             return tableOrder;
         } else {
             ModeloOrdenMostrador dineinOrder = new ModeloOrdenMostrador();
@@ -156,7 +274,7 @@ public class confirmOrderController implements Initializable {
     }
 
     private void setUpPaymentConfig() {
-        List<ModeloTipoPago> tiposPago = orderService.getTiposDePago();
+        List<ModeloTipoPago> tiposPago = orderService.getPaymentTypes();
         paymentMethodCombo.getItems().setAll(tiposPago);
         paymentMethodCombo.setPromptText("Seleccionar...");
         paymentMethodCombo.setCellFactory(lv -> createCustomCell());

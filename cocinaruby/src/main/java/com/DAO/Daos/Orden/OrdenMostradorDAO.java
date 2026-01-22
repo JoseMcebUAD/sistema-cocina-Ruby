@@ -38,7 +38,7 @@ public class OrdenMostradorDAO extends BaseDAO implements ICrud<ModeloOrdenMostr
     }
 
     @Override
-    public ModeloOrdenMostrador find(int id) throws SQLException {
+    public ModeloOrdenMostrador read(int id) throws SQLException {
         String sql = """
             SELECT o.*, om.nombre
             FROM orden o
