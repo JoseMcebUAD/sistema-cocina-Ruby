@@ -13,15 +13,40 @@ public class UserService {
     private UsuarioDAO usuarioDAO= new UsuarioDAO();
     private SessionUsuario instanceSessionUsuario = SessionUsuario.getInstance();
 
-    public boolean EsUsuariorRegistrado(ModeloUsuario usuario) {
-        //Verificar si esta validacion si pertenece aqui
-        if(!ValidarDatosLogin(usuario)){
+    /**
+     * Códigos de retorno:
+     * 0 = Éxito, usuario autenticado
+     * 1 = Campos vacíos o inválidos
+     * 2 = Usuario o contraseña incorrectos
+     * 3 = Error de base de datos
+     */
+    public int authenticate(ModeloUsuario usuario) {
+        // Verificar si los campos están llenos
+        if(!validateLoginData(usuario)){
+            return 1; // Campos vacíos
+        }
+        // Validar usuario en base de datos
+        try {
+            if(validateUser(usuario)){
+                return 0; // Éxito
+            }else {
+                return 2; // Usuario o contraseña incorrectos
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 3; // Error de base de datos
+        }
+    }
+
+    public boolean isUserRegistered(ModeloUsuario usuario) {
+        // Verify if this validation belongs here
+        if(!validateLoginData(usuario)){
             JOptionPane.showMessageDialog(null, "Llena los campos");
             return false;
         }
-        //Esto si va
+        // This part goes
         try {
-            return ValidarUsuario(usuario);
+            return validateUser(usuario);
         } catch (SQLException e) {
         e.printStackTrace();
         JOptionPane.showMessageDialog(null, "Usuario no encontrado");
@@ -31,18 +56,18 @@ public class UserService {
         
     }
     /**
-     * funcion para verificar los campos que introduce el usuario al sistema
-     * @param usuario
-     * @return
+     * Función para verificar los campos que introduce el usuario en el sistema
+     * @param usuario Modelo de usuario
+     * @return true si usuario y contraseña no están vacíos
      */
-    private boolean ValidarDatosLogin(ModeloUsuario usuario){
-    boolean resultado = usuario.getNombreUsuario()!= null && !usuario.getNombreUsuario().isBlank() 
+    private boolean validateLoginData(ModeloUsuario usuario){
+    boolean result = usuario.getNombreUsuario()!= null && !usuario.getNombreUsuario().isBlank() 
     && usuario.getContrasenaUsuario() != null && !usuario.getContrasenaUsuario().isBlank();
-    return resultado;
+    return result;
     }
 
-    //petición a la base de datos para verificar si el ususario es correcto
-    private boolean ValidarUsuario(ModeloUsuario usuario) throws SQLException{
+    // Petición a la base de datos para verificar si el usuario es correcto
+    private boolean validateUser(ModeloUsuario usuario) throws SQLException{
     if(usuarioDAO.autenticar(usuario.getNombreUsuario(), usuario.getContrasenaUsuario()) != null){
         this.instanceSessionUsuario.guardarNombreUsuario(usuario.getNombreUsuario());
         return true;

@@ -5,7 +5,7 @@ import com.Model.DTO.VIEW.ModeloVentasView;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -61,12 +61,15 @@ public class OrdenViewDAO extends BaseDAO {
      */
     public List<ModeloVentasView> findByCorteDelDia(String tipoCliente, int idTipoPago, String nombreCliente) throws SQLException {
         String sql = """
-            SELECT * FROM view_ventas
-            WHERE DATE(fecha_expedicion_orden) = CURDATE()
-                AND (? = 0 OR idRel_tipo_pago = ?)
-                AND (? IS NULL OR nombre_cliente LIKE ?)
-                AND (? IS NULL OR tipo_cliente = ?)
-            ORDER BY fecha_expedicion_orden DESC
+            SELECT v.*, o.facturado, tp.nombre_tipo_pago
+            FROM view_ventas v
+            LEFT JOIN orden o ON v.id_orden = o.id_orden
+            LEFT JOIN tipo_pago tp ON v.idRel_tipo_pago = tp.id_tipo_pago
+            WHERE DATE(v.fecha_expedicion_orden) = CURDATE()
+                AND (? = 0 OR v.idRel_tipo_pago = ?)
+                AND (? IS NULL OR v.nombre_cliente LIKE ?)
+                AND (? IS NULL OR v.tipo_cliente = ?)
+            ORDER BY v.fecha_expedicion_orden DESC
         """;
 
         List<ModeloVentasView> ordenes = new ArrayList<>();
@@ -113,14 +116,17 @@ public class OrdenViewDAO extends BaseDAO {
      * @param idTipoPago ID del tipo de pago (0 = ignorar filtro)
      * @param nombreCliente Nombre del cliente (null = ignorar filtro)
      */
-    public List<ModeloVentasView> findByFiltroFechas(Date desde, Date hasta, String tipoCliente, int idTipoPago, String nombreCliente) throws SQLException {
+    public List<ModeloVentasView> findByFiltroFechas(LocalDateTime desde, LocalDateTime hasta, String tipoCliente, int idTipoPago, String nombreCliente) throws SQLException {
         String sql = """
-            SELECT * FROM view_ventas
-            WHERE DATE(fecha_expedicion_orden) BETWEEN ? AND ?
-                AND (? = 0 OR idRel_tipo_pago = ?)
-                AND (? IS NULL OR nombre_cliente LIKE ?)
-                AND (? IS NULL OR tipo_cliente = ?)
-            ORDER BY fecha_expedicion_orden DESC
+            SELECT v.*, o.facturado, tp.nombre_tipo_pago
+            FROM view_ventas v
+            LEFT JOIN orden o ON v.id_orden = o.id_orden
+            LEFT JOIN tipo_pago tp ON v.idRel_tipo_pago = tp.id_tipo_pago
+            WHERE DATE(v.fecha_expedicion_orden) BETWEEN ? AND ?
+                AND (? = 0 OR v.idRel_tipo_pago = ?)
+                AND (? IS NULL OR v.nombre_cliente LIKE ?)
+                AND (? IS NULL OR v.tipo_cliente = ?)
+            ORDER BY v.fecha_expedicion_orden DESC
         """;
 
         List<ModeloVentasView> ordenes = new ArrayList<>();
@@ -128,9 +134,9 @@ public class OrdenViewDAO extends BaseDAO {
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            // Filtro por rango de fechas
-            ps.setDate(1, new java.sql.Date(desde.getTime()));
-            ps.setDate(2, new java.sql.Date(hasta.getTime()));
+            // Filtro por rango de fechas (usar Timestamp para LocalDateTime)
+            ps.setTimestamp(1, Timestamp.valueOf(desde));
+            ps.setTimestamp(2, Timestamp.valueOf(hasta));
 
             // Filtro por tipo de pago
             ps.setInt(3, idTipoPago);
@@ -171,14 +177,14 @@ public class OrdenViewDAO extends BaseDAO {
      * @return Total de ventas
      * @throws SQLException si hay error en la consulta
      */
-    public double calcularTotalVentas(Date desde, Date hasta) throws SQLException {
+    public double calcularTotalVentas(LocalDateTime desde, LocalDateTime hasta) throws SQLException {
         String sql = "SELECT SUM(precio_orden) as total FROM view_ventas WHERE DATE(fecha_expedicion_orden) BETWEEN ? AND ?";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setDate(1, new java.sql.Date(desde.getTime()));
-            ps.setDate(2, new java.sql.Date(hasta.getTime()));
+            ps.setTimestamp(1, Timestamp.valueOf(desde));
+            ps.setTimestamp(2, Timestamp.valueOf(hasta));
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -223,17 +229,68 @@ public class OrdenViewDAO extends BaseDAO {
         orden.setIdOrden(rs.getInt("id_orden"));
         orden.setIdRelTipoPago(rs.getInt("idRel_tipo_pago"));
         orden.setTipoCliente(rs.getString("tipo_cliente"));
-        orden.setFechaExpedicionOrden(rs.getTimestamp("fecha_expedicion_orden"));
+        Timestamp ts = rs.getTimestamp("fecha_expedicion_orden");
+        if (ts != null) {
+            orden.setFechaExpedicionOrden(ts.toLocalDateTime());
+        } else {
+            orden.setFechaExpedicionOrden(null);
+        }
         orden.setPrecioOrden(rs.getDouble("precio_orden"));
         orden.setPagoCliente(rs.getDouble("pago_cliente"));
 
         // Campos normalizados
         orden.setNombreCliente(rs.getString("nombre_cliente"));
-
-        //obtener el json como objeto de los detalles de orde
-        orden.setDetalleOrden(orden.obtenerJsonDetalle(rs.getString("detalle_orden")));
         
+        // Obtener nombre del tipo de pago
+        try {
+            String nombreTipoPago = rs.getString("nombre_tipo_pago");
+            orden.setNombreTipoPago(nombreTipoPago != null ? nombreTipoPago : "Desconocido");
+        } catch (SQLException e) {
+            orden.setNombreTipoPago("Desconocido");
+        }
+        
+        // Obtener estado facturado
+        try {
+            orden.setFacturado(rs.getBoolean("facturado"));
+        } catch (SQLException e) {
+            orden.setFacturado(false);
+        }
+
+        // Obtener detalles de la orden desde la tabla detalle_orden
+        try {
+            List<com.Model.ModeloDetalleOrden> detalles = obtenerDetallesOrden(orden.getIdOrden());
+            orden.setDetalleOrden(detalles);
+        } catch (SQLException e) {
+            System.err.println("Error obteniendo detalles de orden " + orden.getIdOrden() + ": " + e.getMessage());
+            orden.setDetalleOrden(new ArrayList<>());
+        }
         
         return orden;
+    }
+
+    /**
+     * Obtiene los detalles de una orden desde la tabla detalle_orden
+     */
+    private List<com.Model.ModeloDetalleOrden> obtenerDetallesOrden(int idOrden) throws SQLException {
+        String sql = "SELECT * FROM detalle_orden WHERE idRel_orden = ?";
+        List<com.Model.ModeloDetalleOrden> detalles = new ArrayList<>();
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, idOrden);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    com.Model.ModeloDetalleOrden detalle = new com.Model.ModeloDetalleOrden();
+                    detalle.setIdDetalleOrden(rs.getInt("id_detalle_orden"));
+                    detalle.setIdRelOrden(rs.getInt("idRel_orden"));
+                    detalle.setEspecificacionesDetalleOrden(rs.getString("especificaciones_detalle_orden"));
+                    detalle.setPrecioDetalleOrden(rs.getDouble("precio_detalle_orden"));
+                    detalle.setCantidad(rs.getInt("cantidad"));
+                    detalles.add(detalle);
+                }
+            }
+        }
+        return detalles;
     }
 }

@@ -22,14 +22,13 @@ public class AA6CrearTablaDetalleOrden20250105 extends Migration {
 
             System.out.println("Tabla 'detalle_orden' creada exitosamente");
 
-            // Crear triggers para actualizar automáticamente el precio_orden
             String triggerInsert = """
                 CREATE TRIGGER trg_detalle_insert
                 AFTER INSERT ON detalle_orden
                 FOR EACH ROW
                 BEGIN
                   UPDATE orden
-                  SET precio_orden = precio_orden + NEW.precio_detalle_orden
+                  SET precio_orden = precio_orden + (NEW.precio_detalle_orden * NEW.cantidad)
                   WHERE id_orden = NEW.idRel_orden;
                 END
                 """;
@@ -41,8 +40,8 @@ public class AA6CrearTablaDetalleOrden20250105 extends Migration {
                 BEGIN
                   UPDATE orden
                   SET precio_orden = precio_orden
-                      - OLD.precio_detalle_orden
-                      + NEW.precio_detalle_orden
+                      - (OLD.precio_detalle_orden * OLD.cantidad)
+                      + (NEW.precio_detalle_orden * NEW.cantidad)
                   WHERE id_orden = NEW.idRel_orden;
                 END
                 """;
@@ -53,7 +52,7 @@ public class AA6CrearTablaDetalleOrden20250105 extends Migration {
                 FOR EACH ROW
                 BEGIN
                   UPDATE orden
-                  SET precio_orden = precio_orden - OLD.precio_detalle_orden
+                  SET precio_orden = precio_orden - (OLD.precio_detalle_orden * OLD.cantidad)
                   WHERE id_orden = OLD.idRel_orden;
                 END
                 """;

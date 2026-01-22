@@ -15,7 +15,7 @@ public class AA5CrearTablaOrden20250105 extends Migration {
                 table.enumColumn("tipo_cliente","Domicilio","Mesa","Mostrador").notNull();
                 table.datetime("fecha_expedicion_orden").notNull().defaultValue("CURRENT_TIMESTAMP");
                 table.decimal("precio_orden", 10, 2).notNull().defaultValue("0.00");
-                table.decimal("pago_cliente", 5, 2).nullable().defaultValue("0.00");
+                table.decimal("pago_cliente", 10, 2).nullable().defaultValue("0.00");
                 table.bool("facturado").defaultValue("0");
 
                 table.foreign("idRel_tipo_pago", "tipo_pago", "id_tipo_pago");
