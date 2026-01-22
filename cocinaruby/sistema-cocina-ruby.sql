@@ -23,8 +23,8 @@ USE `sistema-cocina-ruby`;
 -- Table structure for table `tipo_usuario`
 --
 
-CREATE TABLE IF NOT EXISTS`tipo_usuario` (
-  `id_tipo_usuario` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `tipo_usuario` (
+  `id_tipo_usuario` int(11) NOT NULL PRIMARY KEY,
   `nombre_tipo_usuario` varchar(50) NOT NULL,
   `permisos_usuario` varchar(1000) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -36,21 +36,11 @@ CREATE TABLE IF NOT EXISTS`tipo_usuario` (
 --
 
 CREATE TABLE IF NOT EXISTS `usuario` (
-  `id_usuario` int(11) NOT NULL,
+  `id_usuario` int(11) NOT NULL PRIMARY KEY,
   `idRel_tipo_usuario` int(11) NOT NULL,
   `nombre_usuario` varchar(50) NOT NULL,
-  `contrasena_usuario` varchar(200) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tipo_cliente`
---
-
-CREATE TABLE IF NOT EXISTS `tipo_cliente` (
-  `id_tipo_cliente` int(11) NOT NULL,
-  `nombre_tipo_cliente` varchar(50) NOT NULL
+  `contrasena_usuario` varchar(200) NOT NULL,
+  FOREIGN KEY (`idRel_tipo_usuario`) REFERENCES `tipo_usuario` (`id_tipo_usuario`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -60,11 +50,9 @@ CREATE TABLE IF NOT EXISTS `tipo_cliente` (
 --
 
 CREATE TABLE IF NOT EXISTS `cliente` (
-  `id_cliente` int(11) NOT NULL,
-  `idRel_tipo_cliente` int(11) NOT NULL,
-  `nombre_cliente` varchar(50) DEFAULT NULL,
+  `id_cliente` int(11) NOT NULL PRIMARY KEY,
+  `nombre_cliente` varchar(50) NOT NULL,
   `direcciones` varchar(400) DEFAULT NULL,
-  `numero_tarjeta` varchar(50) DEFAULT NULL
   `telefono` varchar(25) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -75,8 +63,8 @@ CREATE TABLE IF NOT EXISTS `cliente` (
 --
 
 CREATE TABLE IF NOT EXISTS `tipo_pago` (
-  `id_tipo_pago` int(11) NOT NULL,
-  `nombre_tipo_pago` varchar(30) NOT NULL
+  `id_tipo_pago` int(11) NOT NULL PRIMARY KEY,
+  `nombre_tipo_pago` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -86,14 +74,52 @@ CREATE TABLE IF NOT EXISTS `tipo_pago` (
 --
 
 CREATE TABLE IF NOT EXISTS `orden` (
-  `id_orden` int(11) NOT NULL,
-  `idRel_cliente` int(11) DEFAULT NULL,
+  `id_orden` int(11) NOT NULL PRIMARY KEY,
   `idRel_tipo_pago` int(11) NOT NULL,
+  `tipo_cliente` ENUM('Mostrador','Domicilio','Mesa') NOT NULL,
   `fecha_expedicion_orden` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `notas_orden` varchar(100) DEFAULT NULL,
   `precio_orden` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `pago_cliente` float(5,2) NULL DEFAULT 0.00,
-  `facturado` tinyint(1) NOT NULL DEFAULT 0
+  `pago_cliente` decimal(10,2) NULL DEFAULT 0.00,
+  `facturado` tinyint(1) NOT NULL DEFAULT 0,
+  FOREIGN KEY (`idRel_tipo_pago`) REFERENCES `tipo_pago` (`id_tipo_pago`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `orden_mostrador`
+--
+
+CREATE TABLE IF NOT EXISTS `orden_mostrador` (
+  `id_orden` int(11) PRIMARY KEY,
+  `nombre` varchar(100) DEFAULT NULL,
+  FOREIGN KEY (`id_orden`) REFERENCES `orden` (`id_orden`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `orden_domicilio`
+--
+
+CREATE TABLE IF NOT EXISTS `orden_domicilio` (
+  `id_orden` int(11) PRIMARY KEY,
+  `idRel_cliente` int(11) DEFAULT NULL,
+  `direccion` varchar(400) DEFAULT NULL,
+  FOREIGN KEY (`id_orden`) REFERENCES `orden` (`id_orden`) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (`idRel_cliente`) REFERENCES `cliente` (`id_cliente`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `orden_mesa`
+--
+
+CREATE TABLE IF NOT EXISTS `orden_mesa` (
+  `id_orden` int(11) PRIMARY KEY,
+  `numero_mesa` varchar(30) DEFAULT NULL,
+  FOREIGN KEY (`id_orden`) REFERENCES `orden` (`id_orden`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -103,11 +129,12 @@ CREATE TABLE IF NOT EXISTS `orden` (
 --
 
 CREATE TABLE IF NOT EXISTS `detalle_orden` (
-  `id_detalle_orden` int(11) NOT NULL,
+  `id_detalle_orden` int(11) NOT NULL PRIMARY KEY,
   `idRel_orden` int(11) NOT NULL,
   `especificaciones_detalle_orden` varchar(100) DEFAULT NULL,
   `precio_detalle_orden` decimal(10,2) NOT NULL,
-  'cantidad' int(3) NOT NULL
+  `cantidad` int(3) NOT NULL DEFAULT 1,
+  FOREIGN KEY (`idRel_orden`) REFERENCES `orden` (`id_orden`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 DELIMITER $$
@@ -143,141 +170,6 @@ END$$
 
 DELIMITER ;
 
-
-
-
--- --------------------------------------------------------
-
---
--- Indexes for dumped tables
---
-
---
--- Indexes for table `tipo_usuario`
---
-ALTER TABLE `tipo_usuario`
-  ADD PRIMARY KEY (`id_tipo_usuario`);
-
---
--- Indexes for table `usuario`
---
-ALTER TABLE `usuario`
-  ADD PRIMARY KEY (`id_usuario`),
-  ADD KEY `fk_usuario_tipo` (`idRel_tipo_usuario`);
-
---
--- Indexes for table `tipo_cliente`
---
-ALTER TABLE `tipo_cliente`
-  ADD PRIMARY KEY (`id_tipo_cliente`);
-
---
--- Indexes for table `cliente`
---
-ALTER TABLE `cliente`
-  ADD PRIMARY KEY (`id_cliente`),
-  ADD KEY `fk_cliente_tipo` (`idRel_tipo_cliente`);
-
---
--- Indexes for table `tipo_pago`
---
-ALTER TABLE `tipo_pago`
-  ADD PRIMARY KEY (`id_tipo_pago`);
-
---
--- Indexes for table `orden`
---
-ALTER TABLE `orden`
-  ADD PRIMARY KEY (`id_orden`),
-  ADD KEY `fk_orden_cliente` (`idRel_cliente`),
-  ADD KEY `fk_orden_tipo_pago` (`idRel_tipo_pago`),
-  ADD KEY `idx_fecha_expedicion` (`fecha_expedicion_orden`),
-  ADD KEY `idx_facturado` (`facturado`);
-
---
--- Indexes for table `detalle_orden`
---
-ALTER TABLE `detalle_orden`
-  ADD PRIMARY KEY (`id_detalle_orden`),
-  ADD KEY `fk_detalle_orden` (`idRel_orden`);
-
--- --------------------------------------------------------
-
---
--- AUTO_INCREMENT for dumped tables
---
-
-ALTER TABLE `tipo_usuario`
-  MODIFY `id_tipo_usuario` int(11) NOT NULL AUTO_INCREMENT;
-
-ALTER TABLE `usuario`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT;
-
-ALTER TABLE `tipo_cliente`
-  MODIFY `id_tipo_cliente` int(11) NOT NULL AUTO_INCREMENT;
-
-ALTER TABLE `cliente`
-  MODIFY `id_cliente` int(11) NOT NULL AUTO_INCREMENT;
-
-ALTER TABLE `tipo_pago`
-  MODIFY `id_tipo_pago` int(11) NOT NULL AUTO_INCREMENT;
-
-ALTER TABLE `orden`
-  MODIFY `id_orden` int(11) NOT NULL AUTO_INCREMENT;
-
-ALTER TABLE `detalle_orden`
-  MODIFY `id_detalle_orden` int(11) NOT NULL AUTO_INCREMENT;
-
--- --------------------------------------------------------
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `usuario`
---
-ALTER TABLE `usuario`
-  ADD CONSTRAINT `usuario_ibfk_1`
-  FOREIGN KEY (`idRel_tipo_usuario`)
-  REFERENCES `tipo_usuario` (`id_tipo_usuario`)
-  ON DELETE RESTRICT
-  ON UPDATE CASCADE;
-
---
--- Constraints for table `cliente`
---
-ALTER TABLE `cliente`
-  ADD CONSTRAINT `cliente_ibfk_1`
-  FOREIGN KEY (`idRel_tipo_cliente`)
-  REFERENCES `tipo_cliente` (`id_tipo_cliente`)
-  ON DELETE RESTRICT
-  ON UPDATE CASCADE;
-
---
--- Constraints for table `orden`
---
-ALTER TABLE `orden`
-  ADD CONSTRAINT `orden_ibfk_1`
-  FOREIGN KEY (`idRel_cliente`)
-  REFERENCES `cliente` (`id_cliente`)
-  ON DELETE SET NULL
-  ON UPDATE CASCADE,
-  ADD CONSTRAINT `orden_ibfk_2`
-  FOREIGN KEY (`idRel_tipo_pago`)
-  REFERENCES `tipo_pago` (`id_tipo_pago`)
-  ON DELETE RESTRICT
-  ON UPDATE CASCADE;
-
---
--- Constraints for table `detalle_orden`
---
-ALTER TABLE `detalle_orden`
-  ADD CONSTRAINT `detalle_orden_ibfk_1`
-  FOREIGN KEY (`idRel_orden`)
-  REFERENCES `orden` (`id_orden`)
-  ON DELETE CASCADE
-  ON UPDATE CASCADE;
 
 COMMIT;
 
