@@ -6,7 +6,6 @@ import java.util.ResourceBundle;
 import com.Model.ModeloCliente;
 import com.Service.ClientService;
 import com.Model.Enum.ClientsUIConstants;
-import com.Model.Enum.AnimationConstants;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

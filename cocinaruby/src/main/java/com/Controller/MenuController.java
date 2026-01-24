@@ -18,7 +18,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
 import com.Model.Enum.MenuStyleConstants;
 import com.Model.Enum.AnimationConstants;
@@ -116,9 +115,9 @@ public class MenuController extends BaseController {
         menu.setCursor(Cursor.HAND);
     }
 
-    private void setupUserName(){
+    // private void setupUserName(){
 
-    }
+    // }
     // =============== BOTONES ===============
     /**
      * Configura todos los botones del menú.
