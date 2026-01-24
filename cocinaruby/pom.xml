@@ -117,6 +117,22 @@
 
     <!-- Plugins adicionales fuera de pluginManagement -->
     <plugins>
+      <!-- Plugin para JAR ejecutable con icono embebido -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.2.0</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>com.View.Main</mainClass>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>lib/</classpathPrefix>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+
       <!-- Plugin para ejecutar clases Java -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -152,6 +168,23 @@
           </execution>
         </executions>
       </plugin>
+
+
+      <plugin>
+          <groupId>org.panteleyev</groupId>
+            <artifactId>jpackage-maven-plugin</artifactId>
+            <version>1.6.0</version>
+            <configuration>
+            <name>CocinaRubyPOS</name>
+            <mainClass>com.View.Main</mainClass>
+            <type>exe</type>
+            <icon>src/main/resources/icons/app.ico</icon>
+            <javaOptions>
+            <option>-Xmx512m</option>
+            </javaOptions>
+            <winConsole>false</winConsole>
+            </configuration>
+            </plugin>
     </plugins>
   </build>
 </project>

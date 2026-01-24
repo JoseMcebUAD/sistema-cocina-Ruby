@@ -2,6 +2,7 @@ package com.View;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -60,7 +61,7 @@ public class Main extends Application {
         primaryStage.setFullScreenExitHint("");
         primaryStage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
         primaryStage.initStyle(StageStyle.TRANSPARENT);
-
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/app.png")));
         // Si carga menu.fxml, maximizar y no permitir redimensionar
         // Si carga auth.fxml, permitir redimensionar
         if (fxmlPath.contains("menu.fxml")) {
