@@ -27,6 +27,7 @@ public class ModeloVentasView {
 
     // Campos normalizados de las tablas especializadas
     private String nombreCliente; // Nombre del cliente, "Mostrador", o "Mesa X"
+    private double tarifaDomicilio; // Tarifa de domicilio (0.0 si no es domicilio)
 
     // Detalles de la orden en formato JSON
     private List<ModeloDetalleOrden> detalleOrden; // JSON array con los detalles
@@ -111,6 +112,14 @@ public class ModeloVentasView {
 
     public void setDetalleOrden(List<ModeloDetalleOrden> detalleOrden) {
         this.detalleOrden = detalleOrden;
+    }
+
+    public double getTarifaDomicilio() {
+        return tarifaDomicilio;
+    }
+
+    public void setTarifaDomicilio(double tarifaDomicilio) {
+        this.tarifaDomicilio = tarifaDomicilio;
     }
 
     /**

@@ -267,16 +267,24 @@ public class SalesController extends BaseController {
 
     /**
      * Maneja el clic en el botón "LIMPIAR CAMPOS".
-     * Limpia los DatePicker, el campo de búsqueda y la tabla.
+     * Limpia todos los campos, vuelve a las fechas de hoy y carga las órdenes de hoy.
      */
     private void handleClearButton() {
-        startDate.setValue(null);
-        endDate.setValue(null);
+        // Limpiar todos los campos
+        startDate.setValue(LocalDate.now());
+        endDate.setValue(LocalDate.now());
         searchField.clear();
-        updateTotalLabel(0.0);
-        OrderTable.setItems(FXCollections.observableArrayList());
-        orderDetailTable.setItems(FXCollections.observableArrayList());
+
+        // Ocultar barras de búsqueda
         setVisibility(fieldBar, false);
+        setVisibility(dateBar, false);
+
+        // Resetear los estilos de los botones/menús
+        toggleMenuItemStyle(null, dateSearchButton, clientTypeButton, clientNameButton, PayTypeButton);
+        updateTabStyles(false); // Activar "Ventas de Hoy"
+
+        // Cargar órdenes de hoy
+        loadOrdersFromService();
     }
     
     /**
@@ -762,15 +770,15 @@ public class SalesController extends BaseController {
         String searchText = searchField.getText().trim();
         String templateText = templateLabel.getText();
 
+        // Si el campo está vacío, volver a mostrar las órdenes de hoy
         if (searchText.isEmpty()) {
-            updateTotalLabel(0.0);
-            OrderTable.setItems(FXCollections.observableArrayList());
+            loadOrdersFromService();
             return;
         }
 
         try {
             List<ModeloVentasView> filteredOrders = getFilteredOrders(searchText, templateText);
-            
+
             if (filteredOrders == null || filteredOrders.isEmpty()) {
                 System.out.println("No hay órdenes que coincidan con la búsqueda: " + searchText);
                 updateTotalLabel(0.0);
@@ -809,26 +817,26 @@ public class SalesController extends BaseController {
     }
 
     /**
-     * Busca órdenes por tipo de pago.
+     * Busca órdenes por tipo de pago (solo las de hoy).
      */
     private List<ModeloVentasView> searchOrdersByPaymentType(String paymentTypeName) {
         try {
             List<ModeloTipoPago> paymentTypes = orderService.getPaymentTypes();
             System.out.println("Tipos de pago disponibles: " + paymentTypes.size());
-            
+
             int matchingPaymentTypeId = findPaymentTypeId(paymentTypes, paymentTypeName);
-            
+
             if (matchingPaymentTypeId == -1) {
                 System.out.println("No se encontró tipo de pago que coincida con: " + paymentTypeName);
                 return List.of();
             }
-            
-            LocalDate veryOldDate = LocalDate.of(2000, 1, 1);
+
+            // Buscar solo en órdenes de hoy
             LocalDate today = LocalDate.now();
             List<ModeloVentasView> allOrders = orderService.getOrdersByDateRange(
-                veryOldDate, today, null, matchingPaymentTypeId, null);
-            
-            System.out.println("Órdenes encontradas con tipo de pago ID " + matchingPaymentTypeId + ": " + allOrders.size());
+                today, today, null, matchingPaymentTypeId, null);
+
+            System.out.println("Órdenes de hoy encontradas con tipo de pago ID " + matchingPaymentTypeId + ": " + allOrders.size());
             return allOrders;
         } catch (Exception e) {
             System.err.println("Error al buscar por tipo de pago: " + e.getMessage());

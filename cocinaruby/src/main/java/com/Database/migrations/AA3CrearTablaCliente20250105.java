@@ -14,6 +14,7 @@ public class AA3CrearTablaCliente20250105 extends Migration {
                 table.string("nombre_cliente", 50).nullable();
                 table.string("direcciones", 400).nullable();
                 table.string("telefono", 25).nullable();
+                table.decimal("tarifa_domicilio", 10, 2).defaultValue("0.00");
             }, conexion);
 
             System.out.println("Tabla 'cliente' creada exitosamente");

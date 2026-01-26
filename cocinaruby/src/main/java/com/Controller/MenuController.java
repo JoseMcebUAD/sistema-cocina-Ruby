@@ -18,7 +18,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
 import com.Model.Enum.MenuStyleConstants;
 import com.Model.Enum.AnimationConstants;
@@ -31,7 +30,7 @@ public class MenuController extends BaseController {
     @FXML private AnchorPane slider;
     @FXML private StackPane content;
     @FXML private StackPane sliderWrapper;
-    @FXML private Button btnCorteCaja, ordersButton, salesButton, clientsButton, stopSalesButton;
+    @FXML private Button btnCorteCaja, ordersButton, salesButton, clientsButton, tablesButton, stopSalesButton;
     private Button currentActiveButton;
     private boolean stopSales = false;
     private double sidebarWidth;
@@ -116,9 +115,9 @@ public class MenuController extends BaseController {
         menu.setCursor(Cursor.HAND);
     }
 
-    private void setupUserName(){
+    // private void setupUserName(){
 
-    }
+    // }
     // =============== BOTONES ===============
     /**
      * Configura todos los botones del menú.
@@ -131,6 +130,7 @@ public class MenuController extends BaseController {
         setupOrdersButton();
         setupSalesButton();
         setupClientButton();
+        setupTablesButton();
         setupStopSalesButton();
     }
 
@@ -197,6 +197,13 @@ public class MenuController extends BaseController {
      */
     private void setupClientButton(){
         clientsButton.setOnAction(e -> loadView("/com/view/clients.fxml", clientsButton));
+    }
+
+    /**
+     * Configura el botón de mesas.
+     */
+    private void setupTablesButton(){
+        tablesButton.setOnAction(e -> loadView("/com/view/tables.fxml", tablesButton));
     }
 
     // =============== ANIMACIONES ===============

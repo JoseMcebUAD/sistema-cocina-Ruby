@@ -12,6 +12,7 @@ public class AA9CrearTablaOrdenDomicilio20250111 extends Migration {
             MigrationSchema.create("orden_domicilio", table -> {
                 table.integer("id_orden").notNull().primary();
                 table.integer("idRel_cliente").nullable();
+                table.decimal("tarifa_domicilio", 10, 2).defaultValue("0.00");
                 table.string("direccion", 400).nullable();
 
                 table.foreign("id_orden", "orden", "id_orden").onDeleteCascade().onUpdateCascade();

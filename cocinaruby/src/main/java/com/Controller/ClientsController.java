@@ -6,7 +6,6 @@ import java.util.ResourceBundle;
 import com.Model.ModeloCliente;
 import com.Service.ClientService;
 import com.Model.Enum.ClientsUIConstants;
-import com.Model.Enum.AnimationConstants;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -28,7 +27,7 @@ public class ClientsController extends BaseController {
     @FXML
     private Button addButton, deleteButton, editButton, confirmButton, clearButton;
     @FXML
-    private TextField nameField, phoneField, addressField;
+    private TextField nameField, phoneField, addressField, tarifaField;
     @FXML
     private TableView<ModeloCliente> clienteTable;
     @FXML
@@ -37,6 +36,7 @@ public class ClientsController extends BaseController {
     private BorderPane mainRoot;
 
     private ClientService clientService = new ClientService();
+    //las arrays de todos los clientes
     private ObservableList<ModeloCliente> masterData = FXCollections.observableArrayList();
     private FilteredList<ModeloCliente> filteredData;
     private OrderController parentController;
@@ -119,6 +119,8 @@ public class ClientsController extends BaseController {
         String nombre = nameField.getText().trim();
         String direccion = addressField.getText().trim();
         String telefono = phoneField.getText().trim();
+        String tarifaText = tarifaField.getText().trim();
+        double tarifa = (tarifaText == null || tarifaText.trim().isEmpty()) ? 0.0 : Double.parseDouble(tarifaText);
         
         // Validar que al menos el nombre esté completo
         if (nombre.isEmpty()) {
@@ -130,13 +132,20 @@ public class ClientsController extends BaseController {
         ModeloCliente newClient = new ModeloCliente();
         newClient.setNombreCliente(nombre);
         newClient.setDirecciones(direccion);
-        
+
         // Validar teléfono
         if (!telefono.isEmpty()) {
             String rawPhone = telefono.replaceAll("[^\\d]", "");
             newClient.setTelefono(rawPhone.isEmpty() ? "0" : rawPhone);
         } else {
             newClient.setTelefono("0");
+        }
+
+        // Validar y asignar tarifa de domicilio
+        try {
+            newClient.setTarifaDomicilio(tarifa);
+        } catch (NumberFormatException e) {
+            newClient.setTarifaDomicilio(0.0);
         }
         
         // Guardar cliente
@@ -162,6 +171,15 @@ public class ClientsController extends BaseController {
         selectedClient.setNombreCliente(nameField.getText());
         selectedClient.setDirecciones(addressField.getText());
         selectedClient.setTelefono(phoneField.getText());
+
+        // Actualizar tarifa de domicilio
+        try {
+            String tarifaText = tarifaField.getText();
+            double tarifa = (tarifaText == null || tarifaText.trim().isEmpty()) ? 0.0 : Double.parseDouble(tarifaText);
+            selectedClient.setTarifaDomicilio(tarifa);
+        } catch (NumberFormatException e) {
+            selectedClient.setTarifaDomicilio(0.0);
+        }
 
         if(clientService.updateClient(selectedClient)){
             clienteTable.refresh(); 
@@ -207,6 +225,13 @@ public class ClientsController extends BaseController {
                 String nombre = nameField.getText();
                 String direccion = addressField.getText();
                 String telefono = phoneField.getText();
+                String tarifaText = tarifaField.getText();
+                double tarifa = 0.0;
+                try {
+                    tarifa = (tarifaText == null || tarifaText.trim().isEmpty()) ? 0.0 : Double.parseDouble(tarifaText);
+                } catch (NumberFormatException e) {
+                    tarifa = 0.0;
+                }
                 int clientId = 0;
                 
                 ModeloCliente selected = clienteTable.getSelectionModel().getSelectedItem();
@@ -215,7 +240,8 @@ public class ClientsController extends BaseController {
                 }
                 
                 // Pasar los datos tal como están, sin valores por defecto
-                parentController.setClientData(clientId, nombre, direccion, telefono);
+                System.out.println(tarifa);
+                parentController.setClientData(clientId, nombre, direccion, telefono,tarifa);
             }
             Stage stage = (Stage) confirmButton.getScene().getWindow();
             stage.close();
@@ -267,6 +293,7 @@ public class ClientsController extends BaseController {
             columns.get(0).setCellValueFactory(new PropertyValueFactory<>("nombreCliente"));
             columns.get(1).setCellValueFactory(new PropertyValueFactory<>("direcciones"));
             columns.get(2).setCellValueFactory(new PropertyValueFactory<>("telefono"));
+            columns.get(3).setCellValueFactory(new PropertyValueFactory<>("tarifaDomicilio"));
         }
         filteredData = new FilteredList<>(masterData, p -> true);
         clienteTable.setItems(filteredData);
@@ -283,6 +310,7 @@ public class ClientsController extends BaseController {
                 nameField.setText(newSelection.getNombreCliente());
                 addressField.setText(newSelection.getDirecciones());
                 phoneField.setText(newSelection.getTelefono());
+                tarifaField.setText(String.valueOf(newSelection.getTarifaDomicilio()));
             } else {
                 clearFields();
             }
@@ -330,6 +358,7 @@ public class ClientsController extends BaseController {
         nameField.clear();
         addressField.clear();
         phoneField.clear();
+        tarifaField.clear();
     }
 
     /**
@@ -345,6 +374,16 @@ public class ClientsController extends BaseController {
         } else {
             client.setTelefono(rawPhone);
         }
+
+        // Agregar tarifa de domicilio
+        try {
+            String tarifaText = tarifaField.getText();
+            double tarifa = (tarifaText == null || tarifaText.trim().isEmpty()) ? 0.0 : Double.parseDouble(tarifaText);
+            client.setTarifaDomicilio(tarifa);
+        } catch (NumberFormatException e) {
+            client.setTarifaDomicilio(0.0);
+        }
+
         return client;
     }
 

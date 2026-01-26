@@ -30,11 +30,23 @@ public class OrderService {
     private TipoPagoDAO tipoPagoDAO = new TipoPagoDAO();
     private final DetalleOrdenDAO orderDetailDao = new DetalleOrdenDAO();
     private final OrdenViewDAO ordenViewDAO = new OrdenViewDAO();
+    private final MesaService mesaService = new MesaService();
 
     public boolean addFullOrder(ModeloOrdenCompleta fullOrder) {
         try {
             ModeloOrden orderHeader = fullOrder.getOrden();
             orderHeader.setPrecioOrden(0.0);
+
+            // If it's a table order, validate that the table is available
+            if (TiposClienteEnum.PAGO_MESA.equals(orderHeader.getTipoCliente())) {
+                ModeloOrdenMesa mesaOrder = (ModeloOrdenMesa) orderHeader;
+                if (mesaOrder.getIdRelMesa() != null) {
+                    if (!mesaService.validarMesaDisponible(mesaOrder.getIdRelMesa())) {
+                        System.err.println("Error: La mesa no está disponible");
+                        return false;
+                    }
+                }
+            }
 
             orderDaoInstance.create(orderHeader);
             int orderId = orderHeader.getIdOrden();
@@ -51,25 +63,59 @@ public class OrderService {
 
             } else if (TiposClienteEnum.PAGO_MESA.equals(customerType)) {
                 OrdenMesaDAO tableOrderDao = new OrdenMesaDAO();
-                tableOrderDao.create((ModeloOrdenMesa) orderHeader);
+                ModeloOrdenMesa mesaOrder = (ModeloOrdenMesa) orderHeader;
+                tableOrderDao.create(mesaOrder);
+
+                // Mark table as occupied after creating the order
+                if (mesaOrder.getIdRelMesa() != null) {
+                    mesaService.marcarComoOcupada(mesaOrder.getIdRelMesa());
+                }
 
             } else if (TiposClienteEnum.PAGO_DOMICILIO.equals(customerType)) {
                 OrdenDomicilioDAO deliveryOrderDao = new OrdenDomicilioDAO();
                 deliveryOrderDao.create((ModeloOrdenDomicilio) orderHeader);
-                
+
             } else {
                 System.err.println("Tipo de cliente no soportado: " + customerType);
                 return false;
             }
 
+            // Insert order details (triggers will update precio_orden with products total)
             for (ModeloDetalleOrden itemDetail : fullOrder.getDetalles()) {
                 itemDetail.setIdRelOrden(orderId);
                 orderDetailDao.create(itemDetail);
             }
+
+            // If it's a delivery order, add the delivery fee to precio_orden
+            if (TiposClienteEnum.PAGO_DOMICILIO.equals(customerType)) {
+                ModeloOrdenDomicilio deliveryOrder = (ModeloOrdenDomicilio) orderHeader;
+                if (deliveryOrder.getTarifaDomicilio() > 0) {
+                    aplicarTarifaDomicilio(orderId, deliveryOrder.getTarifaDomicilio());
+                }
+            }
+
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    /**
+     * Suma la tarifa de domicilio al precio_orden actual.
+     * El precio_orden ya tiene el total de productos (actualizado por triggers).
+     *
+     * @param idOrden ID de la orden
+     * @param tarifaDomicilio Tarifa a sumar
+     * @throws SQLException si hay error en la actualización
+     */
+    private void aplicarTarifaDomicilio(int idOrden, double tarifaDomicilio) throws SQLException {
+        // Read current orden to get current price
+        ModeloOrden orden = orderDaoInstance.read(idOrden);
+        if (orden != null) {
+            double newPrice = orden.getPrecioOrden() + tarifaDomicilio;
+            orden.setPrecioOrden(newPrice);
+            orderDaoInstance.update(idOrden, orden);
         }
     }
 
@@ -239,5 +285,59 @@ public class OrderService {
             return new ArrayList<>();
         }
     }
-    
+
+    /**
+     * Marca una orden como facturada (impresa).
+     * Si es una orden de mesa, libera la mesa (cambia estado a DISPONIBLE).
+     *
+     * @param idOrden ID de la orden a marcar como facturada
+     * @return true si se marcó correctamente
+     */
+    public boolean marcarComoFacturada(int idOrden) {
+        try {
+            // Update facturado field in orden table
+            ModeloOrden orden = orderDaoInstance.read(idOrden);
+            if (orden == null) {
+                System.err.println("Error: Orden no encontrada ID: " + idOrden);
+                return false;
+            }
+
+            orden.setFacturado(true);
+            boolean updated = orderDaoInstance.update(idOrden, orden);
+
+            if (updated) {
+                // If it's a table order, release the table
+                liberarMesaSiCorresponde(idOrden);
+                return true;
+            }
+
+            return false;
+        } catch (SQLException e) {
+            logError("Error al marcar orden como facturada ID: " + idOrden, e);
+            return false;
+        }
+    }
+
+    /**
+     * Libera la mesa si la orden es de tipo MESA.
+     * Se llama automáticamente al facturar una orden.
+     *
+     * @param idOrden ID de la orden
+     */
+    private void liberarMesaSiCorresponde(int idOrden) {
+        try {
+            ModeloVentasView orden = ordenViewDAO.find(idOrden);
+            if (orden != null && TiposClienteEnum.PAGO_MESA.equals(orden.getTipoCliente())) {
+                OrdenMesaDAO mesaDAO = new OrdenMesaDAO();
+                ModeloOrdenMesa ordenMesa = mesaDAO.read(idOrden);
+
+                if (ordenMesa != null && ordenMesa.getIdRelMesa() != null) {
+                    mesaService.marcarComoDisponible(ordenMesa.getIdRelMesa());
+                }
+            }
+        } catch (Exception e) {
+            logError("Error al liberar mesa para orden ID: " + idOrden, e);
+        }
+    }
+
 }

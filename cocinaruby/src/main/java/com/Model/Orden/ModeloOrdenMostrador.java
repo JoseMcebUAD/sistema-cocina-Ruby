@@ -5,22 +5,22 @@ import com.Model.ModeloOrden;
 /**
  * Representa una orden de tipo MOSTRADOR.
  * Hereda los campos comunes de ModeloOrden y agrega campos específicos:
- * - nombre: Nombre del cliente para la orden de mostrador
+ * - nombrePersona: Nombre de la persona que hace la orden de mostrador
  */
 public class ModeloOrdenMostrador extends ModeloOrden {
 
-    private String nombre;
+    private String nombrePersona;
 
-    public String getNombre() {
-        return nombre;
+    public String getNombrePersona() {
+        return nombrePersona;
     }
 
-    public void setNombreCliente(String nombre) {
-        this.nombre = nombre;
+    public void setNombrePersona(String nombrePersona) {
+        this.nombrePersona = nombrePersona;
     }
 
     @Override
     public String getNombreCliente() {
-        return "Mostrador";
+        return nombrePersona;
     }
 }

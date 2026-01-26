@@ -10,6 +10,7 @@ public enum OrderUIConstants {
     MSG_EMPTY_ORDER("Orden Vacía"),
     MSG_NO_PRODUCTS("No puede realizar una orden sin productos."),
     MSG_INCOMPLETE_DATA("Datos Incompletos"),
+    MSG_DINEINNAME_REQUIRED("llene el nombre del cliente"),
     MSG_DELIVERY_REQUIRED("Para Domicilio, debe llenar Nombre, Dirección y Teléfono."),
     MSG_TABLE_REQUIRED("Por favor ingrese el número de mesa."),
     

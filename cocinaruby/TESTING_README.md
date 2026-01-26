@@ -336,10 +336,8 @@ Para expandir la cobertura de pruebas:
 
 1. **Agregar tests para**:
    - `ClienteDAO`
-   - `OrdenDAO`
    - `TipoPagoDAO`
-   - `TipoClienteDAO`
-   - `CorteCajaDAO`
+   - DAOs especializados de órdenes (OrdenMostradorDAO, OrdenDomicilioDAO, OrdenMesaDAO)
 
 2. **Implementar tests de integración** con H2
 3. **Agregar coverage reports** con JaCoCo

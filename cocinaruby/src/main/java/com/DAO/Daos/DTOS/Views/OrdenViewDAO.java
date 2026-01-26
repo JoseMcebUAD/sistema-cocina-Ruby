@@ -240,7 +240,8 @@ public class OrdenViewDAO extends BaseDAO {
 
         // Campos normalizados
         orden.setNombreCliente(rs.getString("nombre_cliente"));
-        
+        orden.setTarifaDomicilio(rs.getDouble("tarifa_domicilio"));
+
         // Obtener nombre del tipo de pago
         try {
             String nombreTipoPago = rs.getString("nombre_tipo_pago");

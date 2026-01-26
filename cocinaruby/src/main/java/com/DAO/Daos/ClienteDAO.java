@@ -12,7 +12,7 @@ public class ClienteDAO extends BaseDAO  implements ICrud<ModeloCliente> {
 
     @Override
     public ModeloCliente create(ModeloCliente model) throws SQLException {
-        String sql = "INSERT INTO cliente (nombre_cliente, direcciones, telefono) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO cliente (nombre_cliente, direcciones, telefono, tarifa_domicilio) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = getConnection();
             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -20,6 +20,7 @@ public class ClienteDAO extends BaseDAO  implements ICrud<ModeloCliente> {
             ps.setString(1, model.getNombreCliente());
             ps.setString(2, model.getDirecciones());
             ps.setString(3, model.getTelefono());
+            ps.setDouble(4, model.getTarifaDomicilio());
             ps.executeUpdate();
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -67,7 +68,7 @@ public class ClienteDAO extends BaseDAO  implements ICrud<ModeloCliente> {
 
     @Override
     public boolean update(int id, ModeloCliente model) throws SQLException {
-        String sql = "UPDATE cliente SET nombre_cliente = ?, direcciones = ?, telefono = ? WHERE id_cliente = ?";
+        String sql = "UPDATE cliente SET nombre_cliente = ?, direcciones = ?, telefono = ?, tarifa_domicilio = ? WHERE id_cliente = ?";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -75,7 +76,8 @@ public class ClienteDAO extends BaseDAO  implements ICrud<ModeloCliente> {
             ps.setString(1, model.getNombreCliente());
             ps.setString(2, model.getDirecciones());
             ps.setString(3, model.getTelefono());
-            ps.setInt(4, id);
+            ps.setDouble(4, model.getTarifaDomicilio());
+            ps.setInt(5, id);
 
             return ps.executeUpdate() > 0;
         }
@@ -100,6 +102,7 @@ public class ClienteDAO extends BaseDAO  implements ICrud<ModeloCliente> {
         cliente.setNombreCliente(rs.getString("nombre_cliente"));
         cliente.setDirecciones(rs.getString("direcciones"));
         cliente.setTelefono(rs.getString("telefono"));
+        cliente.setTarifaDomicilio(rs.getDouble("tarifa_domicilio"));
         return cliente;
     }
 }

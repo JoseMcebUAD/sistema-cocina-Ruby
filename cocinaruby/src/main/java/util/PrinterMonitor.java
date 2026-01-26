@@ -35,7 +35,7 @@ public final class PrinterMonitor {
     }
 
     /**
-     * Detiene el monitoreo de la impresora
+     * detiene el monitoreo de la impresora terfimca
      */
     public static void stop(){
         scheduler.shutdown();
@@ -49,8 +49,8 @@ public final class PrinterMonitor {
     }
 
     /**
-     * Verifica si el monitor está corriendo
-     * @return true si está activo, false si está detenido
+     * verifica si el monitor esta conectao
+     * @return true activo, false  detenido
      */
     public static boolean isRunning(){
         return !scheduler.isShutdown();
