@@ -1,5 +1,7 @@
 package com.Controller.popup.order;
 import com.Controller.OrderController;
+import com.Controller.order.OrderSelectedInterface;
+
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -8,9 +10,7 @@ import java.util.ResourceBundle;
 import com.Model.ModeloDetalleOrden;
 import com.Model.ModeloOrden;
 import com.Model.DTO.ModeloOrdenCompleta;
-import com.Model.Enum.TiposClienteEnum;
 import com.Model.Orden.ModeloOrdenDomicilio;
-import com.Model.Orden.ModeloOrdenMesa;
 import com.Model.Orden.ModeloOrdenMostrador;
 import com.Service.OrderService;
 import com.Service.TicketServices.TicketOrderService;
@@ -44,10 +44,7 @@ public class confirmOrderController implements Initializable {
     private HBox cashDetailsBox;
 
     private List<ModeloDetalleOrden> details;
-    private double total;
-    private String serviceType;
-    private String clientName, clientAddress, clientPhone;
-    private int clientId = 0;
+    private OrderSelectedInterface orderStrategy;
 
     private OrderService orderService = new OrderService();
     private ClientService clientService = new ClientService();
@@ -66,23 +63,25 @@ public class confirmOrderController implements Initializable {
         this.parentController = parent;
     }
 
-    public void setOrderData(List<ModeloDetalleOrden> orderDetails, double orderTotal, String orderType,  int clientId, String clientName, String clientAddress, String clientPhone) {
+    public void setOrderData(List<ModeloDetalleOrden> orderDetails, OrderSelectedInterface strategy) {
         this.details = orderDetails;
-        this.total = orderTotal;
-        this.serviceType = orderType;
-        this.clientName = clientName;
-        this.clientAddress = clientAddress;
-        this.clientPhone = clientPhone;
-        this.clientId = clientId;
+        this.orderStrategy = strategy;
+
+        // Setear atributos desde los campos del controller
+        strategy.setOrderAtributes();
+
+        // Calcular total usando el strategy
+        double total = strategy.calculateOrderTotal();
 
         if (totalField != null) {
-            totalField.setText(String.format("%.2f", orderTotal));
+            totalField.setText(String.format("%.2f", total));
         }
         if (orderTypeField != null) {
-            orderTypeField.setText(orderType);
+            orderTypeField.setText(strategy.currentTypeOrder());
         }
         if (clientNameField != null) {
-            clientNameField.setText(clientName.isEmpty() ? "Cliente General" : clientName);
+            // Obtener el nombre apropiado según el tipo de orden
+            clientNameField.setText(strategy.getConfirmOrderName());
         }
     }
 
@@ -93,12 +92,20 @@ public class confirmOrderController implements Initializable {
                 return;
             }
 
-            ModeloOrden order = createOrderByType();
+            // Crear la orden usando el strategy
+            ModeloOrden order = orderStrategy.createOrden();
 
+            // Si es orden de domicilio, buscar o registrar el cliente
             if (order instanceof ModeloOrdenDomicilio) {
                 ModeloOrdenDomicilio domOrder = (ModeloOrdenDomicilio) order;
+                com.Controller.order.OrdersSelected.OrderDomicilioSelected domStrategy =
+                    (com.Controller.order.OrdersSelected.OrderDomicilioSelected) orderStrategy;
 
-                if (clientName != null && !clientName.isEmpty() && 
+                String clientName = domStrategy.getClientName();
+                String clientPhone = domStrategy.getTelefono();
+                String clientAddress = domStrategy.getDireccion();
+
+                if (clientName != null && !clientName.isEmpty() &&
                     clientPhone != null && !clientPhone.isEmpty()) {
 
                     ModeloCliente tempClient = new ModeloCliente();
@@ -110,13 +117,15 @@ public class confirmOrderController implements Initializable {
 
                     if (finalClient != null) {
                         domOrder.setIdRelCliente(finalClient.getIdCliente());
-                        domOrder.setDireccionCliente(finalClient.getDirecciones()); 
+                        domOrder.setDireccionCliente(finalClient.getDirecciones());
                     }
                 }
             }
+
+            // Configurar campos base de la orden
             order.setFechaExpedicionOrden(LocalDateTime.now());
-            order.setPrecioOrden(this.total);
-            order.setTipoCliente(this.serviceType);
+            order.setPrecioOrden(orderStrategy.calculateOrderTotal());
+            order.setTipoCliente(orderStrategy.currentTypeOrder());
             order.setFacturado(false);
 
             if (!configurePayment(order)) return;
@@ -127,7 +136,7 @@ public class confirmOrderController implements Initializable {
                 // Intentar imprimir el ticket
                 int orderId = order.getIdOrden();
                 PrintResultEnum printResult = attemptPrintTicket(orderId);
-                
+
                 // Actualizar estado de facturado según resultado de impresión
                 if (printResult == PrintResultEnum.SUCCESS) {
                     order.setFacturado(true);
@@ -138,14 +147,15 @@ public class confirmOrderController implements Initializable {
                     orderService.updateOrderHeader(order);
                     System.out.println("Orden marcada como NO facturada/impresa.");
                 }
-                
+
                 // Mostrar mensaje según resultado de impresión
                 double cambio = 0.0;
                 boolean esEfectivo = false;
+                double total = orderStrategy.calculateOrderTotal();
                 ModeloTipoPago metodo = paymentMethodCombo.getValue();
                 if (metodo != null && "Efectivo".equalsIgnoreCase(metodo.getNombreTipoPago())) {
                     esEfectivo = true;
-                    cambio = order.getPagoCliente() - this.total;
+                    cambio = order.getPagoCliente() - total;
                 }
                 
                 StringBuilder mensaje = new StringBuilder("Pedido registrado correctamente.");
@@ -246,33 +256,6 @@ public class confirmOrderController implements Initializable {
         return orden;
     }
 
-
-    private ModeloOrden createOrderByType() {
-        if (TiposClienteEnum.PAGO_DOMICILIO.equals(this.serviceType)) {
-            ModeloOrdenDomicilio deliveryOrder = new ModeloOrdenDomicilio();
-            deliveryOrder.setNombreCliente(clientName);
-            deliveryOrder.setDireccionCliente(clientAddress);
-            deliveryOrder.setTelefonoCliente(clientPhone);
-            if (this.clientId > 0) {
-                deliveryOrder.setIdRelCliente(this.clientId);
-            }
-            return deliveryOrder;
-        } else if (TiposClienteEnum.PAGO_MESA.equals(this.serviceType)) {
-            ModeloOrdenMesa tableOrder = new ModeloOrdenMesa();
-            // Si clientName viene como "Mesa X", extraer solo la X
-            String numeroMesa = clientName;
-            if (clientName.startsWith("Mesa ")) {
-                numeroMesa = clientName.substring(5); // Quitar "Mesa "
-            }
-            tableOrder.setNumeroMesa(numeroMesa.isEmpty() ? "General" : numeroMesa);
-            return tableOrder;
-        } else {
-            ModeloOrdenMostrador dineinOrder = new ModeloOrdenMostrador();
-            dineinOrder.setNombreCliente("Cliente Mostrador");
-            return dineinOrder;
-        }
-    }
-
     private void setUpPaymentConfig() {
         List<ModeloTipoPago> tiposPago = orderService.getPaymentTypes();
         paymentMethodCombo.getItems().setAll(tiposPago);
@@ -344,16 +327,16 @@ public class confirmOrderController implements Initializable {
      */
     private boolean configurePayment(ModeloOrden order) {
         ModeloTipoPago chosenPaymentOption = paymentMethodCombo.getValue();
-        
+
         if (chosenPaymentOption == null) {
             showCustomAlert("WARNING", "Atención", "Seleccione un método de pago.");
             return false;
         }
 
         order.setIdRelTipoPago(chosenPaymentOption.getIdTipoPago());
-        order.setNombreTipoPago(chosenPaymentOption.getNombreTipoPago()); 
+        order.setNombreTipoPago(chosenPaymentOption.getNombreTipoPago());
 
-        double precio = this.total;
+        double precio = orderStrategy.calculateOrderTotal();
         
         if ("Efectivo".equalsIgnoreCase(chosenPaymentOption.getNombreTipoPago())) {
             String amountPaidText = amountPaidField.getText();

@@ -5,10 +5,16 @@ import java.util.ArrayList;
 import java.util.ResourceBundle;
 
 import com.Model.ModeloDetalleOrden;
-import com.Model.Enum.TiposClienteEnum;
+import com.Model.ModeloMesa;
 import com.Model.Enum.OrderUIConstants;
+import com.Service.MesaService;
+import com.Controller.order.OrderSelectedInterface;
+import com.Controller.order.OrdersSelected;
+import com.Controller.order.OrderSelectedInterface.MSGValidacion;
+import com.Controller.popup.order.confirmOrderController;
 
-import javafx.animation.FadeTransition;
+import java.util.List;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -19,21 +25,25 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
-import javafx.util.Duration;
 
 public class OrderController extends BaseController {
-    @FXML private BorderPane mainRoot;
-    @FXML private VBox clientBar,TableBar;
-    @FXML private Button addProductButton, tableButton, deliveryButton, dineinButton, 
-    makeOrderButton, selectClientButton;
-    @FXML private TextField addressField, clientNameField, phoneNumberField, priceField, 
-    productField, quantityField,tableNumberField;
-    @FXML private Label grandTotalLabel;
-    @FXML private TableView<ModeloDetalleOrden> productsTable;
-    private ObservableList<ModeloDetalleOrden> orderItems = FXCollections.observableArrayList();
-    private boolean isUpdatingFromSelection = false;
-    private String currentOrderType;
-    private int currentClientId = 0;
+    @FXML protected BorderPane mainRoot;
+    @FXML public VBox clientBar,TableBar,DeliveryBar;
+    @FXML public Button addProductButton, tableButton, deliveryButton, dineinButton,
+    makeOrderButton, selectClientButton,deleteButton;
+    @FXML public TextField addressField, clientNameField, phoneNumberField, priceField,
+    productField, quantityField, dineinNameField, tarifaDomicilioField;
+    @FXML public ComboBox<ModeloMesa> tableComboBox;
+    @FXML public Label grandTotalLabel;
+    @FXML protected TableView<ModeloDetalleOrden> productsTable;
+    public ObservableList<ModeloDetalleOrden> orderItems = FXCollections.observableArrayList();
+    protected boolean isUpdatingFromSelection = false;
+    public int currentClientId = 0;
+    protected int mesaSeleccionadaId = 0;
+    public MesaService mesaService = new MesaService();
+
+    // Strategy pattern for order types
+    private OrderSelectedInterface orderStrategy;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -43,13 +53,11 @@ public class OrderController extends BaseController {
     @Override
     protected void setupAdditionalConfig() {
         setupGlobalClickConfig();
-        showClientBar(false);
-        showTableBar(false);
-        selectOrderType(dineinButton);
-        setupValidations();
+        // Inicializar con orden de mostrador por defecto
+        setOrderStrategy(new OrdersSelected.OrderDineinSelected(this));
+        toggleGroupStyle(dineinButton, dineinButton, deliveryButton, tableButton); 
     }
 
-    // =============== VALIDACIONES ===============
     /**
      * Valida que los campos obligatorios del producto no estén vacíos.
      */
@@ -63,51 +71,20 @@ public class OrderController extends BaseController {
 
     /**
      * Valida que la orden cumpla con los requisitos según su tipo.
+     * @return true si la validación fue exitosa (sin errores), false si hubo errores
      */
     private boolean validateOrderRequirements() {
-        if (orderItems.isEmpty()) {
-            showAlert(OrderUIConstants.MSG_EMPTY_ORDER.getValue(), OrderUIConstants.MSG_NO_PRODUCTS.getValue());
+        MSGValidacion validacion = this.orderStrategy.validateOrderRequirements();
+
+        // Si hay error, mostrar alerta
+        if(!validacion.hasError()) {
+            showAlert(validacion.fieldValues(), validacion.errorMesagge());
             return false;
         }
-        if (currentOrderType.equals(TiposClienteEnum.PAGO_DOMICILIO)) {
-            if (clientNameField.getText().trim().isEmpty() || 
-                addressField.getText().trim().isEmpty() || 
-                phoneNumberField.getText().trim().isEmpty()) {
-                showAlert(OrderUIConstants.MSG_INCOMPLETE_DATA.getValue(), OrderUIConstants.MSG_DELIVERY_REQUIRED.getValue());
-                return false;
-            }
-        } 
-        else if (currentOrderType.equals(TiposClienteEnum.PAGO_MESA)) {
-            if (tableNumberField.getText().trim().isEmpty()) {
-                showAlert(OrderUIConstants.MSG_INCOMPLETE_DATA.getValue(), OrderUIConstants.MSG_TABLE_REQUIRED.getValue());
-                return false;
-            }
-        }
-        return true;
-    }
 
-    /**
-     * Configura validadores para que solo acepten caracteres numéricos o decimales.
-     */
-    private void setupValidations() {
-        quantityField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!newValue.matches("\\d*")) {
-                quantityField.setText(newValue.replaceAll("[^\\d]", ""));
-            }
-        });
-        tableNumberField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!newValue.matches("\\d*")) {
-                tableNumberField.setText(newValue.replaceAll("[^\\d]", ""));
-            }
-        });
-        priceField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!newValue.matches("\\d*(\\.\\d*)?")) {
-                priceField.setText(oldValue);
-            }
-        });
+        return true; // Validación exitosa
     }
-
-    // =============== BOTONES ===============
+    
     @Override
     protected void setupAllButtons() {
         setupDeliveryButton();
@@ -116,6 +93,7 @@ public class OrderController extends BaseController {
         setupSelectClientButton();
         setupMakeOrderButton();
         setupAddProductButton();
+        setupDeleteProductoButton(false);
     }
 
     /**
@@ -124,26 +102,42 @@ public class OrderController extends BaseController {
     private void setupAddProductButton(){
         addProductButton.setOnAction(e -> handleAddOrUpdateProduct());
     }
+    /*
+    para mostrar el boton para eliminar
+    */
+    private void setupDeleteProductoButton(boolean show){
+        deleteButton.setVisible(show);
+        deleteButton.setManaged(show);
+        deleteButton.setOnAction(e -> handleDeleteProduct());
+    }
+
+    /**
+     * Establece la estrategia de orden y actualiza la UI.
+     */
+    private void setOrderStrategy(OrderSelectedInterface strategy) {
+        this.orderStrategy = strategy;
+        strategy.showOrderBar(true);
+        strategy.barChanged();
+        updateTotalLabel();
+    }
 
     /**
      * Configura el botón de entrega a domicilio.
      */
     private void setupDeliveryButton(){
         deliveryButton.setOnAction(e -> {
-            showClientBar(true); 
-            showTableBar(false);  
-            selectOrderType(deliveryButton);
+            setOrderStrategy(new OrdersSelected.OrderDomicilioSelected(this));
+            toggleGroupStyle(deliveryButton, dineinButton, deliveryButton, tableButton);
         });
     }
 
     /**
      * Configura el botón de comer en el lugar.
-     */
-    private void setupDineinButton(){
-        dineinButton.setOnAction(e -> {
-            showClientBar(false); 
-            showTableBar(false);  
-            selectOrderType(dineinButton);
+    */
+   private void setupDineinButton(){
+       dineinButton.setOnAction(e -> {
+            setOrderStrategy(new OrdersSelected.OrderDineinSelected(this));
+            toggleGroupStyle(dineinButton, dineinButton, deliveryButton, tableButton);
         });
     }
 
@@ -152,10 +146,57 @@ public class OrderController extends BaseController {
      */
     private void setupTableButton() {
         tableButton.setOnAction(e -> {
-            showClientBar(false); 
-            showTableBar(true);   
-            selectOrderType(tableButton);
+            setOrderStrategy(new OrdersSelected.OrderTableSelected(this));
+            toggleGroupStyle(tableButton, dineinButton, deliveryButton, tableButton);
         });
+    }
+
+    /**
+     * Carga las mesas disponibles desde la base de datos en el ComboBox.
+     */
+    public void cargarMesasDisponibles() {
+        try {
+            List<ModeloMesa> mesas = mesaService.getMesasDisponibles();
+            tableComboBox.getItems().clear();
+            tableComboBox.getItems().addAll(mesas);
+
+            // Configurar cómo se muestra cada mesa en la lista desplegable
+            tableComboBox.setCellFactory(param -> new ListCell<ModeloMesa>() {
+                @Override
+                protected void updateItem(ModeloMesa item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText(null);
+                    } else {
+                        setText(item.getNumeroMesaDisplay() + " - " + item.getEstadoMesa());
+                    }
+                }
+            });
+
+            // Configurar cómo se muestra el item seleccionado en el botón
+            tableComboBox.setButtonCell(new ListCell<ModeloMesa>() {
+                @Override
+                protected void updateItem(ModeloMesa item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText(null);
+                    } else {
+                        setText(item.getNumeroMesaDisplay());
+                    }
+                }
+            });
+
+            // Guardar ID cuando se selecciona una mesa
+            tableComboBox.setOnAction(evt -> {
+                ModeloMesa selected = tableComboBox.getValue();
+                if (selected != null) {
+                    mesaSeleccionadaId = selected.getIdMesa();
+                }
+            });
+
+        } catch (Exception e) {
+            showAlert("ERROR", "Error al cargar mesas", "No se pudieron cargar las mesas: " + e.getMessage());
+        }
     }
 
     /**
@@ -175,52 +216,6 @@ public class OrderController extends BaseController {
             }
         });
     }
-
-    /**
-     * Muestra u oculta la barra de cliente con animación de transición.
-     */
-    private void showClientBar(boolean show) {
-        clientBar.setVisible(show);
-        clientBar.setManaged(show);
-        if (show) playFade(clientBar);
-    }
-
-    /**
-     * Muestra u oculta la barra de mesa con animación de transición.
-     */
-    private void showTableBar(boolean show) {
-        if (TableBar != null) {
-            TableBar.setVisible(show);
-            TableBar.setManaged(show);
-            if (show) playFade(TableBar);
-        }
-    }
-
-    /**
-     * Reproduce una animación de transición de opacidad.
-     */
-    private void playFade(Node node) {
-        FadeTransition fade = new FadeTransition(Duration.millis(300), node);
-        fade.setFromValue(0.0);
-        fade.setToValue(1.0);
-        fade.play();
-    }
-
-    /**
-     * Establece el tipo de orden actual según el botón seleccionado.
-     */
-    private void selectOrderType(Button selected) {
-        toggleGroupStyle(selected, dineinButton, deliveryButton, tableButton); 
-
-        if (selected == dineinButton) {
-            currentOrderType = TiposClienteEnum.PAGO_MOSTRADOR;
-        } else if (selected == deliveryButton) {
-            currentOrderType = TiposClienteEnum.PAGO_DOMICILIO;
-        } else if (selected == tableButton) {
-            currentOrderType = TiposClienteEnum.PAGO_MESA;
-        } 
-    }
-
     /**
      * Cambia los estilos CSS de los botones para indicar cuál está activo.
      */
@@ -258,26 +253,10 @@ public class OrderController extends BaseController {
         }
 
         if (fxmlPath.contains("confirmOrder")) {
-            com.Controller.popup.order.confirmOrderController controller = loader.getController();
-            
-            double currentTotal = orderItems.stream()
-                .mapToDouble(item -> item.getPrecioDetalleOrden() * item.getCantidad())
-                .sum();
-
-            // Decidir qué "Nombre" enviar: Nombre del Cliente O Número de Mesa
-            String clientIdentifier = clientNameField.getText();
-            if (currentOrderType.equals(TiposClienteEnum.PAGO_MESA)) {
-                clientIdentifier = "Mesa " + tableNumberField.getText();
-            }
-
+            confirmOrderController controller = loader.getController();
             controller.setOrderData(
                 new ArrayList<>(orderItems),
-                currentTotal,
-                currentOrderType,
-                currentClientId,
-                clientIdentifier,
-                addressField.getText(),
-                phoneNumberField.getText()
+                orderStrategy
             );
             
             controller.setParentController(this);
@@ -288,11 +267,16 @@ public class OrderController extends BaseController {
     /**
      * Establece los datos del cliente en los campos correspondientes.
      */
-    public void setClientData(int clientId, String name, String address, String phoneNumber) {
+    public void setClientData(int clientId, String name, String address, String phoneNumber,double tarifaDomicilio) {
         clientNameField.setText(name);
         addressField.setText(address);
         phoneNumberField.setText(phoneNumber);
+        tarifaDomicilioField.setText(String.valueOf(tarifaDomicilio));
         this.currentClientId = clientId;
+    }
+
+    public void setCostumerDeliveryName(String deliveryCustomerName){
+        dineinNameField.setText(deliveryCustomerName);
     }
 
     /**
@@ -329,8 +313,13 @@ public class OrderController extends BaseController {
                 priceField.setText(String.valueOf(newSelection.getPrecioDetalleOrden()));
                 
                 // Cambiar texto del botón visualmente para indicar edición (Opcional)
+                System.out.println("se esta eliminando en actualizar");
                 addProductButton.setText("ACTUALIZAR");
+                deleteButton.setVisible(true);
+                deleteButton.setManaged(true);
             } else {
+                deleteButton.setVisible(false);
+                deleteButton.setManaged(false);
                 clearProductFields();
                 addProductButton.setText("AGREGAR");
             }
@@ -409,12 +398,12 @@ public class OrderController extends BaseController {
 
     // =============== UTILIDADES ===============
     /**
-     * Actualiza el label del total multiplicando precio por cantidad.
+     * Actualiza el label del total usando la estrategia de orden actual.
      */
     private void updateTotalLabel() {
-        double total = orderItems.stream()
-                .mapToDouble(item -> item.getPrecioDetalleOrden() * item.getCantidad()) 
-                .sum();
+        double total = orderStrategy != null ?
+            orderStrategy.calculateOrderTotal() :
+            orderItems.stream().mapToDouble(item -> item.getPrecioDetalleOrden() * item.getCantidad()).sum();
         grandTotalLabel.setText("$" + String.format("%.2f", total));
     }
 
@@ -436,14 +425,16 @@ public class OrderController extends BaseController {
         clientNameField.clear();
         addressField.clear();
         phoneNumberField.clear();
-        tableNumberField.clear();
+        tableComboBox.setValue(null);
         productField.clear();
+        dineinNameField.clear();
         quantityField.clear();
         priceField.clear();
         grandTotalLabel.setText("$0.00");
-        selectOrderType(dineinButton);
+        toggleGroupStyle(dineinButton,dineinButton,deliveryButton,tableButton);
         currentClientId = 0;
-    }
+        mesaSeleccionadaId = 0;
+    }   
 
     /**
      * Configura los listeners globales del formulario para limpiar campos solo si están vacíos.
