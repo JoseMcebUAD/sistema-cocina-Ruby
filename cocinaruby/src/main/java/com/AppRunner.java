@@ -2,6 +2,7 @@ package com;
 
 import com.Config.CConexion;
 import com.Config.Constants;
+import com.Config.DatabasePool;
 import util.PrinterServiceHolder;
 import util.session.SessionUsuario;
 import util.PrinterMonitor;
@@ -259,6 +260,10 @@ public class AppRunner {
     public void cleanup() {
         stopPrinterMonitor();
         closeDatabase();
+
+        // Cerrar pool de conexiones HikariCP
+        DatabasePool.shutdown();
+
         System.out.println("✓ Recursos del sistema liberados");
     }
 
