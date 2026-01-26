@@ -3,6 +3,8 @@ package com.Controller;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.image.Image;
+import javafx.stage.Stage;
 
 /**
  * Clase base abstracta para todos los controladores de la aplicación.
@@ -67,6 +69,17 @@ public abstract class BaseController implements Initializable {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
+        
+        // Agregar icono a la alerta
+        try {
+            String iconPath = "/icons/app.png";
+            Image icon = new Image(getClass().getResourceAsStream(iconPath));
+            Stage stage = (Stage) alert.getDialogPane().getScene().getWindow();
+            stage.getIcons().add(icon);
+        } catch (Exception e) {
+            // Si hay error al cargar el icono, continuar sin él
+        }
+        
         alert.showAndWait();
     }
 
