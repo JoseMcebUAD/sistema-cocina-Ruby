@@ -24,13 +24,21 @@ public class OrdenMesaDAO extends BaseDAO implements ICrud<ModeloOrdenMesa>{
 
     @Override
     public ModeloOrdenMesa create(ModeloOrdenMesa model) throws SQLException {
-        String sqlMesa = "INSERT INTO orden_mesa (id_orden, numero_mesa) VALUES (?, ?)";
+        String sqlMesa = "INSERT INTO orden_mesa (id_orden, idRel_mesa, numero_mesa) VALUES (?, ?, ?)";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sqlMesa)) {
 
             ps.setInt(1, model.getIdOrden());
-            ps.setString(2, model.getNumeroMesa());
+
+            // idRel_mesa puede ser null para órdenes antiguas
+            if (model.getIdRelMesa() != null) {
+                ps.setInt(2, model.getIdRelMesa());
+            } else {
+                ps.setNull(2, Types.INTEGER);
+            }
+
+            ps.setString(3, model.getNumeroMesa());
             ps.executeUpdate();
 
             return model;
@@ -40,7 +48,7 @@ public class OrdenMesaDAO extends BaseDAO implements ICrud<ModeloOrdenMesa>{
     @Override
     public ModeloOrdenMesa read(int id) throws SQLException {
         String sql = """
-            SELECT o.*, om.numero_mesa
+            SELECT o.*, om.idRel_mesa, om.numero_mesa
             FROM orden o
             INNER JOIN orden_mesa om ON o.id_orden = om.id_orden
             WHERE o.id_orden = ?
@@ -64,7 +72,7 @@ public class OrdenMesaDAO extends BaseDAO implements ICrud<ModeloOrdenMesa>{
     public List<ModeloOrdenMesa> all() throws SQLException {
         List<ModeloOrdenMesa> ordenes = new ArrayList<>();
         String sql = """
-            SELECT o.*, om.numero_mesa
+            SELECT o.*, om.idRel_mesa, om.numero_mesa
             FROM orden o
             INNER JOIN orden_mesa om ON o.id_orden = om.id_orden
             ORDER BY o.fecha_expedicion_orden DESC
@@ -83,13 +91,20 @@ public class OrdenMesaDAO extends BaseDAO implements ICrud<ModeloOrdenMesa>{
 
     @Override
     public boolean update(int id, ModeloOrdenMesa model) throws SQLException {
-        String sqlMesa = "UPDATE orden_mesa SET numero_mesa = ? WHERE id_orden = ?";
+        String sqlMesa = "UPDATE orden_mesa SET idRel_mesa = ?, numero_mesa = ? WHERE id_orden = ?";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sqlMesa)) {
 
-            ps.setString(1, model.getNumeroMesa());
-            ps.setInt(2, id);
+            // idRel_mesa puede ser null para órdenes antiguas
+            if (model.getIdRelMesa() != null) {
+                ps.setInt(1, model.getIdRelMesa());
+            } else {
+                ps.setNull(1, Types.INTEGER);
+            }
+
+            ps.setString(2, model.getNumeroMesa());
+            ps.setInt(3, id);
 
             return ps.executeUpdate() > 0;
         }
@@ -114,7 +129,7 @@ public class OrdenMesaDAO extends BaseDAO implements ICrud<ModeloOrdenMesa>{
     public List<ModeloOrdenMesa> findToday() throws SQLException {
         List<ModeloOrdenMesa> ordenes = new ArrayList<>();
         String sql = """
-            SELECT o.*, om.numero_mesa
+            SELECT o.*, om.idRel_mesa, om.numero_mesa
             FROM orden o
             INNER JOIN orden_mesa om ON o.id_orden = om.id_orden
             WHERE DATE(o.fecha_expedicion_orden) = CURDATE()
@@ -138,7 +153,7 @@ public class OrdenMesaDAO extends BaseDAO implements ICrud<ModeloOrdenMesa>{
     public List<ModeloOrdenMesa> findByNumeroMesa(String numeroMesa) throws SQLException {
         List<ModeloOrdenMesa> ordenes = new ArrayList<>();
         String sql = """
-            SELECT o.*, om.numero_mesa
+            SELECT o.*, om.idRel_mesa, om.numero_mesa
             FROM orden o
             INNER JOIN orden_mesa om ON o.id_orden = om.id_orden
             WHERE om.numero_mesa = ?
@@ -165,7 +180,7 @@ public class OrdenMesaDAO extends BaseDAO implements ICrud<ModeloOrdenMesa>{
     public List<ModeloOrdenMesa> findActiveByMesa(String numeroMesa) throws SQLException {
         List<ModeloOrdenMesa> ordenes = new ArrayList<>();
         String sql = """
-            SELECT o.*, om.numero_mesa
+            SELECT o.*, om.idRel_mesa, om.numero_mesa
             FROM orden o
             INNER JOIN orden_mesa om ON o.id_orden = om.id_orden
             WHERE om.numero_mesa = ? AND o.facturado = 0
@@ -176,6 +191,33 @@ public class OrdenMesaDAO extends BaseDAO implements ICrud<ModeloOrdenMesa>{
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, numeroMesa);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ordenes.add(mapRow(rs));
+                }
+            }
+        }
+        return ordenes;
+    }
+
+    /**
+     * Obtiene todas las órdenes activas (no facturadas) por ID de mesa
+     */
+    public List<ModeloOrdenMesa> findActiveByMesaId(int idMesa) throws SQLException {
+        List<ModeloOrdenMesa> ordenes = new ArrayList<>();
+        String sql = """
+            SELECT o.*, om.idRel_mesa, om.numero_mesa
+            FROM orden o
+            INNER JOIN orden_mesa om ON o.id_orden = om.id_orden
+            WHERE om.idRel_mesa = ? AND o.facturado = 0
+            ORDER BY o.fecha_expedicion_orden DESC
+        """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, idMesa);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -207,6 +249,10 @@ public class OrdenMesaDAO extends BaseDAO implements ICrud<ModeloOrdenMesa>{
         orden.setFacturado(rs.getBoolean("facturado"));
 
         // Campos de la tabla 'orden_mesa'
+        int mesaId = rs.getInt("idRel_mesa");
+        if (!rs.wasNull()) {
+            orden.setIdRelMesa(mesaId);
+        }
         orden.setNumeroMesa(rs.getString("numero_mesa"));
 
         return orden;

@@ -9,6 +9,7 @@ public class ModeloCliente {
     private String nombreCliente;
     private String direcciones;
     private String telefono;
+    private double tarifaDomicilio;
 
     public int getIdCliente() {
         return idCliente;
@@ -40,5 +41,13 @@ public class ModeloCliente {
 
     public void setTelefono(String telefono) {
         this.telefono = telefono;
+    }
+
+    public double getTarifaDomicilio() {
+        return tarifaDomicilio;
+    }
+
+    public void setTarifaDomicilio(double tarifaDomicilio) {
+        this.tarifaDomicilio = tarifaDomicilio;
     }
 }

@@ -24,7 +24,7 @@ public class OrdenDomicilioDAO extends BaseDAO implements ICrud<ModeloOrdenDomic
 
     @Override
     public ModeloOrdenDomicilio create(ModeloOrdenDomicilio model) throws SQLException {
-        String sqlDomicilio = "INSERT INTO orden_domicilio (id_orden, idRel_cliente, direccion) VALUES (?, ?, ?)";
+        String sqlDomicilio = "INSERT INTO orden_domicilio (id_orden, idRel_cliente, direccion, tarifa_domicilio) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = getConnection();
             PreparedStatement ps = conn.prepareStatement(sqlDomicilio)) {
@@ -39,6 +39,7 @@ public class OrdenDomicilioDAO extends BaseDAO implements ICrud<ModeloOrdenDomic
             }
 
             ps.setString(3, model.getDireccionCliente());
+            ps.setDouble(4, model.getTarifaDomicilio());
             ps.executeUpdate();
 
             return model;
@@ -48,7 +49,7 @@ public class OrdenDomicilioDAO extends BaseDAO implements ICrud<ModeloOrdenDomic
     @Override
     public ModeloOrdenDomicilio read(int id) throws SQLException {
         String sql = """
-            SELECT o.*, od.idRel_cliente, od.direccion
+            SELECT o.*, od.idRel_cliente, od.direccion, od.tarifa_domicilio
             FROM orden o
             INNER JOIN orden_domicilio od ON o.id_orden = od.id_orden
             WHERE o.id_orden = ?
@@ -72,7 +73,7 @@ public class OrdenDomicilioDAO extends BaseDAO implements ICrud<ModeloOrdenDomic
     public List<ModeloOrdenDomicilio> all() throws SQLException {
         List<ModeloOrdenDomicilio> ordenes = new ArrayList<>();
         String sql = """
-            SELECT o.*, od.idRel_cliente, od.direccion
+            SELECT o.*, od.idRel_cliente, od.direccion, od.tarifa_domicilio
             FROM orden o
             INNER JOIN orden_domicilio od ON o.id_orden = od.id_orden
             ORDER BY o.fecha_expedicion_orden DESC
@@ -92,18 +93,19 @@ public class OrdenDomicilioDAO extends BaseDAO implements ICrud<ModeloOrdenDomic
     @Override
     public boolean update(int id, ModeloOrdenDomicilio model) throws SQLException {
         try {
-            
-            String sqlDomicilio = "UPDATE orden_domicilio SET idRel_cliente = ?, direccion = ? WHERE id_orden = ?";
+
+            String sqlDomicilio = "UPDATE orden_domicilio SET idRel_cliente = ?, direccion = ?, tarifa_domicilio = ? WHERE id_orden = ?";
             try (Connection conn = getConnection();
             PreparedStatement ps = conn.prepareStatement(sqlDomicilio)) {
-                
+
                 if (model.getIdRelCliente() != null) {
                     ps.setInt(1, model.getIdRelCliente());
                 } else {
                     ps.setNull(1, Types.INTEGER);
                 }
                 ps.setString(2, model.getDireccionCliente());
-                ps.setInt(3, id);
+                ps.setDouble(3, model.getTarifaDomicilio());
+                ps.setInt(4, id);
                 ps.executeUpdate();
             }
 
@@ -133,7 +135,7 @@ public class OrdenDomicilioDAO extends BaseDAO implements ICrud<ModeloOrdenDomic
     public List<ModeloOrdenDomicilio> findToday() throws SQLException {
         List<ModeloOrdenDomicilio> ordenes = new ArrayList<>();
         String sql = """
-            SELECT o.*, od.idRel_cliente, od.direccion
+            SELECT o.*, od.idRel_cliente, od.direccion, od.tarifa_domicilio
             FROM orden o
             INNER JOIN orden_domicilio od ON o.id_orden = od.id_orden
             WHERE DATE(o.fecha_expedicion_orden) = CURDATE()
@@ -157,7 +159,7 @@ public class OrdenDomicilioDAO extends BaseDAO implements ICrud<ModeloOrdenDomic
     public List<ModeloOrdenDomicilio> findByCliente(int clienteId) throws SQLException {
         List<ModeloOrdenDomicilio> ordenes = new ArrayList<>();
         String sql = """
-            SELECT o.*, od.idRel_cliente, od.direccion
+            SELECT o.*, od.idRel_cliente, od.direccion, od.tarifa_domicilio
             FROM orden o
             INNER JOIN orden_domicilio od ON o.id_orden = od.id_orden
             WHERE od.idRel_cliente = ?
@@ -184,7 +186,7 @@ public class OrdenDomicilioDAO extends BaseDAO implements ICrud<ModeloOrdenDomic
     public List<ModeloOrdenDomicilio> findByDireccion(String direccion) throws SQLException {
         List<ModeloOrdenDomicilio> ordenes = new ArrayList<>();
         String sql = """
-            SELECT o.*, od.idRel_cliente, od.direccion
+            SELECT o.*, od.idRel_cliente, od.direccion, od.tarifa_domicilio
             FROM orden o
             INNER JOIN orden_domicilio od ON o.id_orden = od.id_orden
             WHERE od.direccion LIKE ?
@@ -231,6 +233,7 @@ public class OrdenDomicilioDAO extends BaseDAO implements ICrud<ModeloOrdenDomic
             orden.setIdRelCliente(clienteId);
         }
         orden.setDireccionCliente(rs.getString("direccion"));
+        orden.setTarifaDomicilio(rs.getDouble("tarifa_domicilio"));
 
         return orden;
     }

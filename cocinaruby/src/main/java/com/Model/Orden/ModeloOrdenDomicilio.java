@@ -14,6 +14,7 @@ public class ModeloOrdenDomicilio extends ModeloOrden {
     private String direccionCliente;
     private String nombreCliente;
     private String telefonoCliente;
+    private double tarifaDomicilio;
 
     public Integer getIdRelCliente() {
         return idRelCliente;
@@ -43,6 +44,13 @@ public class ModeloOrdenDomicilio extends ModeloOrden {
         return telefonoCliente;
     }
 
+    public double getTarifaDomicilio() {
+        return tarifaDomicilio;
+    }
+
+    public void setTarifaDomicilio(double tarifaDomicilio) {
+        this.tarifaDomicilio = tarifaDomicilio;
+    }
 
     @Override
     public String getNombreCliente() {

@@ -24,13 +24,13 @@ public class OrdenMostradorDAO extends BaseDAO implements ICrud<ModeloOrdenMostr
 
     @Override
     public ModeloOrdenMostrador create(ModeloOrdenMostrador model) throws SQLException {
-        String sqlMostrador = "INSERT INTO orden_mostrador (id_orden, nombre) VALUES (?, ?)";
+        String sqlMostrador = "INSERT INTO orden_mostrador (id_orden, nombre_persona) VALUES (?, ?)";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sqlMostrador)) {
 
             ps.setInt(1, model.getIdOrden());
-            ps.setString(2, model.getNombre());
+            ps.setString(2, model.getNombrePersona());
             ps.executeUpdate();
 
             return model;
@@ -40,7 +40,7 @@ public class OrdenMostradorDAO extends BaseDAO implements ICrud<ModeloOrdenMostr
     @Override
     public ModeloOrdenMostrador read(int id) throws SQLException {
         String sql = """
-            SELECT o.*, om.nombre
+            SELECT o.*, om.nombre_persona
             FROM orden o
             INNER JOIN orden_mostrador om ON o.id_orden = om.id_orden
             WHERE o.id_orden = ?
@@ -64,7 +64,7 @@ public class OrdenMostradorDAO extends BaseDAO implements ICrud<ModeloOrdenMostr
     public List<ModeloOrdenMostrador> all() throws SQLException {
         List<ModeloOrdenMostrador> ordenes = new ArrayList<>();
         String sql = """
-            SELECT o.*, om.nombre
+            SELECT o.*, om.nombre_persona
             FROM orden o
             INNER JOIN orden_mostrador om ON o.id_orden = om.id_orden
             ORDER BY o.fecha_expedicion_orden DESC
@@ -83,12 +83,12 @@ public class OrdenMostradorDAO extends BaseDAO implements ICrud<ModeloOrdenMostr
 
     @Override
     public boolean update(int id, ModeloOrdenMostrador model) throws SQLException {
-        String sqlMostrador = "UPDATE orden_mostrador SET nombre = ? WHERE id_orden = ?";
+        String sqlMostrador = "UPDATE orden_mostrador SET nombre_persona = ? WHERE id_orden = ?";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sqlMostrador)) {
 
-            ps.setString(1, model.getNombre());
+            ps.setString(1, model.getNombrePersona());
             ps.setInt(2, id);
 
             return ps.executeUpdate() > 0;
@@ -114,7 +114,7 @@ public class OrdenMostradorDAO extends BaseDAO implements ICrud<ModeloOrdenMostr
     public List<ModeloOrdenMostrador> findToday() throws SQLException {
         List<ModeloOrdenMostrador> ordenes = new ArrayList<>();
         String sql = """
-            SELECT o.*, om.nombre
+            SELECT o.*, om.nombre_persona
             FROM orden o
             INNER JOIN orden_mostrador om ON o.id_orden = om.id_orden
             WHERE DATE(o.fecha_expedicion_orden) = CURDATE()
@@ -133,22 +133,22 @@ public class OrdenMostradorDAO extends BaseDAO implements ICrud<ModeloOrdenMostr
     }
 
     /**
-     * Busca órdenes de mostrador por nombre
+     * Busca órdenes de mostrador por nombre_persona
      */
-    public List<ModeloOrdenMostrador> findByNombre(String nombre) throws SQLException {
+    public List<ModeloOrdenMostrador> findByNombre(String nombre_persona) throws SQLException {
         List<ModeloOrdenMostrador> ordenes = new ArrayList<>();
         String sql = """
-            SELECT o.*, om.nombre
+            SELECT o.*, om.nombre_persona
             FROM orden o
             INNER JOIN orden_mostrador om ON o.id_orden = om.id_orden
-            WHERE om.nombre LIKE ?
+            WHERE om.nombre_persona LIKE ?
             ORDER BY o.fecha_expedicion_orden DESC
         """;
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, "%" + nombre + "%");
+            ps.setString(1, "%" + nombre_persona + "%");
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -180,7 +180,7 @@ public class OrdenMostradorDAO extends BaseDAO implements ICrud<ModeloOrdenMostr
         orden.setFacturado(rs.getBoolean("facturado"));
 
         // Campos de la tabla 'orden_mostrador'
-        orden.setNombreCliente(rs.getString("nombre"));
+        orden.setNombrePersona(rs.getString("nombre_persona"));
 
         return orden;
     }
