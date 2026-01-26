@@ -25,7 +25,7 @@ public class AA12ActualizarViewVentas20260124 extends Migration {
             LEFT JOIN (
                 SELECT
                     om.id_orden,
-                    'Mostrador' AS nombre_cliente
+                    om.nombre_persona AS nombre_cliente
                 FROM orden_mostrador AS om
                 UNION ALL
                 SELECT
