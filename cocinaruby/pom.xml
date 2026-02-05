@@ -109,7 +109,7 @@
       <artifactId>javafx-maven-plugin</artifactId>
       <version>0.0.8</version>
       <configuration>
-        <mainClass>com.View.Main</mainClass>
+        <mainClass>com.Main</mainClass>
       </configuration>
     </plugin>
       </plugins>
@@ -125,7 +125,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>com.View.Main</mainClass>
+              <mainClass>com.Main</mainClass>
               <addClasspath>true</addClasspath>
               <classpathPrefix>lib/</classpathPrefix>
             </manifest>
