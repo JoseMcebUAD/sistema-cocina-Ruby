@@ -271,7 +271,7 @@ public class OrderController extends BaseController {
         clientNameField.setText(name);
         addressField.setText(address);
         phoneNumberField.setText(phoneNumber);
-        tarifaDomicilioField.setText(String.valueOf(tarifaDomicilio));
+            tarifaDomicilioField.setText(String.valueOf(tarifaDomicilio));
         this.currentClientId = clientId;
     }
 

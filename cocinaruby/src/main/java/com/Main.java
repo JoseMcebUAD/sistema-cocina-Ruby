@@ -1,4 +1,4 @@
-package com.View;
+package com;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -7,8 +7,6 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-
-import com.AppRunner;
 
 /**
  * Clase Main para iniciar la aplicación Cocina Ruby.

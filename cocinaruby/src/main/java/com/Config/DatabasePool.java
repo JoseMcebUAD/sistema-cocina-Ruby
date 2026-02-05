@@ -3,8 +3,8 @@ package com.Config;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
@@ -129,8 +129,11 @@ public class DatabasePool {
      */
     private static Properties loadProperties(String configFile) throws IOException {
         Properties props = new Properties();
-        try (FileInputStream fis = new FileInputStream(configFile)) {
-            props.load(fis);
+        try (InputStream is = DatabasePool.class.getClassLoader().getResourceAsStream(configFile)) {
+            if (is == null) {
+                throw new IOException("No se encontró el archivo: " + configFile);
+            }
+            props.load(is);
         }
         return props;
     }

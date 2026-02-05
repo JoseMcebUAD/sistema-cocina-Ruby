@@ -19,13 +19,29 @@ public final class SessionUsuario {
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private SessionUsuario(){
-        //deberia regresar C:://.../cocina-ruby
-        String direccionActual = System.getProperty("user.dir");
-        Path ruta = Path.of(direccionActual, "config.tokenUsuario");
+        // Guardar en carpeta del usuario para que funcione tanto en IDE como empaquetado
+        String userHome = System.getProperty("user.home");
+        Path appDir = Path.of(userHome, "CocinaRubyPOS");
+        appDir.toFile().mkdirs();
+        Path ruta = appDir.resolve("config.tokenUsuario");
+
+        // Si no existe, crear el archivo con valores por defecto
+        if (!ruta.toFile().exists()) {
+            try {
+                Properties defaults = new Properties();
+                defaults.setProperty("nombreUsuario", "");
+                defaults.setProperty("cerrarsessiontimestamp", "");
+                try (var out = new java.io.FileOutputStream(ruta.toFile())) {
+                    defaults.store(out, "sesion inicial");
+                }
+            } catch (java.io.IOException e) {
+                System.err.println("No se pudo crear config.tokenUsuario: " + e.getMessage());
+            }
+        }
+
         this.sessionExpiration = new SessionExpiration();
         this.sessionRepository = new FileSessionRepository(ruta);
         this.properties = this.sessionRepository.load();
-        
     }
     //creamos el singleton 
     public static synchronized SessionUsuario getInstance() {
