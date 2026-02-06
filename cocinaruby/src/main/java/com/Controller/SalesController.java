@@ -555,8 +555,6 @@ public class SalesController extends BaseController {
                 // Marcar como impreso si no lo estaba
                 if (!order.isFacturado()) {
                     order.setFacturado(true);
-                    orderService.updateOrderHeader(new ModeloOrdenMostrador());
-                    // Actualizar el orden en la BD
                     ModeloOrden modeloOrden = createOrderFromSale(order);
                     modeloOrden.setFacturado(true);
                     orderService.updateOrderHeader(modeloOrden);

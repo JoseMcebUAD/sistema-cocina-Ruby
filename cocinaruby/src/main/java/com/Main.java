@@ -39,9 +39,9 @@ public class Main extends Application {
 
         String fxmlPath = app.determineViewPath();
 
-        // opional para las impresoras
-        // app.initializePrinterService();
-        // app.startPrinterMonitor();
+        // Inicializar impresora (si no está disponible, la app sigue funcionando)
+        app.initializePrinterService();
+        app.startPrinterMonitor();
 
         // 6. Cargar UI (DESPUÉS de las configuraciones)
         if (!app.loadUI(fxmlPath)) {

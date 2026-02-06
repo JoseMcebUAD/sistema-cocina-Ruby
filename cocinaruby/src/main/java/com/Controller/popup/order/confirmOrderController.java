@@ -355,14 +355,12 @@ public class confirmOrderController implements Initializable {
                     return false;
                 }
                 order.setPagoCliente(pagado);
-                order.setFacturado(true); 
             } catch (NumberFormatException ex) {
                 showCustomAlert("WARNING", "Formato Inválido", "Por favor ingrese solo números.");
                 return false;
             }
         } else {
             order.setPagoCliente(precio);
-            order.setFacturado(true);
         }
         
         return true;
