@@ -90,13 +90,32 @@ mvn exec:java@migrate-down
 mvn javafx:run
 ```
 
-### Generar ejecutable (.exe)
+### Generar el JAR
+    Como JAVAFX no está disponible en tiempo de ejecución,
+    es necesario descargar el SDK de JAVAFX en https://openjfx.io/
 
+    Una vez hecho esto, generar el Jar con 
 ```bash
-mvn jpackage:jpackage
+mvn clean package
 ```
+El jar se genera en `/target`.
 
-El ejecutable se genera en `target/jpackage/`.
+### Generar el exe
+tener java jdk v21 en el path del sistema
+```bash
+
+jpackage ^
+ --name CocinaRuby ^
+ --input target ^
+ --main-jar cocinaruby-1.0-SNAPSHOT.jar ^
+ --main-class com.Launcher ^
+ --type exe ^
+ --java-options "--module-path C:\JAVASDK-21\openjfx-21.0.10_windows-x64_bin-sdk\javafx-sdk-21.0.10\lib --add-modules javafx.controls,javafx.fxml" ^
+ --icon src\main\resources\icons\app.ico ^
+ --win-console
+ ```
+
+
 
 ## Estructura del proyecto
 
