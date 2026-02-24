@@ -586,6 +586,7 @@ public class SalesController extends BaseController {
     private ModeloOrden createOrderFromSale(ModeloVentasView venta) {
         ModeloOrdenMostrador orden = new ModeloOrdenMostrador();
         orden.setIdOrden(venta.getIdOrden());
+        orden.setNombrePersona(venta.getNombreCliente());
         orden.setIdRelTipoPago(venta.getIdRelTipoPago());
         orden.setTipoCliente(venta.getTipoCliente());
         orden.setFechaExpedicionOrden(venta.getFechaExpedicionOrden() != null ? 

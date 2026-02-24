@@ -239,6 +239,7 @@ public class confirmOrderController implements Initializable {
     private ModeloOrden createOrderFromSale(com.Model.DTO.VIEW.ModeloVentasView venta) {
         ModeloOrdenMostrador orden = new ModeloOrdenMostrador();
         orden.setIdOrden(venta.getIdOrden());
+        orden.setNombrePersona(venta.getNombreCliente());
         orden.setIdRelTipoPago(venta.getIdRelTipoPago());
         orden.setNombreTipoPago(venta.getNombreTipoPago());
         orden.setTipoCliente(venta.getTipoCliente());

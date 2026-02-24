@@ -3,7 +3,7 @@ package com.Config;
 public final class Constants {
 
     // Configuración de impresora
-    public static final String NOMBRE_IMPRESORA = "EPSON_T2011";
+    public static final String NOMBRE_IMPRESORA = "EPSON_TM-T88Vl";
 
     // Configuración de formato de factura térmica
     public static final int ANCHO_TICKET = 40; // Ancho en caracteres del ticket térmico
