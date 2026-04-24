@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane id="retiro-caja-root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="340.0" prefWidth="460.0" stylesheets="@../../css/styles.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.Controller.popup.caja.RetiroCajaController">
+   <center>
+      <VBox spacing="20.0" BorderPane.alignment="CENTER">
+         <children>
+            <Label styleClass="confirmOrder-header-label" text="AGREGAR RETIRO DE CAJA" />
+
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+               <children>
+                  <Label styleClass="confirmOrder-label" text="MONTO A RETIRAR ($):" />
+                  <TextField fx:id="montoRetiroField" prefHeight="40.0" prefWidth="180.0"
+                             promptText="0.00" styleClass="confirmOrder-field-read" HBox.hgrow="ALWAYS" />
+               </children>
+            </HBox>
+
+            <VBox spacing="5.0">
+               <children>
+                  <Label styleClass="confirmOrder-label" text="RAZÓN DEL RETIRO:" />
+                  <TextArea fx:id="razonRetiroArea" prefHeight="75.0" prefWidth="380.0"
+                            promptText="Ingrese la razón del retiro..." wrapText="true" />
+               </children>
+            </VBox>
+
+            <Label fx:id="errorLabel" styleClass="error-label" text="" visible="false" managed="false" />
+
+            <HBox alignment="CENTER" spacing="20.0">
+               <children>
+                  <Button fx:id="cancelarButton" mnemonicParsing="false"
+                          styleClass="confirmOrder-btn-back" text="CANCELAR">
+                     <padding>
+                        <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
+                     </padding>
+                  </Button>
+                  <Button fx:id="registrarButton" mnemonicParsing="false"
+                          styleClass="confirmOrder-btn-success" text="REGISTRAR">
+                     <padding>
+                        <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
+                     </padding>
+                  </Button>
+               </children>
+            </HBox>
+         </children>
+         <padding>
+            <Insets bottom="30.0" left="40.0" right="40.0" top="30.0" />
+         </padding>
+      </VBox>
+   </center>
+</BorderPane>

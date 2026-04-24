@@ -13,27 +13,28 @@ public class FormatearReciboService {
 
     /**
      * Formatea el detalle de una orden, dividiendo en múltiples líneas si es necesario.
-     * El precio siempre aparece al final de la última línea.
+     * El precio siempre aparece al final de la última línea, precedido por la cantidad.
      * Cada línea ocupa exactamente 40 caracteres.
      *
      * @param especificaciones Descripción del producto
+     * @param cantidad Cantidad del producto (se muestra como "x2")
      * @param precio Precio formateado
      * @return Lista de líneas formateadas (1 o más líneas)
      */
-    public List<String> formatearDetalleOrden(String especificaciones, String precio) {
+    public List<String> formatearDetalleOrden(String especificaciones, int cantidad, String precio) {
         List<String> lineas = new ArrayList<>();
-        int espacioParaPrecio = precio.length() + 1; // +1 para al menos un espacio antes del precio
-        int anchoParaTexto = Constants.ANCHO_TICKET - espacioParaPrecio;
+        String sufijo = "x" + cantidad + " " + precio;
+        int espacioParaSufijo = sufijo.length() + 1; // +1 para al menos un espacio antes del sufijo
+        int anchoParaTexto = Constants.ANCHO_TICKET - espacioParaSufijo;
 
-        // Si el texto cabe en una sola línea con el precio
+        // Si el texto cabe en una sola línea con el sufijo
         if (especificaciones.length() <= anchoParaTexto) {
-            // Formatear en una línea: texto + espacios + precio
-            int espaciosNecesarios = Constants.ANCHO_TICKET - especificaciones.length() - precio.length();
+            int espaciosNecesarios = Constants.ANCHO_TICKET - especificaciones.length() - sufijo.length();
             StringBuilder linea = new StringBuilder(especificaciones);
             for (int i = 0; i < espaciosNecesarios; i++) {
                 linea.append(" ");
             }
-            linea.append(precio);
+            linea.append(sufijo);
             lineas.add(linea.toString());
         } else {
             // Dividir el texto en múltiples líneas
@@ -44,15 +45,15 @@ public class FormatearReciboService {
                 lineas.add(completarLinea(lineasTexto.get(i), Constants.ANCHO_TICKET));
             }
 
-            // La última línea lleva el precio
+            // La última línea lleva cantidad y precio
             String ultimaLinea = lineasTexto.get(lineasTexto.size() - 1);
-            int espaciosNecesarios = Constants.ANCHO_TICKET - ultimaLinea.length() - precio.length();
-            StringBuilder lineaConPrecio = new StringBuilder(ultimaLinea);
+            int espaciosNecesarios = Constants.ANCHO_TICKET - ultimaLinea.length() - sufijo.length();
+            StringBuilder lineaConSufijo = new StringBuilder(ultimaLinea);
             for (int i = 0; i < espaciosNecesarios; i++) {
-                lineaConPrecio.append(" ");
+                lineaConSufijo.append(" ");
             }
-            lineaConPrecio.append(precio);
-            lineas.add(lineaConPrecio.toString());
+            lineaConSufijo.append(sufijo);
+            lineas.add(lineaConSufijo.toString());
         }
 
         return lineas;

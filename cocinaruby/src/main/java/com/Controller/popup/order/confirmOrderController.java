@@ -11,7 +11,6 @@ import com.Model.ModeloDetalleOrden;
 import com.Model.ModeloOrden;
 import com.Model.DTO.ModeloOrdenCompleta;
 import com.Model.Orden.ModeloOrdenDomicilio;
-import com.Model.Orden.ModeloOrdenMostrador;
 import com.Service.OrderService;
 import com.Service.TicketServices.TicketOrderService;
 import com.Service.TicketServices.TicketOrderService.PrintResultEnum;
@@ -20,6 +19,7 @@ import com.Model.DTO.VIEW.ModeloVentasView;
 import com.Model.ModeloTipoPago;
 import com.Model.ModeloCliente;
 import com.Service.ClientService;
+import com.Service.Factory.ModeloOrdenFactory;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -117,14 +117,15 @@ public class confirmOrderController implements Initializable {
 
                     if (finalClient != null) {
                         domOrder.setIdRelCliente(finalClient.getIdCliente());
-                        domOrder.setDireccionCliente(finalClient.getDirecciones());
+                        // La dirección del pedido es la que ingresó el usuario (puede diferir
+                        // de la dirección guardada del cliente). Ya está seteada desde createOrden().
                     }
                 }
             }
 
             // Configurar campos base de la orden
             order.setFechaExpedicionOrden(LocalDateTime.now());
-            order.setPrecioOrden(orderStrategy.calculateOrderTotal());
+            order.setPrecioOrden(0); // Los triggers de detalle_orden actualizan precio_orden automáticamente
             order.setTipoCliente(orderStrategy.currentTypeOrder());
             order.setFacturado(false);
 
@@ -237,24 +238,7 @@ public class confirmOrderController implements Initializable {
      * Crea un objeto ModeloOrden a partir de un ModeloVentasView
      */
     private ModeloOrden createOrderFromSale(com.Model.DTO.VIEW.ModeloVentasView venta) {
-        ModeloOrdenMostrador orden = new ModeloOrdenMostrador();
-        orden.setIdOrden(venta.getIdOrden());
-        orden.setNombrePersona(venta.getNombreCliente());
-        orden.setIdRelTipoPago(venta.getIdRelTipoPago());
-        orden.setNombreTipoPago(venta.getNombreTipoPago());
-        orden.setTipoCliente(venta.getTipoCliente());
-        
-        // Asignar fecha directamente ya que es LocalDateTime
-        if (venta.getFechaExpedicionOrden() != null) {
-            orden.setFechaExpedicionOrden(venta.getFechaExpedicionOrden());
-        } else {
-            orden.setFechaExpedicionOrden(LocalDateTime.now());
-        }
-        
-        orden.setPrecioOrden(venta.getPrecioOrden());
-        orden.setPagoCliente(venta.getPagoCliente());
-        orden.setFacturado(venta.isFacturado());
-        return orden;
+        return ModeloOrdenFactory.createFromSale(venta);
     }
 
     private void setUpPaymentConfig() {

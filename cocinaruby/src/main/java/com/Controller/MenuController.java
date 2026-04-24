@@ -19,6 +19,11 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
+import com.Controller.popup.caja.AperturaCajaController;
+import com.Controller.popup.caja.CierreCajaController;
+import com.Model.ModeloAperturaCaja;
+import com.Model.ModeloCierreCaja;
+import com.Service.CajaService;
 import com.Model.Enum.MenuStyleConstants;
 import com.Model.Enum.AnimationConstants;
 
@@ -26,15 +31,18 @@ public class MenuController extends BaseController {
 
     @FXML private BorderPane menuContainer;
     @FXML private ImageView exit,minimize;
-    @FXML private Label menu,userNameLabel;
+    @FXML private Label menu, userNameLabel, dineroEnCajaLabel;
     @FXML private AnchorPane slider;
     @FXML private StackPane content;
     @FXML private StackPane sliderWrapper;
-    @FXML private Button btnCorteCaja, ordersButton, salesButton, clientsButton, tablesButton, stopSalesButton;
+    @FXML private Button btnCorteCaja, ordersButton, salesButton, clientsButton, tablesButton, stopSalesButton, retiroCajaButton;
     private Button currentActiveButton;
     private boolean stopSales = false;
     private double sidebarWidth;
     private boolean sidebarOpen = true;
+
+    private final CajaService cajaService = new CajaService();
+    private ModeloAperturaCaja aperturaActiva = null;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -131,6 +139,7 @@ public class MenuController extends BaseController {
         setupSalesButton();
         setupClientButton();
         setupTablesButton();
+        setupRetiroCajaButton();
         setupStopSalesButton();
     }
 
@@ -167,15 +176,64 @@ public class MenuController extends BaseController {
     }
 
     /**
-     * Configura el botón de detener ventas.
+     * Configura el botón de Retiro de Caja para cargar la vista del módulo.
      */
-    private void setupStopSalesButton(){
+    private void setupRetiroCajaButton() {
+        retiroCajaButton.setOnAction(e -> loadView("/com/view/retiros.fxml", retiroCajaButton));
+    }
+
+    /**
+     * Configura el botón de Corte de Caja.
+     * Si hay apertura activa sin cierre: abre popup de cierre ciego.
+     * Si ya hay cierre o no hay apertura: informa el estado.
+     */
+    private void setupStopSalesButton() {
         stopSalesButton.setOnAction(e -> {
-            stopSales = true;
-            if (currentActiveButton == ordersButton) {
-                loadView("/com/view/order.fxml", ordersButton);
+            if (aperturaActiva == null) {
+                mostrarPopupApertura();
+                return;
             }
+
+            ModeloCierreCaja cierreExistente = cajaService.getCierrePorApertura(aperturaActiva.getIdApertura());
+            if (cierreExistente != null) {
+                javafx.scene.control.Alert info = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+                info.setTitle("Caja ya cerrada");
+                info.setHeaderText(null);
+                info.setContentText("La caja ya fue cerrada.\nDinero en caja: $" + String.format("%.2f", cierreExistente.getMontoReal()));
+                info.showAndWait();
+                return;
+            }
+
+            mostrarPopupCierreCaja();
         });
+    }
+
+    /**
+     * Abre el popup de cierre ciego de forma modal.
+     * Al guardar el cierre bloquea pedidos y muestra el label.
+     */
+    private void mostrarPopupCierreCaja() {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                getClass().getResource("/com/view/pop-up/caja/cierreCaja.fxml"));
+            javafx.scene.Parent root = loader.load();
+
+            CierreCajaController ctrl = loader.getController();
+            ctrl.setDatos(aperturaActiva.getIdApertura(), cierre -> {
+                bloquearPedidosConCierre(cierre);
+            });
+
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.initStyle(javafx.stage.StageStyle.DECORATED);
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            stage.setTitle("Cierre de Caja");
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.setResizable(false);
+            stage.showAndWait();
+        } catch (Exception e) {
+            System.err.println("Error al abrir popup de cierre: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     /**
@@ -233,5 +291,77 @@ public class MenuController extends BaseController {
     protected void setupAdditionalConfig() {
         setupSliderFunction();
         setupCursors();
+        verificarEstadoCaja();
+    }
+
+    // =============== CICLO DE CAJA ===============
+
+    /**
+     * Verifica el estado de la caja al iniciar la aplicación.
+     * - Sin apertura activa: muestra popup de apertura y bloquea pedidos.
+     * - Con apertura y cierre: bloquea pedidos y muestra dinero en caja.
+     * - Con apertura sin cierre: permite pedidos normalmente.
+     */
+    private void verificarEstadoCaja() {
+        aperturaActiva = cajaService.getUltimaAperturaHoy();
+
+        if (aperturaActiva == null) {
+            ordersButton.setDisable(true);
+            mostrarPopupApertura();
+            // Si el usuario cerró el popup sin abrir caja, bloquear la vista de pedidos
+            if (aperturaActiva == null) {
+                stopSales = true;
+            }
+            return;
+        }
+
+        ModeloCierreCaja cierre = cajaService.getCierrePorApertura(aperturaActiva.getIdApertura());
+        if (cierre != null) {
+            bloquearPedidosConCierre(cierre);
+        }
+    }
+
+    /**
+     * Abre el popup de apertura de caja de forma modal.
+     * Al confirmar, habilita los pedidos.
+     */
+    private void mostrarPopupApertura() {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                getClass().getResource("/com/view/pop-up/caja/aperturaCaja.fxml"));
+            javafx.scene.Parent root = loader.load();
+
+            AperturaCajaController ctrl = loader.getController();
+            ctrl.setOnAperturaCreada(apertura -> {
+                aperturaActiva = apertura;
+                ordersButton.setDisable(false);
+            });
+
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.initStyle(javafx.stage.StageStyle.DECORATED);
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            stage.setTitle("Apertura de Caja");
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.setResizable(false);
+            ctrl.setStage(stage);
+            stage.showAndWait();
+        } catch (Exception e) {
+            System.err.println("Error al abrir popup de apertura: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Bloquea pedidos tras un cierre exitoso y muestra el monto real en el label.
+     */
+    private void bloquearPedidosConCierre(ModeloCierreCaja cierre) {
+        stopSales = true;
+        ordersButton.setDisable(true);
+        if (currentActiveButton == ordersButton) {
+            loadView("/com/view/order.fxml", ordersButton);
+        }
+        dineroEnCajaLabel.setText("Dinero en Caja: $" + String.format("%.2f", cierre.getMontoReal()));
+        dineroEnCajaLabel.setVisible(true);
+        dineroEnCajaLabel.setManaged(true);
     }
 }

@@ -2,7 +2,6 @@ package com.Controller;
 
 import java.net.URL;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -13,12 +12,12 @@ import com.Model.DTO.VIEW.ModeloVentasView;
 import com.Model.ModeloDetalleOrden;
 import com.Model.DTO.ModeloRecibo;
 import com.Model.DTO.ModeloOrdenCompleta;
-import com.Model.Orden.ModeloOrdenMostrador;
 import com.Model.ModeloOrden;
 import com.Model.Enum.SalesStyleConstants;
 import com.Model.Enum.SalesFormatConstants;
 import com.Model.Enum.SalesUILabels;
 import com.Model.Enum.SalesMessages;
+import com.Service.Factory.ModeloOrdenFactory;
 
 import javafx.animation.FadeTransition;
 import javafx.beans.property.SimpleStringProperty;
@@ -385,12 +384,6 @@ public class SalesController extends BaseController {
         for (ModeloVentasView order : orders) {
             total += calculateOrderTotal(order);
         }
-        System.out.println("Calculando total para " + orders.size() + " órdenes: $" + String.format("%.2f", total));
-        for (ModeloVentasView order : orders) {
-            double orderTotal = calculateOrderTotal(order);
-            System.out.println("  Orden " + order.getIdOrden() + ": $" + String.format("%.2f", orderTotal));
-        }
-        
         return total;
     }
     
@@ -584,17 +577,7 @@ public class SalesController extends BaseController {
      * Crea un objeto ModeloOrden a partir de un ModeloVentasView.
      */
     private ModeloOrden createOrderFromSale(ModeloVentasView venta) {
-        ModeloOrdenMostrador orden = new ModeloOrdenMostrador();
-        orden.setIdOrden(venta.getIdOrden());
-        orden.setNombrePersona(venta.getNombreCliente());
-        orden.setIdRelTipoPago(venta.getIdRelTipoPago());
-        orden.setTipoCliente(venta.getTipoCliente());
-        orden.setFechaExpedicionOrden(venta.getFechaExpedicionOrden() != null ? 
-            venta.getFechaExpedicionOrden() : LocalDateTime.now());
-        orden.setPrecioOrden(venta.getPrecioOrden());
-        orden.setPagoCliente(venta.getPagoCliente());
-        orden.setFacturado(venta.isFacturado());
-        return orden;
+        return ModeloOrdenFactory.createFromSale(venta);
     }
 
     /**

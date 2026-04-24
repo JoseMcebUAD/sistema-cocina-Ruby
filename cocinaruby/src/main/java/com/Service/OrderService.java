@@ -35,7 +35,6 @@ public class OrderService {
     public boolean addFullOrder(ModeloOrdenCompleta fullOrder) {
         try {
             ModeloOrden orderHeader = fullOrder.getOrden();
-            orderHeader.setPrecioOrden(0.0);
 
             // If it's a table order, validate that the table is available
             if (TiposClienteEnum.PAGO_MESA.equals(orderHeader.getTipoCliente())) {
@@ -80,19 +79,25 @@ public class OrderService {
                 return false;
             }
 
-            // Insert order details (triggers will update precio_orden with products total)
+            // Insert order details
+            double totalProductos = 0.0;
             for (ModeloDetalleOrden itemDetail : fullOrder.getDetalles()) {
                 itemDetail.setIdRelOrden(orderId);
                 orderDetailDao.create(itemDetail);
+                totalProductos += itemDetail.getPrecioDetalleOrden();
             }
 
-            // If it's a delivery order, add the delivery fee to precio_orden
+            // If it's a delivery order, add the delivery fee
             if (TiposClienteEnum.PAGO_DOMICILIO.equals(customerType)) {
                 ModeloOrdenDomicilio deliveryOrder = (ModeloOrdenDomicilio) orderHeader;
                 if (deliveryOrder.getTarifaDomicilio() > 0) {
-                    aplicarTarifaDomicilio(orderId, deliveryOrder.getTarifaDomicilio());
+                    totalProductos += deliveryOrder.getTarifaDomicilio();
                 }
             }
+
+            // Update precio_orden with the calculated total
+            orderHeader.setPrecioOrden(totalProductos);
+            orderDaoInstance.update(orderId, orderHeader);
 
             return true;
         } catch (SQLException e) {
@@ -101,23 +106,6 @@ public class OrderService {
         }
     }
 
-    /**
-     * Suma la tarifa de domicilio al precio_orden actual.
-     * El precio_orden ya tiene el total de productos (actualizado por triggers).
-     *
-     * @param idOrden ID de la orden
-     * @param tarifaDomicilio Tarifa a sumar
-     * @throws SQLException si hay error en la actualización
-     */
-    private void aplicarTarifaDomicilio(int idOrden, double tarifaDomicilio) throws SQLException {
-        // Read current orden to get current price
-        ModeloOrden orden = orderDaoInstance.read(idOrden);
-        if (orden != null) {
-            double newPrice = orden.getPrecioOrden() + tarifaDomicilio;
-            orden.setPrecioOrden(newPrice);
-            orderDaoInstance.update(idOrden, orden);
-        }
-    }
 
     /**
      * Obtiene una orden completa con sus detalles.

@@ -53,9 +53,23 @@ public class OrderController extends BaseController {
     @Override
     protected void setupAdditionalConfig() {
         setupGlobalClickConfig();
+        setupTarifaListener();
         // Inicializar con orden de mostrador por defecto
         setOrderStrategy(new OrdersSelected.OrderDineinSelected(this));
-        toggleGroupStyle(dineinButton, dineinButton, deliveryButton, tableButton); 
+        toggleGroupStyle(dineinButton, dineinButton, deliveryButton, tableButton);
+    }
+
+    /**
+     * Actualiza el total en tiempo real cuando el usuario modifica la tarifa de domicilio.
+     */
+    private void setupTarifaListener() {
+        tarifaDomicilioField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.matches("\\d*(\\.\\d*)?")) {
+                tarifaDomicilioField.setText(oldVal);
+                return;
+            }
+            updateTotalLabel();
+        });
     }
 
     /**

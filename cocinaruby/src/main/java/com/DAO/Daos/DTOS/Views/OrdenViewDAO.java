@@ -35,7 +35,13 @@ public class OrdenViewDAO extends BaseDAO {
      * @throws SQLException si hay error en la consulta
      */
     public ModeloVentasView find(int idOrden) throws SQLException {
-        String sql = "SELECT * FROM view_ventas WHERE id_orden = ?";
+        String sql = """
+            SELECT v.*, o.facturado, tp.nombre_tipo_pago
+            FROM view_ventas v
+            LEFT JOIN orden o ON v.id_orden = o.id_orden
+            LEFT JOIN tipo_pago tp ON v.idRel_tipo_pago = tp.id_tipo_pago
+            WHERE v.id_orden = ?
+        """;
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {

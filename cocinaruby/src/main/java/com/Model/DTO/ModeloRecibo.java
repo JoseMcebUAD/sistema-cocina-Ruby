@@ -17,7 +17,7 @@ public class ModeloRecibo {
         this.fechaExpedicion = fechaExpedicion;
     }
     
-    public ModeloOrdenCompleta getOrden() {
+    public ModeloOrdenCompleta getOrdenCompleta() {
         return orden;
     }
 
