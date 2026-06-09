@@ -35,7 +35,6 @@ public class Desayuno {
     @Column(name = "id_desayuno")
     private Integer idDesayuno;
 
-    /** UUID público usado en el menú web. No expone el id interno de la DB. */
     @Column(name = "uuid_desayuno", nullable = false, length = 45)
     private String uuidDesayuno;
 

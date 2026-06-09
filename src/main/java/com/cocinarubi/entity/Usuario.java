@@ -40,7 +40,6 @@ public class Usuario implements UserDetails {
     @Column(name = "id_usuario")
     private Integer idUsuario;
 
-    /** Rol que define los permisos del operador en el dashboard. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_rol", nullable = false)
     private RolUsuario rolUsuario;
@@ -48,7 +47,6 @@ public class Usuario implements UserDetails {
     @Column(name = "nombre_usuario", nullable = false, length = 20)
     private String nombreUsuario;
 
-    /** PIN de 5 dígitos hasheado con BCrypt. Nunca se expone en respuestas JSON. */
     @JsonIgnore
     @Column(name = "contrasena", nullable = false, length = 70)
     private String contrasena;

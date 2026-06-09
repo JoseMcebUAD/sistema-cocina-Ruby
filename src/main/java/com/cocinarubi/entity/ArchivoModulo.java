@@ -37,23 +37,14 @@ public class ArchivoModulo {
 
     @Column(name = "nombre_modulo", nullable = false, length = 50)
     private String nombreModulo;
-
-    /**
-     * Tipo de catálogo de producto al que pertenece este módulo.
-     * {@code null} si el módulo no está asociado a un producto (ej: banners).
-     */
+    
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_catalogo_producto")
     private TipoCatalogoProducto tipoCatalogoProducto;
 
-    /** Carpeta destino en el servidor de archivos (no la ruta de zona de reparto). */
     @Column(name = "ruta", nullable = false, length = 100)
     private String ruta;
 
-    /**
-     * Array JSON de MIME types permitidos. Ej: ["image/jpeg","image/png"].
-     * Se almacena como JSON en MySQL; se lee como String y se parsea en la capa de servicio.
-     */
     @Column(name = "archivos_aceptados", nullable = false, columnDefinition = "JSON")
     private String archivosAceptados;
 }

@@ -33,15 +33,12 @@ public class CodigoCliente {
     @Column(name = "id_codigo_cliente")
     private Integer idCodigoCliente;
 
-    /** Nombre legible del código, asignado por el operador. Ej: "Código Susanita". */
     @Column(name = "identificador", nullable = false, length = 255)
     private String identificador;
 
-    /** Código hasheado que se entrega al cliente para que lo ingrese en el menú web. */
     @Column(name = "codigo_cliente", nullable = false, length = 255)
     private String codigoCliente;
 
-    /** Tarifa de envío que se aplicará al cliente que use este código, en pesos. */
     @Column(name = "tarifa_especial", nullable = false, precision = 5, scale = 2)
     private BigDecimal tarifaEspecial;
 }

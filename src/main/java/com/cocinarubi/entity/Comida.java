@@ -37,7 +37,6 @@ public class Comida {
     @Column(name = "id_comida")
     private Integer idComida;
 
-    /** UUID público usado en el menú web. No expone el id interno de la DB. */
     @Column(name = "uuid_comida", nullable = false, length = 45)
     private String uuidComida;
 
@@ -57,7 +56,6 @@ public class Comida {
     @Column(name = "estatus", nullable = false)
     private Estatus estatus;
 
-    /** 1 = mostrar con prioridad visual en el carrito web del cliente. */
     @Column(name = "destacado", nullable = false)
     private boolean destacado;
 }

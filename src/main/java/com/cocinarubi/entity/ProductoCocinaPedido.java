@@ -37,22 +37,18 @@ public class ProductoCocinaPedido {
     @Column(name = "id_producto_cocina_pedido")
     private Integer idProductoCocinaPedido;
 
-    /** Pedido al que pertenece esta línea. Se ignora en JSON para evitar ciclos. */
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_pedido", nullable = false)
     private Pedido pedido;
 
-    /** Producto de cocina ordenado. No se puede eliminar mientras esté en pedidos. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_producto_cocina", nullable = false)
     private ProductoCocina productoCocina;
 
-    /** Número de unidades de este producto en la línea. Por defecto 1. */
     @Column(name = "cantidad", nullable = false)
     private byte cantidad;
 
-    /** Precio unitario capturado al momento de la orden. Depende del tipo de pedido (RF05). */
     @Column(name = "precio_unitario", nullable = false, precision = 5, scale = 2)
     private BigDecimal precioUnitario;
 }

@@ -40,18 +40,15 @@ public class DesayunoPedido {
     @Column(name = "id_desayuno_pedido")
     private Integer idDesayunoPedido;
 
-    /** Pedido al que pertenece esta línea. Se ignora en JSON para evitar ciclos. */
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_pedido", nullable = false)
     private Pedido pedido;
 
-    /** Platillo de desayuno ordenado. No se puede eliminar mientras esté en pedidos. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_desayuno", nullable = false)
     private Desayuno desayuno;
 
-    /** Precio capturado al momento de la orden (histórico). */
     @Column(name = "precio", nullable = false, precision = 5, scale = 2)
     private BigDecimal precio;
 }

@@ -35,22 +35,13 @@ public class InventarioComida {
     @Column(name = "id_inventario_comida")
     private Integer idInventarioComida;
 
-    /** Platillo al que corresponde este registro de consumo. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_comida", nullable = false)
     private Comida comida;
 
-    /**
-     * Unidades consumidas (tortillas, piezas, etc.).
-     * Al menos este campo o {@code kilogramos} debe tener valor (CHECK en DB).
-     */
     @Column(name = "cantidad")
     private Integer cantidad;
 
-    /**
-     * Peso consumido en kilogramos (puré, pechuga, etc.).
-     * Al menos este campo o {@code cantidad} debe tener valor (CHECK en DB).
-     */
     @Column(name = "kilogramos", precision = 8, scale = 3)
     private BigDecimal kilogramos;
 }

@@ -34,10 +34,8 @@ public class Anuncio {
     @Column(name = "descripcion_anuncio", nullable = false, length = 255)
     private String descripcionAnuncio;
 
-    /** Color HEX del anuncio para resaltarlo en la interfaz. Ej: #FF5733. Puede ser nulo. */
     @Column(name = "color", length = 10)
     private String color;
-
     /** Fecha y hora de publicación del anuncio. */
     @Column(name = "fecha_anuncio", nullable = false)
     private LocalDateTime fechaAnuncio;

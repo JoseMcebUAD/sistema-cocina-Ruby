@@ -38,13 +38,11 @@ public class BasicoComplemento {
     @Column(name = "id_basico_complemento")
     private Integer idBasicoComplemento;
 
-    /** Paquete al que pertenece este complemento. Se ignora en JSON para evitar ciclos. */
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_basico", nullable = false)
     private Basico basico;
 
-    /** Complemento incluido en el paquete. No se puede eliminar si está en uso. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_complemento", nullable = false)
     private Complemento complemento;

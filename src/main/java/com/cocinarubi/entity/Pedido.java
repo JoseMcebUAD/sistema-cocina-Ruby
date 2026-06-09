@@ -73,34 +73,19 @@ public class Pedido {
     @Column(name = "pedido_creado_desde", nullable = false)
     private PedidoCreadoDesde pedidoCreadoDesde;
 
-    /** Total a cobrar al cliente incluyendo productos y tarifa de envío. */
     @Column(name = "precio_final_orden", nullable = false, precision = 10, scale = 2)
     private BigDecimal precioFinalOrden;
 
-    /**
-     * Monto entregado por el cliente (efectivo). Permite calcular el cambio.
-     * Nulo cuando el pago es con tarjeta o transferencia.
-     */
+
     @Column(name = "pago_cliente", precision = 10, scale = 2)
     private BigDecimal pagoCliente;
 
-    /**
-     * UUID del cliente web que realizó el pedido. Nulo si el pedido es manual (COCINA).
-     * FK lógica a {@link Cliente#uuidCliente}; se conserva aunque el cliente sea eliminado.
-     */
     @Column(name = "uuid_cliente", length = 45)
     private String uuidCliente;
 
-    /**
-     * Estado de impresión del ticket ESC/POS.
-     * 0 = pendiente de imprimir, 1 = ya impreso. Ver RF016/RF026.
-     */
     @Column(name = "impreso", nullable = false)
     private boolean impreso;
 
-    // -------------------------------------------------------------------------
-    // Relaciones hijas (cascade: si se elimina el pedido, se eliminan sus líneas)
-    // -------------------------------------------------------------------------
 
     @Builder.Default
     @OneToOne(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

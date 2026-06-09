@@ -36,11 +36,9 @@ public class PagoRepartidor {
     @Column(name = "id_pago_repartidor")
     private Integer idPagoRepartidor;
 
-    /** Monto pagado al repartidor por su jornada en la ruta asignada, en pesos. */
     @Column(name = "pago", nullable = false, precision = 5, scale = 2)
     private BigDecimal pago;
 
-    /** Fecha y hora en que se registró el pago. */
     @Column(name = "fecha_pago", nullable = false)
     private LocalDateTime fechaPago;
 }

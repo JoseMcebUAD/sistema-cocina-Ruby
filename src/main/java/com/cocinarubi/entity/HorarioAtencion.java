@@ -40,22 +40,13 @@ public class HorarioAtencion {
     @Column(name = "hora_cierre_atencion_comidas", nullable = false)
     private LocalTime horaCierreAtencionComidas;
 
-    /**
-     * Código de día: L=lunes, M=martes, X=miércoles, J=jueves, V=viernes, S=sábado.
-     * Se usa CHAR(1) en la DB; se mapea como String de longitud 1.
-     */
     @Column(name = "dia_semana", nullable = false, length = 1)
     private String diaSemana;
 
-    /** Identifica si este registro corresponde al turno de comidas o de desayunos. */
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_horario", nullable = false)
     private TipoHorario tipoHorario;
 
-    /**
-     * Override manual de apertura. 1 = abierto ahora mismo, independientemente
-     * del horario configurado. El operador lo activa/desactiva desde el dashboard.
-     */
     @Column(name = "atendiendo", nullable = false)
     private boolean atendiendo;
 }

@@ -38,7 +38,6 @@ public class Basico {
     @Column(name = "id_basico")
     private Integer idBasico;
 
-    /** Comida principal incluida en el paquete. No se puede eliminar si hay básicos activos. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_comida", nullable = false)
     private Comida comida;
@@ -46,20 +45,16 @@ public class Basico {
     @Column(name = "descripcion", length = 255)
     private String descripcion;
 
-    /** 1 = mostrar con prioridad visual en el menú web. */
     @Column(name = "destacado", nullable = false)
     private boolean destacado;
 
-    /** Precio total del paquete en pesos. Puede diferir de la suma individual de sus componentes. */
     @Column(name = "precio_basico", nullable = false, precision = 5, scale = 2)
     private BigDecimal precioBasico;
 
-    /** Complementos que conforman el paquete. Se eliminan en cascada si se borra el básico. */
     @Builder.Default
     @OneToMany(mappedBy = "basico", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<BasicoComplemento> complementos = new ArrayList<>();
 
-    /** Sincroniza ambos lados de la relación al agregar un complemento al paquete. */
     public void addComplemento(BasicoComplemento basicoComplemento) {
         basicoComplemento.setBasico(this);
         this.complementos.add(basicoComplemento);

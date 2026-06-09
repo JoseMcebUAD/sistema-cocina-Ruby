@@ -37,23 +37,16 @@ public class Cliente {
     @Column(name = "id_cliente")
     private Integer idCliente;
 
-    /**
-     * Ruta detectada via cookie o geolocalización. Solo es un caché de sesión;
-     * ON DELETE SET NULL: si la ruta se elimina, este campo queda nulo.
-     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_ruta")
     private Ruta ruta;
 
-    /** UUID generado en localStorage del navegador. Persiste entre visitas del mismo dispositivo. */
     @Column(name = "uuid_cliente", nullable = false, length = 45)
     private String uuidCliente;
 
-    /** Token de sesión único. Se usa como clave de FK en {@link FavoritoCliente} y {@link Pedido}. */
     @Column(name = "session_token", nullable = false, unique = true, length = 255)
     private String sessionToken;
 
-    /** Código especial para clientes en zonas fuera de rutas estándar. Ver {@link CodigoCliente}. */
     @Column(name = "codigo_cliente", length = 255)
     private String codigoCliente;
 
@@ -63,18 +56,15 @@ public class Cliente {
     @Column(name = "ip_address", length = 45)
     private String ipAddress;
 
-    /** Caché de última latitud conocida. No usar para cálculos de tarifa. */
     @Column(name = "ubicacion_latitud", precision = 10, scale = 7)
     private BigDecimal ubicacionLatitud;
 
-    /** Caché de última longitud conocida. No usar para cálculos de tarifa. */
     @Column(name = "ubicacion_longitud", precision = 10, scale = 7)
     private BigDecimal ubicacionLongitud;
 
     @Column(name = "nombre", length = 255)
     private String nombre;
 
-    /** Caché de última dirección ingresada. La dirección definitiva se guarda en {@link PedidoDomicilio}. */
     @Column(name = "direccion_cliente", length = 255)
     private String direccionCliente;
 

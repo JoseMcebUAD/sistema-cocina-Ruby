@@ -29,7 +29,6 @@ import java.math.BigDecimal;
 @Builder
 public class Complemento {
 
-    /** Estado de disponibilidad del complemento en el menú web. */
     public enum Estatus { DISPONIBLE, NO_DISPONIBLE, AGOTADO }
 
     @Id
@@ -37,7 +36,6 @@ public class Complemento {
     @Column(name = "id_complemento")
     private Integer idComplemento;
 
-    /** UUID público usado en el menú web. */
     @Column(name = "uuid_complemento", nullable = false, length = 45)
     private String uuidComplemento;
 
@@ -47,7 +45,6 @@ public class Complemento {
     @Column(name = "descripcion", length = 255)
     private String descripcion;
 
-    /** Costo adicional del complemento en pesos. 0.00 si es gratuito. */
     @Column(name = "precio_extra", nullable = false, precision = 5, scale = 2)
     private BigDecimal precioExtra;
 
@@ -58,10 +55,6 @@ public class Complemento {
     @Column(name = "destacado", nullable = false)
     private boolean destacado;
 
-    /**
-     * Si es {@code true}, este complemento siempre genera cargo aunque la comida
-     * pertenezca a un paquete {@link Basico} que lo incluya como "sin costo extra".
-     */
     @Column(name = "cobrar_siempre", nullable = false)
     private boolean cobrarSiempre;
 }

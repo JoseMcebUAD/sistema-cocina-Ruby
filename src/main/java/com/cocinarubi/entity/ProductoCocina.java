@@ -28,10 +28,8 @@ import java.math.BigDecimal;
 @Builder
 public class ProductoCocina {
 
-    /** Estado de disponibilidad del producto en el menú web. */
     public enum Estatus { DISPONIBLE, NO_DISPONIBLE, AGOTADO }
 
-    /** Categoría del producto. Determina cómo se agrupa en el menú y qué precio aplicar. */
     public enum TipoProducto { SNACK, CHAROLA, BEBIDA }
 
     @Id
@@ -39,7 +37,6 @@ public class ProductoCocina {
     @Column(name = "id_producto_cocina")
     private Integer idProductoCocina;
 
-    /** UUID público usado en el menú web. */
     @Column(name = "uuid_producto_cocina", nullable = false, length = 45)
     private String uuidProductoCocina;
 
@@ -49,11 +46,9 @@ public class ProductoCocina {
     @Column(name = "descripcion", length = 255)
     private String descripcion;
 
-    /** Precio aplicado cuando el pedido es a domicilio (RF05). */
     @Column(name = "precio_domicilio", nullable = false, precision = 5, scale = 2)
     private BigDecimal precioDomicilio;
 
-    /** Precio aplicado para pick-up y mostrador. */
     @Column(name = "precio_normal", nullable = false, precision = 5, scale = 2)
     private BigDecimal precioNormal;
 

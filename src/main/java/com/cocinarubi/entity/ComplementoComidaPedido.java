@@ -40,18 +40,15 @@ public class ComplementoComidaPedido {
     @Column(name = "id_complemento_comida_pedido")
     private Integer idComplementoComidaPedido;
 
-    /** Línea de comida a la que pertenece este complemento. Se ignora en JSON para evitar ciclos. */
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_comida_pedido", nullable = false)
     private ComidaPedido comidaPedido;
 
-    /** Complemento elegido. No se puede eliminar del catálogo mientras esté en pedidos. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_complemento", nullable = false)
     private Complemento complemento;
 
-    /** Precio del complemento capturado al momento de la orden. Inmutable una vez creado. */
     @Column(name = "precio_unitario", nullable = false, precision = 5, scale = 2)
     private BigDecimal precioUnitario;
 }

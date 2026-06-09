@@ -37,7 +37,6 @@ import java.util.List;
 @Builder
 public class ComidaPedido {
 
-    /** Tamaño de la porción elegida por el cliente. */
     public enum TamanoPorcion { MEDIA, ENTERA }
 
     @Id
@@ -45,18 +44,15 @@ public class ComidaPedido {
     @Column(name = "id_comida_pedido")
     private Integer idComidaPedido;
 
-    /** Pedido al que pertenece esta línea. Se ignora en JSON para evitar ciclos. */
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_pedido", nullable = false)
     private Pedido pedido;
 
-    /** Platillo ordenado. No se puede eliminar del catálogo mientras existan pedidos que lo usen. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_comida", nullable = false)
     private Comida comida;
 
-    /** Precio del platillo capturado al momento de la orden. Inmutable una vez creado. */
     @Column(name = "precio_unitario", nullable = false, precision = 5, scale = 2)
     private BigDecimal precioUnitario;
 
@@ -64,7 +60,6 @@ public class ComidaPedido {
     @Column(name = "tamano_porcion", nullable = false)
     private TamanoPorcion tamanoPorcion;
 
-    /** Complementos elegidos para esta línea de comida. Se eliminan si se borra la línea. */
     @Builder.Default
     @OneToMany(mappedBy = "comidaPedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ComplementoComidaPedido> complementos = new ArrayList<>();

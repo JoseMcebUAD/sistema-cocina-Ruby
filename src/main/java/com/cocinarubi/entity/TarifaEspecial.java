@@ -30,25 +30,17 @@ public class TarifaEspecial {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_tarifa_lluvia")
+    @Column(name = "id_tarifa")
     private Integer idTarifaLluvia;
 
     @Column(name = "nombre_tarifa", nullable = false, length = 255)
     private String nombreTarifa;
 
-    /** Monto adicional que se suma al envío cuando esta tarifa está activa, en pesos. */
     @Column(name = "tarifa", nullable = false, precision = 5, scale = 2)
     private BigDecimal tarifa;
 
-    /**
-     * Ruta a la que aplica esta tarifa. Si es {@code null}, aplica a todas las rutas.
-     * ON DELETE SET NULL: si se elimina la ruta, la tarifa pasa a ser global.
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_ruta")
     private Ruta ruta;
 
-    /** Indica si la tarifa está actualmente activa. El operador la activa/desactiva manualmente. */
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
 }

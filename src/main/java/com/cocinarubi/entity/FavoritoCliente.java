@@ -46,20 +46,14 @@ public class FavoritoCliente {
     @Column(name = "id_favorito_cliente")
     private Integer idFavoritoCliente;
 
-    /**
-     * ID del producto favorito. Su significado depende de {@code tipoCatalogoProducto}.
-     * La integridad referencial se valida en la capa de servicio (no hay FK formal).
-     */
     @Column(name = "id_producto", nullable = false)
     private Integer idProducto;
 
-    /** Cliente propietario del favorito. Se ignora en JSON para evitar ciclos. */
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_token", referencedColumnName = "session_token", nullable = false)
     private Cliente cliente;
 
-    /** Determina a qué tabla pertenece {@code id_producto}. */
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_catalogo_producto", nullable = false)
     private TipoCatalogoProducto tipoCatalogoProducto;

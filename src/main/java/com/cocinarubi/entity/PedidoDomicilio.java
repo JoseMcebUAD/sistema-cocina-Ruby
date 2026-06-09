@@ -36,23 +36,16 @@ import java.math.BigDecimal;
 @Builder
 public class PedidoDomicilio {
 
-    /** PK compartida con pedido. Se llena automáticamente por @MapsId. */
     @Id
     @Column(name = "id_pedido")
     private Integer idPedido;
 
-    /** Pedido padre. Se ignora en JSON para evitar ciclos. */
     @JsonIgnore
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "id_pedido")
     private Pedido pedido;
 
-    /**
-     * Zona de reparto real donde se entregará el pedido. Fuente de verdad para
-     * calcular tarifas. ON DELETE RESTRICT: no se puede eliminar una ruta si tiene
-     * pedidos a domicilio asociados.
-     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_ruta", nullable = false)
     private Ruta ruta;
@@ -60,7 +53,6 @@ public class PedidoDomicilio {
     @Column(name = "direccion", nullable = false, length = 255)
     private String direccion;
 
-    /** Código especial si el cliente está fuera de las rutas estándar. Ver {@link CodigoCliente}. */
     @Column(name = "codigo", length = 255)
     private String codigo;
 

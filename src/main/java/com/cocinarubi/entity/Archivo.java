@@ -32,12 +32,10 @@ public class Archivo {
     @Column(name = "id_archivo")
     private Integer idArchivo;
 
-    /** Módulo al que pertenece el archivo. Define la carpeta y MIME types válidos. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_archivo_modulo", nullable = false)
     private ArchivoModulo archivoModulo;
 
-    /** Ruta absoluta del archivo en el servidor. Se usa para construir la URL pública. */
     @Column(name = "path_archivo", nullable = false, length = 255)
     private String pathArchivo;
 
