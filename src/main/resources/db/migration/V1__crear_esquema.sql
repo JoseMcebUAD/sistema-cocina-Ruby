@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS anuncio (
     id_anuncio          INT          NOT NULL AUTO_INCREMENT,
     descripcion_anuncio VARCHAR(255) NOT NULL,
     color               VARCHAR(10)  NULL     COMMENT 'Color HEX del anuncio, ej. #FF5733',
-    fecha_anuncio       DATETIME     NOT NULL,
+    fecha_expiracion_anuncio       DATETIME     NOT NULL,
     PRIMARY KEY (id_anuncio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -66,6 +66,7 @@ CREATE TABLE IF NOT EXISTS codigo_cliente (
     identificador      VARCHAR(255) NOT NULL COMMENT 'Nombre legible asignado por el operador, ej. Código Susanita',
     codigo_cliente     VARCHAR(255) NOT NULL COMMENT 'Código hasheado que se entrega al cliente',
     tarifa_especial    DECIMAL(5,2) NOT NULL,
+    estatus    VARCHAR(15) NOT NULL DEFAULT: "DISPONIBLE"
     PRIMARY KEY (id_codigo_cliente)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -203,12 +204,13 @@ CREATE TABLE IF NOT EXISTS basico_complemento (
 
 CREATE TABLE IF NOT EXISTS pedido (
     id_pedido               INT           NOT NULL AUTO_INCREMENT,
-    metodo_pago             ENUM('TARJETA','EFECTIVO','TRANSFERENCIA') NOT NULL,
+    metodo_pago_principal             ENUM('TARJETA','EFECTIVO','TRANSFERENCIA') NOT NULL,
+    metodo_pago_secundario             ENUM('TARJETA','EFECTIVO','TRANSFERENCIA') NOT NULL,
     tipo_pedido             ENUM('PICK_UP','DOMICILIO','MOSTRADOR')    NOT NULL,
     fecha_expedicion_pedido DATETIME      NOT NULL,
     pedido_creado_desde     ENUM('COCINA','WEB') NOT NULL,
     precio_final_orden      DECIMAL(10,2) NOT NULL,
-    pago_cliente            DECIMAL(10,2) NULL,     
+    pago_cliente_principal            DECIMAL(10,2) NULL,     
     uuid_cliente            VARCHAR(45)   NULL,    
     impreso                 TINYINT       NOT NULL DEFAULT 0,
                         

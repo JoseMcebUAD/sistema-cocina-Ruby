@@ -54,31 +54,30 @@ public class Pedido {
     private Integer idPedido;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "metodo_pago", nullable = false)
+    @Column(name = "metodo_pago")
     private MetodoPago metodoPago;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "tipo_pedido", nullable = false)
+    @Column(name = "tipo_pedido")
     private TipoPedido tipoPedido;
 
-    @Column(name = "fecha_expedicion_pedido", nullable = false)
+    @Column(name = "fecha_expedicion_pedido")
     private LocalDateTime fechaExpedicionPedido;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "pedido_creado_desde", nullable = false)
+    @Column(name = "pedido_creado_desde")
     private PedidoCreadoDesde pedidoCreadoDesde;
 
-    @Column(name = "precio_final_orden", nullable = false, precision = 10, scale = 2)
+    @Column(name = "precio_final_orden")
     private BigDecimal precioFinalOrden;
 
-
-    @Column(name = "pago_cliente", precision = 10, scale = 2)
+    @Column(name = "pago_cliente_principal")
     private BigDecimal pagoCliente;
 
     @Column(name = "uuid_cliente", length = 45)
     private String uuidCliente;
 
-    @Column(name = "impreso", nullable = false)
+    @Column(name = "impreso")
     private boolean impreso;
 
 
