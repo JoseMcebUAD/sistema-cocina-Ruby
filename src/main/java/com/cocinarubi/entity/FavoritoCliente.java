@@ -1,5 +1,6 @@
 package com.cocinarubi.entity;
 
+import com.cocinarubi.DBConstants.TipoCatalogoProducto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -34,12 +35,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class FavoritoCliente {
-
-    /**
-     * Enum compartido con {@link ArchivoModulo} que identifica el tipo de catálogo
-     * al que pertenece {@code id_producto}.
-     */
-    public enum TipoCatalogoProducto { BASICO, COMIDA, DESAYUNO, SNACK, CHAROLA, BEBIDA }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

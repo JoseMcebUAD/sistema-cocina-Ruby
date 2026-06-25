@@ -1,5 +1,6 @@
 package com.cocinarubi.entity;
 
+import com.cocinarubi.DBConstants.TipoCatalogoProducto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,9 +27,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class ArchivoModulo {
-
-    /** Catálogo de producto al que puede asociarse un archivo subido en este módulo. */
-    public enum TipoCatalogoProducto { BASICO, COMIDA, DESAYUNO, SNACK, CHAROLA, BEBIDA }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

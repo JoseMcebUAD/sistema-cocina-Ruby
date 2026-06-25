@@ -1,5 +1,8 @@
 package com.cocinarubi.entity;
 
+import com.cocinarubi.DBConstants.MetodoPago;
+import com.cocinarubi.DBConstants.PedidoCreadoDesde;
+import com.cocinarubi.DBConstants.TipoPedido;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -44,14 +47,6 @@ import java.util.List;
 @Builder
 public class Pedido {
 
-    /** Forma de pago utilizada por el cliente. */
-    public enum MetodoPago { TARJETA, EFECTIVO, TRANSFERENCIA }
-
-    /** Canal por el que se entrega el pedido. */
-    public enum TipoPedido { PICK_UP, DOMICILIO, MOSTRADOR }
-
-    /** Indica si el pedido fue generado por el cliente web o por un operador de la cocina. */
-    public enum PedidoCreadoDesde { COCINA, WEB }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

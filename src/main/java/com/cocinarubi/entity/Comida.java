@@ -1,5 +1,6 @@
 package com.cocinarubi.entity;
 
+import com.cocinarubi.DBConstants.Estatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -29,8 +30,6 @@ import java.math.BigDecimal;
 @Builder
 public class Comida {
 
-    /** Estado de disponibilidad del platillo en el menú web. */
-    public enum Estatus { DISPONIBLE, NO_DISPONIBLE, AGOTADO }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

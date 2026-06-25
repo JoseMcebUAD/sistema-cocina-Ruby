@@ -1,5 +1,7 @@
 package com.cocinarubi.entity;
 
+import com.cocinarubi.DBConstants.Estatus;
+import com.cocinarubi.DBConstants.TipoProducto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -28,9 +30,6 @@ import java.math.BigDecimal;
 @Builder
 public class ProductoCocina {
 
-    public enum Estatus { DISPONIBLE, NO_DISPONIBLE, AGOTADO }
-
-    public enum TipoProducto { SNACK, CHAROLA, BEBIDA }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

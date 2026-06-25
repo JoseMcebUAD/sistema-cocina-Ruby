@@ -1,5 +1,6 @@
 package com.cocinarubi.entity;
 
+import com.cocinarubi.DBConstants.TamanoPorcion;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -36,8 +37,6 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class ComidaPedido {
-
-    public enum TamanoPorcion { MEDIA, ENTERA }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

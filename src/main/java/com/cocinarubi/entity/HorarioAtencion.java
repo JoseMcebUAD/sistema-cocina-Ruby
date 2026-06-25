@@ -1,5 +1,6 @@
 package com.cocinarubi.entity;
 
+import com.cocinarubi.DBConstants.TipoHorario;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,8 +27,6 @@ import java.time.LocalTime;
 @Builder
 public class HorarioAtencion {
 
-    /** Tipo de turno: menú de comidas del día o menú de desayunos. */
-    public enum TipoHorario { DESAYUNO, COMIDAS }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

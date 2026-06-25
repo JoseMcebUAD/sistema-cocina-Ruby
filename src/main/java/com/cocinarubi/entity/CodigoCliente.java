@@ -1,5 +1,6 @@
 package com.cocinarubi.entity;
 
+import com.cocinarubi.DBConstants.Estatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -41,4 +42,7 @@ public class CodigoCliente {
 
     @Column(name = "tarifa_especial", nullable = false, precision = 5, scale = 2)
     private BigDecimal tarifaEspecial;
+
+    @Column(name = "estatus", nullable = false, precision = 5, scale = 2)
+    private Estatus estatus;
 }
