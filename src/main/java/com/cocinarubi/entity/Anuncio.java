@@ -37,6 +37,6 @@ public class Anuncio {
     @Column(name = "color", length = 10)
     private String color;
     /** Fecha y hora de publicación del anuncio. */
-    @Column(name = "fecha_anuncio", nullable = false)
-    private LocalDateTime fechaAnuncio;
+    @Column(name = "fecha_expiracion_anuncio", nullable = false)
+    private LocalDateTime fechaExpiracionAnuncio;
 }
