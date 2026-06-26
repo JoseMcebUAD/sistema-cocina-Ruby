@@ -1,9 +1,9 @@
 package com.cocinarubi.presentation.controller;
 
 import com.cocinarubi.presentation.dto.response.ApiResponse;
-import com.cocinarubi.entity.Comida;
+import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.exception.BusinessException;
-import com.cocinarubi.service.ComidaService;
+import com.cocinarubi.domain.service.ComidaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;

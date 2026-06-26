@@ -1,6 +1,6 @@
 package com.cocinarubi.dao;
 
-import com.cocinarubi.entity.Complemento;
+import com.cocinarubi.domain.entity.Complemento;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

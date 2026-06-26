@@ -1,6 +1,6 @@
 package com.cocinarubi.dao;
 
-import com.cocinarubi.entity.TarifaEspecial;
+import com.cocinarubi.domain.entity.TarifaEspecial;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import java.util.List;

@@ -2,9 +2,9 @@ package com.cocinarubi.presentation.controller;
 
 import com.cocinarubi.presentation.dto.request.TarifaEspecialRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
-import com.cocinarubi.entity.TarifaEspecial;
+import com.cocinarubi.domain.entity.TarifaEspecial;
 import com.cocinarubi.exception.BusinessException;
-import com.cocinarubi.service.TarifaEspecialService;
+import com.cocinarubi.domain.service.TarifaEspecialService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

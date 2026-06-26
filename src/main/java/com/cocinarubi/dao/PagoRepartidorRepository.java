@@ -1,6 +1,6 @@
 package com.cocinarubi.dao;
 
-import com.cocinarubi.entity.PagoRepartidor;
+import com.cocinarubi.domain.entity.PagoRepartidor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import java.util.List;

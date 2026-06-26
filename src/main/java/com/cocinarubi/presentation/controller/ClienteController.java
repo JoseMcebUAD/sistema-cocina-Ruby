@@ -2,9 +2,9 @@ package com.cocinarubi.presentation.controller;
 
 import com.cocinarubi.presentation.dto.request.ClienteRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
-import com.cocinarubi.entity.Cliente;
+import com.cocinarubi.domain.entity.Cliente;
 import com.cocinarubi.exception.BusinessException;
-import com.cocinarubi.service.ClienteService;
+import com.cocinarubi.domain.service.ClienteService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

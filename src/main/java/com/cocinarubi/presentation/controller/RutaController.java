@@ -4,7 +4,7 @@ import com.cocinarubi.presentation.dto.request.RutaRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.presentation.dto.response.RutaResponseDTO;
 import com.cocinarubi.exception.BusinessException;
-import com.cocinarubi.service.RutaService;
+import com.cocinarubi.domain.service.RutaService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
