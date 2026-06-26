@@ -39,8 +39,6 @@ public class TarifaEspecial {
     @Column(name = "tarifa", nullable = false, precision = 5, scale = 2)
     private BigDecimal tarifa;
 
-    private Ruta ruta;
-
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
 }
