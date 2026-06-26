@@ -1,8 +1,8 @@
-package com.cocinarubi.controller;
+package com.cocinarubi.presentation.controller;
 
-import com.cocinarubi.dto.request.UsuarioRequestDTO;
-import com.cocinarubi.dto.response.ApiResponse;
-import com.cocinarubi.dto.response.UsuarioResponseDTO;
+import com.cocinarubi.presentation.dto.request.UsuarioRequestDTO;
+import com.cocinarubi.presentation.dto.response.ApiResponse;
+import com.cocinarubi.presentation.dto.response.UsuarioResponseDTO;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.service.UsuarioService;
 import io.swagger.v3.oas.annotations.tags.Tag;

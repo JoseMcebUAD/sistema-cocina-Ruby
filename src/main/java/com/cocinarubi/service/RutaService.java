@@ -1,8 +1,8 @@
 package com.cocinarubi.service;
 
 import com.cocinarubi.dao.RutaRepository;
-import com.cocinarubi.dto.request.RutaRequestDTO;
-import com.cocinarubi.dto.response.RutaResponseDTO;
+import com.cocinarubi.presentation.dto.request.RutaRequestDTO;
+import com.cocinarubi.presentation.dto.response.RutaResponseDTO;
 import com.cocinarubi.entity.Ruta;
 import com.cocinarubi.exception.BusinessException;
 import org.locationtech.jts.geom.Geometry;

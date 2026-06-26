@@ -1,7 +1,7 @@
-package com.cocinarubi.controller;
+package com.cocinarubi.presentation.controller;
 
-import com.cocinarubi.dto.request.TarifaEspecialRequestDTO;
-import com.cocinarubi.dto.response.ApiResponse;
+import com.cocinarubi.presentation.dto.request.TarifaEspecialRequestDTO;
+import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.entity.TarifaEspecial;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.service.TarifaEspecialService;

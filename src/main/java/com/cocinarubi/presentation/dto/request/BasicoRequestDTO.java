@@ -1,4 +1,4 @@
-package com.cocinarubi.dto.request;
+package com.cocinarubi.presentation.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;

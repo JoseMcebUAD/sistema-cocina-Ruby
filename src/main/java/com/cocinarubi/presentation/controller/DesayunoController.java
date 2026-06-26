@@ -1,6 +1,6 @@
-package com.cocinarubi.controller;
+package com.cocinarubi.presentation.controller;
 
-import com.cocinarubi.dto.response.ApiResponse;
+import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.entity.Desayuno;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.service.DesayunoService;

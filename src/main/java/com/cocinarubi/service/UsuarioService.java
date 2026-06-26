@@ -2,8 +2,8 @@ package com.cocinarubi.service;
 
 import com.cocinarubi.dao.RolUsuarioRepository;
 import com.cocinarubi.dao.UsuarioRepository;
-import com.cocinarubi.dto.request.UsuarioRequestDTO;
-import com.cocinarubi.dto.response.UsuarioResponseDTO;
+import com.cocinarubi.presentation.dto.request.UsuarioRequestDTO;
+import com.cocinarubi.presentation.dto.response.UsuarioResponseDTO;
 import com.cocinarubi.entity.RolUsuario;
 import com.cocinarubi.entity.Usuario;
 import com.cocinarubi.exception.BusinessException;

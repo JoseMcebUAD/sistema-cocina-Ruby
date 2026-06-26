@@ -1,7 +1,7 @@
 package com.cocinarubi.service;
 
 import com.cocinarubi.dao.TarifaEspecialRepository;
-import com.cocinarubi.dto.request.TarifaEspecialRequestDTO;
+import com.cocinarubi.presentation.dto.request.TarifaEspecialRequestDTO;
 import com.cocinarubi.entity.TarifaEspecial;
 import com.cocinarubi.exception.BusinessException;
 import org.springframework.http.HttpStatus;

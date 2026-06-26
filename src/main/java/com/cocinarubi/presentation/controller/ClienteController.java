@@ -1,7 +1,7 @@
-package com.cocinarubi.controller;
+package com.cocinarubi.presentation.controller;
 
-import com.cocinarubi.dto.request.ClienteRequestDTO;
-import com.cocinarubi.dto.response.ApiResponse;
+import com.cocinarubi.presentation.dto.request.ClienteRequestDTO;
+import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.entity.Cliente;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.service.ClienteService;

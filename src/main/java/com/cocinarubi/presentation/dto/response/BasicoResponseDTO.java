@@ -1,4 +1,4 @@
-package com.cocinarubi.dto.response;
+package com.cocinarubi.presentation.dto.response;
 
 import java.math.BigDecimal;
 

@@ -2,7 +2,7 @@ package com.cocinarubi.service;
 
 import com.cocinarubi.dao.ClienteRepository;
 import com.cocinarubi.dao.RutaRepository;
-import com.cocinarubi.dto.request.ClienteRequestDTO;
+import com.cocinarubi.presentation.dto.request.ClienteRequestDTO;
 import com.cocinarubi.entity.Cliente;
 import com.cocinarubi.entity.Ruta;
 import com.cocinarubi.exception.BusinessException;

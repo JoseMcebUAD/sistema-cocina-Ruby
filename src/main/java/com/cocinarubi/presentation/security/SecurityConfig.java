@@ -1,4 +1,4 @@
-package com.cocinarubi.security;
+package com.cocinarubi.presentation.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

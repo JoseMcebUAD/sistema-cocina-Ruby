@@ -1,8 +1,8 @@
 package com.cocinarubi.service;
 
 import com.cocinarubi.dao.BasicoRepository;
-import com.cocinarubi.dto.request.BasicoRequestDTO;
-import com.cocinarubi.dto.response.BasicoResponseDTO;
+import com.cocinarubi.presentation.dto.request.BasicoRequestDTO;
+import com.cocinarubi.presentation.dto.response.BasicoResponseDTO;
 import com.cocinarubi.entity.Basico;
 import com.cocinarubi.entity.Comida;
 import com.cocinarubi.exception.BusinessException;
