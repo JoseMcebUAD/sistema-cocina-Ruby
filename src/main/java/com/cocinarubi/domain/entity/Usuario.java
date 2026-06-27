@@ -9,6 +9,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collection;
 import java.util.List;
 
@@ -57,6 +58,9 @@ public class Usuario implements UserDetails {
     @Column(name = "ultimo_login")
     private LocalDateTime ultimoLogin;
 
+    @Column(name = "bloqueado_hasta")
+    private LocalDateTime bloqueadoHasta;
+
     // -------------------------------------------------------------------------
     // UserDetails
     // -------------------------------------------------------------------------
@@ -83,7 +87,8 @@ public class Usuario implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return bloqueadoHasta == null
+                || bloqueadoHasta.isBefore(LocalDateTime.now(ZoneId.of("America/Merida")));
     }
 
     @Override
