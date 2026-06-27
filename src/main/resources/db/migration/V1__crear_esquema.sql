@@ -323,10 +323,13 @@ CREATE TABLE IF NOT EXISTS archivo_modulo (
 CREATE TABLE IF NOT EXISTS archivo (
     id_archivo        INT          NOT NULL AUTO_INCREMENT,
     id_archivo_modulo INT          NOT NULL,
-    path_archivo      VARCHAR(255) NOT NULL COMMENT 'Ruta absoluta del archivo en el servidor',
+    id_entidad        INT          NOT NULL,
+    path_archivo      VARCHAR(255) NOT NULL COMMENT 'URL segura de Cloudinary',
     mime_type         VARCHAR(50)  NOT NULL,
-    extension_archivo VARCHAR(50)  NOT NULL,
     nombre_archivo    VARCHAR(255) NOT NULL,
+    orden             INT          NULL,
+    entity_type       ENUM('comida','complemento','producto_cocina',) NOT NULL,
+    public_id         VARCHAR(255) NOT NULL UNIQUE COMMENT 'public_id de Cloudinary',
     creado_en         DATETIME     NOT NULL,
     PRIMARY KEY (id_archivo),
     CONSTRAINT fk_archivo_modulo
