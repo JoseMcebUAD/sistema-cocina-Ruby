@@ -42,7 +42,7 @@ public class ArchivoModulo {
 
     @Column(name = "ruta", nullable = false, length = 100)
     private String ruta;
-
+    //jpeg,webp,json...
     @Column(name = "archivos_aceptados", nullable = false, columnDefinition = "JSON")
     private String archivosAceptados;
 }
