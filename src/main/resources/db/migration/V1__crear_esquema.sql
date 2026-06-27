@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS codigo_cliente (
     identificador      VARCHAR(255) NOT NULL COMMENT 'Nombre legible asignado por el operador, ej. Código Susanita',
     codigo_cliente     VARCHAR(255) NOT NULL COMMENT 'Código hasheado que se entrega al cliente',
     tarifa_especial    DECIMAL(5,2) NOT NULL,
-    estatus    VARCHAR(15) NOT NULL DEFAULT: "DISPONIBLE"
+    estatus    VARCHAR(15) NOT NULL DEFAULT 'DISPONIBLE',
     PRIMARY KEY (id_codigo_cliente)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
