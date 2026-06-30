@@ -40,7 +40,6 @@ CREATE TABLE IF NOT EXISTS tarifa_especial (
 CREATE TABLE IF NOT EXISTS horario_atencion (
     id_horario_atencion_comidas   INT   NOT NULL AUTO_INCREMENT,
     hora_inicio_atencion_comidas  TIME  NOT NULL,
-    contador  INT  NOT NLL,
     hora_cierre_atencion_comidas  TIME  NOT NULL,
     dia_semana                    CHAR(1) NOT NULL  COMMENT 'L=lunes M=martes X=miércoles J=jueves V=viernes S=sábado',
     tipo_horario                  ENUM('DESAYUNO','COMIDAS') NOT NULL
@@ -329,7 +328,7 @@ CREATE TABLE IF NOT EXISTS archivo (
     mime_type         VARCHAR(50)  NOT NULL,
     nombre_archivo    VARCHAR(255) NOT NULL,
     orden             INT          NULL,
-    entity_type       ENUM('comida','complemento','producto_cocina',) NOT NULL,
+    entity_type       ENUM('comida','complemento','producto_cocina') NOT NULL,
     public_id         VARCHAR(255) NOT NULL UNIQUE COMMENT 'public_id de Cloudinary',
     creado_en         DATETIME     NOT NULL,
     PRIMARY KEY (id_archivo),
