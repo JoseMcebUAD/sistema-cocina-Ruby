@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
+/** Gestiona el catálogo de desayunos disponibles en el menú del restaurante. */
 @Service
 public class DesayunoService {
 
@@ -34,6 +35,7 @@ public class DesayunoService {
         if (!desayunoRepository.existsById(id)) {
             throw new BusinessException("Desayuno no encontrado con id: " + id, HttpStatus.NOT_FOUND);
         }
+        // Evitar eliminación si el desayuno está asociado a pedidos históricos
         if (desayunoRepository.countEnPedidos(id) > 0) {
             throw new BusinessException(
                     "No se puede eliminar el desayuno porque está referenciado en pedidos existentes",

@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
+/** Gestiona el catálogo de comidas disponibles en el menú del restaurante. */
 @Service
 public class ComidaService {
 
@@ -34,6 +35,7 @@ public class ComidaService {
         if (!comidaRepository.existsById(id)) {
             throw new BusinessException("Comida no encontrada con id: " + id, HttpStatus.NOT_FOUND);
         }
+        // Guardar integridad referencial: la DB no tiene ON DELETE CASCADE para estas relaciones
         if (comidaRepository.countEnPedidos(id) > 0) {
             throw new BusinessException(
                     "No se puede eliminar la comida porque está referenciada en pedidos existentes",

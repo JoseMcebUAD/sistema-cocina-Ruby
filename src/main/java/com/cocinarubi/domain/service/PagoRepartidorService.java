@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
+/** Gestiona los registros de pago a repartidores por sus entregas realizadas. */
 @Service
 public class PagoRepartidorService {
 
@@ -31,6 +32,7 @@ public class PagoRepartidorService {
     }
 
     public void delete(int id) {
+        // Verificar existencia antes de borrar para devolver 404 en lugar del silencioso no-op de JPA
         if (!pagoRepartidorRepository.existsById(id)) {
             throw new BusinessException(
                     "Pago de repartidor no encontrado con id: " + id, HttpStatus.NOT_FOUND);

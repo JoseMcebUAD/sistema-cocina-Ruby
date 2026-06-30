@@ -16,6 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Gestiona los usuarios del sistema (administradores, repartidores, etc.).
+ * La contraseña siempre se almacena cifrada con BCrypt.
+ */
 @Service
 public class UsuarioService {
 
@@ -42,6 +46,7 @@ public class UsuarioService {
     }
 
     public UsuarioResponseDTO save(UsuarioRequestDTO dto) {
+        // El nombreUsuario es la clave de autenticación; no puede estar duplicado
         if (usuarioRepository.existsByNombreUsuario(dto.getNombreUsuario())) {
             throw new BusinessException(
                     "Ya existe un usuario con el nombre: " + dto.getNombreUsuario(), HttpStatus.CONFLICT);
@@ -51,6 +56,7 @@ public class UsuarioService {
                 .rolUsuario(rol)
                 .nombreUsuario(dto.getNombreUsuario())
                 .contrasena(passwordEncoder.encode(dto.getContrasena()))
+                // Zona horaria fija del restaurante para evitar ambigüedades al comparar fechas
                 .creadoEn(LocalDateTime.now(ZoneId.of("America/Merida")))
                 .build();
         return toResponseDTO(usuarioRepository.save(usuario));
@@ -58,6 +64,7 @@ public class UsuarioService {
 
     public UsuarioResponseDTO update(int id, UsuarioRequestDTO dto) {
         Usuario existente = findEntityById(id);
+        // Solo se valida unicidad si el nombre realmente cambió
         if (!existente.getNombreUsuario().equals(dto.getNombreUsuario())
                 && usuarioRepository.existsByNombreUsuario(dto.getNombreUsuario())) {
             throw new BusinessException(
@@ -73,6 +80,7 @@ public class UsuarioService {
         Usuario existente = findEntityById(id);
         if (payload.containsKey("nombreUsuario")) {
             String nuevoNombre = (String) payload.get("nombreUsuario");
+            // Solo se valida unicidad si el nombre realmente cambió
             if (!existente.getNombreUsuario().equals(nuevoNombre)
                     && usuarioRepository.existsByNombreUsuario(nuevoNombre)) {
                 throw new BusinessException(
@@ -84,12 +92,14 @@ public class UsuarioService {
             existente.setContrasena(passwordEncoder.encode((String) payload.get("contrasena")));
         }
         if (payload.containsKey("idRol")) {
+            // Jackson deserializa números de JSON como Integer o Long; se normaliza con Number
             existente.setRolUsuario(findRol(((Number) payload.get("idRol")).intValue()));
         }
         return toResponseDTO(usuarioRepository.save(existente));
     }
 
     public void delete(int id) {
+        // Verificar existencia antes de borrar para devolver 404 en lugar del silencioso no-op de JPA
         if (!usuarioRepository.existsById(id)) {
             throw new BusinessException("Usuario no encontrado con id: " + id, HttpStatus.NOT_FOUND);
         }
