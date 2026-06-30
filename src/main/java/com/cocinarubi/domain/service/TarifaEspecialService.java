@@ -10,6 +10,10 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Gestiona las tarifas especiales de envío (ej. tarifa reducida para zonas específicas
+ * o promociones de temporada).
+ */
 @Service
 public class TarifaEspecialService {
 
@@ -52,6 +56,7 @@ public class TarifaEspecialService {
             existente.setNombreTarifa((String) payload.get("nombreTarifa"));
         }
         if (payload.containsKey("tarifa")) {
+            // El payload JSON llega como Double; se convierte a String primero para evitar pérdida de precisión
             existente.setTarifa(new BigDecimal(payload.get("tarifa").toString()));
         }
         if (payload.containsKey("isActive")) {
@@ -61,6 +66,7 @@ public class TarifaEspecialService {
     }
 
     public void delete(int id) {
+        // Verificar existencia antes de borrar para devolver 404 en lugar del silencioso no-op de JPA
         if (!tarifaEspecialRepository.existsById(id)) {
             throw new BusinessException(
                     "Tarifa especial no encontrada con id: " + id, HttpStatus.NOT_FOUND);
