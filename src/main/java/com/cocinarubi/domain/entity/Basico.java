@@ -1,5 +1,6 @@
 package com.cocinarubi.domain.entity;
 
+import com.cocinarubi.DBConstants.Estatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -50,6 +51,10 @@ public class Basico {
 
     @Column(name = "precio_basico", nullable = false, precision = 5, scale = 2)
     private BigDecimal precioBasico;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estatus", nullable = false)
+    private Estatus estatus = Estatus.DISPONIBLE;
 
     @Builder.Default
     @OneToMany(mappedBy = "basico", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
