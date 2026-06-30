@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BasicoRequestDTO {
 
@@ -23,13 +25,18 @@ public class BasicoRequestDTO {
     @JsonProperty("precioBasico")
     private BigDecimal precioBasico;
 
+    @JsonProperty("idComplementos")
+    private List<Integer> idComplementos = new ArrayList<>();
+
     public BasicoRequestDTO() {}
 
-    public BasicoRequestDTO(Integer idComida, String descripcion, boolean destacado, BigDecimal precioBasico) {
+    public BasicoRequestDTO(Integer idComida, String descripcion, boolean destacado,
+                             BigDecimal precioBasico, List<Integer> idComplementos) {
         this.idComida = idComida;
         this.descripcion = descripcion;
         this.destacado = destacado;
         this.precioBasico = precioBasico;
+        this.idComplementos = idComplementos != null ? idComplementos : new ArrayList<>();
     }
 
     public Integer getIdComida() { return idComida; }
@@ -43,4 +50,7 @@ public class BasicoRequestDTO {
 
     public BigDecimal getPrecioBasico() { return precioBasico; }
     public void setPrecioBasico(BigDecimal precioBasico) { this.precioBasico = precioBasico; }
+
+    public List<Integer> getIdComplementos() { return idComplementos; }
+    public void setIdComplementos(List<Integer> idComplementos) { this.idComplementos = idComplementos; }
 }
