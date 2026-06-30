@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS tarifa_especial (
 CREATE TABLE IF NOT EXISTS horario_atencion (
     id_horario_atencion_comidas   INT   NOT NULL AUTO_INCREMENT,
     hora_inicio_atencion_comidas  TIME  NOT NULL,
+    contador  INT  NOT NLL,
     hora_cierre_atencion_comidas  TIME  NOT NULL,
     dia_semana                    CHAR(1) NOT NULL  COMMENT 'L=lunes M=martes X=miércoles J=jueves V=viernes S=sábado',
     tipo_horario                  ENUM('DESAYUNO','COMIDAS') NOT NULL
@@ -359,13 +360,13 @@ CREATE TABLE IF NOT EXISTS inventario_comida (
     id_inventario_comida INT          NOT NULL AUTO_INCREMENT,
     id_comida            INT          NOT NULL, -- [C4] FK formal a comida
     cantidad             INT          NULL,
-    kilogramos           DECIMAL(8,3) NULL, 
+    tipo_contador_comida           ENUM('UNIDAD','KILOGRAMO','GRAMO','OTRO') NULL, 
     PRIMARY KEY (id_inventario_comida),
     CONSTRAINT fk_inventario_comida
         FOREIGN KEY (id_comida) REFERENCES comida (id_comida)
         ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT chk_inventario_no_vacio
-        CHECK (cantidad IS NOT NULL OR kilogramos IS NOT NULL)
+        CHECK (cantidad IS NOT NULL OR tipo_contador_comida IS NOT NULL)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS pago_repartidor (

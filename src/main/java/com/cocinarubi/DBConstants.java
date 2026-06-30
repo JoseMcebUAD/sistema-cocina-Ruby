@@ -31,4 +31,7 @@ public class DBConstants {
     /** Indica si el pedido fue generado por el cliente web o por un operador de la cocina. */
     public enum PedidoCreadoDesde { COCINA, WEB }
 
+    /**Se crea el tipo contador de comida, si es por unidad, gramo o kilogramo  */
+    public enum TipoContadorComida {UNIDAD, KILOGRAMO, GRAMO }
+
 }
