@@ -34,6 +34,7 @@ import java.util.List;
  *   <li>{@link ComidaPedido} — líneas de platillos del menú principal.</li>
  *   <li>{@link DesayunoPedido} — líneas de platillos de desayuno.</li>
  *   <li>{@link ProductoCocinaPedido} — líneas de snacks, charolas y bebidas.</li>
+ *   <li>{@link BasicoPedido} — líneas de paquetes básicos.</li>
  * </ul>
  * </p>
  */
@@ -97,6 +98,10 @@ public class Pedido {
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ProductoCocinaPedido> productosCocina = new ArrayList<>();
 
+    @Builder.Default
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<BasicoPedido> basicosPedido = new ArrayList<>();
+
     // -------------------------------------------------------------------------
     // Métodos helper para sincronización bidireccional
     // -------------------------------------------------------------------------
@@ -114,5 +119,10 @@ public class Pedido {
     public void addProductoCocinaPedido(ProductoCocinaPedido item) {
         item.setPedido(this);
         this.productosCocina.add(item);
+    }
+
+    public void addBasicoPedido(BasicoPedido item) {
+        item.setPedido(this);
+        this.basicosPedido.add(item);
     }
 }
