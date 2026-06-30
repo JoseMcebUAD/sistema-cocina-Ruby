@@ -72,32 +72,6 @@ public class BasicoService {
         return toResponseDTO(basicoRepository.save(existente));
     }
 
-    @Transactional
-    public BasicoResponseDTO patch(int id, Map<String, Object> payload) {
-        Basico existente = findEntityById(id);
-        if (payload.containsKey("idComida")) {
-            existente.setComida(comidaService.findById(((Number) payload.get("idComida")).intValue()));
-        }
-        if (payload.containsKey("descripcion")) {
-            existente.setDescripcion((String) payload.get("descripcion"));
-        }
-        if (payload.containsKey("destacado")) {
-            existente.setDestacado((Boolean) payload.get("destacado"));
-        }
-        if (payload.containsKey("precioBasico")) {
-            // El payload JSON llega como Double; se convierte a String primero para evitar pérdida de precisión
-            existente.setPrecioBasico(new BigDecimal(payload.get("precioBasico").toString()));
-        }
-        if (payload.containsKey("idComplementos")) {
-            // Jackson deserializa números de JSON como Integer o Long según el tamaño; se normaliza con Number
-            List<Integer> ids = ((List<?>) payload.get("idComplementos")).stream()
-                    .map(o -> ((Number) o).intValue())
-                    .collect(Collectors.toList());
-            existente.getComplementos().clear();
-            agregarComplementos(existente, ids);
-        }
-        return toResponseDTO(basicoRepository.save(existente));
-    }
 
     public void delete(int id) {
         // Verificar existencia antes de borrar para devolver 404 en lugar del silencioso no-op de JPA
