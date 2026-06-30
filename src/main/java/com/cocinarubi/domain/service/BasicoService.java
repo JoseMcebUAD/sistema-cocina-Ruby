@@ -4,6 +4,8 @@ import com.cocinarubi.dao.BasicoRepository;
 import com.cocinarubi.presentation.dto.request.BasicoRequestDTO;
 import com.cocinarubi.presentation.dto.response.BasicoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComplementoResponseDTO;
+import com.cocinarubi.presentation.strategy.strategyImplementation.BasicoConfirmationImp;
+import com.cocinarubi.presentation.strategy.strategyImplementation.BasicoValidationImp;
 import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.BasicoComplemento;
 import com.cocinarubi.domain.entity.Comida;
@@ -26,12 +28,18 @@ public class BasicoService {
     private final BasicoRepository basicoRepository;
     private final ComidaService comidaService;
     private final ComplementoService complementoService;
+    private final BasicoValidationImp basicoValidation;
+    private final BasicoConfirmationImp basicoConfirmation;
 
     public BasicoService(BasicoRepository basicoRepository, ComidaService comidaService,
-                         ComplementoService complementoService) {
+                         ComplementoService complementoService,
+                         BasicoValidationImp basicoValidation,
+                         BasicoConfirmationImp basicoConfirmation) {
         this.basicoRepository = basicoRepository;
         this.comidaService = comidaService;
         this.complementoService = complementoService;
+        this.basicoValidation = basicoValidation;
+        this.basicoConfirmation = basicoConfirmation;
     }
 
     @Transactional(readOnly = true)
@@ -48,6 +56,10 @@ public class BasicoService {
 
     @Transactional
     public BasicoResponseDTO save(BasicoRequestDTO dto) {
+        basicoValidation.validarPost(dto);
+        if (!dto.isSaltarConfirmacion()) {
+            basicoConfirmation.validarPost(dto);
+        }
         Comida comida = comidaService.findById(dto.getIdComida());
         Basico basico = Basico.builder()
                 .comida(comida)

@@ -28,6 +28,9 @@ public class BasicoRequestDTO {
     @JsonProperty("idComplementos")
     private List<Integer> idComplementos = new ArrayList<>();
 
+    @JsonProperty("saltarConfirmacion")
+    private boolean saltarConfirmacion = false;
+
     public BasicoRequestDTO() {}
 
     public BasicoRequestDTO(Integer idComida, String descripcion, boolean destacado,
@@ -53,4 +56,7 @@ public class BasicoRequestDTO {
 
     public List<Integer> getIdComplementos() { return idComplementos; }
     public void setIdComplementos(List<Integer> idComplementos) { this.idComplementos = idComplementos; }
+
+    public boolean isSaltarConfirmacion() { return saltarConfirmacion; }
+    public void setSaltarConfirmacion(boolean saltarConfirmacion) { this.saltarConfirmacion = saltarConfirmacion; }
 }
