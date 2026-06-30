@@ -50,16 +50,6 @@ public class BasicoController {
                 basicoService.update(id, dto)));
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<ApiResponse<BasicoResponseDTO>> patch(@PathVariable int id,
-                                                                @RequestBody Map<String, Object> payload) {
-        if (payload.containsKey("idBasico")) {
-            throw new BusinessException("El ID no puede ser modificado.", HttpStatus.BAD_REQUEST);
-        }
-        return ResponseEntity.ok(ApiResponse.exito(200, "Básico actualizado parcialmente",
-                basicoService.patch(id, payload)));
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable int id) {
         basicoService.delete(id);
