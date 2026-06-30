@@ -14,24 +14,30 @@ public class ApiResponse<T> {
     private final LocalDateTime timestamp;
     private final int status;
     private final String message;
+    private final String errorCode;
     private final T data;
 
-    private ApiResponse(int status, String message, T data) {
+    private ApiResponse(int status, String message, String errorCode, T data) {
         this.timestamp = LocalDateTime.now(ZoneId.of("America/Merida"));
         this.status = status;
         this.message = message;
+        this.errorCode = errorCode;
         this.data = data;
     }
 
     public static <T> ApiResponse<T> exito(int status, String message, T data) {
-        return new ApiResponse<>(status, message, data);
+        return new ApiResponse<>(status, message, null, data);
     }
 
     public static ApiResponse<Void> error(int status, String message) {
-        return new ApiResponse<>(status, message, null);
+        return new ApiResponse<>(status, message, null, null);
+    }
+
+    public static ApiResponse<Void> error(int status, String message, String errorCode) {
+        return new ApiResponse<>(status, message, errorCode, null);
     }
 
     public static <T> ApiResponse<T> errorConDatos(int status, String message, T data) {
-        return new ApiResponse<>(status, message, data);
+        return new ApiResponse<>(status, message, null, data);
     }
 }
