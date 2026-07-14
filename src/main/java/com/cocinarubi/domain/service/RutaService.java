@@ -99,7 +99,7 @@ public class RutaService {
         rutaRepository.deleteById(id);
     }
 
-    private Ruta findEntityById(int id) {
+    public Ruta findEntityById(int id) {
         return rutaRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(
                         "Ruta no encontrada con id: " + id, HttpStatus.NOT_FOUND));
