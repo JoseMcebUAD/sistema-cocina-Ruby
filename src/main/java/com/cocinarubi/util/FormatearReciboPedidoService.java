@@ -48,7 +48,7 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
 
     public List<String> formatBasicoBlock(BasicoPedidoResponseDTO basico, String precio, int anchoEfectivo) {
         List<String> lineas = new ArrayList<>();
-        lineas.add(construirLineaConPrecio(basico.getNombreBasico(), precio, anchoEfectivo));
+        lineas.add(construirLineaConPrecio(basico.getBasico().getNombreComida(), precio, anchoEfectivo));
         return lineas;
     }
 }

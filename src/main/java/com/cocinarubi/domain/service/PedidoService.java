@@ -29,6 +29,7 @@ import com.cocinarubi.presentation.dto.request.PedidoDomicilioDTO;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.request.ProductoCocinaPedidoDTO;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
+import com.cocinarubi.presentation.dto.response.BasicoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComplementoResponseDTO;
 import com.cocinarubi.presentation.dto.response.DesayunoPedidoResponseDTO;
@@ -357,15 +358,23 @@ public class PedidoService {
     }
 
     private BasicoPedidoResponseDTO toBasicoPedidoDTO(BasicoPedido bp) {
-        String nombre = bp.getBasico() != null && bp.getBasico().getComida() != null
-                ? bp.getBasico().getComida().getNombreComida()
-                : "(básico)";
-        return new BasicoPedidoResponseDTO(
-                bp.getIdBasicoPedido(),
-                bp.getBasico().getIdBasico(),
-                nombre,
-                bp.getPrecioUnitario()
+        Basico b = bp.getBasico();
+        List<ComplementoResponseDTO> comps = b.getComplementos().stream()
+                .map(bc -> new ComplementoResponseDTO(
+                        bc.getComplemento().getIdComplemento(),
+                        bc.getComplemento().getNombreComplemento(),
+                        bc.getComplemento().getPrecioExtra()))
+                .collect(Collectors.toList());
+        BasicoResponseDTO basicoDTO = new BasicoResponseDTO(
+                b.getIdBasico(),
+                b.getComida().getIdComida(),
+                b.getComida().getNombreComida(),
+                b.getDescripcion(),
+                b.isDestacado(),
+                b.getPrecioBasico(),
+                comps
         );
+        return new BasicoPedidoResponseDTO(bp.getIdBasicoPedido(), basicoDTO, bp.getPrecioUnitario());
     }
 
     private ProductoCocinaPedidoResponseDTO toProductoCocinaPedidoDTO(ProductoCocinaPedido pcp) {
