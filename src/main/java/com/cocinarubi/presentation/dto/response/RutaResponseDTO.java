@@ -10,17 +10,19 @@ public class RutaResponseDTO {
     private boolean active;
     private BigDecimal tarifaEnvio;
     private Integer tiempoEstimadoMin;
+    private Integer orden;
 
     public RutaResponseDTO() {}
 
     public RutaResponseDTO(int idRuta, String nombre, String boundaryWkt, boolean active,
-                           BigDecimal tarifaEnvio, Integer tiempoEstimadoMin) {
+                           BigDecimal tarifaEnvio, Integer tiempoEstimadoMin, Integer orden) {
         this.idRuta = idRuta;
         this.nombre = nombre;
         this.boundaryWkt = boundaryWkt;
         this.active = active;
         this.tarifaEnvio = tarifaEnvio;
         this.tiempoEstimadoMin = tiempoEstimadoMin;
+        this.orden = orden;
     }
 
     public int getIdRuta() { return idRuta; }
@@ -40,4 +42,7 @@ public class RutaResponseDTO {
 
     public Integer getTiempoEstimadoMin() { return tiempoEstimadoMin; }
     public void setTiempoEstimadoMin(Integer tiempoEstimadoMin) { this.tiempoEstimadoMin = tiempoEstimadoMin; }
+
+    public Integer getOrden() { return orden; }
+    public void setOrden(Integer orden) { this.orden = orden; }
 }

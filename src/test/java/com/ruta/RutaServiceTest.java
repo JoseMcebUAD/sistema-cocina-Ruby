@@ -46,10 +46,10 @@ public class RutaServiceTest {
             .build();
 
     public RutaRequestDTO RUTA_DTO = new RutaRequestDTO(
-            "Zona Norte", WKT_POLYGON, true, BigDecimal.valueOf(30), 20);
+            "Zona Norte", WKT_POLYGON, true, BigDecimal.valueOf(30), 20,1);
 
     public RutaRequestDTO RUTA_DTO_MODIFIED = new RutaRequestDTO(
-            "Zona Sur", WKT_POLYGON, false, BigDecimal.valueOf(50), 35);
+            "Zona Sur", WKT_POLYGON, false, BigDecimal.valueOf(50), 35,2);
 
     private static Geometry parseGeom(String wkt) {
         try {

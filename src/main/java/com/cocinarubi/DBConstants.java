@@ -34,4 +34,7 @@ public class DBConstants {
     /**Se crea el tipo contador de comida, si es por unidad, gramo o kilogramo  */
     public enum TipoContadorComida {UNIDAD, KILOGRAMO, GRAMO }
 
+    /** Tipo de entidad soportada por el módulo de impresión (extensible a futuro). */
+    public enum TipoEntidadImpresion { PEDIDO }
+
 }

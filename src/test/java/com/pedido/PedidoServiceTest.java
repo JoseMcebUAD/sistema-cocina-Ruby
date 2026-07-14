@@ -10,8 +10,14 @@ import com.cocinarubi.dao.DesayunoRepository;
 import com.cocinarubi.dao.PedidoRepository;
 import com.cocinarubi.dao.ProductoCocinaRepository;
 import com.cocinarubi.dao.RutaRepository;
+import com.cocinarubi.domain.entity.Basico;
+import com.cocinarubi.domain.entity.BasicoComplemento;
+import com.cocinarubi.domain.entity.BasicoPedido;
+import com.cocinarubi.domain.entity.Comida;
+import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.domain.entity.Pedido;
 import com.cocinarubi.domain.entity.Ruta;
+import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.domain.service.PedidoService;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.PedidoDomicilioDTO;
@@ -198,6 +204,66 @@ public class PedidoServiceTest {
         assertDoesNotThrow(() -> pedidoService.delete(10));
         verify(pedidoRepository).deleteById(10);
         System.out.println("[OK] delete eliminó pedido id=10");
+    }
+
+    @Test
+    @DisplayName("findById - Debe retornar basicoPedido con objeto basico anidado y complementos")
+    public void findById_conBasicos() {
+        Complemento complemento = new Complemento();
+        complemento.setIdComplemento(1);
+        complemento.setNombreComplemento("Agua");
+        complemento.setPrecioExtra(BigDecimal.ZERO);
+
+        BasicoComplemento bc = BasicoComplemento.builder()
+                .idBasicoComplemento(1)
+                .complemento(complemento)
+                .build();
+
+        Comida comida = new Comida();
+        comida.setIdComida(5);
+        comida.setNombreComida("Pollo Asado");
+
+        Basico basico = Basico.builder()
+                .idBasico(3)
+                .comida(comida)
+                .descripcion("Básico completo")
+                .destacado(true)
+                .precioBasico(BigDecimal.valueOf(80.00))
+                .complementos(List.of(bc))
+                .build();
+
+        BasicoPedido bp = BasicoPedido.builder()
+                .idBasicoPedido(7)
+                .basico(basico)
+                .precioUnitario(BigDecimal.valueOf(80.00))
+                .build();
+
+        Pedido pedidoConBasicos = Pedido.builder()
+                .idPedido(10)
+                .metodoPago(MetodoPago.EFECTIVO)
+                .tipoPedido(TipoPedido.MOSTRADOR)
+                .pedidoCreadoDesde(PedidoCreadoDesde.COCINA)
+                .precioFinalOrden(BigDecimal.valueOf(80.00))
+                .impreso(false)
+                .basicosPedido(List.of(bp))
+                .build();
+
+        when(pedidoRepository.findById(10)).thenReturn(Optional.of(pedidoConBasicos));
+
+        PedidoResponseDTO result = pedidoService.findById(10);
+
+        assertNotNull(result);
+        assertEquals(1, result.getBasicos().size());
+        BasicoPedidoResponseDTO basicoDTO = result.getBasicos().get(0);
+        assertEquals(7, basicoDTO.getIdBasicoPedido());
+        assertNotNull(basicoDTO.getBasico());
+        assertEquals(3, basicoDTO.getBasico().getIdBasico());
+        assertEquals("Pollo Asado", basicoDTO.getBasico().getNombreComida());
+        assertEquals(1, basicoDTO.getBasico().getComplementos().size());
+        assertEquals("Agua", basicoDTO.getBasico().getComplementos().get(0).getNombreComplemento());
+        assertEquals(0, BigDecimal.valueOf(80.00).compareTo(basicoDTO.getPrecioUnitario()));
+        System.out.println("[OK] findById retornó basicoPedido id=" + basicoDTO.getIdBasicoPedido()
+                + " con basico.nombreComida=" + basicoDTO.getBasico().getNombreComida());
     }
 
     @Test

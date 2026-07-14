@@ -1,6 +1,7 @@
 package com.cocinarubi.domain.service;
 
 import com.cocinarubi.dao.RutaRepository;
+import com.cocinarubi.presentation.dto.request.RutaOrdenItemDTO;
 import com.cocinarubi.presentation.dto.request.RutaRequestDTO;
 import com.cocinarubi.presentation.dto.response.RutaResponseDTO;
 import com.cocinarubi.domain.entity.Ruta;
@@ -10,9 +11,12 @@ import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +50,7 @@ public class RutaService {
                 .isActive(dto.isActive())
                 .tarifaEnvio(dto.getTarifaEnvio())
                 .tiempoEstimadoMin(dto.getTiempoEstimadoMin())
+                .orden(dto.getOrden())
                 .build();
         return toResponseDTO(rutaRepository.save(ruta));
     }
@@ -57,6 +62,7 @@ public class RutaService {
         existente.setActive(dto.isActive());
         existente.setTarifaEnvio(dto.getTarifaEnvio());
         existente.setTiempoEstimadoMin(dto.getTiempoEstimadoMin());
+        existente.setOrden(dto.getOrden());
         return toResponseDTO(rutaRepository.save(existente));
     }
 
@@ -77,6 +83,9 @@ public class RutaService {
         }
         if (payload.containsKey("tiempoEstimadoMin")) {
             existente.setTiempoEstimadoMin((Integer) payload.get("tiempoEstimadoMin"));
+        }
+        if (payload.containsKey("orden")) {
+            existente.setOrden((Integer) payload.get("orden"));
         }
         return toResponseDTO(rutaRepository.save(existente));
     }
@@ -99,7 +108,30 @@ public class RutaService {
         rutaRepository.deleteById(id);
     }
 
-    private Ruta findEntityById(int id) {
+    @Transactional
+    public List<RutaResponseDTO> reordenar(List<RutaOrdenItemDTO> items) {
+        Set<Integer> ordenes = new HashSet<>();
+        for (RutaOrdenItemDTO item : items) {
+            if (!ordenes.add(item.getOrden())) {
+                throw new BusinessException(
+                        "El orden " + item.getOrden() + " está duplicado en la solicitud",
+                        HttpStatus.BAD_REQUEST);
+            }
+        }
+
+        List<Ruta> rutas = items.stream().map(item -> {
+            Ruta ruta = findEntityById(item.getIdRuta());
+            ruta.setOrden(item.getOrden());
+            return ruta;
+        }).collect(Collectors.toList());
+
+        return rutaRepository.saveAll(rutas).stream()
+                .sorted((a, b) -> Integer.compare(a.getOrden(), b.getOrden()))
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    public Ruta findEntityById(int id) {
         return rutaRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(
                         "Ruta no encontrada con id: " + id, HttpStatus.NOT_FOUND));
@@ -125,7 +157,8 @@ public class RutaService {
                 ruta.getBoundary().toText(),
                 ruta.isActive(),
                 ruta.getTarifaEnvio(),
-                ruta.getTiempoEstimadoMin()
+                ruta.getTiempoEstimadoMin(),
+                ruta.getOrden()
         );
     }
 }

@@ -119,6 +119,7 @@ public class BasicoService {
                 .collect(Collectors.toList());
         return new BasicoResponseDTO(
                 basico.getIdBasico(),
+                basico.getComida().getIdComida(),
                 basico.getComida().getNombreComida(),
                 basico.getDescripcion(),
                 basico.isDestacado(),
