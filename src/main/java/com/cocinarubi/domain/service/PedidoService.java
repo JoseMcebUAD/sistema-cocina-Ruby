@@ -108,6 +108,13 @@ public class PedidoService {
         return pedidoMapper.toResponseDTO(pedidoRepository.save(existente));
     }
 
+    @Transactional
+    public void marcarImpreso(int id) {
+        Pedido pedido = findEntityById(id);
+        pedido.setImpreso(true);
+        pedidoRepository.save(pedido);
+    }
+
     public void delete(int id) {
         if (!pedidoRepository.existsById(id)) {
             throw new BusinessException(

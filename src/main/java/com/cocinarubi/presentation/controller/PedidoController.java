@@ -50,6 +50,12 @@ public class PedidoController {
                 pedidoService.update(id, dto)));
     }
 
+    @PatchMapping("/{id}/marcar-impreso")
+    public ResponseEntity<Void> marcarImpreso(@PathVariable int id) {
+        pedidoService.marcarImpreso(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable int id) {
         pedidoService.delete(id);

@@ -38,7 +38,6 @@ public class ImpresoraService {
                     "Error generando bytes ESC/POS", HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        strategy.onPrintSuccess(req.getId());
 
         String base64 = Base64.getEncoder().encodeToString(bytes);
         return new PedidoEscResponseDTO(req.getId(), base64);
