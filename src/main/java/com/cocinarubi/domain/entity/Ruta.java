@@ -49,4 +49,7 @@ public class Ruta {
 
     @Column(name = "tiempo_estimado_min")
     private Integer tiempoEstimadoMin;
+
+    @Column(name = "orden", nullable = false)
+    private Integer orden;
 }

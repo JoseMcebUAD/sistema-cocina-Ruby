@@ -9,7 +9,7 @@ import java.util.List;
 public interface RutaRepository extends JpaRepository<Ruta, Integer> {
 
     @Override
-    @Query("SELECT r FROM Ruta r ORDER BY r.nombre ASC")
+    @Query("SELECT r FROM Ruta r ORDER BY r.orden ASC")
     List<Ruta> findAll();
 
     boolean existsByNombre(String nombre);

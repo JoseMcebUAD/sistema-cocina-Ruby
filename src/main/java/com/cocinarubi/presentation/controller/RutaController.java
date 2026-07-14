@@ -1,5 +1,6 @@
 package com.cocinarubi.presentation.controller;
 
+import com.cocinarubi.presentation.dto.request.RutaOrdenItemDTO;
 import com.cocinarubi.presentation.dto.request.RutaRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.presentation.dto.response.RutaResponseDTO;
@@ -64,5 +65,12 @@ public class RutaController {
     public ResponseEntity<Void> delete(@PathVariable int id) {
         rutaService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/orden")
+    public ResponseEntity<ApiResponse<List<RutaResponseDTO>>> reordenar(
+            @Valid @RequestBody List<RutaOrdenItemDTO> items) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Orden de rutas actualizado correctamente",
+                rutaService.reordenar(items)));
     }
 }
