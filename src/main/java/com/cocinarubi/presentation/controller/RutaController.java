@@ -4,6 +4,7 @@ import com.cocinarubi.presentation.dto.request.RutaOrdenItemDTO;
 import com.cocinarubi.presentation.dto.request.RutaRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.presentation.dto.response.RutaResponseDTO;
+import com.cocinarubi.presentation.dto.response.RutaSimpleResponseDTO;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.domain.service.RutaService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,8 +27,14 @@ public class RutaController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<RutaResponseDTO>>> findAll() {
+    public ResponseEntity<ApiResponse<List<RutaSimpleResponseDTO>>> findAll() {
         return ResponseEntity.ok(ApiResponse.exito(200, "Rutas obtenidas correctamente",
+                rutaService.findAllSimple()));
+    }
+
+    @GetMapping("/mapa")
+    public ResponseEntity<ApiResponse<List<RutaResponseDTO>>> findAllParaMapa() {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Rutas con coordenadas obtenidas correctamente",
                 rutaService.findAll()));
     }
 

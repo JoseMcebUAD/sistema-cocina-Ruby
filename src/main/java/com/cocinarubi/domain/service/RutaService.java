@@ -4,8 +4,10 @@ import com.cocinarubi.dao.RutaRepository;
 import com.cocinarubi.presentation.dto.request.RutaOrdenItemDTO;
 import com.cocinarubi.presentation.dto.request.RutaRequestDTO;
 import com.cocinarubi.presentation.dto.response.RutaResponseDTO;
+import com.cocinarubi.presentation.dto.response.RutaSimpleResponseDTO;
 import com.cocinarubi.domain.entity.Ruta;
 import com.cocinarubi.exception.BusinessException;
+import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
@@ -13,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +33,12 @@ public class RutaService {
 
     public RutaService(RutaRepository rutaRepository) {
         this.rutaRepository = rutaRepository;
+    }
+
+    public List<RutaSimpleResponseDTO> findAllSimple() {
+        return rutaRepository.findAll().stream()
+                .map(this::toSimpleResponseDTO)
+                .collect(Collectors.toList());
     }
 
     public List<RutaResponseDTO> findAll() {
@@ -149,12 +158,28 @@ public class RutaService {
         }
     }
 
-    /** Serializa el boundary geográfico de vuelta a WKT para la respuesta. */
+    private RutaSimpleResponseDTO toSimpleResponseDTO(Ruta ruta) {
+        return new RutaSimpleResponseDTO(
+                ruta.getIdRuta(),
+                ruta.getNombre(),
+                ruta.isActive(),
+                ruta.getTarifaEnvio(),
+                ruta.getTiempoEstimadoMin(),
+                ruta.getOrden()
+        );
+    }
+
     private RutaResponseDTO toResponseDTO(Ruta ruta) {
+        Coordinate[] coords = ruta.getBoundary().getCoordinates();
+        // JTS Polygon cierra el anillo repitiendo el primer punto al final; se omite ese duplicado
+        List<RutaResponseDTO.CoordinateDTO> coordinates = Arrays.stream(coords)
+                .limit(coords.length - 1)
+                .map(c -> new RutaResponseDTO.CoordinateDTO(c.y, c.x))
+                .collect(Collectors.toList());
         return new RutaResponseDTO(
                 ruta.getIdRuta(),
                 ruta.getNombre(),
-                ruta.getBoundary().toText(),
+                coordinates,
                 ruta.isActive(),
                 ruta.getTarifaEnvio(),
                 ruta.getTiempoEstimadoMin(),
