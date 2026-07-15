@@ -58,7 +58,8 @@ public class PedidoService {
             pedidoConfirmation.validarPost(dto);
         }
         Pedido pedido = Pedido.builder()
-                .metodoPago(dto.getMetodoPago())
+                .metodoPagoPrincipal(dto.getMetodoPagoPrincipal())
+                .metodoPagoSecundario(dto.getMetodoPagoSecundario())
                 .tipoPedido(dto.getTipoPedido())
                 .pedidoCreadoDesde(dto.getPedidoCreadoDesde())
                 .pagoCliente(dto.getPagoCliente())
@@ -84,7 +85,8 @@ public class PedidoService {
             pedidoConfirmation.validarPost(dto);
         }
         Pedido existente = findEntityById(id);
-        existente.setMetodoPago(dto.getMetodoPago());
+        existente.setMetodoPagoPrincipal(dto.getMetodoPagoPrincipal());
+        existente.setMetodoPagoSecundario(dto.getMetodoPagoSecundario());
         existente.setTipoPedido(dto.getTipoPedido());
         existente.setPedidoCreadoDesde(dto.getPedidoCreadoDesde());
         existente.setPagoCliente(dto.getPagoCliente());

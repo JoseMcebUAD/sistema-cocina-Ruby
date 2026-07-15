@@ -31,7 +31,8 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
             escpos.writeLF(FORMATO_FECHA.format(data.getFechaExpedicionPedido()));
         }
         escpos.writeLF("Tipo: " + data.getTipoPedido());
-        escpos.writeLF("Pago: " + data.getMetodoPago());
+        String pago = data.getMetodoPagoPrincipal() + (data.getMetodoPagoSecundario() != null ? " / " + data.getMetodoPagoSecundario() : "");
+        escpos.writeLF("Pago: " + pago);
         escpos.writeLF(formatter.formatearLineaTotal("TOTAL", FORMATO_PRECIO.format(data.getPrecioFinalOrden())));
         escpos.writeLF(formatter.formatearLineaTotal("PAGO CLIENTE", FORMATO_PRECIO.format(data.getPagoCliente())));
         renderDomicilio(escpos, data.getDomicilio());

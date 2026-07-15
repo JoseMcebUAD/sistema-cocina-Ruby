@@ -13,9 +13,13 @@ import java.util.List;
 
 public class PedidoRequestDTO {
 
-    @NotNull(message = "El método de pago no puede ser nulo")
-    @JsonProperty("metodoPago")
-    private MetodoPago metodoPago;
+    @NotNull(message = "El método de pago principal no puede ser nulo")
+    @JsonProperty("metodoPagoPrincipal")
+    private MetodoPago metodoPagoPrincipal;
+
+    @NotNull(message = "El método de pago secundario no puede ser nulo")
+    @JsonProperty("metodoPagoSecundario")
+    private MetodoPago metodoPagoSecundario;
 
     @NotNull(message = "El tipo de pedido no puede ser nulo")
     @JsonProperty("tipoPedido")
@@ -55,8 +59,11 @@ public class PedidoRequestDTO {
 
     public PedidoRequestDTO() {}
 
-    public MetodoPago getMetodoPago() { return metodoPago; }
-    public void setMetodoPago(MetodoPago metodoPago) { this.metodoPago = metodoPago; }
+    public MetodoPago getMetodoPagoPrincipal() { return metodoPagoPrincipal; }
+    public void setMetodoPagoPrincipal(MetodoPago metodoPagoPrincipal) { this.metodoPagoPrincipal = metodoPagoPrincipal; }
+
+    public MetodoPago getMetodoPagoSecundario() { return metodoPagoSecundario; }
+    public void setMetodoPagoSecundario(MetodoPago metodoPagoSecundario) { this.metodoPagoSecundario = metodoPagoSecundario; }
 
     public TipoPedido getTipoPedido() { return tipoPedido; }
     public void setTipoPedido(TipoPedido tipoPedido) { this.tipoPedido = tipoPedido; }

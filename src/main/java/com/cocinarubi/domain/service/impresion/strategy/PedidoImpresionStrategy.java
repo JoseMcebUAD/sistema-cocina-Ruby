@@ -50,7 +50,8 @@ public class PedidoImpresionStrategy implements ImpresionStrategy {
     private PedidoTicketData toTicketData(PedidoResponseDTO dto) {
         PedidoTicketData data = new PedidoTicketData();
         data.setNumeroPedido(dto.getIdPedido());
-        data.setMetodoPago(dto.getMetodoPago());
+        data.setMetodoPagoPrincipal(dto.getMetodoPagoPrincipal());
+        data.setMetodoPagoSecundario(dto.getMetodoPagoSecundario());
         data.setTipoPedido(dto.getTipoPedido());
         data.setFechaExpedicionPedido(dto.getFechaExpedicionPedido());
         data.setPrecioFinalOrden(dto.getPrecioFinalOrden());

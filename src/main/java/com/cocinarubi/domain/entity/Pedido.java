@@ -55,8 +55,12 @@ public class Pedido {
     private Integer idPedido;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "metodo_pago")
-    private MetodoPago metodoPago;
+    @Column(name = "metodo_pago_principal")
+    private MetodoPago metodoPagoPrincipal;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "metodo_pago_secundario")
+    private MetodoPago metodoPagoSecundario;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_pedido")

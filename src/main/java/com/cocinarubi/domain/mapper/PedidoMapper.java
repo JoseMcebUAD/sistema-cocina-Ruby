@@ -44,7 +44,8 @@ public class PedidoMapper {
 
         return new PedidoResponseDTO(
                 pedido.getIdPedido(),
-                pedido.getMetodoPago(),
+                pedido.getMetodoPagoPrincipal(),
+                pedido.getMetodoPagoSecundario(),
                 pedido.getTipoPedido(),
                 pedido.getFechaExpedicionPedido(),
                 pedido.getPedidoCreadoDesde(),

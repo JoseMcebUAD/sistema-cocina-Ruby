@@ -20,7 +20,8 @@ import java.util.List;
 public class PedidoTicketData {
 
     private int numeroPedido;
-    private MetodoPago metodoPago;
+    private MetodoPago metodoPagoPrincipal;
+    private MetodoPago metodoPagoSecundario;
     private TipoPedido tipoPedido;
     private LocalDateTime fechaExpedicionPedido;
     private BigDecimal precioFinalOrden;
@@ -37,8 +38,11 @@ public class PedidoTicketData {
     public int getNumeroPedido() { return numeroPedido; }
     public void setNumeroPedido(int numeroPedido) { this.numeroPedido = numeroPedido; }
 
-    public MetodoPago getMetodoPago() { return metodoPago; }
-    public void setMetodoPago(MetodoPago metodoPago) { this.metodoPago = metodoPago; }
+    public MetodoPago getMetodoPagoPrincipal() { return metodoPagoPrincipal; }
+    public void setMetodoPagoPrincipal(MetodoPago metodoPagoPrincipal) { this.metodoPagoPrincipal = metodoPagoPrincipal; }
+
+    public MetodoPago getMetodoPagoSecundario() { return metodoPagoSecundario; }
+    public void setMetodoPagoSecundario(MetodoPago metodoPagoSecundario) { this.metodoPagoSecundario = metodoPagoSecundario; }
 
     public TipoPedido getTipoPedido() { return tipoPedido; }
     public void setTipoPedido(TipoPedido tipoPedido) { this.tipoPedido = tipoPedido; }

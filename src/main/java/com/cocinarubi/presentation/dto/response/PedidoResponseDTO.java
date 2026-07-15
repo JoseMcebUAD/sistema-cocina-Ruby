@@ -11,7 +11,8 @@ import java.util.List;
 public class PedidoResponseDTO {
 
     private int idPedido;
-    private MetodoPago metodoPago;
+    private MetodoPago metodoPagoPrincipal;
+    private MetodoPago metodoPagoSecundario;
     private TipoPedido tipoPedido;
     private LocalDateTime fechaExpedicionPedido;
     private PedidoCreadoDesde pedidoCreadoDesde;
@@ -27,7 +28,8 @@ public class PedidoResponseDTO {
 
     public PedidoResponseDTO() {}
 
-    public PedidoResponseDTO(int idPedido, MetodoPago metodoPago, TipoPedido tipoPedido,
+    public PedidoResponseDTO(int idPedido, MetodoPago metodoPagoPrincipal, MetodoPago metodoPagoSecundario,
+                             TipoPedido tipoPedido,
                              LocalDateTime fechaExpedicionPedido, PedidoCreadoDesde pedidoCreadoDesde,
                              BigDecimal precioFinalOrden, BigDecimal pagoCliente, BigDecimal cambio,
                              String uuidCliente,
@@ -37,7 +39,8 @@ public class PedidoResponseDTO {
                              List<ProductoCocinaPedidoResponseDTO> productosCocina,
                              PedidoDomicilioResponseDTO domicilio) {
         this.idPedido = idPedido;
-        this.metodoPago = metodoPago;
+        this.metodoPagoPrincipal = metodoPagoPrincipal;
+        this.metodoPagoSecundario = metodoPagoSecundario;
         this.tipoPedido = tipoPedido;
         this.fechaExpedicionPedido = fechaExpedicionPedido;
         this.pedidoCreadoDesde = pedidoCreadoDesde;
@@ -55,8 +58,11 @@ public class PedidoResponseDTO {
     public int getIdPedido() { return idPedido; }
     public void setIdPedido(int idPedido) { this.idPedido = idPedido; }
 
-    public MetodoPago getMetodoPago() { return metodoPago; }
-    public void setMetodoPago(MetodoPago metodoPago) { this.metodoPago = metodoPago; }
+    public MetodoPago getMetodoPagoPrincipal() { return metodoPagoPrincipal; }
+    public void setMetodoPagoPrincipal(MetodoPago metodoPagoPrincipal) { this.metodoPagoPrincipal = metodoPagoPrincipal; }
+
+    public MetodoPago getMetodoPagoSecundario() { return metodoPagoSecundario; }
+    public void setMetodoPagoSecundario(MetodoPago metodoPagoSecundario) { this.metodoPagoSecundario = metodoPagoSecundario; }
 
     public TipoPedido getTipoPedido() { return tipoPedido; }
     public void setTipoPedido(TipoPedido tipoPedido) { this.tipoPedido = tipoPedido; }
