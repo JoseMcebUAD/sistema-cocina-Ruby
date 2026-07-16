@@ -1,5 +1,6 @@
 package com.cocinarubi.domain.service;
 
+import com.cocinarubi.DBConstants;
 import com.cocinarubi.dao.BasicoRepository;
 import com.cocinarubi.presentation.dto.request.BasicoRequestDTO;
 import com.cocinarubi.presentation.dto.response.BasicoResponseDTO;
@@ -10,12 +11,12 @@ import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.BasicoComplemento;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.exception.BusinessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -50,6 +51,19 @@ public class BasicoService {
     }
 
     @Transactional(readOnly = true)
+    public Page<BasicoResponseDTO> findAll(Pageable pageable) {
+        return basicoRepository.findAllPaginado(pageable).map(this::toResponseDTO);
+    }
+
+    @Transactional(readOnly = true)
+    public List<BasicoResponseDTO> findDisponibles() {
+        return basicoRepository.findDisponiblesOrdenados(DBConstants.Estatus.DISPONIBLE)
+                .stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public BasicoResponseDTO findById(int id) {
         return toResponseDTO(findEntityById(id));
     }
@@ -66,6 +80,7 @@ public class BasicoService {
                 .descripcion(dto.getDescripcion())
                 .destacado(dto.isDestacado())
                 .precioBasico(dto.getPrecioBasico())
+                .estatus(dto.getEstatus())
                 .build();
         agregarComplementos(basico, dto.getIdComplementos());
         return toResponseDTO(basicoRepository.save(basico));
@@ -78,6 +93,7 @@ public class BasicoService {
         existente.setDescripcion(dto.getDescripcion());
         existente.setDestacado(dto.isDestacado());
         existente.setPrecioBasico(dto.getPrecioBasico());
+        existente.setEstatus(dto.getEstatus());
         // Reemplazar la lista completa de complementos en cada actualización total
         existente.getComplementos().clear();
         agregarComplementos(existente, dto.getIdComplementos());
@@ -124,6 +140,7 @@ public class BasicoService {
                 basico.getDescripcion(),
                 basico.isDestacado(),
                 basico.getPrecioBasico(),
+                basico.getEstatus(),
                 complementos
         );
     }

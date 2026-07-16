@@ -98,6 +98,7 @@ public class PedidoMapper {
                 b.getDescripcion(),
                 b.isDestacado(),
                 b.getPrecioBasico(),
+                b.getEstatus(),
                 comps
         );
         return new BasicoPedidoResponseDTO(bp.getIdBasicoPedido(), basicoDTO, bp.getPrecioUnitario());

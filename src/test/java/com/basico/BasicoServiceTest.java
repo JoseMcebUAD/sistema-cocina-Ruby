@@ -1,5 +1,6 @@
 package com.basico;
 
+import com.cocinarubi.DBConstants.Estatus;
 import com.cocinarubi.dao.BasicoRepository;
 import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.Comida;
@@ -49,11 +50,12 @@ public class BasicoServiceTest {
             .descripcion("Paquete con arroz y agua")
             .destacado(false)
             .precioBasico(BigDecimal.valueOf(65))
+            .estatus(Estatus.DISPONIBLE)
             .build();
 
-    public BasicoRequestDTO DTO_PREPARED = new BasicoRequestDTO(5, "Paquete con arroz y agua", false, BigDecimal.valueOf(65), null);
+    public BasicoRequestDTO DTO_PREPARED = new BasicoRequestDTO(5, "Paquete con arroz y agua", false, BigDecimal.valueOf(65), Estatus.DISPONIBLE, null);
 
-    public BasicoRequestDTO DTO_MODIFIED_PREPARED = new BasicoRequestDTO(5, "Paquete especial", true, BigDecimal.valueOf(75), null);
+    public BasicoRequestDTO DTO_MODIFIED_PREPARED = new BasicoRequestDTO(5, "Paquete especial", true, BigDecimal.valueOf(75), Estatus.DISPONIBLE, null);
 
     @Test
     @DisplayName("findAll - Debe retornar la lista de básicos registrados")
@@ -109,7 +111,7 @@ public class BasicoServiceTest {
         when(basicoRepository.findByIdWithComplementos(1)).thenReturn(Optional.of(BASICO_PREPARED));
         when(comidaService.findById(5)).thenReturn(COMIDA_PREPARED);
         Basico basicoActualizado = Basico.builder()
-                .idBasico(1).comida(COMIDA_PREPARED).descripcion("Paquete especial").destacado(true).precioBasico(BigDecimal.valueOf(75)).build();
+                .idBasico(1).comida(COMIDA_PREPARED).descripcion("Paquete especial").destacado(true).precioBasico(BigDecimal.valueOf(75)).estatus(Estatus.DISPONIBLE).build();
         when(basicoRepository.save(any(Basico.class))).thenReturn(basicoActualizado);
 
         BasicoResponseDTO result = basicoService.update(1, DTO_MODIFIED_PREPARED);

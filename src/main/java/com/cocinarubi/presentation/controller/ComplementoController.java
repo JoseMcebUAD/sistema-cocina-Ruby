@@ -6,6 +6,8 @@ import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.domain.service.ComplementoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,9 +28,23 @@ public class ComplementoController {
     }
 
     @GetMapping
+    public ResponseEntity<ApiResponse<Page<Complemento>>> findAllPaginado(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Complementos obtenidos correctamente",
+                complementoService.findAll(PageRequest.of(page, size))));
+    }
+
+    @GetMapping("/todos")
     public ResponseEntity<ApiResponse<List<Complemento>>> findAll() {
         return ResponseEntity.ok(ApiResponse.exito(200, "Complementos obtenidos correctamente",
                 complementoService.findAll()));
+    }
+
+    @GetMapping("/disponibles")
+    public ResponseEntity<ApiResponse<List<Complemento>>> findDisponibles() {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Complementos disponibles obtenidos correctamente",
+                complementoService.findDisponibles()));
     }
 
     @GetMapping("/{id}")

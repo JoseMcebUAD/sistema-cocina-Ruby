@@ -1,8 +1,11 @@
 package com.cocinarubi.domain.service;
 
+import com.cocinarubi.DBConstants;
 import com.cocinarubi.dao.ComidaRepository;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.exception.BusinessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -19,6 +22,14 @@ public class ComidaService {
 
     public List<Comida> findAll() {
         return comidaRepository.findAll();
+    }
+
+    public Page<Comida> findAll(Pageable pageable) {
+        return comidaRepository.findAllPaginado(pageable);
+    }
+
+    public List<Comida> findDisponibles() {
+        return comidaRepository.findDisponiblesOrdenados(DBConstants.Estatus.DISPONIBLE);
     }
 
     public Comida findById(int id) {
