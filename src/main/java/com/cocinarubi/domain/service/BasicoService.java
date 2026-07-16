@@ -11,6 +11,8 @@ import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.BasicoComplemento;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.exception.BusinessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +48,11 @@ public class BasicoService {
         return basicoRepository.findAll().stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<BasicoResponseDTO> findAll(Pageable pageable) {
+        return basicoRepository.findAllPaginado(pageable).map(this::toResponseDTO);
     }
 
     @Transactional(readOnly = true)

@@ -9,6 +9,8 @@ import com.cocinarubi.presentation.dto.request.ProductoCocinaRequestDTO;
 import com.cocinarubi.presentation.dto.response.ProductoCocinaResponseDTO;
 import com.cocinarubi.presentation.strategy.strategyImplementation.ProductoCocinaConfirmationImp;
 import com.cocinarubi.presentation.strategy.strategyImplementation.ProductoCocinaValidationImp;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +39,11 @@ public class ProductoCocinaService {
         return productoCocinaRepository.findAll().stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProductoCocinaResponseDTO> findAll(Pageable pageable) {
+        return productoCocinaRepository.findAllPaginado(pageable).map(this::toResponseDTO);
     }
 
     @Transactional(readOnly = true)
