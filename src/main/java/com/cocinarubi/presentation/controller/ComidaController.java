@@ -6,6 +6,8 @@ import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.domain.service.ComidaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +28,14 @@ public class ComidaController {
     }
 
     @GetMapping
+    public ResponseEntity<ApiResponse<Page<Comida>>> findAllPaginado(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Comidas obtenidas correctamente",
+                comidaService.findAll(PageRequest.of(page, size))));
+    }
+
+    @GetMapping("/todos")
     public ResponseEntity<ApiResponse<List<Comida>>> findAll() {
         return ResponseEntity.ok(ApiResponse.exito(200, "Comidas obtenidas correctamente",
                 comidaService.findAll()));

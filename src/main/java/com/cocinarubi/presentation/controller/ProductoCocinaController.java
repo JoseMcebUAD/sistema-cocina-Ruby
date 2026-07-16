@@ -6,6 +6,8 @@ import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.presentation.dto.response.ProductoCocinaResponseDTO;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +26,14 @@ public class ProductoCocinaController {
     }
 
     @GetMapping
+    public ResponseEntity<ApiResponse<Page<ProductoCocinaResponseDTO>>> findAllPaginado(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Productos de cocina obtenidos correctamente",
+                productoCocinaService.findAll(PageRequest.of(page, size))));
+    }
+
+    @GetMapping("/todos")
     public ResponseEntity<ApiResponse<List<ProductoCocinaResponseDTO>>> findAll() {
         return ResponseEntity.ok(ApiResponse.exito(200, "Productos de cocina obtenidos correctamente",
                 productoCocinaService.findAll()));
