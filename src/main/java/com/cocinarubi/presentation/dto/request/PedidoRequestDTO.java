@@ -17,7 +17,6 @@ public class PedidoRequestDTO {
     @JsonProperty("metodoPagoPrincipal")
     private MetodoPago metodoPagoPrincipal;
 
-    @NotNull(message = "El método de pago secundario no puede ser nulo")
     @JsonProperty("metodoPagoSecundario")
     private MetodoPago metodoPagoSecundario;
 
