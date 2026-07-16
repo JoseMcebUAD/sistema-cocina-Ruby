@@ -31,6 +31,12 @@ public class ComidaController {
                 comidaService.findAll()));
     }
 
+    @GetMapping("/disponibles")
+    public ResponseEntity<ApiResponse<List<Comida>>> findDisponibles() {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Comidas disponibles obtenidas correctamente",
+                comidaService.findDisponibles()));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Comida>> findById(@PathVariable int id) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Comida encontrada",

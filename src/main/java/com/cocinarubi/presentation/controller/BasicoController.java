@@ -28,6 +28,12 @@ public class BasicoController {
                 basicoService.findAll()));
     }
 
+    @GetMapping("/disponibles")
+    public ResponseEntity<ApiResponse<List<BasicoResponseDTO>>> findDisponibles() {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Básicos disponibles obtenidos correctamente",
+                basicoService.findDisponibles()));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<BasicoResponseDTO>> findById(@PathVariable int id) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Básico encontrado",

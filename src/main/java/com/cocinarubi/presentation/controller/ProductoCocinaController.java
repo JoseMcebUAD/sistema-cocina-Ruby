@@ -29,6 +29,12 @@ public class ProductoCocinaController {
                 productoCocinaService.findAll()));
     }
 
+    @GetMapping("/disponibles")
+    public ResponseEntity<ApiResponse<List<ProductoCocinaResponseDTO>>> findDisponibles() {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Productos de cocina disponibles obtenidos correctamente",
+                productoCocinaService.findDisponibles()));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductoCocinaResponseDTO>> findById(@PathVariable int id) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Producto de cocina encontrado",

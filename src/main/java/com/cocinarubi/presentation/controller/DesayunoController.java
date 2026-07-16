@@ -31,6 +31,12 @@ public class DesayunoController {
                 desayunoService.findAll()));
     }
 
+    @GetMapping("/disponibles")
+    public ResponseEntity<ApiResponse<List<Desayuno>>> findDisponibles() {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Desayunos disponibles obtenidos correctamente",
+                desayunoService.findDisponibles()));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Desayuno>> findById(@PathVariable int id) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Desayuno encontrado",

@@ -31,6 +31,12 @@ public class ComplementoController {
                 complementoService.findAll()));
     }
 
+    @GetMapping("/disponibles")
+    public ResponseEntity<ApiResponse<List<Complemento>>> findDisponibles() {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Complementos disponibles obtenidos correctamente",
+                complementoService.findDisponibles()));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Complemento>> findById(@PathVariable int id) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Complemento encontrado",
