@@ -1,5 +1,6 @@
 package com.cocinarubi.dao;
 
+import com.cocinarubi.DBConstants;
 import com.cocinarubi.domain.entity.Complemento;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -19,4 +20,7 @@ public interface ComplementoRepository extends JpaRepository<Complemento, Intege
 
     @Query("SELECT COUNT(ccp) FROM ComplementoComidaPedido ccp WHERE ccp.complemento.idComplemento = :id")
     long countEnPedidos(@Param("id") int id);
+
+    @Query("SELECT c FROM Complemento c WHERE c.estatus = :estatus ORDER BY c.nombreComplemento ASC")
+    List<Complemento> findDisponiblesOrdenados(@Param("estatus") DBConstants.Estatus estatus);
 }
