@@ -16,6 +16,7 @@ import com.cocinarubi.domain.entity.ProductoCocinaPedido;
 import com.cocinarubi.domain.entity.Ruta;
 import com.cocinarubi.presentation.dto.request.BasicoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComidaPedidoDTO;
+import com.cocinarubi.presentation.dto.request.ComplementoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.DesayunoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.PedidoDomicilioDTO;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
@@ -71,8 +72,8 @@ public class CatalogoPedidoService {
                     .precioUnitario(linea.getPrecioUnitario())
                     .tamanoPorcion(linea.getTamanoPorcion())
                     .build();
-            for (Integer idComp : linea.getIdComplementos()) {
-                Complemento c = complementoService.findById(idComp);
+            for (ComplementoPedidoDTO compDto : linea.getComplementos()) {
+                Complemento c = complementoService.findById(compDto.getIdComplemento());
                 item.addComplemento(ComplementoComidaPedido.builder()
                         .complemento(c)
                         .precioUnitario(c.getPrecioExtra())

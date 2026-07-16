@@ -1,5 +1,6 @@
 package com.cocinarubi.util;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,24 +25,17 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
         lineas.add(lineaComida);
         lineas.add("");
 
-        for (int i = 0; i < complementos.size(); i++) {
-            ComplementoResponseDTO compl = complementos.get(i);
+        for (ComplementoResponseDTO compl : complementos) {
             String nombreCompl = compl.getNombreComplemento();
-            boolean esUltimo = (i == complementos.size() - 1);
-
-            if (!esUltimo) {
-                lineas.add(nombreCompl);
-                continue;
-            }
-
-            int margen = anchoEfectivo - nombreCompl.length() - precio.length();
-            if (margen >= 2) {
-                lineas.add(construirLineaConPrecio(nombreCompl, precio, anchoEfectivo));
+            BigDecimal precioComp = compl.getPrecioExtra();
+            if (precioComp != null && precioComp.compareTo(BigDecimal.ZERO) != 0) {
+                lineas.add(construirLineaConPrecio(nombreCompl, FORMATO_PRECIO.format(precioComp), anchoEfectivo));
             } else {
                 lineas.add(nombreCompl);
-                lineas.add(alinearDerechaCompleto(precio, anchoEfectivo));
             }
         }
+
+        lineas.add(alinearDerechaCompleto(precio, anchoEfectivo));
 
         return lineas;
     }

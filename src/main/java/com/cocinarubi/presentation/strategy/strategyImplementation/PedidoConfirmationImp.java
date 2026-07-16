@@ -15,6 +15,7 @@ import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.exception.ErrorCode;
 import com.cocinarubi.presentation.dto.request.BasicoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComidaPedidoDTO;
+import com.cocinarubi.presentation.dto.request.ComplementoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.DesayunoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.request.ProductoCocinaPedidoDTO;
@@ -77,10 +78,10 @@ public class PedidoConfirmationImp implements ConfirmationStrategy<PedidoRequest
                         "La comida '" + comida.getNombreComida() + "' no está disponible",
                         HttpStatus.CONFLICT, ErrorCode.VALIDACION);
             }
-            for (Integer idComp : linea.getIdComplementos()) {
-                Complemento c = complementoRepository.findById(idComp)
+            for (ComplementoPedidoDTO comp : linea.getComplementos()) {
+                Complemento c = complementoRepository.findById(comp.getIdComplemento())
                         .orElseThrow(() -> new BusinessException(
-                                "El complemento con id " + idComp + " no existe",
+                                "El complemento con id " + comp.getIdComplemento() + " no existe",
                                 HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
                 if (c.getEstatus() != Estatus.DISPONIBLE) {
                     throw new BusinessException(

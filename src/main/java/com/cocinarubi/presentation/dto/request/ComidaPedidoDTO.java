@@ -25,17 +25,17 @@ public class ComidaPedidoDTO {
     @JsonProperty("tamanoPorcion")
     private TamanoPorcion tamanoPorcion;
 
-    @JsonProperty("idComplementos")
-    private List<Integer> idComplementos = new ArrayList<>();
+    @JsonProperty("complementos")
+    private List<ComplementoPedidoDTO> complementos = new ArrayList<>();
 
     public ComidaPedidoDTO() {}
 
     public ComidaPedidoDTO(Integer idComida, BigDecimal precioUnitario,
-                           TamanoPorcion tamanoPorcion, List<Integer> idComplementos) {
+                           TamanoPorcion tamanoPorcion, List<ComplementoPedidoDTO> complementos) {
         this.idComida = idComida;
         this.precioUnitario = precioUnitario;
         this.tamanoPorcion = tamanoPorcion;
-        this.idComplementos = idComplementos != null ? idComplementos : new ArrayList<>();
+        this.complementos = complementos != null ? complementos : new ArrayList<>();
     }
 
     public Integer getIdComida() { return idComida; }
@@ -47,6 +47,6 @@ public class ComidaPedidoDTO {
     public TamanoPorcion getTamanoPorcion() { return tamanoPorcion; }
     public void setTamanoPorcion(TamanoPorcion tamanoPorcion) { this.tamanoPorcion = tamanoPorcion; }
 
-    public List<Integer> getIdComplementos() { return idComplementos; }
-    public void setIdComplementos(List<Integer> idComplementos) { this.idComplementos = idComplementos; }
+    public List<ComplementoPedidoDTO> getComplementos() { return complementos; }
+    public void setComplementos(List<ComplementoPedidoDTO> complementos) { this.complementos = complementos; }
 }

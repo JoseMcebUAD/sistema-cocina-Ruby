@@ -11,6 +11,7 @@ import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.exception.ErrorCode;
 import com.cocinarubi.presentation.dto.request.BasicoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComidaPedidoDTO;
+import com.cocinarubi.presentation.dto.request.ComplementoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.DesayunoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.request.ProductoCocinaPedidoDTO;
@@ -87,10 +88,10 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                         "La comida con id " + linea.getIdComida() + " no existe",
                         HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
             }
-            for (Integer idComp : linea.getIdComplementos()) {
-                if (!complementoRepository.existsById(idComp)) {
+            for (ComplementoPedidoDTO comp : linea.getComplementos()) {
+                if (!complementoRepository.existsById(comp.getIdComplemento())) {
                     throw new BusinessException(
-                            "El complemento con id " + idComp + " no existe",
+                            "El complemento con id " + comp.getIdComplemento() + " no existe",
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
                 }
             }
