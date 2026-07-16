@@ -34,7 +34,13 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         String pago = data.getMetodoPagoPrincipal() + (data.getMetodoPagoSecundario() != null ? " / " + data.getMetodoPagoSecundario() : "");
         escpos.writeLF("Pago: " + pago);
         escpos.writeLF(formatter.formatearLineaTotal("TOTAL", FORMATO_PRECIO.format(data.getPrecioFinalOrden())));
-        escpos.writeLF(formatter.formatearLineaTotal("PAGO CLIENTE", FORMATO_PRECIO.format(data.getPagoCliente())));
+        
+        if (data.getPagoCliente() != null) {
+            escpos.writeLF(formatter.formatearLineaTotal("PAGO CLIENTE", FORMATO_PRECIO.format(data.getPagoCliente())));
+        }
+        if (data.getCambio() != null) {
+            escpos.writeLF(formatter.formatearLineaTotal("CAMBIO", FORMATO_PRECIO.format(data.getCambio())));
+        }
         renderDomicilio(escpos, data.getDomicilio());
         escpos.feed(1);
 
@@ -42,6 +48,8 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         renderDesayunos(escpos, data.getDesayunos());
         renderBasicos(escpos, data.getBasicos());
         renderProductosCocina(escpos, data.getProductosCocina());
+        escpos.feed(5).cut(EscPos.CutMode.FULL);
+
     }
 
     @Override
