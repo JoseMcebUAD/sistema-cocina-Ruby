@@ -2,6 +2,8 @@ package com.cocinarubi.dao;
 
 import com.cocinarubi.DBConstants;
 import com.cocinarubi.domain.entity.Desayuno;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,4 +22,10 @@ public interface DesayunoRepository extends JpaRepository<Desayuno, Integer> {
 
     @Query("SELECT d FROM Desayuno d WHERE d.estatus = :estatus ORDER BY d.nombreDesayuno ASC")
     List<Desayuno> findDisponiblesOrdenados(@Param("estatus") DBConstants.Estatus estatus);
+
+    @Query(value = "SELECT d FROM Desayuno d ORDER BY " +
+                   "CASE d.estatus WHEN 'DISPONIBLE' THEN 0 WHEN 'NO_DISPONIBLE' THEN 1 WHEN 'AGOTADO' THEN 2 ELSE 3 END, " +
+                   "d.nombreDesayuno ASC",
+           countQuery = "SELECT COUNT(d) FROM Desayuno d")
+    Page<Desayuno> findAllPaginado(Pageable pageable);
 }
