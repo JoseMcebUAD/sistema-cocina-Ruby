@@ -1,24 +1,38 @@
 package com.cocinarubi.presentation.dto.response;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public class RutaResponseDTO {
 
     private int idRuta;
     private String nombre;
-    private String boundaryWkt;
+    private List<CoordinateDTO> coordinates;
     private boolean active;
     private BigDecimal tarifaEnvio;
     private Integer tiempoEstimadoMin;
     private Integer orden;
 
+    public static class CoordinateDTO {
+        private double latitude;
+        private double longitude;
+
+        public CoordinateDTO(double latitude, double longitude) {
+            this.latitude = latitude;
+            this.longitude = longitude;
+        }
+
+        public double getLatitude() { return latitude; }
+        public double getLongitude() { return longitude; }
+    }
+
     public RutaResponseDTO() {}
 
-    public RutaResponseDTO(int idRuta, String nombre, String boundaryWkt, boolean active,
+    public RutaResponseDTO(int idRuta, String nombre, List<CoordinateDTO> coordinates, boolean active,
                            BigDecimal tarifaEnvio, Integer tiempoEstimadoMin, Integer orden) {
         this.idRuta = idRuta;
         this.nombre = nombre;
-        this.boundaryWkt = boundaryWkt;
+        this.coordinates = coordinates;
         this.active = active;
         this.tarifaEnvio = tarifaEnvio;
         this.tiempoEstimadoMin = tiempoEstimadoMin;
@@ -31,8 +45,8 @@ public class RutaResponseDTO {
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
 
-    public String getBoundaryWkt() { return boundaryWkt; }
-    public void setBoundaryWkt(String boundaryWkt) { this.boundaryWkt = boundaryWkt; }
+    public List<CoordinateDTO> getCoordinates() { return coordinates; }
+    public void setCoordinates(List<CoordinateDTO> coordinates) { this.coordinates = coordinates; }
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
