@@ -50,7 +50,7 @@ public class FavoritoClienteValidationImp implements ValidationStrategy<Favorito
             case COMIDA -> comidaRepository.existsById(idProducto);
             case DESAYUNO -> desayunoRepository.existsById(idProducto);
             case BASICO -> basicoRepository.existsById(idProducto);
-            case SNACK, CHAROLA, BEBIDA -> productoCocinaRepository.existsById(idProducto);
+            case SNACK, CHAROLA, BEBIDA, POSTRE -> productoCocinaRepository.existsById(idProducto);
         };
         if (!existe) {
             throw new BusinessException(

@@ -124,7 +124,7 @@ public class FavoritoClienteService {
             case BASICO -> basicoRepository.findById(idProducto)
                     .map(b -> b.getComida() != null ? b.getComida().getNombreComida() : "(básico)")
                     .orElse("(producto eliminado)");
-            case SNACK, CHAROLA, BEBIDA -> productoCocinaRepository.findById(idProducto)
+            case SNACK, CHAROLA, BEBIDA, POSTRE -> productoCocinaRepository.findById(idProducto)
                     .map(p -> p.getNombreProducto()).orElse("(producto eliminado)");
         };
     }
