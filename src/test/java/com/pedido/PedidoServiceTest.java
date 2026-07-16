@@ -63,7 +63,7 @@ public class PedidoServiceTest {
 
     public Pedido PEDIDO_PREPARED = Pedido.builder()
             .idPedido(10)
-            .metodoPago(MetodoPago.EFECTIVO)
+            .metodoPagoPrincipal(MetodoPago.EFECTIVO)
             .tipoPedido(TipoPedido.MOSTRADOR)
             .pedidoCreadoDesde(PedidoCreadoDesde.COCINA)
             .precioFinalOrden(BigDecimal.ZERO)
@@ -72,7 +72,7 @@ public class PedidoServiceTest {
 
     public PedidoRequestDTO crearDtoMostrador() {
         PedidoRequestDTO dto = new PedidoRequestDTO();
-        dto.setMetodoPago(MetodoPago.EFECTIVO);
+        dto.setMetodoPagoPrincipal(MetodoPago.EFECTIVO);
         dto.setTipoPedido(TipoPedido.MOSTRADOR);
         dto.setPedidoCreadoDesde(PedidoCreadoDesde.COCINA);
         dto.setComidas(List.of());
@@ -89,7 +89,7 @@ public class PedidoServiceTest {
         domicilioDto.setDireccion("Calle Falsa 123");
 
         PedidoRequestDTO dto = new PedidoRequestDTO();
-        dto.setMetodoPago(MetodoPago.TARJETA);
+        dto.setMetodoPagoPrincipal(MetodoPago.TARJETA);
         dto.setTipoPedido(TipoPedido.DOMICILIO);
         dto.setPedidoCreadoDesde(PedidoCreadoDesde.COCINA);
         dto.setComidas(List.of());
@@ -109,8 +109,8 @@ public class PedidoServiceTest {
         List<PedidoResponseDTO> result = pedidoService.findAll();
 
         assertEquals(1, result.size());
-        assertEquals(MetodoPago.EFECTIVO, result.get(0).getMetodoPago());
-        System.out.println("[OK] findAll retornó " + result.size() + " pedido(s): metodoPago=" + result.get(0).getMetodoPago());
+        assertEquals(MetodoPago.EFECTIVO, result.get(0).getMetodoPagoPrincipal());
+        System.out.println("[OK] findAll retornó " + result.size() + " pedido(s): metodoPago=" + result.get(0).getMetodoPagoPrincipal());
     }
 
     @Test
@@ -143,7 +143,7 @@ public class PedidoServiceTest {
         PedidoResponseDTO result = pedidoService.save(crearDtoMostrador());
 
         assertNotNull(result);
-        assertEquals(MetodoPago.EFECTIVO, result.getMetodoPago());
+        assertEquals(MetodoPago.EFECTIVO, result.getMetodoPagoPrincipal());
         verify(pedidoRepository).save(any(Pedido.class));
         verify(rutaRepository, never()).findById(anyInt());
         System.out.println("[OK] save guardó pedido MOSTRADOR: id=" + result.getIdPedido());
@@ -179,7 +179,7 @@ public class PedidoServiceTest {
         when(pedidoRepository.findById(10)).thenReturn(Optional.of(PEDIDO_PREPARED));
         Pedido actualizado = Pedido.builder()
                 .idPedido(10)
-                .metodoPago(MetodoPago.TARJETA)
+                .metodoPagoPrincipal(MetodoPago.TARJETA)
                 .tipoPedido(TipoPedido.MOSTRADOR)
                 .pedidoCreadoDesde(PedidoCreadoDesde.COCINA)
                 .precioFinalOrden(BigDecimal.ZERO)
@@ -188,12 +188,12 @@ public class PedidoServiceTest {
         when(pedidoRepository.save(any(Pedido.class))).thenReturn(actualizado);
 
         PedidoRequestDTO dtoUpdate = crearDtoMostrador();
-        dtoUpdate.setMetodoPago(MetodoPago.TARJETA);
+        dtoUpdate.setMetodoPagoPrincipal(MetodoPago.TARJETA);
         PedidoResponseDTO result = pedidoService.update(10, dtoUpdate);
 
         assertNotNull(result);
-        assertEquals(MetodoPago.TARJETA, result.getMetodoPago());
-        System.out.println("[OK] update actualizó pedido: metodoPago=" + result.getMetodoPago());
+        assertEquals(MetodoPago.TARJETA, result.getMetodoPagoPrincipal());
+        System.out.println("[OK] update actualizó pedido: metodoPago=" + result.getMetodoPagoPrincipal());
     }
 
     @Test
@@ -240,7 +240,7 @@ public class PedidoServiceTest {
 
         Pedido pedidoConBasicos = Pedido.builder()
                 .idPedido(10)
-                .metodoPago(MetodoPago.EFECTIVO)
+                .metodoPagoPrincipal(MetodoPago.EFECTIVO)
                 .tipoPedido(TipoPedido.MOSTRADOR)
                 .pedidoCreadoDesde(PedidoCreadoDesde.COCINA)
                 .precioFinalOrden(BigDecimal.valueOf(80.00))
