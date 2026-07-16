@@ -1,5 +1,6 @@
 package com.cocinarubi.presentation.dto.response;
 
+import com.cocinarubi.DBConstants.Estatus;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -12,13 +13,14 @@ public class BasicoResponseDTO {
     private String descripcion;
     private boolean destacado;
     private BigDecimal precioBasico;
+    private Estatus estatus;
     private List<ComplementoResponseDTO> complementos;
     private int totalComplementos;
 
     public BasicoResponseDTO() {}
 
     public BasicoResponseDTO(int idBasico, int idComida, String nombreComida, String descripcion,
-                              boolean destacado, BigDecimal precioBasico,
+                              boolean destacado, BigDecimal precioBasico, Estatus estatus,
                               List<ComplementoResponseDTO> complementos) {
         this.idBasico = idBasico;
         this.idComida = idComida;
@@ -26,6 +28,7 @@ public class BasicoResponseDTO {
         this.descripcion = descripcion;
         this.destacado = destacado;
         this.precioBasico = precioBasico;
+        this.estatus = estatus;
         this.complementos = complementos;
         this.totalComplementos = complementos != null ? complementos.size() : 0;
     }
@@ -47,6 +50,9 @@ public class BasicoResponseDTO {
 
     public BigDecimal getPrecioBasico() { return precioBasico; }
     public void setPrecioBasico(BigDecimal precioBasico) { this.precioBasico = precioBasico; }
+
+    public Estatus getEstatus() { return estatus; }
+    public void setEstatus(Estatus estatus) { this.estatus = estatus; }
 
     //complementos seleccionados del básico
     public List<ComplementoResponseDTO> getComplementos() { return complementos; }

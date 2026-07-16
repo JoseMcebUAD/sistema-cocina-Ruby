@@ -73,6 +73,7 @@ public class BasicoService {
                 .descripcion(dto.getDescripcion())
                 .destacado(dto.isDestacado())
                 .precioBasico(dto.getPrecioBasico())
+                .estatus(dto.getEstatus())
                 .build();
         agregarComplementos(basico, dto.getIdComplementos());
         return toResponseDTO(basicoRepository.save(basico));
@@ -85,6 +86,7 @@ public class BasicoService {
         existente.setDescripcion(dto.getDescripcion());
         existente.setDestacado(dto.isDestacado());
         existente.setPrecioBasico(dto.getPrecioBasico());
+        existente.setEstatus(dto.getEstatus());
         // Reemplazar la lista completa de complementos en cada actualización total
         existente.getComplementos().clear();
         agregarComplementos(existente, dto.getIdComplementos());
@@ -131,6 +133,7 @@ public class BasicoService {
                 basico.getDescripcion(),
                 basico.isDestacado(),
                 basico.getPrecioBasico(),
+                basico.getEstatus(),
                 complementos
         );
     }
