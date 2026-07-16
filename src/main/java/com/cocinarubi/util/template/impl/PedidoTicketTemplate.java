@@ -33,7 +33,7 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         escpos.writeLF("Tipo: " + data.getTipoPedido());
         String pago = data.getMetodoPagoPrincipal() + (data.getMetodoPagoSecundario() != null ? " / " + data.getMetodoPagoSecundario() : "");
         escpos.writeLF("Pago: " + pago);
-        escpos.writeLF(formatter.formatearLineaTotal("TOTAL", FORMATO_PRECIO.format(data.getPrecioFinalOrden())));
+        escpos.writeLF(subtitleStyle ,formatter.formatearLineaTotal("TOTAL", FORMATO_PRECIO.format(data.getPrecioFinalOrden())));
         
         if (data.getPagoCliente() != null) {
             escpos.writeLF(formatter.formatearLineaTotal("PAGO CLIENTE", FORMATO_PRECIO.format(data.getPagoCliente())));
@@ -63,7 +63,7 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
             String precio = FORMATO_PRECIO.format(c.getPrecioUnitario());
             for (String linea : formatter.formatProductBlock(c, precio, anchoEfectivo)) {
                 if (linea.isEmpty()) escpos.feed(1);
-                else escpos.writeLF(linea);
+                else escpos.writeLF(subtitleStyle,linea);
             }
         }
         escpos.writeLF(Constants.SEPARADOR_TICKET).feed(1);
@@ -74,7 +74,7 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         for (DesayunoPedidoResponseDTO d : desayunos) {
             String precio = FORMATO_PRECIO.format(d.getPrecio());
             for (String linea : formatter.formatearDetalleOrden(d.getNombreDesayuno(), precio)) {
-                escpos.writeLF(linea);
+                escpos.writeLF(subtitleStyle,linea);
             }
         }
     }
@@ -85,7 +85,7 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
             String precio = FORMATO_PRECIO.format(b.getPrecioUnitario());
             for (String linea : formatter.formatBasicoBlock(b, precio, anchoEfectivo)) {
                 if (linea.isEmpty()) escpos.feed(1);
-                else escpos.writeLF(linea);
+                else escpos.writeLF(subtitleStyle,linea);
             }
         }
     }
@@ -97,7 +97,7 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
             String precio = FORMATO_PRECIO.format(
                     p.getPrecioUnitario().multiply(java.math.BigDecimal.valueOf(p.getCantidad())));
             for (String linea : formatter.formatearDetalleOrden(descripcion, precio)) {
-                escpos.writeLF(linea);
+                escpos.writeLF(subtitleStyle, linea);
             }
         }
     }
