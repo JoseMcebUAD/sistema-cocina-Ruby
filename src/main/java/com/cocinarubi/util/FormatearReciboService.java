@@ -1,11 +1,14 @@
 package com.cocinarubi.util;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.cocinarubi.Constants;
 
 public class FormatearReciboService {
+
+    protected static final DecimalFormat FORMATO_PRECIO = new DecimalFormat("$#,##0.00");
 
     /**
      * Formatea el detalle de una orden genérica (refrescos, etc.),
