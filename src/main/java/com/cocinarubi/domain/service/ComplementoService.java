@@ -1,5 +1,6 @@
 package com.cocinarubi.domain.service;
 
+import com.cocinarubi.DBConstants;
 import com.cocinarubi.dao.ComplementoRepository;
 import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.exception.BusinessException;
@@ -19,6 +20,10 @@ public class ComplementoService {
 
     public List<Complemento> findAll() {
         return complementoRepository.findAll();
+    }
+
+    public List<Complemento> findDisponibles() {
+        return complementoRepository.findDisponiblesOrdenados(DBConstants.Estatus.DISPONIBLE);
     }
 
     public Complemento findById(int id) {

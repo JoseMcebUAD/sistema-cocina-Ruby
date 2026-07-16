@@ -1,5 +1,6 @@
 package com.cocinarubi.domain.service;
 
+import com.cocinarubi.DBConstants;
 import com.cocinarubi.dao.BasicoRepository;
 import com.cocinarubi.presentation.dto.request.BasicoRequestDTO;
 import com.cocinarubi.presentation.dto.response.BasicoResponseDTO;
@@ -43,6 +44,14 @@ public class BasicoService {
     @Transactional(readOnly = true)
     public List<BasicoResponseDTO> findAll() {
         return basicoRepository.findAll().stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<BasicoResponseDTO> findDisponibles() {
+        return basicoRepository.findDisponiblesOrdenados(DBConstants.Estatus.DISPONIBLE)
+                .stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
     }

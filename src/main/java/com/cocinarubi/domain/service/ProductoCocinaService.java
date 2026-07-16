@@ -1,5 +1,6 @@
 package com.cocinarubi.domain.service;
 
+import com.cocinarubi.DBConstants;
 import com.cocinarubi.dao.ProductoCocinaRepository;
 import com.cocinarubi.domain.entity.ProductoCocina;
 import com.cocinarubi.exception.BusinessException;
@@ -34,6 +35,14 @@ public class ProductoCocinaService {
     @Transactional(readOnly = true)
     public List<ProductoCocinaResponseDTO> findAll() {
         return productoCocinaRepository.findAll().stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductoCocinaResponseDTO> findDisponibles() {
+        return productoCocinaRepository.findDisponiblesOrdenados(DBConstants.Estatus.DISPONIBLE)
+                .stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
     }

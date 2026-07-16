@@ -1,5 +1,6 @@
 package com.cocinarubi.domain.service;
 
+import com.cocinarubi.DBConstants;
 import com.cocinarubi.dao.ComidaRepository;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.exception.BusinessException;
@@ -19,6 +20,10 @@ public class ComidaService {
 
     public List<Comida> findAll() {
         return comidaRepository.findAll();
+    }
+
+    public List<Comida> findDisponibles() {
+        return comidaRepository.findDisponiblesOrdenados(DBConstants.Estatus.DISPONIBLE);
     }
 
     public Comida findById(int id) {
