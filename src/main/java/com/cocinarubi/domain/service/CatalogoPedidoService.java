@@ -1,6 +1,8 @@
 package com.cocinarubi.domain.service;
 
+import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.dao.BasicoRepository;
+import com.cocinarubi.dao.RegistroClienteRepository;
 import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.BasicoPedido;
 import com.cocinarubi.domain.entity.Comida;
@@ -10,18 +12,23 @@ import com.cocinarubi.domain.entity.ComplementoComidaPedido;
 import com.cocinarubi.domain.entity.Desayuno;
 import com.cocinarubi.domain.entity.DesayunoPedido;
 import com.cocinarubi.domain.entity.Pedido;
+import com.cocinarubi.domain.entity.PedidoCocina;
 import com.cocinarubi.domain.entity.PedidoDomicilio;
+import com.cocinarubi.domain.entity.PedidoDomicilioCocina;
 import com.cocinarubi.domain.entity.ProductoCocina;
 import com.cocinarubi.domain.entity.ProductoCocinaPedido;
+import com.cocinarubi.domain.entity.RegistroCliente;
 import com.cocinarubi.domain.entity.Ruta;
+import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.BasicoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComidaPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComplementoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.DesayunoPedidoDTO;
+import com.cocinarubi.presentation.dto.request.PedidoCocinaDTO;
+import com.cocinarubi.presentation.dto.request.PedidoDomicilioCocinaDTO;
 import com.cocinarubi.presentation.dto.request.PedidoDomicilioDTO;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.request.ProductoCocinaPedidoDTO;
-import com.cocinarubi.exception.BusinessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -29,9 +36,18 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * Resuelve las referencias del catálogo (Comida, Desayuno, Básico, ProductoCocina,
- * Complemento, Ruta) y construye las líneas hijas del {@link Pedido}.
- * También centraliza el cálculo del precio final.
+ * Orquesta la construcción del {@link Pedido} a partir de los DTOs de entrada.
+ *
+ * <p>Responsabilidades:
+ * <ul>
+ *   <li>Resolver entidades del catálogo (Comida, Desayuno, Básico, ProductoCocina, Complemento, Ruta).</li>
+ *   <li>Construir y asociar las líneas hijas al {@link Pedido} usando los métodos {@code addXxx} de la entidad.</li>
+ *   <li>Despachar la lógica de tipo de entrega según {@code pedidoCreadoDesde} y {@code tipoPedido}.</li>
+ *   <li>Calcular el precio final sumando todas las líneas y la tarifa de entrega cuando aplica.</li>
+ * </ul>
+ *
+ * <p>Se extrae de {@link PedidoService} para mantener a ese servicio enfocado en el ciclo de
+ * vida transaccional del pedido, sin mezclar la resolución de referencias de catálogo.
  */
 @Service
 public class CatalogoPedidoService {
@@ -42,25 +58,43 @@ public class CatalogoPedidoService {
     private final ProductoCocinaService productoCocinaService;
     private final ComplementoService complementoService;
     private final RutaService rutaService;
+    private final RegistroClienteRepository registroClienteRepository;
 
     public CatalogoPedidoService(ComidaService comidaService,
                                   DesayunoService desayunoService,
                                   BasicoRepository basicoRepository,
                                   ProductoCocinaService productoCocinaService,
                                   ComplementoService complementoService,
-                                  RutaService rutaService) {
+                                  RutaService rutaService,
+                                  RegistroClienteRepository registroClienteRepository) {
         this.comidaService = comidaService;
         this.desayunoService = desayunoService;
         this.basicoRepository = basicoRepository;
         this.productoCocinaService = productoCocinaService;
         this.complementoService = complementoService;
         this.rutaService = rutaService;
+        this.registroClienteRepository = registroClienteRepository;
     }
 
+    /**
+     * Asocia al pedido la entidad de entrega correcta según el canal de origen y el tipo de pedido.
+     *
+     * <p>PICK_UP y MOSTRADOR generan un {@link PedidoCocina} en lugar de una entidad de domicilio
+     * porque ambas modalidades se gestionan presencialmente desde la cocina y comparten el mismo
+     * flujo de registro de nombre de cliente (opcional).
+     * Los pedidos WEB que no son DOMICILIO no requieren ninguna entidad de entrega adicional.
+     */
     public void handleTipoPedido(Pedido pedido, PedidoRequestDTO dto) {
-        switch (dto.getTipoPedido()) {
-            case DOMICILIO -> agregarDomicilio(pedido, dto.getDomicilio());
-            case PICK_UP, MOSTRADOR -> { }
+        if (dto.getPedidoCreadoDesde() == PedidoCreadoDesde.COCINA) {
+            switch (dto.getTipoPedido()) {
+                case DOMICILIO -> agregarDomicilioCocina(pedido, dto.getDomicilioCocina());
+                case PICK_UP, MOSTRADOR -> agregarPedidoCocina(pedido, dto.getPedidoCocina());
+            }
+        } else {
+            switch (dto.getTipoPedido()) {
+                case DOMICILIO -> agregarDomicilio(pedido, dto.getDomicilio());
+                case PICK_UP, MOSTRADOR -> { }
+            }
         }
     }
 
@@ -136,6 +170,9 @@ public class CatalogoPedidoService {
         if (pedido.getPedidoDomicilio() != null && pedido.getPedidoDomicilio().getRuta() != null) {
             total = total.add(pedido.getPedidoDomicilio().getRuta().getTarifaEnvio());
         }
+        if (pedido.getPedidoDomicilioCocina() != null) {
+            total = total.add(pedido.getPedidoDomicilioCocina().getPrecioTarifa());
+        }
         return total;
     }
 
@@ -148,5 +185,31 @@ public class CatalogoPedidoService {
                 .codigo(domicilioDto.getCodigo())
                 .build();
         pedido.setPedidoDomicilio(domicilio);
+    }
+
+    private void agregarDomicilioCocina(Pedido pedido, PedidoDomicilioCocinaDTO dto) {
+        RegistroCliente cliente = registroClienteRepository.findById(dto.getIdRegistroCliente())
+                .orElseThrow(() -> new BusinessException(
+                        "Registro de cliente no encontrado con id: " + dto.getIdRegistroCliente(),
+                        HttpStatus.BAD_REQUEST));
+        Ruta ruta = rutaService.findEntityById(dto.getIdRuta());
+        PedidoDomicilioCocina domicilio = PedidoDomicilioCocina.builder()
+                .pedido(pedido)
+                .registroCliente(cliente)
+                .ruta(ruta)
+                .domicilio(dto.getDomicilio())
+                .precioTarifa(dto.getPrecioTarifa())
+                .build();
+        pedido.setPedidoDomicilioCocina(domicilio);
+    }
+
+    private void agregarPedidoCocina(Pedido pedido, PedidoCocinaDTO dto) {
+        // dto puede ser null cuando el operador no ingresa nombre de cliente (campo opcional en PICK_UP/MOSTRADOR)
+        String nombre = dto != null ? dto.getNombreCliente() : null;
+        PedidoCocina pedidoCocina = PedidoCocina.builder()
+                .pedido(pedido)
+                .nombreCliente(nombre)
+                .build();
+        pedido.setPedidoCocina(pedidoCocina);
     }
 }
