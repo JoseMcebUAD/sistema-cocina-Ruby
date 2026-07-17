@@ -134,6 +134,7 @@ public class SecurityConfig {
                             "/desayuno/**",
                             "/complemento/**",
                             "/basico/**",
+                            "/registro-cliente/**",
                             "/cliente/**",
                             "/pago-repartidor/**"
                     ).hasAnyRole("JEFA_COCINA", "COCINA")

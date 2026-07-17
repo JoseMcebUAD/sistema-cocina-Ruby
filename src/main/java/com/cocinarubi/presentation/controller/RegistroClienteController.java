@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/registro'cliente")
+@RequestMapping("/registro-cliente")
 @Tag(name = "Registro Cliente", description = "Directorio de clientes manuales para pedidos creados desde cocina")
 public class RegistroClienteController {
 
