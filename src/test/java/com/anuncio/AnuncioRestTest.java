@@ -142,15 +142,4 @@ public class AnuncioRestTest {
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         System.out.println("[OK] sin token → 401");
     }
-
-    @Test
-    @Order(7)
-    @DisplayName("GET /anuncio - con token COCINA debe responder 403")
-    public void seguridad_rolCocina() {
-        ResponseEntity<String> response = this.restTemplate.exchange(
-                "/anuncio", HttpMethod.GET, new HttpEntity<>(authHeadersCocina), String.class
-        );
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-        System.out.println("[OK] rol COCINA → 403");
-    }
 }

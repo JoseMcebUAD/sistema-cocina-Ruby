@@ -10,6 +10,8 @@ import com.cocinarubi.domain.service.ComplementoService;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.BasicoRequestDTO;
 import com.cocinarubi.presentation.dto.response.BasicoResponseDTO;
+import com.cocinarubi.presentation.strategy.strategyImplementation.BasicoConfirmationImp;
+import com.cocinarubi.presentation.strategy.strategyImplementation.BasicoValidationImp;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,6 +37,12 @@ public class BasicoServiceTest {
 
     @Mock
     private ComplementoService complementoService;
+
+    @Mock
+    private BasicoValidationImp basicoValidation;
+
+    @Mock
+    private BasicoConfirmationImp basicoConfirmation;
 
     @InjectMocks
     private BasicoService basicoService;

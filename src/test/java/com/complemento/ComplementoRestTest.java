@@ -40,7 +40,7 @@ public class ComplementoRestTest {
     @DisplayName("GET /complemento - Debe retornar lista de complementos con status 200")
     public void findAll() throws Exception {
         ResponseEntity<String> response = this.restTemplate.exchange(
-                "/complemento", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
+                "/complemento/todos", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());

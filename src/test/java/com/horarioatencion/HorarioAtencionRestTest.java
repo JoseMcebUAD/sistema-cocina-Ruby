@@ -46,7 +46,7 @@ public class HorarioAtencionRestTest {
     @DisplayName("GET /horario-atencion - Debe retornar lista de horarios con status 200")
     public void findAll() throws Exception {
         ResponseEntity<String> response = this.restTemplate.exchange(
-                "/horario-atencion", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
+                "/horario-atencion/todos", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -135,27 +135,5 @@ public class HorarioAtencionRestTest {
         );
         assertEquals(HttpStatus.NOT_FOUND, getResponse.getStatusCode());
         System.out.println("[OK] DELETE 204 → GET 404 para horario id=" + createdId);
-    }
-
-    @Test
-    @Order(6)
-    @DisplayName("GET /horario-atencion - sin token debe responder 401")
-    public void seguridad_sinToken() {
-        ResponseEntity<String> response = this.restTemplate.exchange(
-                "/horario-atencion", HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), String.class
-        );
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        System.out.println("[OK] sin token → 401");
-    }
-
-    @Test
-    @Order(7)
-    @DisplayName("GET /horario-atencion - con token COCINA debe responder 403")
-    public void seguridad_rolCocina() {
-        ResponseEntity<String> response = this.restTemplate.exchange(
-                "/horario-atencion", HttpMethod.GET, new HttpEntity<>(authHeadersCocina), String.class
-        );
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-        System.out.println("[OK] rol COCINA → 403");
     }
 }

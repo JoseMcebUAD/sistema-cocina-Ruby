@@ -40,7 +40,7 @@ public class ProductoCocinaRestTest {
     @DisplayName("GET /productoCocina - Debe retornar lista de productos con status 200")
     public void findAll() throws Exception {
         ResponseEntity<String> response = this.restTemplate.exchange(
-                "/productoCocina", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
+                "/productoCocina/todos", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());

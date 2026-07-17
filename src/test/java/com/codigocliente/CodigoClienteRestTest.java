@@ -40,7 +40,7 @@ public class CodigoClienteRestTest {
     @DisplayName("GET /codigoCliente - Debe retornar lista de códigos con status 200")
     public void findAll() throws Exception {
         ResponseEntity<String> response = this.restTemplate.exchange(
-                "/codigoCliente", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
+                "/codigoCliente/todos", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -56,7 +56,7 @@ public class CodigoClienteRestTest {
         String json = """
                 {
                   "identificador": "Código Test REST",
-                  "codigoCliente": "TREST001",
+                  "codigoCliente": "TRAasST001",
                   "tarifaEspecial": 25.00,
                   "estatus": "DISPONIBLE"
                 }
@@ -69,6 +69,7 @@ public class CodigoClienteRestTest {
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
         createdId = data.get("idCodigoCliente").asInt();
+        System.out.println(createdId  + " aaa");
         assertTrue(createdId > 0);
         System.out.println("[OK] " + response.getStatusCode() + " | id=" + createdId);
     }
