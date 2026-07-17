@@ -91,6 +91,14 @@ public class Pedido {
     private PedidoDomicilio pedidoDomicilio = null;
 
     @Builder.Default
+    @OneToOne(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private PedidoDomicilioCocina pedidoDomicilioCocina = null;
+
+    @Builder.Default
+    @OneToOne(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private PedidoCocina pedidoCocina = null;
+
+    @Builder.Default
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ComidaPedido> comidasPedido = new ArrayList<>();
 
