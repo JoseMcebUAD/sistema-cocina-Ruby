@@ -16,7 +16,7 @@ public class CodigoClienteRequestDTO {
     private String identificador;
 
     @NotBlank(message = "El código del cliente no puede estar vacío")
-    @Size(min = 9, max = 9, message = "El código debe tener exactamente 9 caracteres")
+    @Size(min = 5, max = 20, message = "El código debe tener un mínimo de 5 y máximo de caracteres")
     @JsonProperty("codigoCliente")
     private String codigoCliente;
 
