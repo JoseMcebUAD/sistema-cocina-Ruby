@@ -6,6 +6,8 @@ import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.exception.ErrorCode;
 import com.cocinarubi.presentation.dto.request.CodigoClienteRequestDTO;
 import com.cocinarubi.presentation.dto.response.CodigoClienteResponseDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,11 @@ public class CodigoClienteService {
 
     public CodigoClienteService(CodigoClienteRepository codigoClienteRepository) {
         this.codigoClienteRepository = codigoClienteRepository;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CodigoClienteResponseDTO> findAll(PageRequest pageable) {
+        return codigoClienteRepository.findAll(pageable).map(this::toResponseDTO);
     }
 
     @Transactional(readOnly = true)
