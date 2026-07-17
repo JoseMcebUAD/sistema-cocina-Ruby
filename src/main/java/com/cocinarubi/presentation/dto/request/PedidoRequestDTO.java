@@ -33,6 +33,12 @@ public class PedidoRequestDTO {
     @JsonProperty("uuidCliente")
     private String uuidCliente;
 
+    @JsonProperty("idRegistroCliente")
+    private Integer idRegistroCliente;
+
+    @JsonProperty("nombreCliente")
+    private String nombreCliente;
+
     @Valid
     @JsonProperty("comidas")
     private List<ComidaPedidoDTO> comidas = new ArrayList<>();
@@ -52,14 +58,6 @@ public class PedidoRequestDTO {
     @Valid
     @JsonProperty("domicilio")
     private PedidoDomicilioDTO domicilio;
-
-    @Valid
-    @JsonProperty("domicilioCocina")
-    private PedidoDomicilioCocinaDTO domicilioCocina;
-
-    @Valid
-    @JsonProperty("pedidoCocina")
-    private PedidoCocinaDTO pedidoCocina;
 
     @JsonProperty("saltarConfirmacion")
     private boolean saltarConfirmacion = false;
@@ -84,6 +82,12 @@ public class PedidoRequestDTO {
     public String getUuidCliente() { return uuidCliente; }
     public void setUuidCliente(String uuidCliente) { this.uuidCliente = uuidCliente; }
 
+    public Integer getIdRegistroCliente() { return idRegistroCliente; }
+    public void setIdRegistroCliente(Integer idRegistroCliente) { this.idRegistroCliente = idRegistroCliente; }
+
+    public String getNombreCliente() { return nombreCliente; }
+    public void setNombreCliente(String nombreCliente) { this.nombreCliente = nombreCliente; }
+
     public List<ComidaPedidoDTO> getComidas() { return comidas; }
     public void setComidas(List<ComidaPedidoDTO> comidas) {
         this.comidas = comidas != null ? comidas : new ArrayList<>();
@@ -106,12 +110,6 @@ public class PedidoRequestDTO {
 
     public PedidoDomicilioDTO getDomicilio() { return domicilio; }
     public void setDomicilio(PedidoDomicilioDTO domicilio) { this.domicilio = domicilio; }
-
-    public PedidoDomicilioCocinaDTO getDomicilioCocina() { return domicilioCocina; }
-    public void setDomicilioCocina(PedidoDomicilioCocinaDTO domicilioCocina) { this.domicilioCocina = domicilioCocina; }
-
-    public PedidoCocinaDTO getPedidoCocina() { return pedidoCocina; }
-    public void setPedidoCocina(PedidoCocinaDTO pedidoCocina) { this.pedidoCocina = pedidoCocina; }
 
     public boolean isSaltarConfirmacion() { return saltarConfirmacion; }
     public void setSaltarConfirmacion(boolean saltarConfirmacion) { this.saltarConfirmacion = saltarConfirmacion; }
