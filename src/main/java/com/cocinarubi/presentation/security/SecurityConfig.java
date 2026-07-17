@@ -132,6 +132,7 @@ public class SecurityConfig {
                             "/tarifa-especial/**",
                             "/horario-atencion/**",
                             "/anuncio/**",
+                            "/codigoCliente/**",
                             "/complemento/**",
                             "/basico/**",
                             "/registro-cliente/**",
