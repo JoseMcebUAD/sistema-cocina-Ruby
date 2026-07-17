@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cocinarubi.aop.SkipAudit;
 import com.cocinarubi.domain.service.impresion.ImpresoraService;
 import com.cocinarubi.presentation.dto.request.ImpresionRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
@@ -14,6 +15,7 @@ import com.cocinarubi.presentation.dto.response.pedido.EscPosBytesDTO;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
+@SkipAudit
 @RestController
 @RequestMapping("/impresora")
 @Tag(name = "Impresora", description = "Generación de bytes ESC/POS para impresión desde el frontend vía TCP:9100")

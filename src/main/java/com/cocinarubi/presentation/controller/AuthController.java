@@ -1,5 +1,6 @@
 package com.cocinarubi.presentation.controller;
 
+import com.cocinarubi.aop.SkipAudit;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.LoginRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@SkipAudit
 @RestController
 @RequestMapping("/auth")
 public class AuthController {

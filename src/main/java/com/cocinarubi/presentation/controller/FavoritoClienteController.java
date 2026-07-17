@@ -1,5 +1,6 @@
 package com.cocinarubi.presentation.controller;
 
+import com.cocinarubi.aop.SkipAudit;
 import com.cocinarubi.domain.service.FavoritoClienteService;
 import com.cocinarubi.presentation.dto.request.FavoritoClienteRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
@@ -50,7 +51,7 @@ public class FavoritoClienteController {
                 .body(ApiResponse.exito(201, "Favorito creado correctamente",
                         favoritoClienteService.save(dto)));
     }
-
+    @SkipAudit
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<FavoritoClienteResponseDTO>> update(@PathVariable int id,
                                                                          @Valid @RequestBody FavoritoClienteRequestDTO dto) {

@@ -50,16 +50,6 @@ public class UsuarioController {
                 usuarioService.update(id, dto)));
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<ApiResponse<UsuarioResponseDTO>> patch(@PathVariable int id,
-                                                                 @RequestBody Map<String, Object> payload) {
-        if (payload.containsKey("idUsuario")) {
-            throw new BusinessException("El ID no puede ser modificado.", HttpStatus.BAD_REQUEST);
-        }
-        return ResponseEntity.ok(ApiResponse.exito(200, "Usuario actualizado parcialmente",
-                usuarioService.patch(id, payload)));
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable int id) {
         usuarioService.delete(id);

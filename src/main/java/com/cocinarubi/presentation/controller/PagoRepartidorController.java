@@ -51,23 +51,6 @@ public class PagoRepartidorController {
                 pagoRepartidorService.save(pagoRepartidor)));
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<ApiResponse<PagoRepartidor>> patch(@PathVariable int id,
-                                                              @RequestBody Map<String, Object> payload) {
-        PagoRepartidor existente = pagoRepartidorService.findById(id);
-        if (payload.containsKey("idPagoRepartidor")) {
-            throw new BusinessException("El ID no puede ser modificado.", HttpStatus.BAD_REQUEST);
-        }
-        try {
-            PagoRepartidor actualizado = objectMapper.updateValue(existente, payload);
-            return ResponseEntity.ok(ApiResponse.exito(200, "Pago actualizado parcialmente",
-                    pagoRepartidorService.save(actualizado)));
-        } catch (com.fasterxml.jackson.databind.JsonMappingException e) {
-            throw new BusinessException(
-                    "Error al aplicar la actualización parcial: " + e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable int id) {
         pagoRepartidorService.delete(id);

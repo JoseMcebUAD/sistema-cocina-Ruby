@@ -1,5 +1,6 @@
 package com.cocinarubi.presentation.controller;
 
+import com.cocinarubi.aop.SkipAudit;
 import com.cocinarubi.domain.service.PedidoService;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
@@ -50,6 +51,7 @@ public class PedidoController {
                 pedidoService.update(id, dto)));
     }
 
+    @SkipAudit
     @PatchMapping("/{id}/marcar-impreso")
     public ResponseEntity<Void> marcarImpreso(@PathVariable int id) {
         pedidoService.marcarImpreso(id);
