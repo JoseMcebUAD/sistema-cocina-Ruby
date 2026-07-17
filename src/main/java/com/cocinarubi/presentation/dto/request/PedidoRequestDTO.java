@@ -53,6 +53,14 @@ public class PedidoRequestDTO {
     @JsonProperty("domicilio")
     private PedidoDomicilioDTO domicilio;
 
+    @Valid
+    @JsonProperty("domicilioCocina")
+    private PedidoDomicilioCocinaDTO domicilioCocina;
+
+    @Valid
+    @JsonProperty("pedidoCocina")
+    private PedidoCocinaDTO pedidoCocina;
+
     @JsonProperty("saltarConfirmacion")
     private boolean saltarConfirmacion = false;
 
@@ -98,6 +106,12 @@ public class PedidoRequestDTO {
 
     public PedidoDomicilioDTO getDomicilio() { return domicilio; }
     public void setDomicilio(PedidoDomicilioDTO domicilio) { this.domicilio = domicilio; }
+
+    public PedidoDomicilioCocinaDTO getDomicilioCocina() { return domicilioCocina; }
+    public void setDomicilioCocina(PedidoDomicilioCocinaDTO domicilioCocina) { this.domicilioCocina = domicilioCocina; }
+
+    public PedidoCocinaDTO getPedidoCocina() { return pedidoCocina; }
+    public void setPedidoCocina(PedidoCocinaDTO pedidoCocina) { this.pedidoCocina = pedidoCocina; }
 
     public boolean isSaltarConfirmacion() { return saltarConfirmacion; }
     public void setSaltarConfirmacion(boolean saltarConfirmacion) { this.saltarConfirmacion = saltarConfirmacion; }

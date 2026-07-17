@@ -25,6 +25,8 @@ public class PedidoResponseDTO {
     private List<BasicoPedidoResponseDTO> basicos;
     private List<ProductoCocinaPedidoResponseDTO> productosCocina;
     private PedidoDomicilioResponseDTO domicilio;
+    private PedidoDomicilioCocinaResponseDTO domicilioCocina;
+    private PedidoCocinaResponseDTO pedidoCocina;
 
     public PedidoResponseDTO() {}
 
@@ -37,7 +39,9 @@ public class PedidoResponseDTO {
                              List<DesayunoPedidoResponseDTO> desayunos,
                              List<BasicoPedidoResponseDTO> basicos,
                              List<ProductoCocinaPedidoResponseDTO> productosCocina,
-                             PedidoDomicilioResponseDTO domicilio) {
+                             PedidoDomicilioResponseDTO domicilio,
+                             PedidoDomicilioCocinaResponseDTO domicilioCocina,
+                             PedidoCocinaResponseDTO pedidoCocina) {
         this.idPedido = idPedido;
         this.metodoPagoPrincipal = metodoPagoPrincipal;
         this.metodoPagoSecundario = metodoPagoSecundario;
@@ -53,6 +57,8 @@ public class PedidoResponseDTO {
         this.basicos = basicos;
         this.productosCocina = productosCocina;
         this.domicilio = domicilio;
+        this.domicilioCocina = domicilioCocina;
+        this.pedidoCocina = pedidoCocina;
     }
 
     public int getIdPedido() { return idPedido; }
@@ -99,4 +105,10 @@ public class PedidoResponseDTO {
 
     public PedidoDomicilioResponseDTO getDomicilio() { return domicilio; }
     public void setDomicilio(PedidoDomicilioResponseDTO domicilio) { this.domicilio = domicilio; }
+
+    public PedidoDomicilioCocinaResponseDTO getDomicilioCocina() { return domicilioCocina; }
+    public void setDomicilioCocina(PedidoDomicilioCocinaResponseDTO domicilioCocina) { this.domicilioCocina = domicilioCocina; }
+
+    public PedidoCocinaResponseDTO getPedidoCocina() { return pedidoCocina; }
+    public void setPedidoCocina(PedidoCocinaResponseDTO pedidoCocina) { this.pedidoCocina = pedidoCocina; }
 }
