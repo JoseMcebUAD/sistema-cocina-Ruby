@@ -7,7 +7,7 @@ import lombok.*;
 import java.math.BigDecimal;
 
 /**
- * Visitante anónimo del menú web de Cocina Ruby.
+ * Visitante anónimo del menú web de Cocina rubi.
  *
  * <p>No requiere registro formal. El cliente se identifica mediante un
  * {@code uuid_cliente} generado en {@code localStorage} del navegador y

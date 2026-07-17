@@ -16,8 +16,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = com.cocinarubi.Application.class)
 public class AuthRestTest {
 
-    // TODO: Reemplazar con la contraseña real del usuario 'ruby' en la DB de test (exactamente 5 caracteres)
-    private static final String RUBY_PASSWORD = "cocina123";
+    // TODO: Reemplazar con la contraseña real del usuario 'rubi' en la DB de test (exactamente 5 caracteres)
+    private static final String rubi_PASSWORD = "cocina123";
 
     @Autowired private TestRestTemplate restTemplate;
 
@@ -34,10 +34,10 @@ public class AuthRestTest {
     public void login_exitoso() throws Exception {
         String json = """
                 {
-                  "nombreUsuario": "ruby",
+                  "nombreUsuario": "rubi",
                   "contrasena": "%s"
                 }
-                """.formatted(RUBY_PASSWORD);
+                """.formatted(rubi_PASSWORD);
 
         ResponseEntity<String> response = this.restTemplate.exchange(
                 "/auth/login", HttpMethod.POST, new HttpEntity<>(json, jsonHeaders), String.class
@@ -55,7 +55,7 @@ public class AuthRestTest {
     public void login_credencialesInvalidas() throws Exception {
         String json = """
                 {
-                  "nombreUsuario": "ruby",
+                  "nombreUsuario": "rubi",
                   "contrasena": "wrong"
                 }
                 """;
@@ -73,7 +73,7 @@ public class AuthRestTest {
     public void login_campoRequerido_retorna400() {
         String json = """
                 {
-                  "contrasena": "ruby1"
+                  "contrasena": "rubi1"
                 }
                 """;
 

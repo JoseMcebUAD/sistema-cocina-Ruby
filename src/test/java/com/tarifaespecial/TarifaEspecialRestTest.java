@@ -30,7 +30,7 @@ public class TarifaEspecialRestTest {
 
     @BeforeAll
     void setUp() {
-        UserDetails jefa = usuarioDetailsService.loadUserByUsername("ruby");
+        UserDetails jefa = usuarioDetailsService.loadUserByUsername("rubi");
         authHeaders = new HttpHeaders();
         authHeaders.setBearerAuth(jwtService.generarToken(jefa));
         authHeaders.setContentType(MediaType.APPLICATION_JSON);

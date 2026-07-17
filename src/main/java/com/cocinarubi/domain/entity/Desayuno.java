@@ -8,7 +8,7 @@ import lombok.*;
 import java.math.BigDecimal;
 
 /**
- * Platillo del menú de desayunos de Cocina Ruby.
+ * Platillo del menú de desayunos de Cocina rubi.
  *
  * <p>Los desayunos se sirven exclusivamente en modalidad <strong>PICK_UP</strong>
  * (recoger en tienda), de lunes a sábado de 7:00 a 11:00 h. Al igual que

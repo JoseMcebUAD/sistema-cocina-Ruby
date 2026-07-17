@@ -8,7 +8,7 @@ import lombok.*;
 import java.math.BigDecimal;
 
 /**
- * Platillo del menú principal de Cocina Ruby.
+ * Platillo del menú principal de Cocina rubi.
  *
  * <p>Cada comida puede servirse en dos tamaños: media porción ({@code precio_media})
  * o porción entera ({@code precio_entera}). El campo {@code destacado} permite

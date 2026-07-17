@@ -3,25 +3,20 @@ package com.pedido;
 import com.cocinarubi.DBConstants.MetodoPago;
 import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.DBConstants.TipoPedido;
-import com.cocinarubi.dao.BasicoRepository;
-import com.cocinarubi.dao.ComidaRepository;
-import com.cocinarubi.dao.ComplementoRepository;
-import com.cocinarubi.dao.DesayunoRepository;
 import com.cocinarubi.dao.PedidoRepository;
-import com.cocinarubi.dao.ProductoCocinaRepository;
-import com.cocinarubi.dao.RutaRepository;
 import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.BasicoComplemento;
 import com.cocinarubi.domain.entity.BasicoPedido;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.domain.entity.Pedido;
-import com.cocinarubi.domain.entity.Ruta;
-import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
+import com.cocinarubi.domain.mapper.PedidoMapper;
+import com.cocinarubi.domain.service.CatalogoPedidoService;
 import com.cocinarubi.domain.service.PedidoService;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.PedidoDomicilioDTO;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
+import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
 import com.cocinarubi.presentation.strategy.strategyImplementation.PedidoConfirmationImp;
 import com.cocinarubi.presentation.strategy.strategyImplementation.PedidoValidationImp;
@@ -30,7 +25,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -43,23 +40,13 @@ import static org.mockito.Mockito.*;
 public class PedidoServiceTest {
 
     @Mock private PedidoRepository pedidoRepository;
-    @Mock private ComidaRepository comidaRepository;
-    @Mock private DesayunoRepository desayunoRepository;
-    @Mock private BasicoRepository basicoRepository;
-    @Mock private ProductoCocinaRepository productoCocinaRepository;
-    @Mock private ComplementoRepository complementoRepository;
-    @Mock private RutaRepository rutaRepository;
     @Mock private PedidoValidationImp pedidoValidation;
     @Mock private PedidoConfirmationImp pedidoConfirmation;
+    @Mock private CatalogoPedidoService catalogoPedido;
+    @Spy  private PedidoMapper pedidoMapper = new PedidoMapper();
 
     @InjectMocks
     private PedidoService pedidoService;
-
-    public Ruta RUTA_PREPARED = Ruta.builder()
-            .idRuta(1)
-            .nombre("Zona Centro")
-            .tarifaEnvio(BigDecimal.valueOf(30.00))
-            .build();
 
     public Pedido PEDIDO_PREPARED = Pedido.builder()
             .idPedido(10)
@@ -75,6 +62,7 @@ public class PedidoServiceTest {
         dto.setMetodoPagoPrincipal(MetodoPago.EFECTIVO);
         dto.setTipoPedido(TipoPedido.MOSTRADOR);
         dto.setPedidoCreadoDesde(PedidoCreadoDesde.COCINA);
+        dto.setNombreCliente("Cliente Mostrador");
         dto.setComidas(List.of());
         dto.setDesayunos(List.of());
         dto.setBasicos(List.of());
@@ -83,20 +71,48 @@ public class PedidoServiceTest {
         return dto;
     }
 
-    public PedidoRequestDTO crearDtoDomicilio(int idRuta) {
+    public PedidoRequestDTO crearDtoWebDomicilio() {
         PedidoDomicilioDTO domicilioDto = new PedidoDomicilioDTO();
-        domicilioDto.setIdRuta(idRuta);
+        domicilioDto.setIdRuta(1);
         domicilioDto.setDireccion("Calle Falsa 123");
 
         PedidoRequestDTO dto = new PedidoRequestDTO();
         dto.setMetodoPagoPrincipal(MetodoPago.TARJETA);
         dto.setTipoPedido(TipoPedido.DOMICILIO);
-        dto.setPedidoCreadoDesde(PedidoCreadoDesde.COCINA);
+        dto.setPedidoCreadoDesde(PedidoCreadoDesde.WEB);
         dto.setComidas(List.of());
         dto.setDesayunos(List.of());
         dto.setBasicos(List.of());
         dto.setProductosCocina(List.of());
         dto.setDomicilio(domicilioDto);
+        dto.setSaltarConfirmacion(true);
+        return dto;
+    }
+
+    public PedidoRequestDTO crearDtoCocinaPickUp(String nombreCliente) {
+        PedidoRequestDTO dto = new PedidoRequestDTO();
+        dto.setMetodoPagoPrincipal(MetodoPago.EFECTIVO);
+        dto.setTipoPedido(TipoPedido.PICK_UP);
+        dto.setPedidoCreadoDesde(PedidoCreadoDesde.COCINA);
+        dto.setNombreCliente(nombreCliente);
+        dto.setComidas(List.of());
+        dto.setDesayunos(List.of());
+        dto.setBasicos(List.of());
+        dto.setProductosCocina(List.of());
+        dto.setSaltarConfirmacion(true);
+        return dto;
+    }
+
+    public PedidoRequestDTO crearDtoCocinaDomicilio(int idRegistroCliente) {
+        PedidoRequestDTO dto = new PedidoRequestDTO();
+        dto.setMetodoPagoPrincipal(MetodoPago.EFECTIVO);
+        dto.setTipoPedido(TipoPedido.DOMICILIO);
+        dto.setPedidoCreadoDesde(PedidoCreadoDesde.COCINA);
+        dto.setIdRegistroCliente(idRegistroCliente);
+        dto.setComidas(List.of());
+        dto.setDesayunos(List.of());
+        dto.setBasicos(List.of());
+        dto.setProductosCocina(List.of());
         dto.setSaltarConfirmacion(true);
         return dto;
     }
@@ -136,41 +152,71 @@ public class PedidoServiceTest {
     }
 
     @Test
-    @DisplayName("save - Debe guardar un pedido MOSTRADOR con listas vacías correctamente")
+    @DisplayName("save - Debe guardar un pedido MOSTRADOR COCINA y delegar al catálogo")
     public void save_mostradorVacio() {
+        when(catalogoPedido.calcularTotal(any(Pedido.class))).thenReturn(BigDecimal.ZERO);
         when(pedidoRepository.save(any(Pedido.class))).thenReturn(PEDIDO_PREPARED);
 
         PedidoResponseDTO result = pedidoService.save(crearDtoMostrador());
 
         assertNotNull(result);
         assertEquals(MetodoPago.EFECTIVO, result.getMetodoPagoPrincipal());
+        verify(catalogoPedido).handleTipoPedido(any(Pedido.class), any(PedidoRequestDTO.class));
         verify(pedidoRepository).save(any(Pedido.class));
-        verify(rutaRepository, never()).findById(anyInt());
         System.out.println("[OK] save guardó pedido MOSTRADOR: id=" + result.getIdPedido());
     }
 
     @Test
-    @DisplayName("save - Debe guardar un pedido DOMICILIO y consultar la ruta")
-    public void save_domicilioConRuta() {
-        when(rutaRepository.findById(1)).thenReturn(Optional.of(RUTA_PREPARED));
+    @DisplayName("save - Pedido WEB DOMICILIO debe invocar catalogoPedido.handleTipoPedido")
+    public void save_webDomicilio() {
+        when(catalogoPedido.calcularTotal(any(Pedido.class))).thenReturn(BigDecimal.valueOf(30));
         when(pedidoRepository.save(any(Pedido.class))).thenReturn(PEDIDO_PREPARED);
 
-        PedidoResponseDTO result = pedidoService.save(crearDtoDomicilio(1));
+        PedidoResponseDTO result = pedidoService.save(crearDtoWebDomicilio());
 
         assertNotNull(result);
-        verify(rutaRepository).findById(1);
+        verify(catalogoPedido).handleTipoPedido(any(Pedido.class), any(PedidoRequestDTO.class));
         verify(pedidoRepository).save(any(Pedido.class));
-        System.out.println("[OK] save guardó pedido DOMICILIO con ruta id=1");
+        System.out.println("[OK] save guardó pedido WEB-DOMICILIO");
     }
 
     @Test
-    @DisplayName("save - Debe lanzar excepción cuando la ruta del domicilio no existe")
-    public void save_domicilioRutaNoEncontrada() {
-        when(rutaRepository.findById(99)).thenReturn(Optional.empty());
+    @DisplayName("save - Cuando el catálogo lanza excepción el pedido no se guarda")
+    public void save_catalogoLanzaExcepcion_noGuardaPedido() {
+        doThrow(new BusinessException("Ruta no encontrada", HttpStatus.BAD_REQUEST))
+                .when(catalogoPedido).handleTipoPedido(any(Pedido.class), any(PedidoRequestDTO.class));
 
-        assertThrows(BusinessException.class, () -> pedidoService.save(crearDtoDomicilio(99)));
+        assertThrows(BusinessException.class, () -> pedidoService.save(crearDtoWebDomicilio()));
         verify(pedidoRepository, never()).save(any(Pedido.class));
-        System.out.println("[OK] save lanzó BusinessException por ruta no encontrada id=99");
+        System.out.println("[OK] save no guardó pedido cuando catálogo lanza excepción");
+    }
+
+    @Test
+    @DisplayName("save - Pedido COCINA PICK_UP con nombre de cliente debe invocar catalogoPedido")
+    public void save_cocinaPickUp() {
+        when(catalogoPedido.calcularTotal(any(Pedido.class))).thenReturn(BigDecimal.ZERO);
+        when(pedidoRepository.save(any(Pedido.class))).thenReturn(PEDIDO_PREPARED);
+
+        PedidoResponseDTO result = pedidoService.save(crearDtoCocinaPickUp("Juan Pérez"));
+
+        assertNotNull(result);
+        verify(catalogoPedido).handleTipoPedido(any(Pedido.class), any(PedidoRequestDTO.class));
+        verify(pedidoRepository).save(any(Pedido.class));
+        System.out.println("[OK] save guardó pedido COCINA-PICK_UP");
+    }
+
+    @Test
+    @DisplayName("save - Pedido COCINA DOMICILIO con idRegistroCliente debe invocar catalogoPedido")
+    public void save_cocinaDomicilio() {
+        when(catalogoPedido.calcularTotal(any(Pedido.class))).thenReturn(BigDecimal.valueOf(35));
+        when(pedidoRepository.save(any(Pedido.class))).thenReturn(PEDIDO_PREPARED);
+
+        PedidoResponseDTO result = pedidoService.save(crearDtoCocinaDomicilio(1));
+
+        assertNotNull(result);
+        verify(catalogoPedido).handleTipoPedido(any(Pedido.class), any(PedidoRequestDTO.class));
+        verify(pedidoRepository).save(any(Pedido.class));
+        System.out.println("[OK] save guardó pedido COCINA-DOMICILIO");
     }
 
     @Test
@@ -185,6 +231,7 @@ public class PedidoServiceTest {
                 .precioFinalOrden(BigDecimal.ZERO)
                 .impreso(false)
                 .build();
+        when(catalogoPedido.calcularTotal(any(Pedido.class))).thenReturn(BigDecimal.ZERO);
         when(pedidoRepository.save(any(Pedido.class))).thenReturn(actualizado);
 
         PedidoRequestDTO dtoUpdate = crearDtoMostrador();
