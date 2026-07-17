@@ -24,8 +24,6 @@ import com.cocinarubi.presentation.dto.request.BasicoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComidaPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComplementoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.DesayunoPedidoDTO;
-import com.cocinarubi.presentation.dto.request.PedidoCocinaDTO;
-import com.cocinarubi.presentation.dto.request.PedidoDomicilioCocinaDTO;
 import com.cocinarubi.presentation.dto.request.PedidoDomicilioDTO;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.request.ProductoCocinaPedidoDTO;
@@ -87,8 +85,8 @@ public class CatalogoPedidoService {
     public void handleTipoPedido(Pedido pedido, PedidoRequestDTO dto) {
         if (dto.getPedidoCreadoDesde() == PedidoCreadoDesde.COCINA) {
             switch (dto.getTipoPedido()) {
-                case DOMICILIO -> agregarDomicilioCocina(pedido, dto.getDomicilioCocina());
-                case PICK_UP, MOSTRADOR -> agregarPedidoCocina(pedido, dto.getPedidoCocina());
+                case DOMICILIO -> agregarDomicilioCocina(pedido, dto.getIdRegistroCliente());
+                case PICK_UP, MOSTRADOR -> agregarPedidoCocina(pedido, dto.getNombreCliente());
             }
         } else {
             switch (dto.getTipoPedido()) {
@@ -187,29 +185,26 @@ public class CatalogoPedidoService {
         pedido.setPedidoDomicilio(domicilio);
     }
 
-    private void agregarDomicilioCocina(Pedido pedido, PedidoDomicilioCocinaDTO dto) {
-        RegistroCliente cliente = registroClienteRepository.findById(dto.getIdRegistroCliente())
+    private void agregarDomicilioCocina(Pedido pedido, Integer idRegistroCliente) {
+        RegistroCliente cliente = registroClienteRepository.findById(idRegistroCliente)
                 .orElseThrow(() -> new BusinessException(
-                        "Registro de cliente no encontrado con id: " + dto.getIdRegistroCliente(),
+                        "Registro de cliente no encontrado con id: " + idRegistroCliente,
                         HttpStatus.BAD_REQUEST));
-        Ruta ruta = rutaService.findEntityById(dto.getIdRuta());
+        Ruta ruta = cliente.getRuta();
         PedidoDomicilioCocina domicilio = PedidoDomicilioCocina.builder()
                 .pedido(pedido)
                 .registroCliente(cliente)
                 .ruta(ruta)
-                .domicilio(dto.getDomicilio())
-                .precioTarifa(dto.getPrecioTarifa())
+                .domicilio(cliente.getDireccion())
+                .precioTarifa(ruta.getTarifaEnvio())
                 .build();
         pedido.setPedidoDomicilioCocina(domicilio);
     }
 
-    private void agregarPedidoCocina(Pedido pedido, PedidoCocinaDTO dto) {
-        // dto puede ser null cuando el operador no ingresa nombre de cliente (campo opcional en PICK_UP/MOSTRADOR)
-        String nombre = dto != null ? dto.getNombreCliente() : null;
-        PedidoCocina pedidoCocina = PedidoCocina.builder()
+    private void agregarPedidoCocina(Pedido pedido, String nombreCliente) {
+        pedido.setPedidoCocina(PedidoCocina.builder()
                 .pedido(pedido)
-                .nombreCliente(nombre)
-                .build();
-        pedido.setPedidoCocina(pedidoCocina);
+                .nombreCliente(nombreCliente)
+                .build());
     }
 }
