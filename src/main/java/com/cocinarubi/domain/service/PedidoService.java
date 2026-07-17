@@ -16,6 +16,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Gestiona el ciclo de vida transaccional del {@link Pedido}: creación, consulta,
+ * actualización, marcado de impresión y eliminación.
+ *
+ * <p>Delega en {@link CatalogoPedidoService} la resolución de referencias de catálogo
+ * y en {@link com.cocinarubi.presentation.strategy.strategyImplementation.PedidoValidationImp}
+ * la validación estructural. La confirmación de negocio puede omitirse mediante el flag
+ * {@code saltarConfirmacion} para pedidos originados en canales internos de confianza (cocina).
+ */
 @Service
 public class PedidoService {
 
@@ -99,6 +108,8 @@ public class PedidoService {
         existente.getBasicosPedido().clear();
         existente.getProductosCocina().clear();
         existente.setPedidoDomicilio(null);
+        existente.setPedidoDomicilioCocina(null);
+        existente.setPedidoCocina(null);
 
         catalogoPedido.agregarComidas(existente, dto.getComidas());
         catalogoPedido.agregarDesayunos(existente, dto.getDesayunos());
