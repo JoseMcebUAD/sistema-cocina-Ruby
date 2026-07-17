@@ -37,4 +37,7 @@ public class DBConstants {
     /** Tipo de entidad soportada por el módulo de impresión (extensible a futuro). */
     public enum TipoEntidadImpresion { PEDIDO }
 
+    /** Tipo de operación HTTP registrada en la tabla auditoria. PATCH se mapea como PUT. */
+    public enum TipoOperacion { POST, PUT, DELETE }
+
 }
