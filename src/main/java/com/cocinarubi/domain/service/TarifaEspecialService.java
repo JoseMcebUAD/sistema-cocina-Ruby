@@ -4,6 +4,8 @@ import com.cocinarubi.dao.TarifaEspecialRepository;
 import com.cocinarubi.presentation.dto.request.TarifaEspecialRequestDTO;
 import com.cocinarubi.domain.entity.TarifaEspecial;
 import com.cocinarubi.exception.BusinessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
@@ -21,6 +23,10 @@ public class TarifaEspecialService {
 
     public TarifaEspecialService(TarifaEspecialRepository tarifaEspecialRepository) {
         this.tarifaEspecialRepository = tarifaEspecialRepository;
+    }
+
+    public Page<TarifaEspecial> findAll(PageRequest pageable) {
+        return tarifaEspecialRepository.findAll(pageable);
     }
 
     public List<TarifaEspecial> findAll() {
