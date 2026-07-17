@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 
 @SkipAudit
-@PreAuthorize("hasRole('ADMINISTRADOR')")
+@PreAuthorize("hasRole('JEFA_COCINA')")
 @RestController
 @RequestMapping("/auditoria")
 @Tag(name = "Auditoría", description = "Consulta del trail de operaciones de escritura")

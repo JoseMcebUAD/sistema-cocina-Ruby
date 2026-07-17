@@ -124,7 +124,8 @@ public class SecurityConfig {
                             "/ruta/**",
                             "/tarifa-especial/**",
                             "/horario-atencion/**",
-                            "/anuncio/**"
+                            "/anuncio/**",
+                            "/auditoria/**"
                     ).hasRole("JEFA_COCINA")
 
                     // ── Ambos roles ───────────────────────────────────────
