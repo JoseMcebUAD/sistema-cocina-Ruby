@@ -1,4 +1,4 @@
-INSERT INTO ruta (nombre, boundary, is_active, tarifa_envio, tiempo_estimado_min,orden) VALUES
+INSERT INTO ruta (nombre, boundary, is_active, tarifa_envio, tiempo_estimado_min, orden) VALUES
     (
         'Santa Gertrudis',
         ST_GeomFromText('POLYGON((
@@ -22,5 +22,5 @@ INSERT INTO ruta (nombre, boundary, is_active, tarifa_envio, tiempo_estimado_min
         -89.603473 21.040182,
         -89.603498 21.040174
     ))'),
-        1, 0, 0,1
+        1, 0, 0, 7
     );
