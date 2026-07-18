@@ -1,5 +1,6 @@
 package com.cocinarubi.presentation.controller;
 
+import com.cocinarubi.DBConstants;
 import com.cocinarubi.domain.service.ProductoCocinaService;
 import com.cocinarubi.presentation.dto.request.ProductoCocinaRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
@@ -31,6 +32,15 @@ public class ProductoCocinaController {
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Productos de cocina obtenidos correctamente",
                 productoCocinaService.findAll(PageRequest.of(page, size))));
+    }
+
+    @GetMapping("/tipo")
+    public ResponseEntity<ApiResponse<Page<ProductoCocinaResponseDTO>>> findByTipoProducto(
+            @RequestParam DBConstants.TipoProducto tipoProducto,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Productos de cocina obtenidos correctamente",
+                productoCocinaService.findByTipoProducto(tipoProducto, PageRequest.of(page, size))));
     }
 
     @GetMapping("/todos")

@@ -47,6 +47,11 @@ public class ProductoCocinaService {
     }
 
     @Transactional(readOnly = true)
+    public Page<ProductoCocinaResponseDTO> findByTipoProducto(DBConstants.TipoProducto tipo, Pageable pageable) {
+        return productoCocinaRepository.findByTipoProductoPaginado(tipo, pageable).map(this::toResponseDTO);
+    }
+
+    @Transactional(readOnly = true)
     public List<ProductoCocinaResponseDTO> findDisponibles() {
         return productoCocinaRepository.findDisponiblesOrdenados(DBConstants.Estatus.DISPONIBLE)
                 .stream()
