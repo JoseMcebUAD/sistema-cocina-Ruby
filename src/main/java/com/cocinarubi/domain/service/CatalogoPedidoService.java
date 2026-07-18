@@ -24,6 +24,7 @@ import com.cocinarubi.presentation.dto.request.BasicoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComidaPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComplementoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.DesayunoPedidoDTO;
+import com.cocinarubi.presentation.dto.request.PedidoDomicilioCocinaDTO;
 import com.cocinarubi.presentation.dto.request.PedidoDomicilioDTO;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.request.ProductoCocinaPedidoDTO;
@@ -85,7 +86,7 @@ public class CatalogoPedidoService {
     public void handleTipoPedido(Pedido pedido, PedidoRequestDTO dto) {
         if (dto.getPedidoCreadoDesde() == PedidoCreadoDesde.COCINA) {
             switch (dto.getTipoPedido()) {
-                case DOMICILIO -> agregarDomicilioCocina(pedido, dto.getIdRegistroCliente());
+                case DOMICILIO -> agregarDomicilioCocina(pedido, dto.getPedidoDomicilioCocina());
                 case PICK_UP, MOSTRADOR -> agregarPedidoCocina(pedido, dto.getNombreCliente());
             }
         } else {
@@ -185,18 +186,18 @@ public class CatalogoPedidoService {
         pedido.setPedidoDomicilio(domicilio);
     }
 
-    private void agregarDomicilioCocina(Pedido pedido, Integer idRegistroCliente) {
-        RegistroCliente cliente = registroClienteRepository.findById(idRegistroCliente)
+    private void agregarDomicilioCocina(Pedido pedido, PedidoDomicilioCocinaDTO dto) {
+        RegistroCliente cliente = registroClienteRepository.findById(dto.getIdRegistroCliente())
                 .orElseThrow(() -> new BusinessException(
-                        "Registro de cliente no encontrado con id: " + idRegistroCliente,
+                        "Registro de cliente no encontrado con id: " + dto.getIdRegistroCliente(),
                         HttpStatus.BAD_REQUEST));
-        Ruta ruta = cliente.getRuta();
+        Ruta ruta = rutaService.findEntityById(dto.getIdRuta());
         PedidoDomicilioCocina domicilio = PedidoDomicilioCocina.builder()
                 .pedido(pedido)
                 .registroCliente(cliente)
                 .ruta(ruta)
-                .domicilio(cliente.getDireccion())
-                .precioTarifa(ruta.getTarifaEnvio())
+                .domicilio(dto.getDomicilio())
+                .precioTarifa(dto.getTarifa())
                 .build();
         pedido.setPedidoDomicilioCocina(domicilio);
     }

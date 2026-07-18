@@ -33,8 +33,9 @@ public class PedidoRequestDTO {
     @JsonProperty("uuidCliente")
     private String uuidCliente;
 
-    @JsonProperty("idRegistroCliente")
-    private Integer idRegistroCliente;
+    @Valid
+    @JsonProperty("pedidoDomicilioCocina")
+    private PedidoDomicilioCocinaDTO pedidoDomicilioCocina;
 
     @JsonProperty("nombreCliente")
     private String nombreCliente;
@@ -82,8 +83,8 @@ public class PedidoRequestDTO {
     public String getUuidCliente() { return uuidCliente; }
     public void setUuidCliente(String uuidCliente) { this.uuidCliente = uuidCliente; }
 
-    public Integer getIdRegistroCliente() { return idRegistroCliente; }
-    public void setIdRegistroCliente(Integer idRegistroCliente) { this.idRegistroCliente = idRegistroCliente; }
+    public PedidoDomicilioCocinaDTO getPedidoDomicilioCocina() { return pedidoDomicilioCocina; }
+    public void setPedidoDomicilioCocina(PedidoDomicilioCocinaDTO pedidoDomicilioCocina) { this.pedidoDomicilioCocina = pedidoDomicilioCocina; }
 
     public String getNombreCliente() { return nombreCliente; }
     public void setNombreCliente(String nombreCliente) { this.nombreCliente = nombreCliente; }

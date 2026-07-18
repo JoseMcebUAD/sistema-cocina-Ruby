@@ -268,7 +268,7 @@ public class PedidoRestTest {
 
     @Test
     @Order(8)
-    @DisplayName("POST /pedido - COCINA DOMICILIO con idRegistroCliente debe retornar 201 con datos del cliente")
+    @DisplayName("POST /pedido - COCINA DOMICILIO con pedidoDomicilioCocina debe retornar 201 con datos del cliente")
     public void saveCocina_domicilio() throws Exception {
         String json = String.format("""
                 {
@@ -276,7 +276,12 @@ public class PedidoRestTest {
                   "tipoPedido": "DOMICILIO",
                   "pedidoCreadoDesde": "COCINA",
                   "pagoCliente": 80.00,
-                  "idRegistroCliente": %d,
+                  "pedidoDomicilioCocina": {
+                    "idRegistroCliente": %d,
+                    "tarifa": 40.00,
+                    "domicilio": "Calle Principal 42 Int 3",
+                    "idRuta": %d
+                  },
                   "comidas": [],
                   "desayunos": [],
                   "basicos": [],
@@ -285,7 +290,7 @@ public class PedidoRestTest {
                   ],
                   "saltarConfirmacion": true
                 }
-                """, testRegistroClienteId, testProductoId);
+                """, testRegistroClienteId, testRutaId, testProductoId);
 
         ResponseEntity<String> response = this.restTemplate.exchange(
                 "/pedido", HttpMethod.POST, new HttpEntity<>(json, authHeaders), String.class
@@ -316,7 +321,7 @@ public class PedidoRestTest {
 
     @Test
     @Order(9)
-    @DisplayName("POST /pedido - COCINA DOMICILIO sin idRegistroCliente debe retornar 400")
+    @DisplayName("POST /pedido - COCINA DOMICILIO sin pedidoDomicilioCocina debe retornar 400")
     public void save_cocinaDomicilio_sinRegistroCliente_retorna400() throws Exception {
         String json = String.format("""
                 {
@@ -339,8 +344,8 @@ public class PedidoRestTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         JsonNode body = mapper.readTree(response.getBody());
-        assertTrue(body.get("message").asText().contains("idRegistroCliente"));
-        System.out.println("[OK] COCINA+DOMICILIO sin idRegistroCliente → 400: " + body.get("message").asText());
+        assertTrue(body.get("message").asText().contains("pedidoDomicilioCocina"));
+        System.out.println("[OK] COCINA+DOMICILIO sin pedidoDomicilioCocina → 400: " + body.get("message").asText());
     }
 
     @Test

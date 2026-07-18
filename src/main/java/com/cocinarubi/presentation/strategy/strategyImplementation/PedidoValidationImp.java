@@ -75,6 +75,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
         validarLineasBasico(dto);
         validarLineasProductoCocina(dto);
         validarDomicilioWeb(dto);
+        validarRutaDomicilioCocina(dto);
         validarRegistroCliente(dto);
     }
 
@@ -103,10 +104,9 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
 
         if (esCocina) {
             if (esDomicilio) {
-                //verificar si cuando es DOMICILIO y COCINIA que llegue el idRegistroCliente
-                if (dto.getIdRegistroCliente() == null) {
+                if (dto.getPedidoDomicilioCocina() == null) {
                     throw new BusinessException(
-                            "Un pedido COCINA a domicilio requiere un id de registro",
+                            "Un pedido COCINA a domicilio requiere los datos de domicilio'",
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
                 }
 
@@ -198,20 +198,22 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
         }
     }
 
-    /** Valida que el RegistroCliente exista y, cuando el pedido es COCINA+DOMICILIO, que tenga ruta asignada. */
-    private void validarRegistroCliente(PedidoRequestDTO dto) {
-        if (dto.getIdRegistroCliente() == null) return;
-        RegistroCliente cliente = registroClienteRepository
-                .findById(dto.getIdRegistroCliente())
-                .orElseThrow(() -> new BusinessException(
-                        "El registro de cliente " + dto.getIdRegistroCliente() + " no existe",
-                        HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
-        if (dto.getTipoPedido() == TipoPedido.DOMICILIO
-                && dto.getPedidoCreadoDesde() == PedidoCreadoDesde.COCINA
-                && cliente.getRuta() == null) {
+    private void validarRutaDomicilioCocina(PedidoRequestDTO dto) {
+        if (dto.getPedidoDomicilioCocina() == null) return;
+        if (!rutaRepository.existsById(dto.getPedidoDomicilioCocina().getIdRuta())) {
             throw new BusinessException(
-                    "El cliente " + dto.getIdRegistroCliente() + " no tiene una ruta de entrega asignada",
+                    "La ruta " + dto.getPedidoDomicilioCocina().getIdRuta() + " no existe",
                     HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
         }
+    }
+
+    private void validarRegistroCliente(PedidoRequestDTO dto) {
+        if (dto.getPedidoDomicilioCocina() == null) return;
+        Integer idRegistroCliente = dto.getPedidoDomicilioCocina().getIdRegistroCliente();
+        registroClienteRepository
+                .findById(idRegistroCliente)
+                .orElseThrow(() -> new BusinessException(
+                        "El registro de cliente " + idRegistroCliente + " no existe",
+                        HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
     }
 }

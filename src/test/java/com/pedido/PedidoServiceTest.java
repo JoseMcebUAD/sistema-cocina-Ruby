@@ -14,6 +14,7 @@ import com.cocinarubi.domain.mapper.PedidoMapper;
 import com.cocinarubi.domain.service.CatalogoPedidoService;
 import com.cocinarubi.domain.service.PedidoService;
 import com.cocinarubi.exception.BusinessException;
+import com.cocinarubi.presentation.dto.request.PedidoDomicilioCocinaDTO;
 import com.cocinarubi.presentation.dto.request.PedidoDomicilioDTO;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
@@ -104,11 +105,17 @@ public class PedidoServiceTest {
     }
 
     public PedidoRequestDTO crearDtoCocinaDomicilio(int idRegistroCliente) {
+        PedidoDomicilioCocinaDTO domCocinaDto = new PedidoDomicilioCocinaDTO(
+                idRegistroCliente,
+                BigDecimal.valueOf(40.00),
+                "Calle Principal 42 Int 3",
+                1
+        );
         PedidoRequestDTO dto = new PedidoRequestDTO();
         dto.setMetodoPagoPrincipal(MetodoPago.EFECTIVO);
         dto.setTipoPedido(TipoPedido.DOMICILIO);
         dto.setPedidoCreadoDesde(PedidoCreadoDesde.COCINA);
-        dto.setIdRegistroCliente(idRegistroCliente);
+        dto.setPedidoDomicilioCocina(domCocinaDto);
         dto.setComidas(List.of());
         dto.setDesayunos(List.of());
         dto.setBasicos(List.of());
