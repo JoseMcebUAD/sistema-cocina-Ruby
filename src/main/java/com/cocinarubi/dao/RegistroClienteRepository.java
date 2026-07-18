@@ -8,4 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface RegistroClienteRepository extends JpaRepository<RegistroCliente, Integer> {
 
     Page<RegistroCliente> findByTelefonoContaining(String telefono, Pageable pageable);
+
+    boolean existsByTelefono(String telefono);
 }

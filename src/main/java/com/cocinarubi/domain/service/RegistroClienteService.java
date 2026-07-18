@@ -43,6 +43,10 @@ public class RegistroClienteService {
 
     @Transactional
     public RegistroClienteResponseDTO save(RegistroClienteRequestDTO dto) {
+        if (registroClienteRepository.existsByTelefono(dto.getTelefono())) {
+            throw new BusinessException(
+                    "Ya existe un cliente con el teléfono: " + dto.getTelefono(), HttpStatus.CONFLICT);
+        }
         RegistroCliente entidad = RegistroCliente.builder()
                 .nombre(dto.getNombre())
                 .telefono(dto.getTelefono())
@@ -55,6 +59,11 @@ public class RegistroClienteService {
     @Transactional
     public RegistroClienteResponseDTO update(int id, RegistroClienteRequestDTO dto) {
         RegistroCliente existente = findEntityById(id);
+        if (!existente.getTelefono().equals(dto.getTelefono())
+                && registroClienteRepository.existsByTelefono(dto.getTelefono())) {
+            throw new BusinessException(
+                    "Ya existe un cliente con el teléfono: " + dto.getTelefono(), HttpStatus.CONFLICT);
+        }
         existente.setNombre(dto.getNombre());
         existente.setTelefono(dto.getTelefono());
         existente.setRuta(resolverRuta(dto.getIdRuta()));
