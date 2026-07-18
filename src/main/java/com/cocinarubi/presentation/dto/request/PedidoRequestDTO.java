@@ -25,7 +25,7 @@ public class PedidoRequestDTO {
     private TipoPedido tipoPedido;
 
     @JsonProperty("pedidoCreadoDesde")
-    private PedidoCreadoDesde pedidoCreadoDesde = PedidoCreadoDesde.COCINA;
+    private PedidoCreadoDesde pedidoCreadoDesde;
 
     @JsonProperty("pagoCliente")
     private BigDecimal pagoCliente;
