@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS registro_cliente (
     id_registro_cliente INT          NOT NULL AUTO_INCREMENT,
     nombre              VARCHAR(255) NOT NULL,
     telefono            VARCHAR(16)  NOT NULL,
-    id_ruta             INT          NULL,
+    id_ruta             INT          NULL DEFAULT 1,
     direccion           VARCHAR(255) NULL,
     PRIMARY KEY (id_registro_cliente),
     CONSTRAINT fk_reg_cli_ruta

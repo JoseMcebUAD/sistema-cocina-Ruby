@@ -1,7 +1,7 @@
-UPDATE ruta
-SET
-    nombre  = 'Santa Gertrudis',
-    boundary = ST_GeomFromText('POLYGON((
+INSERT INTO ruta (nombre, boundary, is_active, tarifa_envio, tiempo_estimado_min,orden) VALUES
+    (
+        'Santa Gertrudis',
+        ST_GeomFromText('POLYGON((
         -89.603498 21.040174,
         -89.603005 21.042435,
         -89.601466 21.041918,
@@ -21,5 +21,6 @@ SET
         -89.602087 21.039593,
         -89.603473 21.040182,
         -89.603498 21.040174
-    ))')
-WHERE id_ruta = 1;
+    ))'),
+        1, 0, 0,1
+    );
