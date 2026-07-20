@@ -9,5 +9,7 @@ public interface RegistroClienteRepository extends JpaRepository<RegistroCliente
 
     Page<RegistroCliente> findByTelefonoContaining(String telefono, Pageable pageable);
 
+    Page<RegistroCliente> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
+
     boolean existsByTelefono(String telefono);
 }

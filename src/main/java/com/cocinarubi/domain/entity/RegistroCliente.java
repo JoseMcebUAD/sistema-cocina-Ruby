@@ -17,7 +17,9 @@ import lombok.*;
  * registrados en {@link PedidoDomicilioCocina}.</p>
  */
 @Entity
-@Table(name = "registro_cliente")
+@Table(name = "registro_cliente", indexes = {
+        @Index(name = "idx_registro_cliente_nombre", columnList = "nombre")
+})
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Getter
 @Setter

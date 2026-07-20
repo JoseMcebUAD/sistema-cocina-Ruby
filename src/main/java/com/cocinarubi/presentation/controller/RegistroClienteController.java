@@ -46,6 +46,15 @@ public class RegistroClienteController {
                 registroClienteService.findByTelefono(telefono, PageRequest.of(page, size))));
     }
 
+    @GetMapping("/buscar-nombre")
+    public ResponseEntity<ApiResponse<Page<RegistroClienteResponseDTO>>> buscarPorNombre(
+            @RequestParam String nombre,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Registros de cliente encontrados",
+                registroClienteService.findByNombre(nombre, PageRequest.of(page, size))));
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<RegistroClienteResponseDTO>> save(
             @Valid @RequestBody RegistroClienteRequestDTO dto) {

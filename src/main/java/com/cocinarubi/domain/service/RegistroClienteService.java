@@ -41,6 +41,12 @@ public class RegistroClienteService {
                 .map(this::toResponseDTO);
     }
 
+    @Transactional(readOnly = true)
+    public Page<RegistroClienteResponseDTO> findByNombre(String nombre, PageRequest pageable) {
+        return registroClienteRepository.findByNombreContainingIgnoreCase(nombre, pageable)
+                .map(this::toResponseDTO);
+    }
+
     @Transactional
     public RegistroClienteResponseDTO save(RegistroClienteRequestDTO dto) {
         if (registroClienteRepository.existsByTelefono(dto.getTelefono())) {
