@@ -58,6 +58,9 @@ public class Archivo {
     @Column(name = "entity_type", nullable = false)
     private TipoCatalogoProducto entityType;
 
+    @Column(name = "id_entidad", nullable = false)
+    private Integer idEntidad;
+
     @Column(name = "public_id", nullable = false, unique = true, length = 255)
     private String publicId;
 
