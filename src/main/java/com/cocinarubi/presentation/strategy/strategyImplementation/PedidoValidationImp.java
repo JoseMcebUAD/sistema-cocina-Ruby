@@ -22,6 +22,8 @@ import com.cocinarubi.presentation.strategy.ValidationStrategy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+
 /**
  * Valida la integridad estructural y referencial de un {@link com.cocinarubi.presentation.dto.request.PedidoRequestDTO}
  * antes de que el servicio construya la entidad de dominio.
@@ -68,15 +70,24 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
 
     @Override
     public void validarPost(PedidoRequestDTO dto) {
-        validarAlMenosUnProducto(dto);
-        validarConsistenciaDomicilio(dto);
-        validarLineasComida(dto);
-        validarLineasDesayuno(dto);
-        validarLineasBasico(dto);
-        validarLineasProductoCocina(dto);
-        validarDomicilioWeb(dto);
-        validarRutaDomicilioCocina(dto);
-        validarRegistroCliente(dto);
+        try {
+            validarAlMenosUnProducto(dto);
+            validarConsistenciaDomicilio(dto);
+            validarLineasComida(dto);
+            validarLineasDesayuno(dto);
+            validarLineasBasico(dto);
+            validarLineasProductoCocina(dto);
+            validarDomicilioWeb(dto);
+            validarRutaDomicilioCocina(dto);
+            validarRegistroCliente(dto);
+            validarPagoClienteNoExcedaTotal(dto);
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BusinessException(
+                    "El pedido es incorrecto, por favor verifique su pedido",
+                    HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
+        }
     }
 
     /** RF-025: el pedido debe tener al menos una línea de algún tipo. */
@@ -213,7 +224,62 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
         registroClienteRepository
                 .findById(idRegistroCliente)
                 .orElseThrow(() -> new BusinessException(
-                        "El registro de cliente " + idRegistroCliente + " no existe",
+                        "El cliente especificado no existe, por favor verificar que sea un cliente dentro del sistema",
                         HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
+    }
+
+    /**
+     * Verifica que el pago del cliente no supere el precio final de la orden
+     * (suma de líneas de comida + complementos, desayunos, básicos, productos de cocina
+     * y la tarifa de domicilio cocina si aplica).
+     */
+    private void validarPagoClienteNoExcedaTotal(PedidoRequestDTO dto) {
+        if (dto.getPagoCliente() == null) return;
+
+        BigDecimal precioFinalOrden = calcularPrecioFinalOrden(dto);
+
+        if (dto.getPagoCliente().compareTo(precioFinalOrden) > 0) {
+            throw new BusinessException(
+                    "El pago del cliente (" + dto.getPagoCliente()
+                            + ") no puede ser mayor al precio final de la orden ("
+                            + precioFinalOrden + ")",
+                    HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
+        }
+    }
+
+    private BigDecimal calcularPrecioFinalOrden(PedidoRequestDTO dto) {
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (ComidaPedidoDTO comida : dto.getComidas()) {
+            if (comida.getPrecioUnitario() != null) {
+                total = total.add(comida.getPrecioUnitario());
+            }
+            for (ComplementoPedidoDTO comp : comida.getComplementos()) {
+                if (comp.getPrecioUnitario() != null) {
+                    total = total.add(comp.getPrecioUnitario());
+                }
+            }
+        }
+        for (DesayunoPedidoDTO desayuno : dto.getDesayunos()) {
+            if (desayuno.getPrecio() != null) {
+                total = total.add(desayuno.getPrecio());
+            }
+        }
+        for (BasicoPedidoDTO basico : dto.getBasicos()) {
+            if (basico.getPrecioUnitario() != null) {
+                total = total.add(basico.getPrecioUnitario());
+            }
+        }
+        for (ProductoCocinaPedidoDTO producto : dto.getProductosCocina()) {
+            if (producto.getPrecioUnitario() != null && producto.getCantidad() != null) {
+                total = total.add(producto.getPrecioUnitario()
+                        .multiply(BigDecimal.valueOf(producto.getCantidad())));
+            }
+        }
+        if (dto.getPedidoDomicilioCocina() != null
+                && dto.getPedidoDomicilioCocina().getTarifa() != null) {
+            total = total.add(dto.getPedidoDomicilioCocina().getTarifa());
+        }
+        return total;
     }
 }
