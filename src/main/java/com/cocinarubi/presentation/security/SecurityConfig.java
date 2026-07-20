@@ -121,18 +121,21 @@ public class SecurityConfig {
                     // ── Solo JEFA_COCINA ──────────────────────────────────
                     .requestMatchers(
                             "/usuario/**",
+                            "/auditoria/**"
+                        ).hasRole("JEFA_COCINA")
+                        
+                        // ── Ambos roles ───────────────────────────────────────
+                        .requestMatchers(
+                            "/comida/**",
+                            "/desayuno/**",
                             "/ruta/**",
                             "/tarifa-especial/**",
                             "/horario-atencion/**",
-                            "/anuncio/**"
-                    ).hasRole("JEFA_COCINA")
-
-                    // ── Ambos roles ───────────────────────────────────────
-                    .requestMatchers(
-                            "/comida/**",
-                            "/desayuno/**",
+                            "/anuncio/**",
+                            "/codigoCliente/**",
                             "/complemento/**",
                             "/basico/**",
+                            "/registro-cliente/**",
                             "/cliente/**",
                             "/pago-repartidor/**"
                     ).hasAnyRole("JEFA_COCINA", "COCINA")

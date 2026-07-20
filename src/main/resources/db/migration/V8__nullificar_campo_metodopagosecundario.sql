@@ -1,0 +1,2 @@
+ALTER TABLE pedido
+    MODIFY COLUMN metodo_pago_secundario ENUM('TARJETA','EFECTIVO','TRANSFERENCIA') NULL;

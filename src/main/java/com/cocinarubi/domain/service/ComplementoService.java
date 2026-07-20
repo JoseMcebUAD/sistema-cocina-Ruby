@@ -1,12 +1,16 @@
 package com.cocinarubi.domain.service;
 
+import com.cocinarubi.DBConstants;
 import com.cocinarubi.dao.ComplementoRepository;
 import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.exception.BusinessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
+/** Gestiona los complementos opcionales que se pueden agregar a un paquete básico (ej. ensalada, postre). */
 @Service
 public class ComplementoService {
 
@@ -18,6 +22,14 @@ public class ComplementoService {
 
     public List<Complemento> findAll() {
         return complementoRepository.findAll();
+    }
+
+    public Page<Complemento> findAll(Pageable pageable) {
+        return complementoRepository.findAllPaginado(pageable);
+    }
+
+    public List<Complemento> findDisponibles() {
+        return complementoRepository.findDisponiblesOrdenados(DBConstants.Estatus.DISPONIBLE);
     }
 
     public Complemento findById(int id) {
@@ -34,6 +46,7 @@ public class ComplementoService {
         if (!complementoRepository.existsById(id)) {
             throw new BusinessException("Complemento no encontrado con id: " + id, HttpStatus.NOT_FOUND);
         }
+        // Guardar integridad referencial: la DB no tiene ON DELETE CASCADE para estas relaciones
         if (complementoRepository.countEnBasicos(id) > 0) {
             throw new BusinessException(
                     "No se puede eliminar el complemento porque está referenciado en paquetes básicos",

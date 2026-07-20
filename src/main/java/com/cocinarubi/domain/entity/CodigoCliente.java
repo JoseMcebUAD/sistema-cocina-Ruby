@@ -34,15 +34,16 @@ public class CodigoCliente {
     @Column(name = "id_codigo_cliente")
     private Integer idCodigoCliente;
 
-    @Column(name = "identificador", nullable = false, length = 255)
+    @Column(name = "identificador")
     private String identificador;
 
-    @Column(name = "codigo_cliente", nullable = false, length = 255)
+    @Column(name = "codigo_cliente")
     private String codigoCliente;
 
-    @Column(name = "tarifa_especial", nullable = false, precision = 5, scale = 2)
+    @Column(name = "tarifa_especial")
     private BigDecimal tarifaEspecial;
 
-    @Column(name = "estatus", nullable = false, precision = 5, scale = 2)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estatus")
     private Estatus estatus;
 }

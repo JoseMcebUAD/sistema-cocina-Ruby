@@ -1,8 +1,10 @@
 package com.cocinarubi.presentation.controller;
 
+import com.cocinarubi.presentation.dto.request.RutaOrdenItemDTO;
 import com.cocinarubi.presentation.dto.request.RutaRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.presentation.dto.response.RutaResponseDTO;
+import com.cocinarubi.presentation.dto.response.RutaSimpleResponseDTO;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.domain.service.RutaService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,8 +27,14 @@ public class RutaController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<RutaResponseDTO>>> findAll() {
+    public ResponseEntity<ApiResponse<List<RutaSimpleResponseDTO>>> findAll() {
         return ResponseEntity.ok(ApiResponse.exito(200, "Rutas obtenidas correctamente",
+                rutaService.findAllSimple()));
+    }
+
+    @GetMapping("/mapa")
+    public ResponseEntity<ApiResponse<List<RutaResponseDTO>>> findAllParaMapa() {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Rutas con coordenadas obtenidas correctamente",
                 rutaService.findAll()));
     }
 
@@ -64,5 +72,12 @@ public class RutaController {
     public ResponseEntity<Void> delete(@PathVariable int id) {
         rutaService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/orden")
+    public ResponseEntity<ApiResponse<List<RutaResponseDTO>>> reordenar(
+            @Valid @RequestBody List<RutaOrdenItemDTO> items) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Orden de rutas actualizado correctamente",
+                rutaService.reordenar(items)));
     }
 }

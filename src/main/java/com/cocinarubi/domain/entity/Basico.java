@@ -1,5 +1,6 @@
 package com.cocinarubi.domain.entity;
 
+import com.cocinarubi.DBConstants.Estatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -39,17 +40,21 @@ public class Basico {
     private Integer idBasico;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_comida", nullable = false)
+    @JoinColumn(name = "id_comida")
     private Comida comida;
 
-    @Column(name = "descripcion", length = 255)
+    @Column(name = "descripcion")
     private String descripcion;
 
-    @Column(name = "destacado", nullable = false)
+    @Column(name = "destacado")
     private boolean destacado;
 
-    @Column(name = "precio_basico", nullable = false, precision = 5, scale = 2)
+    @Column(name = "precio_basico")
     private BigDecimal precioBasico;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estatus")
+    private Estatus estatus;
 
     @Builder.Default
     @OneToMany(mappedBy = "basico", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

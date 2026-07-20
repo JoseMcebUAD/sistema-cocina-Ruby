@@ -1,10 +1,10 @@
 package com.cocinarubi.domain.entity;
 
+import com.cocinarubi.DBConstants.TipoContadorComida;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 
 /**
  * Registro de consumo de insumos para la preparación de un platillo.
@@ -42,6 +42,6 @@ public class InventarioComida {
     @Column(name = "cantidad")
     private Integer cantidad;
 
-    @Column(name = "kilogramos", precision = 8, scale = 3)
-    private BigDecimal kilogramos;
+    @Column(name = "tipo_contador_comida", precision = 8, scale = 3)
+    private TipoContadorComida tipo_contador_comida;
 }

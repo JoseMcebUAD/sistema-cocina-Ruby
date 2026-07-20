@@ -1,6 +1,7 @@
 package com.cocinarubi.presentation.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -29,15 +30,21 @@ public class RutaRequestDTO {
     @JsonProperty("tiempoEstimadoMin")
     private Integer tiempoEstimadoMin;
 
+    @NotNull(message = "El orden no puede ser nulo")
+    @Min(value = 1, message = "El orden debe ser mayor a cero")
+    @JsonProperty("orden")
+    private Integer orden;
+
     public RutaRequestDTO() {}
 
     public RutaRequestDTO(String nombre, String boundaryWkt, boolean active,
-                          BigDecimal tarifaEnvio, Integer tiempoEstimadoMin) {
+                          BigDecimal tarifaEnvio, Integer tiempoEstimadoMin, Integer orden) {
         this.nombre = nombre;
         this.boundaryWkt = boundaryWkt;
         this.active = active;
         this.tarifaEnvio = tarifaEnvio;
         this.tiempoEstimadoMin = tiempoEstimadoMin;
+        this.orden = orden;
     }
 
     public String getNombre() { return nombre; }
@@ -54,4 +61,7 @@ public class RutaRequestDTO {
 
     public Integer getTiempoEstimadoMin() { return tiempoEstimadoMin; }
     public void setTiempoEstimadoMin(Integer tiempoEstimadoMin) { this.tiempoEstimadoMin = tiempoEstimadoMin; }
+
+    public Integer getOrden() { return orden; }
+    public void setOrden(Integer orden) { this.orden = orden; }
 }

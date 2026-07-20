@@ -19,7 +19,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ApiResponse<Void>> manejarRutaNoEncontrada(NoResourceFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error(404, "La ruta solicitada no existe: " + ex.getResourcePath()));
+                .body(
+                    ApiResponse.error(
+                        404, 
+                        "La ruta solicitada no existe: " + 
+                        ex.getResourcePath())
+                );
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -40,7 +45,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> manejarNegocio(BusinessException ex) {
         return ResponseEntity.status(ex.getHttpStatus())
-                .body(ApiResponse.error(ex.getHttpStatus().value(), ex.getMessage()));
+                .body(ApiResponse.error(ex.getHttpStatus().value(), ex.getMessage(), ex.getTipoErrorCode().name()));
     }
 
     @ExceptionHandler(Exception.class)

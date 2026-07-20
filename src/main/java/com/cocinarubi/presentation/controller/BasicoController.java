@@ -3,15 +3,15 @@ package com.cocinarubi.presentation.controller;
 import com.cocinarubi.presentation.dto.request.BasicoRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.presentation.dto.response.BasicoResponseDTO;
-import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.domain.service.BasicoService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/basico")
@@ -25,9 +25,23 @@ public class BasicoController {
     }
 
     @GetMapping
+    public ResponseEntity<ApiResponse<Page<BasicoResponseDTO>>> findAllPaginado(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Básicos obtenidos correctamente",
+                basicoService.findAll(PageRequest.of(page, size))));
+    }
+
+    @GetMapping("/todos")
     public ResponseEntity<ApiResponse<List<BasicoResponseDTO>>> findAll() {
         return ResponseEntity.ok(ApiResponse.exito(200, "Básicos obtenidos correctamente",
                 basicoService.findAll()));
+    }
+
+    @GetMapping("/disponibles")
+    public ResponseEntity<ApiResponse<List<BasicoResponseDTO>>> findDisponibles() {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Básicos disponibles obtenidos correctamente",
+                basicoService.findDisponibles()));
     }
 
     @GetMapping("/{id}")
@@ -48,16 +62,6 @@ public class BasicoController {
                                                                  @Valid @RequestBody BasicoRequestDTO dto) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Básico actualizado correctamente",
                 basicoService.update(id, dto)));
-    }
-
-    @PatchMapping("/{id}")
-    public ResponseEntity<ApiResponse<BasicoResponseDTO>> patch(@PathVariable int id,
-                                                                @RequestBody Map<String, Object> payload) {
-        if (payload.containsKey("idBasico")) {
-            throw new BusinessException("El ID no puede ser modificado.", HttpStatus.BAD_REQUEST);
-        }
-        return ResponseEntity.ok(ApiResponse.exito(200, "Básico actualizado parcialmente",
-                basicoService.patch(id, payload)));
     }
 
     @DeleteMapping("/{id}")

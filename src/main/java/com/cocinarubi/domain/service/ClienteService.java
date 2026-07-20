@@ -11,6 +11,10 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Gestiona los clientes del sistema: dispositivos/sesiones que realizan pedidos.
+ * Cada cliente se identifica de forma única por su sessionToken.
+ */
 @Service
 public class ClienteService {
 
@@ -29,10 +33,11 @@ public class ClienteService {
     public Cliente findById(int id) {
         return clienteRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(
-                        "Cliente no encontrado con id: " + id, HttpStatus.NOT_FOUND));
+                        "Cliente no encontrado, regrese a la ventana anterior" + id, HttpStatus.NOT_FOUND));
     }
 
     public Cliente save(ClienteRequestDTO dto) {
+        // El sessionToken identifica al dispositivo/sesión; no puede estar duplicado
         if (clienteRepository.existsBySessionToken(dto.getSessionToken())) {
             throw new BusinessException(
                     "Ya existe un cliente con ese session token", HttpStatus.CONFLICT);
@@ -43,6 +48,7 @@ public class ClienteService {
 
     public Cliente update(int id, ClienteRequestDTO dto) {
         Cliente existente = findById(id);
+        // Solo se valida unicidad si el token realmente cambió
         if (!existente.getSessionToken().equals(dto.getSessionToken())
                 && clienteRepository.existsBySessionToken(dto.getSessionToken())) {
             throw new BusinessException(
@@ -72,6 +78,7 @@ public class ClienteService {
         if (payload.containsKey("ipAddress")) existente.setIpAddress((String) payload.get("ipAddress"));
         if (payload.containsKey("codigoCliente")) existente.setCodigoCliente((String) payload.get("codigoCliente"));
         if (payload.containsKey("idRuta")) {
+            // Se permite enviar null explícitamente para desasignar la ruta del cliente
             Object idRutaVal = payload.get("idRuta");
             existente.setRuta(idRutaVal == null ? null : resolveRuta(((Number) idRutaVal).intValue()));
         }
@@ -79,12 +86,14 @@ public class ClienteService {
     }
 
     public void delete(int id) {
+        // Verificar existencia antes de borrar para devolver 404 en lugar del silencioso no-op de JPA
         if (!clienteRepository.existsById(id)) {
             throw new BusinessException("Cliente no encontrado con id: " + id, HttpStatus.NOT_FOUND);
         }
         clienteRepository.deleteById(id);
     }
 
+    /** Devuelve null si idRuta es null; la ruta es opcional para un cliente. */
     private Ruta resolveRuta(Integer idRuta) {
         if (idRuta == null) return null;
         return rutaRepository.findById(idRuta)

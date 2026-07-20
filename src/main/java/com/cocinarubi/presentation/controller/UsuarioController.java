@@ -3,7 +3,6 @@ package com.cocinarubi.presentation.controller;
 import com.cocinarubi.presentation.dto.request.UsuarioRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.presentation.dto.response.UsuarioResponseDTO;
-import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.domain.service.UsuarioService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -11,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/usuario")
@@ -48,16 +46,6 @@ public class UsuarioController {
                                                                   @Valid @RequestBody UsuarioRequestDTO dto) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Usuario actualizado correctamente",
                 usuarioService.update(id, dto)));
-    }
-
-    @PatchMapping("/{id}")
-    public ResponseEntity<ApiResponse<UsuarioResponseDTO>> patch(@PathVariable int id,
-                                                                 @RequestBody Map<String, Object> payload) {
-        if (payload.containsKey("idUsuario")) {
-            throw new BusinessException("El ID no puede ser modificado.", HttpStatus.BAD_REQUEST);
-        }
-        return ResponseEntity.ok(ApiResponse.exito(200, "Usuario actualizado parcialmente",
-                usuarioService.patch(id, payload)));
     }
 
     @DeleteMapping("/{id}")

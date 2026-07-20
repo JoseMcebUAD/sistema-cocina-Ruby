@@ -7,6 +7,8 @@ import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.domain.service.TarifaEspecialService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,14 @@ public class TarifaEspecialController {
     }
 
     @GetMapping
+    public ResponseEntity<ApiResponse<Page<TarifaEspecial>>> findAllPaginado(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Tarifas especiales obtenidas correctamente",
+                tarifaEspecialService.findAll(PageRequest.of(page, size))));
+    }
+
+    @GetMapping("/todos")
     public ResponseEntity<ApiResponse<List<TarifaEspecial>>> findAll() {
         return ResponseEntity.ok(ApiResponse.exito(200, "Tarifas especiales obtenidas correctamente",
                 tarifaEspecialService.findAll()));

@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
+/** Gestiona los horarios de atención del restaurante (días y franjas horarias de servicio). */
 @Service
 public class HorarioAtencionService {
 
@@ -31,6 +32,7 @@ public class HorarioAtencionService {
     }
 
     public void delete(int id) {
+        // Verificar existencia antes de borrar para devolver 404 en lugar del silencioso no-op de JPA
         if (!horarioAtencionRepository.existsById(id)) {
             throw new BusinessException(
                     "Horario de atención no encontrado con id: " + id, HttpStatus.NOT_FOUND);

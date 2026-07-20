@@ -328,7 +328,7 @@ CREATE TABLE IF NOT EXISTS archivo (
     mime_type         VARCHAR(50)  NOT NULL,
     nombre_archivo    VARCHAR(255) NOT NULL,
     orden             INT          NULL,
-    entity_type       ENUM('comida','complemento','producto_cocina',) NOT NULL,
+    entity_type       ENUM('comida','complemento','producto_cocina') NOT NULL,
     public_id         VARCHAR(255) NOT NULL UNIQUE COMMENT 'public_id de Cloudinary',
     creado_en         DATETIME     NOT NULL,
     PRIMARY KEY (id_archivo),
@@ -359,13 +359,13 @@ CREATE TABLE IF NOT EXISTS inventario_comida (
     id_inventario_comida INT          NOT NULL AUTO_INCREMENT,
     id_comida            INT          NOT NULL, -- [C4] FK formal a comida
     cantidad             INT          NULL,
-    kilogramos           DECIMAL(8,3) NULL, 
+    tipo_contador_comida           ENUM('UNIDAD','KILOGRAMO','GRAMO','OTRO') NULL, 
     PRIMARY KEY (id_inventario_comida),
     CONSTRAINT fk_inventario_comida
         FOREIGN KEY (id_comida) REFERENCES comida (id_comida)
         ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT chk_inventario_no_vacio
-        CHECK (cantidad IS NOT NULL OR kilogramos IS NOT NULL)
+        CHECK (cantidad IS NOT NULL OR tipo_contador_comida IS NOT NULL)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS pago_repartidor (

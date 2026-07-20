@@ -1,12 +1,16 @@
 package com.cocinarubi.domain.service;
 
+import com.cocinarubi.DBConstants;
 import com.cocinarubi.dao.ComidaRepository;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.exception.BusinessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
+/** Gestiona el catálogo de comidas disponibles en el menú del restaurante. */
 @Service
 public class ComidaService {
 
@@ -18,6 +22,14 @@ public class ComidaService {
 
     public List<Comida> findAll() {
         return comidaRepository.findAll();
+    }
+
+    public Page<Comida> findAll(Pageable pageable) {
+        return comidaRepository.findAllPaginado(pageable);
+    }
+
+    public List<Comida> findDisponibles() {
+        return comidaRepository.findDisponiblesOrdenados(DBConstants.Estatus.DISPONIBLE);
     }
 
     public Comida findById(int id) {
@@ -34,6 +46,7 @@ public class ComidaService {
         if (!comidaRepository.existsById(id)) {
             throw new BusinessException("Comida no encontrada con id: " + id, HttpStatus.NOT_FOUND);
         }
+        // Guardar integridad referencial: la DB no tiene ON DELETE CASCADE para estas relaciones
         if (comidaRepository.countEnPedidos(id) > 0) {
             throw new BusinessException(
                     "No se puede eliminar la comida porque está referenciada en pedidos existentes",
