@@ -182,6 +182,7 @@ public class CatalogoPedidoService {
                 .ruta(ruta)
                 .direccion(domicilioDto.getDireccion())
                 .codigo(domicilioDto.getCodigo())
+                .tarifa(ruta.getTarifaEnvio())
                 .build();
         pedido.setPedidoDomicilio(domicilio);
     }
