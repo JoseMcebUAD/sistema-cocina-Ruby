@@ -4,6 +4,7 @@ import com.cocinarubi.DBConstants.TipoCatalogoProducto;
 import com.cocinarubi.dao.BasicoRepository;
 import com.cocinarubi.dao.ClienteRepository;
 import com.cocinarubi.dao.ComidaRepository;
+import com.cocinarubi.dao.ComplementoRepository;
 import com.cocinarubi.dao.DesayunoRepository;
 import com.cocinarubi.dao.FavoritoClienteRepository;
 import com.cocinarubi.dao.ProductoCocinaRepository;
@@ -36,6 +37,7 @@ public class FavoritoClienteService {
     private final ProductoCocinaRepository productoCocinaRepository;
     private final FavoritoClienteValidationImp favoritoClienteValidation;
     private final FavoritoClienteConfirmationImp favoritoClienteConfirmation;
+    private final ComplementoRepository complementoRepository;
 
     public FavoritoClienteService(FavoritoClienteRepository favoritoClienteRepository,
                                   ClienteRepository clienteRepository,
@@ -44,7 +46,7 @@ public class FavoritoClienteService {
                                   BasicoRepository basicoRepository,
                                   ProductoCocinaRepository productoCocinaRepository,
                                   FavoritoClienteValidationImp favoritoClienteValidation,
-                                  FavoritoClienteConfirmationImp favoritoClienteConfirmation) {
+                                  FavoritoClienteConfirmationImp favoritoClienteConfirmation,ComplementoRepository complementoRepository) {
         this.favoritoClienteRepository = favoritoClienteRepository;
         this.clienteRepository = clienteRepository;
         this.comidaRepository = comidaRepository;
@@ -53,6 +55,7 @@ public class FavoritoClienteService {
         this.productoCocinaRepository = productoCocinaRepository;
         this.favoritoClienteValidation = favoritoClienteValidation;
         this.favoritoClienteConfirmation = favoritoClienteConfirmation;
+        this.complementoRepository = complementoRepository;
     }
 
     @Transactional(readOnly = true)
@@ -126,6 +129,8 @@ public class FavoritoClienteService {
                     .orElse("(producto eliminado)");
             case SNACK, CHAROLA, BEBIDA, POSTRE -> productoCocinaRepository.findById(idProducto)
                     .map(p -> p.getNombreProducto()).orElse("(producto eliminado)");
+            case COMPLEMENTO -> 
+            this.complementoRepository.findById(idProducto).map(c -> c.getNombreComplemento()).orElse("(producto eliminado)");
         };
     }
 

@@ -6,7 +6,7 @@ package com.cocinarubi;
 public class DBConstants {
 
     /** Catálogo de producto al que puede asociarse un archivo subido en la tabla de ARCHIVOMODULO. */
-    public enum TipoCatalogoProducto { BASICO, COMIDA, DESAYUNO, SNACK, CHAROLA, BEBIDA, POSTRE }
+    public enum TipoCatalogoProducto { BASICO, COMIDA, DESAYUNO, SNACK, CHAROLA, BEBIDA, POSTRE, COMPLEMENTO }
 
     
     /** Estado de disponibilidad de platillos para el menú web. */
