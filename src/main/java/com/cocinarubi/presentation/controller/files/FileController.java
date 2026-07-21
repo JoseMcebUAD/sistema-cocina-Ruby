@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -63,6 +64,22 @@ public class FileController {
             @RequestParam("idEntidad") Integer idEntidad) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Archivos obtenidos correctamente",
                 fileUploadService.getAll(entityType, idEntidad)));
+    }
+
+    @GetMapping("/batch")
+    public ResponseEntity<ApiResponse<Map<Integer, List<ArchivoResponseDTO>>>> getBatch(
+            @RequestParam("entityType") TipoCatalogoProducto entityType,
+            @RequestParam("ids") List<Integer> ids) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Archivos obtenidos correctamente",
+                fileUploadService.getAllBatch(entityType, ids)));
+    }
+
+    @GetMapping("/portada")
+    public ResponseEntity<ApiResponse<Map<Integer, ArchivoResponseDTO>>> getPortada(
+            @RequestParam("entityType") TipoCatalogoProducto entityType,
+            @RequestParam("ids") List<Integer> ids) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Portadas obtenidas correctamente",
+                fileUploadService.getPortadaBatch(entityType, ids)));
     }
 
     @GetMapping("/{idArchivo}")

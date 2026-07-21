@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Servicio principal de gestión de archivos en Cloudinary. Orquesta validación,
@@ -139,6 +140,33 @@ public class FileServiceImpl implements FileUploadService {
                 .orElseThrow(() -> new BusinessException(
                         "Archivo no encontrado con id: " + idArchivo, HttpStatus.NOT_FOUND));
         return ArchivoResponseDTO.from(archivo);
+    }
+
+    @Override
+    public Map<Integer, List<ArchivoResponseDTO>> getAllBatch(TipoCatalogoProducto entityType, List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Map.of();
+        }
+        return archivoRepository.findByEntityTypeAndIdEntidadIn(entityType, ids)
+                .stream()
+                .map(ArchivoResponseDTO::from)
+                .collect(Collectors.groupingBy(ArchivoResponseDTO::getIdEntidad));
+    }
+
+    @Override
+    public Map<Integer, ArchivoResponseDTO> getPortadaBatch(TipoCatalogoProducto entityType, List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Map.of();
+        }
+        // La query ya ordena por idEntidad ASC, orden ASC; el merge keeper descarta duplicados posteriores
+        return archivoRepository.findByEntityTypeAndIdEntidadIn(entityType, ids)
+                .stream()
+                .map(ArchivoResponseDTO::from)
+                .collect(Collectors.toMap(
+                        ArchivoResponseDTO::getIdEntidad,
+                        dto -> dto,
+                        (primero, siguiente) -> primero
+                ));
     }
 
     @Override

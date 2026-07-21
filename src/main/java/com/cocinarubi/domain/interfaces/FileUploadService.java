@@ -6,6 +6,7 @@ import com.cocinarubi.presentation.dto.response.ArchivoResponseDTO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Contrato del servicio de gestión de archivos. Define las operaciones CRUD
@@ -24,4 +25,10 @@ public interface FileUploadService {
 
     // Elimina el archivo en Cloudinary y su registro en BD
     void delete(Integer idArchivo);
+
+    // Retorna archivos de varias entidades del mismo tipo, agrupados por idEntidad
+    Map<Integer, List<ArchivoResponseDTO>> getAllBatch(TipoCatalogoProducto entityType, List<Integer> ids);
+
+    // Retorna solo la imagen de menor orden por entidad (portada para listados)
+    Map<Integer, ArchivoResponseDTO> getPortadaBatch(TipoCatalogoProducto entityType, List<Integer> ids);
 }

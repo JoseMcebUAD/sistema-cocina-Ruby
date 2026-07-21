@@ -28,4 +28,11 @@ public interface ArchivoRepository extends JpaRepository<Archivo, Integer> {
     Integer findMaxOrdenForEntity(
             @Param("type") TipoCatalogoProducto type,
             @Param("idEntidad") Integer idEntidad);
+
+    // Batch: archivos de varias entidades del mismo tipo, ordenados por entidad y luego por orden
+    @Query("SELECT a FROM Archivo a WHERE a.entityType = :type AND a.idEntidad IN :ids " +
+            "ORDER BY a.idEntidad ASC, a.orden ASC")
+    List<Archivo> findByEntityTypeAndIdEntidadIn(
+            @Param("type") TipoCatalogoProducto type,
+            @Param("ids") List<Integer> ids);
 }
