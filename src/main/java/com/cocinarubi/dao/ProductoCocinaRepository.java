@@ -29,4 +29,6 @@ public interface ProductoCocinaRepository extends JpaRepository<ProductoCocina, 
                    "p.nombreProducto ASC",
            countQuery = "SELECT COUNT(p) FROM ProductoCocina p WHERE p.tipoProducto = :tipo")
     Page<ProductoCocina> findByTipoProductoPaginado(@Param("tipo") DBConstants.TipoProducto tipo, Pageable pageable);
+
+    boolean existsByIdProductoCocinaAndTipoProducto(Integer idProductoCocina, DBConstants.TipoProducto tipoProducto);
 }
