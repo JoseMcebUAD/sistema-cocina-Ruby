@@ -3,6 +3,7 @@ package com.cocinarubi.presentation.controller.files;
 import com.cocinarubi.DBConstants.TipoCatalogoProducto;
 import com.cocinarubi.domain.interfaces.FileUploadService;
 import com.cocinarubi.exception.BusinessException;
+import com.cocinarubi.presentation.dto.request.CambiarOrdenRequestDTO;
 import com.cocinarubi.presentation.dto.request.FileUploadRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.presentation.dto.response.ArchivoResponseDTO;
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Valid;
 import jakarta.validation.Validator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -86,6 +88,13 @@ public class FileController {
     public ResponseEntity<ApiResponse<ArchivoResponseDTO>> getOne(@PathVariable Integer idArchivo) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Archivo encontrado",
                 fileUploadService.getOne(idArchivo)));
+    }
+
+    @PatchMapping("/orden")
+    public ResponseEntity<ApiResponse<ArchivoResponseDTO>> actualizarOrden(
+            @Valid @RequestBody CambiarOrdenRequestDTO dto) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Orden actualizado correctamente",
+                fileUploadService.actualizarOrden(dto.getEntityType(), dto.getIdArchivo(), dto.getNuevoOrden())));
     }
 
     @DeleteMapping("/{idArchivo}")

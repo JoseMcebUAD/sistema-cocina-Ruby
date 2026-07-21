@@ -171,6 +171,43 @@ public class FileServiceImpl implements FileUploadService {
 
     @Override
     @Transactional
+    public ArchivoResponseDTO actualizarOrden(TipoCatalogoProducto entityType, Integer idArchivo, Integer nuevoOrden) {
+        Archivo archivo = archivoRepository.findById(idArchivo)
+                .orElseThrow(() -> new BusinessException(
+                        "Archivo no encontrado con id: " + idArchivo, HttpStatus.NOT_FOUND));
+
+        if (!archivo.getEntityType().equals(entityType)) {
+            throw new BusinessException(
+                    "El archivo no pertenece al tipo de entidad indicado", HttpStatus.BAD_REQUEST);
+        }
+
+        Integer origenOrden = archivo.getOrden();
+        if (origenOrden.equals(nuevoOrden)) {
+            return ArchivoResponseDTO.from(archivo);
+        }
+
+        Integer idEntidad = archivo.getIdEntidad();
+        Integer maxOrden = archivoRepository.findMaxOrdenForEntity(entityType, idEntidad);
+
+        if (nuevoOrden > maxOrden) {
+            throw new BusinessException(
+                    "El nuevo orden debe estar entre 1 y " + maxOrden, HttpStatus.BAD_REQUEST);
+        }
+
+        if (origenOrden > nuevoOrden) {
+            // El archivo sube: todos los que estaban en [nuevoOrden, origenOrden-1] ceden su lugar
+            archivoRepository.incrementOrdenBetween(entityType, idEntidad, nuevoOrden, origenOrden - 1);
+        } else {
+            // El archivo baja: todos los que estaban en [origenOrden+1, nuevoOrden] llenan el hueco
+            archivoRepository.decrementOrdenBetween(entityType, idEntidad, origenOrden + 1, nuevoOrden);
+        }
+
+        archivo.setOrden(nuevoOrden);
+        return ArchivoResponseDTO.from(archivoRepository.save(archivo));
+    }
+
+    @Override
+    @Transactional
     public void delete(Integer idArchivo) {
         // Lanza 404 si el archivo no existe antes de intentar eliminarlo en Cloudinary
         Archivo archivo = archivoRepository.findById(idArchivo)

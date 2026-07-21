@@ -3,6 +3,7 @@ package com.cocinarubi.dao;
 import com.cocinarubi.DBConstants.TipoCatalogoProducto;
 import com.cocinarubi.domain.entity.Archivo;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -35,4 +36,24 @@ public interface ArchivoRepository extends JpaRepository<Archivo, Integer> {
     List<Archivo> findByEntityTypeAndIdEntidadIn(
             @Param("type") TipoCatalogoProducto type,
             @Param("ids") List<Integer> ids);
+
+    // Desplaza +1 el orden de los archivos en el rango [from, to] para hacer hueco al archivo que sube
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Archivo a SET a.orden = a.orden + 1 " +
+            "WHERE a.entityType = :type AND a.idEntidad = :idEntidad AND a.orden BETWEEN :from AND :to")
+    void incrementOrdenBetween(
+            @Param("type") TipoCatalogoProducto type,
+            @Param("idEntidad") Integer idEntidad,
+            @Param("from") Integer from,
+            @Param("to") Integer to);
+
+    // Desplaza -1 el orden de los archivos en el rango [from, to] para cerrar el hueco del archivo que baja
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Archivo a SET a.orden = a.orden - 1 " +
+            "WHERE a.entityType = :type AND a.idEntidad = :idEntidad AND a.orden BETWEEN :from AND :to")
+    void decrementOrdenBetween(
+            @Param("type") TipoCatalogoProducto type,
+            @Param("idEntidad") Integer idEntidad,
+            @Param("from") Integer from,
+            @Param("to") Integer to);
 }

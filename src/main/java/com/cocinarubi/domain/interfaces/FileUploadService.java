@@ -31,4 +31,7 @@ public interface FileUploadService {
 
     // Retorna solo la imagen de menor orden por entidad (portada para listados)
     Map<Integer, ArchivoResponseDTO> getPortadaBatch(TipoCatalogoProducto entityType, List<Integer> ids);
+
+    // Cambia el orden de un archivo y rota los demás de la misma entidad para mantener la secuencia
+    ArchivoResponseDTO actualizarOrden(TipoCatalogoProducto entityType, Integer idArchivo, Integer nuevoOrden);
 }
