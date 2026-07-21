@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 public class PagoRepartidorResponseDTO {
 
     private Integer idPagoRepartidor;
+    private String nombreRepartidor;
     private BigDecimal pago;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")

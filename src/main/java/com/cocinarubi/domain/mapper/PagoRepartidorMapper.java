@@ -18,6 +18,7 @@ public class PagoRepartidorMapper {
     public PagoRepartidor toEntity(PagoRepartidorRequestDTO dto) {
         return PagoRepartidor.builder()
                 .idPagoRepartidor(dto.getIdPagoRepartidor())
+                .nombreRepartidor("Don cesar")
                 .pago(dto.getPago())
                 .fechaPago(dto.getFechaPago())
                 .build();
@@ -26,6 +27,7 @@ public class PagoRepartidorMapper {
     public PagoRepartidorResponseDTO toResponse(PagoRepartidor entity) {
         return PagoRepartidorResponseDTO.builder()
                 .idPagoRepartidor(entity.getIdPagoRepartidor())
+                .nombreRepartidor(entity.getNombreRepartidor())
                 .pago(entity.getPago())
                 .fechaPago(entity.getFechaPago())
                 .build();

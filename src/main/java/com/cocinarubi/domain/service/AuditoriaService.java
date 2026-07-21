@@ -5,9 +5,11 @@ import com.cocinarubi.DBConstants.TipoOperacion;
 import com.cocinarubi.dao.AuditoriaRepository;
 import com.cocinarubi.domain.entity.Auditoria;
 import com.cocinarubi.domain.service.auditoria.AuditoriaParser;
+import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.response.AuditoriaResponseDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -73,6 +75,11 @@ public class AuditoriaService {
                                                      Integer idUsuario,
                                                      DBConstants.TipoOperacion tipoOperacion,
                                                      Pageable pageable) {
+        if (desde != null && hasta != null && desde.isAfter(hasta)) {
+            throw new BusinessException(
+                    "La fecha 'desde' no puede ser posterior a la fecha 'hasta'",
+                    HttpStatus.BAD_REQUEST);
+        }
         LocalDateTime desdeTs = desde != null ? desde.atStartOfDay() : null;
         LocalDateTime hastaTs = hasta != null ? hasta.atTime(23, 59, 59) : null;
         Page<AuditoriaResponseDTO> pagina = auditoriaRepository.findConFiltros(

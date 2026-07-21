@@ -3,10 +3,12 @@ package com.cocinarubi.domain.service;
 import com.cocinarubi.DBConstants;
 import com.cocinarubi.dao.VistaResumenPedidoRepository;
 import com.cocinarubi.dao.VistaResumenPedidoRepository.VistaResumenMetricasProjection;
+import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.response.VistaResumenPedidoConMetricasResponseDTO;
 import com.cocinarubi.presentation.dto.response.VistaResumenPedidoResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -26,6 +28,7 @@ public class VistaResumenPedidoService {
                                                         DBConstants.TipoPedido tipoPedido,
                                                         DBConstants.PedidoCreadoDesde creadoDesde,
                                                         Pageable pageable) {
+        validarRango(desde, hasta);
         return repository.findVistaConFiltros(desde, hasta, tipoPedido, creadoDesde, pageable);
     }
 
@@ -34,6 +37,7 @@ public class VistaResumenPedidoService {
                                                                         DBConstants.TipoPedido tipoPedido,
                                                                         DBConstants.PedidoCreadoDesde creadoDesde,
                                                                         Pageable pageable) {
+        validarRango(desde, hasta);
         Page<VistaResumenPedidoResponseDTO> pedidos = repository.findVistaConFiltros(
                 desde, hasta, tipoPedido, creadoDesde, pageable);
         VistaResumenMetricasProjection m = repository.findMetricasConFiltros(
@@ -49,6 +53,14 @@ public class VistaResumenPedidoService {
                 .ingresoTransferencia(nullSafeBigDecimal(m.getIngresoTransferencia()))
                 .ingresoTarjeta(nullSafeBigDecimal(m.getIngresoTarjeta()))
                 .build();
+    }
+
+    private void validarRango(LocalDateTime desde, LocalDateTime hasta) {
+        if (desde != null && hasta != null && desde.isAfter(hasta)) {
+            throw new BusinessException(
+                    "La fecha 'desde' no puede ser posterior a la fecha 'hasta'",
+                    HttpStatus.BAD_REQUEST);
+        }
     }
 
     private long nullSafeLong(Long value) {
