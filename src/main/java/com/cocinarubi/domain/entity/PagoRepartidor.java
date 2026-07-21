@@ -14,6 +14,11 @@ import java.time.LocalDateTime;
  * el monto pagado a cada repartidor por su ruta. Es un registro contable simple
  * que el operador genera al cerrar el turno.</p>
  *
+ * <p>Reglas de negocio (aplicadas en {@code PagoRepartidorValidationImp}):
+ * un único pago por día calendario, solo días hábiles (Lun–Vie) al crear, y el
+ * monto no puede superar el ingreso total del día. El endpoint DELETE no está
+ * expuesto: los registros se corrigen mediante PUT.</p>
+ *
  * <p>⚠️ Bug conocido [BUG-1]: el DDL original referencia {@code id_ruta} en la
  * FK {@code fk_pago_repartidor_ruta}, pero esa columna <strong>no está declarada</strong>
  * en el CREATE TABLE. Por esta razón, la entidad no mapea relación a {@link Ruta};
@@ -36,9 +41,12 @@ public class PagoRepartidor {
     @Column(name = "id_pago_repartidor")
     private Integer idPagoRepartidor;
 
-    @Column(name = "pago", nullable = false, precision = 5, scale = 2)
+    @Column(name = "pago")
     private BigDecimal pago;
 
-    @Column(name = "fecha_pago", nullable = false)
+    @Column(name = "fecha_pago")
     private LocalDateTime fechaPago;
+
+    @Column(name = "nombre_repartidor")
+    private String nombreRepartidor;
 }
