@@ -1,0 +1,66 @@
+package com.cocinarubi.presentation.dto.response;
+
+import com.cocinarubi.DBConstants.Estatus;
+import java.math.BigDecimal;
+import java.util.List;
+
+//DTO del básico para respuesta hacia el front
+public class BasicoResponseDTO {
+
+    private int idBasico;
+    private int idComida;
+    private String nombreComida;
+    private String descripcion;
+    private boolean destacado;
+    private BigDecimal precioBasico;
+    private Estatus estatus;
+    private List<ComplementoResponseDTO> complementos;
+    private int totalComplementos;
+
+    public BasicoResponseDTO() {}
+
+    public BasicoResponseDTO(int idBasico, int idComida, String nombreComida, String descripcion,
+                              boolean destacado, BigDecimal precioBasico, Estatus estatus,
+                              List<ComplementoResponseDTO> complementos) {
+        this.idBasico = idBasico;
+        this.idComida = idComida;
+        this.nombreComida = nombreComida;
+        this.descripcion = descripcion;
+        this.destacado = destacado;
+        this.precioBasico = precioBasico;
+        this.estatus = estatus;
+        this.complementos = complementos;
+        this.totalComplementos = complementos != null ? complementos.size() : 0;
+    }
+
+    public int getIdBasico() { return idBasico; }
+    public void setIdBasico(int idBasico) { this.idBasico = idBasico; }
+
+    public int getIdComida() { return idComida; }
+    public void setIdComida(int idComida) { this.idComida = idComida; }
+
+    public String getNombreComida() { return nombreComida; }
+    public void setNombreComida(String nombreComida) { this.nombreComida = nombreComida; }
+
+    public String getDescripcion() { return descripcion; }
+    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+
+    public boolean isDestacado() { return destacado; }
+    public void setDestacado(boolean destacado) { this.destacado = destacado; }
+
+    public BigDecimal getPrecioBasico() { return precioBasico; }
+    public void setPrecioBasico(BigDecimal precioBasico) { this.precioBasico = precioBasico; }
+
+    public Estatus getEstatus() { return estatus; }
+    public void setEstatus(Estatus estatus) { this.estatus = estatus; }
+
+    //complementos seleccionados del básico
+    public List<ComplementoResponseDTO> getComplementos() { return complementos; }
+    public void setComplementos(List<ComplementoResponseDTO> complementos) {
+        this.complementos = complementos;
+        this.totalComplementos = complementos != null ? complementos.size() : 0;
+    }
+
+    public int getTotalComplementos() { return totalComplementos; }
+    public void setTotalComplementos(int totalComplementos) { this.totalComplementos = totalComplementos; }
+}

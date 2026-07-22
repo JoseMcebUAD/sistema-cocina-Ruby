@@ -1,0 +1,13 @@
+FROM maven:3.9.9-eclipse-temurin-21
+
+WORKDIR /app
+
+# 1. Cachear dependencias (esta capa solo se invalida si cambia el pom.xml)
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# 2. Copiar el resto del código
+COPY src ./src
+
+# 3. Arrancar con perfil dev
+CMD ["mvn", "spring-boot:run", "-Dspring-boot.run.profiles=dev", "-DskipTests"]
