@@ -121,26 +121,35 @@ public class SecurityConfig {
                     // ── Solo JEFA_COCINA ──────────────────────────────────
                     .requestMatchers(
                             "/usuario/**",
-                            "/auditoria/**"
-                        ).hasRole("JEFA_COCINA")
-                        
-                        // ── Ambos roles ───────────────────────────────────────
-                        .requestMatchers(
+                            "/auditoria/**",
+                            "/estadisticas/**"
+                    ).hasRole("JEFA_COCINA")
+
+                    // ── Ambos roles ───────────────────────────────────────
+                    .requestMatchers(
+                            "/anuncio/**",
+                            "/basico/**",
+                            "/cliente/**",
+                            "/codigoCliente/**",
                             "/comida/**",
+                            "/complemento/**",
                             "/desayuno/**",
+                            "/favoritoCliente/**",
+                            "/files/**",
+                            "/horario-atencion/**",
+                            "/impresora/**",
+                            "/inventarioComida/**",
+                            "/pago-repartidor/**",
+                            "/pedido/**",
+                            "/productoCocina/**",
+                            "/registro-cliente/**",
                             "/ruta/**",
                             "/tarifa-especial/**",
-                            "/horario-atencion/**",
-                            "/anuncio/**",
-                            "/codigoCliente/**",
-                            "/complemento/**",
-                            "/basico/**",
-                            "/registro-cliente/**",
-                            "/cliente/**",
-                            "/pago-repartidor/**"
+                            "/vista-resumen-pedido/**"
                     ).hasAnyRole("JEFA_COCINA", "COCINA")
 
-                    .anyRequest().authenticated()
+                    // ── Cualquier otra ruta no especificada: denegada ────
+                    .anyRequest().denyAll()
             )
 
             // ── Orden: GlobalRateLimit → LoginRateLimit → Correlation → JWT → Spring ──
