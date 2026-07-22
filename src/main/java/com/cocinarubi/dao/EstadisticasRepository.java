@@ -123,4 +123,42 @@ public interface EstadisticasRepository extends JpaRepository<Pedido, Integer> {
             @Param("hasta") LocalDateTime hasta,
             @Param("metodoPago") DBConstants.MetodoPago metodoPago
     );
+
+    /**
+     * Cuenta pedidos e ingreso total agrupados por día de semana (DAYOFWEEK MySQL: 1=Dom, 2=Lun, …, 7=Sáb).
+     * Columnas del Object[]: [0] dia_semana (Number 1-7), [1] cantidad_pedidos (Number), [2] ingreso (BigDecimal).
+     */
+    @Query(value = """
+            SELECT DAYOFWEEK(p.fecha_expedicion_pedido) AS dia_semana,
+                   COUNT(*)                              AS cantidad_pedidos,
+                   SUM(p.precio_final_orden)             AS ingreso
+            FROM pedido p
+            WHERE (:desde IS NULL OR p.fecha_expedicion_pedido >= :desde)
+              AND (:hasta IS NULL OR p.fecha_expedicion_pedido <= :hasta)
+            GROUP BY dia_semana
+            """, nativeQuery = true)
+    List<Object[]> findVentasPorDiaSemana(
+            @Param("desde") LocalDateTime desde,
+            @Param("hasta") LocalDateTime hasta
+    );
+
+    /**
+     * Cuenta pedidos agrupados por franja horaria definida por segundosRango.
+     * Columnas del Object[]: [0] slot_index (Number), [1] cantidad_pedidos (Number).
+     * El slot_index se convierte a hora inicio/fin en el servicio.
+     */
+    @Query(value = """
+            SELECT FLOOR(TIME_TO_SEC(TIME(p.fecha_expedicion_pedido)) / :segundosRango) AS slot_index,
+                   COUNT(*) AS cantidad_pedidos
+            FROM pedido p
+            WHERE (:desde IS NULL OR p.fecha_expedicion_pedido >= :desde)
+              AND (:hasta IS NULL OR p.fecha_expedicion_pedido <= :hasta)
+            GROUP BY slot_index
+            ORDER BY slot_index
+            """, nativeQuery = true)
+    List<Object[]> findVentasPorHorario(
+            @Param("desde") LocalDateTime desde,
+            @Param("hasta") LocalDateTime hasta,
+            @Param("segundosRango") int segundosRango
+    );
 }
