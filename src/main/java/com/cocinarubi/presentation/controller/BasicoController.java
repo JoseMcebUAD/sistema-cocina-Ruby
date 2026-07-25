@@ -72,6 +72,12 @@ public class BasicoController {
                 basicoService.update(id, dto)));
     }
 
+    @PutMapping("/destacado/{id}")
+    public ResponseEntity<ApiResponse<BasicoResponseDTO>> toggleDestacado(@PathVariable int id) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Destacado actualizado",
+                basicoService.toggleDestacado(id)));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable int id) {
         basicoService.delete(id);

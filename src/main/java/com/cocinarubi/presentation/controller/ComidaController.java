@@ -92,6 +92,12 @@ public class ComidaController {
         }
     }
 
+    @PutMapping("/destacado/{id}")
+    public ResponseEntity<ApiResponse<Comida>> toggleDestacado(@PathVariable int id) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Destacado actualizado",
+                comidaService.toggleDestacado(id)));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable int id) {
         comidaService.delete(id);

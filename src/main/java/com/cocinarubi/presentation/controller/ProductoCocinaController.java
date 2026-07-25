@@ -84,6 +84,12 @@ public class ProductoCocinaController {
                 productoCocinaService.update(id, dto)));
     }
 
+    @PutMapping("/destacado/{id}")
+    public ResponseEntity<ApiResponse<ProductoCocinaResponseDTO>> toggleDestacado(@PathVariable int id) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Destacado actualizado",
+                productoCocinaService.toggleDestacado(id)));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable int id) {
         productoCocinaService.delete(id);
