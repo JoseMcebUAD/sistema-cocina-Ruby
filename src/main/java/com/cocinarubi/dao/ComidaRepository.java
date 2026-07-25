@@ -26,6 +26,10 @@ public interface ComidaRepository extends JpaRepository<Comida, Integer> {
     @Query("SELECT c FROM Comida c WHERE c.estatus = :estatus ORDER BY c.nombreComida ASC")
     List<Comida> findDisponiblesOrdenados(@Param("estatus") DBConstants.Estatus estatus);
 
+    @Query(value = "SELECT c FROM Comida c WHERE c.estatus = :estatus ORDER BY c.nombreComida ASC",
+           countQuery = "SELECT COUNT(c) FROM Comida c WHERE c.estatus = :estatus")
+    Page<Comida> findDisponiblesPaginado(@Param("estatus") DBConstants.Estatus estatus, Pageable pageable);
+
     @Query(value = "SELECT c FROM Comida c ORDER BY " +
                    "CASE c.estatus WHEN 'DISPONIBLE' THEN 0 WHEN 'NO_DISPONIBLE' THEN 1 WHEN 'AGOTADO' THEN 2 ELSE 3 END, " +
                    "c.nombreComida ASC",

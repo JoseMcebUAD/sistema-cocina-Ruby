@@ -27,4 +27,8 @@ public interface BasicoRepository extends JpaRepository<Basico, Integer> {
                    "b.comida.nombreComida ASC",
            countQuery = "SELECT COUNT(b) FROM Basico b")
     Page<Basico> findAllPaginado(Pageable pageable);
+
+    @Query(value = "SELECT b FROM Basico b WHERE b.estatus = :estatus ORDER BY b.comida.nombreComida ASC",
+           countQuery = "SELECT COUNT(b) FROM Basico b WHERE b.estatus = :estatus")
+    Page<Basico> findDisponiblesPaginado(@Param("estatus") DBConstants.Estatus estatus, Pageable pageable);
 }

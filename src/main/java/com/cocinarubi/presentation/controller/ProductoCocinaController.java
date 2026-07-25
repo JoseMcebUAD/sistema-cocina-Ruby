@@ -55,6 +55,14 @@ public class ProductoCocinaController {
                 productoCocinaService.findDisponibles()));
     }
 
+    @GetMapping("/disponibles-paginado")
+    public ResponseEntity<ApiResponse<Page<ProductoCocinaResponseDTO>>> findDisponiblesPaginado(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Productos de cocina disponibles obtenidos correctamente",
+                productoCocinaService.findDisponibles(PageRequest.of(page, size))));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductoCocinaResponseDTO>> findById(@PathVariable int id) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Producto de cocina encontrado",

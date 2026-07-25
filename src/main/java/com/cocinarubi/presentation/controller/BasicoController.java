@@ -44,6 +44,14 @@ public class BasicoController {
                 basicoService.findDisponibles()));
     }
 
+    @GetMapping("/disponibles-paginado")
+    public ResponseEntity<ApiResponse<Page<BasicoResponseDTO>>> findDisponiblesPaginado(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Básicos disponibles obtenidos correctamente",
+                basicoService.findDisponibles(PageRequest.of(page, size))));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<BasicoResponseDTO>> findById(@PathVariable int id) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Básico encontrado",

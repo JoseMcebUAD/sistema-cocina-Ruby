@@ -47,6 +47,14 @@ public class ComidaController {
                 comidaService.findDisponibles()));
     }
 
+    @GetMapping("/disponibles-paginado")
+    public ResponseEntity<ApiResponse<Page<Comida>>> findDisponiblesPaginado(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Comidas disponibles obtenidas correctamente",
+                comidaService.findDisponibles(PageRequest.of(page, size))));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Comida>> findById(@PathVariable int id) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Comida encontrada",

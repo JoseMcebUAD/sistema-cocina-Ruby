@@ -64,6 +64,12 @@ public class BasicoService {
     }
 
     @Transactional(readOnly = true)
+    public Page<BasicoResponseDTO> findDisponibles(Pageable pageable) {
+        return basicoRepository.findDisponiblesPaginado(DBConstants.Estatus.DISPONIBLE, pageable)
+                .map(this::toResponseDTO);
+    }
+
+    @Transactional(readOnly = true)
     public BasicoResponseDTO findById(int id) {
         return toResponseDTO(findEntityById(id));
     }

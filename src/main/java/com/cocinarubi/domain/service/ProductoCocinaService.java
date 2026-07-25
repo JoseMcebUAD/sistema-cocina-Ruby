@@ -64,6 +64,12 @@ public class ProductoCocinaService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public Page<ProductoCocinaResponseDTO> findDisponibles(Pageable pageable) {
+        return productoCocinaRepository.findDisponiblesPaginado(DBConstants.Estatus.DISPONIBLE, pageable)
+                .map(this::toResponseDTO);
+    }
+
 
     @Transactional
     public ProductoCocinaResponseDTO save(ProductoCocinaRequestDTO dto) {

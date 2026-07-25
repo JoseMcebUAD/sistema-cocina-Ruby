@@ -32,6 +32,10 @@ public class DesayunoService {
         return desayunoRepository.findDisponiblesOrdenados(DBConstants.Estatus.DISPONIBLE);
     }
 
+    public Page<Desayuno> findDisponibles(Pageable pageable) {
+        return desayunoRepository.findDisponiblesPaginado(DBConstants.Estatus.DISPONIBLE, pageable);
+    }
+
     public Desayuno findById(int id) {
         return desayunoRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(

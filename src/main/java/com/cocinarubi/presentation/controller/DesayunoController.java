@@ -47,6 +47,14 @@ public class DesayunoController {
                 desayunoService.findDisponibles()));
     }
 
+    @GetMapping("/disponibles-paginado")
+    public ResponseEntity<ApiResponse<Page<Desayuno>>> findDisponiblesPaginado(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Desayunos disponibles obtenidos correctamente",
+                desayunoService.findDisponibles(PageRequest.of(page, size))));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Desayuno>> findById(@PathVariable int id) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Desayuno encontrado",

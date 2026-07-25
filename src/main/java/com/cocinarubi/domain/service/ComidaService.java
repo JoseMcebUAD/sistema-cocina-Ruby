@@ -32,6 +32,10 @@ public class ComidaService {
         return comidaRepository.findDisponiblesOrdenados(DBConstants.Estatus.DISPONIBLE);
     }
 
+    public Page<Comida> findDisponibles(Pageable pageable) {
+        return comidaRepository.findDisponiblesPaginado(DBConstants.Estatus.DISPONIBLE, pageable);
+    }
+
     public Comida findById(int id) {
         return comidaRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(
