@@ -128,11 +128,21 @@ public class RutaService {
             }
         }
 
+        // Fase 1: valores temporales negativos para liberar el unique constraint antes del reorden.
+        // MySQL valida el unique por fila en cada UPDATE, por lo que asignar el orden final
+        // directamente provoca Duplicate entry cuando dos rutas intercambian posiciones.
         List<Ruta> rutas = items.stream().map(item -> {
             Ruta ruta = findEntityById(item.getIdRuta());
-            ruta.setOrden(item.getOrden());
+            ruta.setOrden(-item.getIdRuta()); // -idRuta es único y nunca colisiona con órdenes reales
             return ruta;
         }).collect(Collectors.toList());
+        rutaRepository.saveAll(rutas);
+        rutaRepository.flush(); // fuerza los UPDATEs temporales antes de la fase 2
+
+        // Fase 2: asignar el orden real ya sin conflictos
+        for (int i = 0; i < rutas.size(); i++) {
+            rutas.get(i).setOrden(items.get(i).getOrden());
+        }
 
         return rutaRepository.saveAll(rutas).stream()
                 .sorted((a, b) -> Integer.compare(a.getOrden(), b.getOrden()))
