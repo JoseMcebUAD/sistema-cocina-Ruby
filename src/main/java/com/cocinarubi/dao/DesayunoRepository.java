@@ -23,11 +23,12 @@ public interface DesayunoRepository extends JpaRepository<Desayuno, Integer> {
     @Query("SELECT d FROM Desayuno d WHERE d.estatus = :estatus ORDER BY d.nombreDesayuno ASC")
     List<Desayuno> findDisponiblesOrdenados(@Param("estatus") DBConstants.Estatus estatus);
 
-    @Query(value = "SELECT d FROM Desayuno d WHERE d.estatus = :estatus ORDER BY d.nombreDesayuno ASC",
+    @Query(value = "SELECT d FROM Desayuno d WHERE d.estatus = :estatus ORDER BY d.destacado DESC, d.nombreDesayuno ASC",
            countQuery = "SELECT COUNT(d) FROM Desayuno d WHERE d.estatus = :estatus")
     Page<Desayuno> findDisponiblesPaginado(@Param("estatus") DBConstants.Estatus estatus, Pageable pageable);
 
     @Query(value = "SELECT d FROM Desayuno d ORDER BY " +
+                   "d.destacado DESC, " +
                    "CASE d.estatus WHEN 'DISPONIBLE' THEN 0 WHEN 'NO_DISPONIBLE' THEN 1 WHEN 'AGOTADO' THEN 2 ELSE 3 END, " +
                    "d.nombreDesayuno ASC",
            countQuery = "SELECT COUNT(d) FROM Desayuno d")

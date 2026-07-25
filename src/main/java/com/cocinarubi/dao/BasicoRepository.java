@@ -23,12 +23,13 @@ public interface BasicoRepository extends JpaRepository<Basico, Integer> {
     List<Basico> findDisponiblesOrdenados(@Param("estatus") DBConstants.Estatus estatus);
 
     @Query(value = "SELECT b FROM Basico b ORDER BY " +
+                   "b.destacado DESC, " +
                    "CASE b.estatus WHEN 'DISPONIBLE' THEN 0 WHEN 'NO_DISPONIBLE' THEN 1 WHEN 'AGOTADO' THEN 2 ELSE 3 END, " +
                    "b.comida.nombreComida ASC",
            countQuery = "SELECT COUNT(b) FROM Basico b")
     Page<Basico> findAllPaginado(Pageable pageable);
 
-    @Query(value = "SELECT b FROM Basico b WHERE b.estatus = :estatus ORDER BY b.comida.nombreComida ASC",
+    @Query(value = "SELECT b FROM Basico b WHERE b.estatus = :estatus ORDER BY b.destacado DESC, b.comida.nombreComida ASC",
            countQuery = "SELECT COUNT(b) FROM Basico b WHERE b.estatus = :estatus")
     Page<Basico> findDisponiblesPaginado(@Param("estatus") DBConstants.Estatus estatus, Pageable pageable);
 }
