@@ -145,6 +145,13 @@ public class ProductoCocinaService {
         );
 
     }
+    @Transactional
+    public ProductoCocinaResponseDTO toggleDestacado(int id) {
+        ProductoCocina entidad = findEntityById(id);
+        entidad.setDestacado(!entidad.isDestacado());
+        return toResponseDTO(productoCocinaRepository.save(entidad));
+    }
+
     public boolean existsByIdAndTipo(Integer id, TipoProducto tipo) {
         // Delega al repositorio la validación combinada id + tipoProducto
         return productoCocinaRepository.existsByIdProductoCocinaAndTipoProducto(id, tipo);

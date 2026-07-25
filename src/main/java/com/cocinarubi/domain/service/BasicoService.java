@@ -115,6 +115,13 @@ public class BasicoService {
         basicoRepository.deleteById(id);
     }
 
+    @Transactional
+    public BasicoResponseDTO toggleDestacado(int id) {
+        Basico basico = findEntityById(id);
+        basico.setDestacado(!basico.isDestacado());
+        return toResponseDTO(basicoRepository.save(basico));
+    }
+
     /** Vincula los complementos al básico; no hace nada si la lista está vacía o es nula. */
     private void agregarComplementos(Basico basico, List<Integer> ids) {
         if (ids == null || ids.isEmpty()) return;

@@ -70,4 +70,10 @@ public class ComidaService {
         }
         comidaRepository.deleteById(id);
     }
+
+    public Comida toggleDestacado(int id) {
+        Comida comida = findById(id);
+        comida.setDestacado(!comida.isDestacado());
+        return comidaRepository.save(comida);
+    }
 }

@@ -58,4 +58,10 @@ public class DesayunoService {
         }
         desayunoRepository.deleteById(id);
     }
+
+    public Desayuno toggleDestacado(int id) {
+        Desayuno desayuno = findById(id);
+        desayuno.setDestacado(!desayuno.isDestacado());
+        return desayunoRepository.save(desayuno);
+    }
 }
