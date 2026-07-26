@@ -128,6 +128,7 @@ public class SecurityConfig {
                     // ── Ambos roles ───────────────────────────────────────
                     .requestMatchers(
                             "/anuncio/**",
+                            "/produccion/**",
                             "/basico/**",
                             "/cliente/**",
                             "/codigoCliente/**",
@@ -176,11 +177,17 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         // Ajustar orígenes para producción
-        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        config.setAllowedOriginPatterns(List.of(
+                "https://api.cocinarubi.com",
+                "https://api-test.cocinarubi.com",
+                "https://carrito.cocinarubi.com",
+                "https://carrito-test.cocinarubi.com"
+        ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        // Necesario para que el frontend pueda leer el header Authorization renovado
-        config.setExposedHeaders(List.of("Authorization", "X-Correlation-ID"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-API-Key",
+                "X-Correlation-ID"));
+        config.setExposedHeaders(List.of("Authorization", "X-Correlation-ID",
+                "X-RateLimit-Remaining", "Retry-After"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 
