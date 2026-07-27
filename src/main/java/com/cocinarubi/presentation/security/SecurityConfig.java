@@ -128,9 +128,10 @@ public class SecurityConfig {
                     // ── Ambos roles ───────────────────────────────────────
                     .requestMatchers(
                             "/anuncio/**",
-                            "/produccion/**",
                             "/basico/**",
+                            "/busqueda-catalogo/**",
                             "/cliente/**",
+                            "/produccion/**",
                             "/codigoCliente/**",
                             "/comida/**",
                             "/complemento/**",
