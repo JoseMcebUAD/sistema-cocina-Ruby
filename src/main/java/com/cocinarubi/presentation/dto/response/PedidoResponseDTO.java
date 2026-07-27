@@ -27,6 +27,7 @@ public class PedidoResponseDTO {
     private PedidoDomicilioResponseDTO domicilio;
     private PedidoDomicilioCocinaResponseDTO domicilioCocina;
     private PedidoCocinaResponseDTO pedidoCocina;
+    private List<String> tarifasAplicadas;
 
     public PedidoResponseDTO() {}
 
@@ -111,4 +112,7 @@ public class PedidoResponseDTO {
 
     public PedidoCocinaResponseDTO getPedidoCocina() { return pedidoCocina; }
     public void setPedidoCocina(PedidoCocinaResponseDTO pedidoCocina) { this.pedidoCocina = pedidoCocina; }
+
+    public List<String> getTarifasAplicadas() { return tarifasAplicadas; }
+    public void setTarifasAplicadas(List<String> tarifasAplicadas) { this.tarifasAplicadas = tarifasAplicadas; }
 }
