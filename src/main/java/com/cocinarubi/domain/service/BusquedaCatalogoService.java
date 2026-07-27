@@ -1,7 +1,7 @@
 package com.cocinarubi.domain.service;
 
 import com.cocinarubi.exception.BusinessException;
-import com.cocinarubi.presentation.dto.response.busqueda.CategoriaResultadoResponseDTO;
+import com.cocinarubi.presentation.dto.response.busqueda.ItemBusquedaResponseDTO;
 import com.cocinarubi.presentation.dto.response.busqueda.ResultadoBusquedaResponseDTO;
 import com.cocinarubi.presentation.strategy.BusquedaProductoStrategy;
 import com.cocinarubi.presentation.strategy.strategyImplementation.BasicoBusquedaImp;
@@ -13,9 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -38,7 +36,7 @@ public class BusquedaCatalogoService {
 
     /**
      * Busca en todos los catálogos y aplica paginación global en memoria.
-     * Las categorías sin resultados en la página solicitada no aparecen en la respuesta.
+     * Cada ítem del resultado incluye su categoría para que el frontend pueda distinguir el tipo.
      */
     @Transactional(readOnly = true)
     public ResultadoBusquedaResponseDTO buscar(String termino, int page, int size) {
@@ -50,30 +48,34 @@ public class BusquedaCatalogoService {
         String t = termino.trim();
 
         // 1. Lista plana ordenada: todos los ítems de cada estrategia en secuencia
-        record Entrada(String categoria, Object dato) {}
-        List<Entrada> todos = new ArrayList<>();
+        List<ItemBusquedaResponseDTO> todos = new ArrayList<>();
         for (BusquedaProductoStrategy estrategia : estrategias) {
             String cat = estrategia.getNombreCategoria();
-            estrategia.buscarTodos(t).forEach(item -> todos.add(new Entrada(cat, item)));
+            estrategia.buscarTodos(t).forEach(item -> todos.add(new ItemBusquedaResponseDTO(cat, item)));
         }
 
         // 2. Paginación global: skip y limit sobre la lista plana
         long total = todos.size();
         int offset = page * size;
-        List<Entrada> pagina = todos.stream().skip(offset).limit(size).collect(Collectors.toList());
-
-        // 3. Reagrupar los ítems de esta página por categoría (LinkedHashMap preserva el orden de inserción)
-        Map<String, List<Object>> agrupado = new LinkedHashMap<>();
-        for (Entrada e : pagina) {
-            agrupado.computeIfAbsent(e.categoria(), k -> new ArrayList<>()).add(e.dato());
-        }
-
-        // 4. Construir la respuesta
-        List<CategoriaResultadoResponseDTO> cats = agrupado.entrySet().stream()
-                .map(e -> new CategoriaResultadoResponseDTO(e.getKey(), e.getValue()))
+        List<ItemBusquedaResponseDTO> content = todos.stream()
+                .skip(offset)
+                .limit(size)
                 .collect(Collectors.toList());
 
+        // 3. Construir metadatos de paginación equivalentes a Spring Page
         int totalPaginas = (int) Math.ceil((double) total / size);
-        return new ResultadoBusquedaResponseDTO(cats, total, totalPaginas, page, size);
+        boolean isFirst = page == 0;
+        boolean isLast = totalPaginas == 0 || page >= totalPaginas - 1;
+
+        ResultadoBusquedaResponseDTO.SortInfo sort =
+                new ResultadoBusquedaResponseDTO.SortInfo(true, false, true);
+        ResultadoBusquedaResponseDTO.PageableInfo pageable =
+                new ResultadoBusquedaResponseDTO.PageableInfo(page, size, sort, (long) page * size, false, true);
+
+        return new ResultadoBusquedaResponseDTO(
+                content, pageable, total, totalPaginas,
+                isFirst, isLast, size, page, sort,
+                content.size(), content.isEmpty()
+        );
     }
 }
