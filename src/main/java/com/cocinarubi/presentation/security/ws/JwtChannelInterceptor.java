@@ -25,10 +25,8 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
 
     private static final Logger log = LoggerFactory.getLogger(JwtChannelInterceptor.class);
 
-    // TODO: reemplazar con el prefijo del topic STOMP que requiera autenticación
-    private static final String TOPIC_PROTEGIDO = "/topic-protegido";
+    private static final String TOPIC_PROTEGIDO = "/pedido-web";
 
-    // TODO: reemplazar con los roles que pueden suscribirse/publicar en ese topic
     private static final Set<String> ROLES_REQUERIDOS = Set.of(
             "ROLE_JEFA_COCINA",
             "ROLE_COCINA"
