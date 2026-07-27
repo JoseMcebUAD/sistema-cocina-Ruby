@@ -33,4 +33,11 @@ public interface DesayunoRepository extends JpaRepository<Desayuno, Integer> {
                    "d.nombreDesayuno ASC",
            countQuery = "SELECT COUNT(d) FROM Desayuno d")
     Page<Desayuno> findAllPaginado(Pageable pageable);
+
+    @Query("SELECT d FROM Desayuno d " +
+           "WHERE LOWER(d.nombreDesayuno) LIKE LOWER(CONCAT('%', :termino, '%')) " +
+           "AND d.estatus = :estatus " +
+           "ORDER BY d.destacado DESC, d.nombreDesayuno ASC")
+    List<Desayuno> buscarDisponiblesPorNombre(@Param("termino") String termino,
+                                              @Param("estatus") DBConstants.Estatus estatus);
 }

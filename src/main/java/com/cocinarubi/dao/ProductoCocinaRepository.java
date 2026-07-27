@@ -36,4 +36,11 @@ public interface ProductoCocinaRepository extends JpaRepository<ProductoCocina, 
     Page<ProductoCocina> findByTipoProductoPaginado(@Param("tipo") DBConstants.TipoProducto tipo, Pageable pageable);
 
     boolean existsByIdProductoCocinaAndTipoProducto(Integer idProductoCocina, DBConstants.TipoProducto tipoProducto);
+
+    @Query("SELECT p FROM ProductoCocina p " +
+           "WHERE LOWER(p.nombreProducto) LIKE LOWER(CONCAT('%', :termino, '%')) " +
+           "AND p.estatus = :estatus " +
+           "ORDER BY p.destacado DESC, p.tipoProducto ASC, p.nombreProducto ASC")
+    List<ProductoCocina> buscarDisponiblesPorNombre(@Param("termino") String termino,
+                                                    @Param("estatus") DBConstants.Estatus estatus);
 }

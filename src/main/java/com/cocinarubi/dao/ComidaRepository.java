@@ -36,4 +36,11 @@ public interface ComidaRepository extends JpaRepository<Comida, Integer> {
                    "c.nombreComida ASC",
            countQuery = "SELECT COUNT(c) FROM Comida c")
     Page<Comida> findAllPaginado(Pageable pageable);
+
+    @Query("SELECT c FROM Comida c " +
+           "WHERE LOWER(c.nombreComida) LIKE LOWER(CONCAT('%', :termino, '%')) " +
+           "AND c.estatus = :estatus " +
+           "ORDER BY c.destacado DESC, c.nombreComida ASC")
+    List<Comida> buscarDisponiblesPorNombre(@Param("termino") String termino,
+                                            @Param("estatus") DBConstants.Estatus estatus);
 }
