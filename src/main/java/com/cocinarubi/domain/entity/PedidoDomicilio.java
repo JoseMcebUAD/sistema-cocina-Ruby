@@ -64,4 +64,7 @@ public class PedidoDomicilio {
 
     @Column(name = "tarifa", nullable = false, precision = 6, scale = 2)
     private BigDecimal tarifa;
+
+    @Column(name = "tarifas_especiales", precision = 5, scale = 2)
+    private BigDecimal tarifasEspeciales;
 }
