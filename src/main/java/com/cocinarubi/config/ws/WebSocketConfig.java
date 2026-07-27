@@ -3,10 +3,13 @@ package com.cocinarubi.config.ws;
 import com.cocinarubi.presentation.security.ws.JwtChannelInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.CloseStatus;
@@ -42,10 +45,26 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         this.jwtChannelInterceptor = jwtChannelInterceptor;
     }
 
+    /**
+     * Scheduler dedicado a enviar frames STOMP de heartbeat periódicamente.
+     * Un solo hilo es suficiente porque el volumen de conexiones simultáneas es bajo.
+     */
+    @Bean
+    public TaskScheduler heartbeatScheduler() {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setPoolSize(1);
+        scheduler.setThreadNamePrefix("wss-heartbeat-");
+        scheduler.initialize();
+        return scheduler;
+    }
+
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         // El broker distribuye mensajes a suscriptores en estos prefijos
-        registry.enableSimpleBroker("/pedido-web", "/topic");
+        // Heartbeat: [servidor→cliente, cliente→servidor] en milisegundos
+        registry.enableSimpleBroker("/pedido-web", "/topic")
+                .setHeartbeatValue(new long[]{20000, 20000})
+                .setTaskScheduler(heartbeatScheduler());
         // Mensajes dirigidos a @MessageMapping / @SubscribeMapping
         registry.setApplicationDestinationPrefixes("/app");
     }
