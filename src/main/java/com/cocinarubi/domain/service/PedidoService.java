@@ -84,6 +84,9 @@ public class PedidoService {
         if (!mensajesTarifas.isEmpty()) {
             response.setTarifasAplicadas(mensajesTarifas);
         }
+        if (PedidoCreadoDesde.WEB.equals(dto.getPedidoCreadoDesde())) {
+            eventPublisher.publishEvent(new PedidoWebActualizadoEvent(this));
+        }
         return response;
     }
 
