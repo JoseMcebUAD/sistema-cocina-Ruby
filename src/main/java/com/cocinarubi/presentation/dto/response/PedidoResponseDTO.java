@@ -20,6 +20,7 @@ public class PedidoResponseDTO {
     private BigDecimal pagoCliente;
     private BigDecimal cambio;
     private String uuidCliente;
+    private boolean pagado;
     private List<ComidaPedidoResponseDTO> comidas;
     private List<DesayunoPedidoResponseDTO> desayunos;
     private List<BasicoPedidoResponseDTO> basicos;
@@ -35,7 +36,7 @@ public class PedidoResponseDTO {
                              TipoPedido tipoPedido,
                              LocalDateTime fechaExpedicionPedido, PedidoCreadoDesde pedidoCreadoDesde,
                              BigDecimal precioFinalOrden, BigDecimal pagoCliente, BigDecimal cambio,
-                             String uuidCliente,
+                             String uuidCliente, boolean pagado,
                              List<ComidaPedidoResponseDTO> comidas,
                              List<DesayunoPedidoResponseDTO> desayunos,
                              List<BasicoPedidoResponseDTO> basicos,
@@ -53,6 +54,7 @@ public class PedidoResponseDTO {
         this.pagoCliente = pagoCliente;
         this.cambio = cambio;
         this.uuidCliente = uuidCliente;
+        this.pagado = pagado;
         this.comidas = comidas;
         this.desayunos = desayunos;
         this.basicos = basicos;
@@ -91,6 +93,9 @@ public class PedidoResponseDTO {
 
     public String getUuidCliente() { return uuidCliente; }
     public void setUuidCliente(String uuidCliente) { this.uuidCliente = uuidCliente; }
+
+    public boolean isPagado() { return pagado; }
+    public void setPagado(boolean pagado) { this.pagado = pagado; }
 
     public List<ComidaPedidoResponseDTO> getComidas() { return comidas; }
     public void setComidas(List<ComidaPedidoResponseDTO> comidas) { this.comidas = comidas; }
