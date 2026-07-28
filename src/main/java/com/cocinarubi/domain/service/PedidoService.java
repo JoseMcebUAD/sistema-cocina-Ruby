@@ -1,5 +1,6 @@
 package com.cocinarubi.domain.service;
 
+import com.cocinarubi.Constants;
 import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.dao.PedidoRepository;
 import com.cocinarubi.dao.TarifaEspecialRepository;
@@ -175,7 +176,7 @@ public class PedidoService {
                 .pedidoCreadoDesde(dto.getPedidoCreadoDesde())
                 .pagoCliente(dto.getPagoCliente())
                 .uuidCliente(dto.getUuidCliente())
-                .fechaExpedicionPedido(LocalDateTime.now())
+                .fechaExpedicionPedido(LocalDateTime.now(Constants.ZONA_MERIDA))
                 .impreso(false)
                 .pagado(false)
                 .build();

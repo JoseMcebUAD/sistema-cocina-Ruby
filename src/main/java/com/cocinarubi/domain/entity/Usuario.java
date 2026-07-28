@@ -1,5 +1,6 @@
 package com.cocinarubi.domain.entity;
 
+import com.cocinarubi.Constants;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -88,7 +89,7 @@ public class Usuario implements UserDetails {
     @Override
     public boolean isAccountNonLocked() {
         return bloqueadoHasta == null
-                || bloqueadoHasta.isBefore(LocalDateTime.now(ZoneId.of("America/Merida")));
+                || bloqueadoHasta.isBefore(LocalDateTime.now(Constants.ZONA_MERIDA));
     }
 
     @Override

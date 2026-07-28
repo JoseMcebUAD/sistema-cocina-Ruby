@@ -1,5 +1,6 @@
 package com.cocinarubi.domain.entity;
 
+import com.cocinarubi.Constants;
 import com.cocinarubi.DBConstants;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -58,6 +59,6 @@ public class Auditoria {
 
     @PrePersist
     void prePersist() {
-        creadoEn = LocalDateTime.now();
+        creadoEn = LocalDateTime.now(Constants.ZONA_MERIDA);
     }
 }

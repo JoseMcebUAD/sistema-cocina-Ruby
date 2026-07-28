@@ -1,5 +1,6 @@
 package com.cocinarubi.domain.service;
 
+import com.cocinarubi.Constants;
 import com.cocinarubi.DBConstants;
 import com.cocinarubi.dao.EstadisticasRepository;
 import com.cocinarubi.dao.PagoRepartidorRepository;
@@ -110,7 +111,7 @@ public class EstadisticasService {
     private BigDecimal sumarPagosRepartidor(LocalDateTime desde, LocalDateTime hasta) {
         // findByRango usa bound superior exclusivo (<), se ajusta hasta a las 00:00 del día siguiente
         LocalDateTime inicio = desde != null ? desde : LocalDateTime.of(2000, 1, 1, 0, 0);
-        LocalDateTime fin = hasta != null ? hasta.plusSeconds(1) : LocalDateTime.now().plusDays(1);
+        LocalDateTime fin = hasta != null ? hasta.plusSeconds(1) : LocalDateTime.now(Constants.ZONA_MERIDA).plusDays(1);
 
         return pagoRepartidorRepository.findByRango(inicio, fin)
                 .stream()
