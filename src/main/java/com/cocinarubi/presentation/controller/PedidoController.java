@@ -30,6 +30,13 @@ public class PedidoController {
                 pedidoService.findAll()));
     }
 
+    @SkipAudit
+    @GetMapping("/contador")
+    public ResponseEntity<ApiResponse<Long>> contador() {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Contador de pedidos WEB sin imprimir",
+                pedidoService.contarWebSinImprimir()));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PedidoResponseDTO>> findById(@PathVariable int id) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Pedido encontrado",
