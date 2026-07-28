@@ -108,6 +108,7 @@ public class SecurityConfig {
                     // ── Rutas públicas ────────────────────────────────────
                     .requestMatchers(
                             "/auth/**",
+                            "/todos/**",
                             "/v3/api-docs/**",
                             "/swagger-ui/**",
                             "/swagger-ui.html",
