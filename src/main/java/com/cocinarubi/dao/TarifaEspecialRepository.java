@@ -10,4 +10,6 @@ public interface TarifaEspecialRepository extends JpaRepository<TarifaEspecial, 
     @Override
     @Query("SELECT t FROM TarifaEspecial t ORDER BY t.nombreTarifa ASC")
     List<TarifaEspecial> findAll();
+
+    List<TarifaEspecial> findByIsActiveTrue();
 }

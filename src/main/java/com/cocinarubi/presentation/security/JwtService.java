@@ -23,8 +23,11 @@ public class JwtService {
 
     private static final long EXPIRACION_MS = 5L * 60 * 60 * 1000;
 
-    // Ambos roles trabajan turnos largos → ventana de renovación de 8 horas
-    private static final long VENTANA_RENOVACION_MS = 8L * 60 * 60 * 1000;
+    // JEFA_COCINA gestiona el local todo el día → token de 24 horas
+    private static final long EXPIRACION_JEFA_COCINA_MS = 24L * 60 * 60 * 1000;
+
+    // Ambos roles trabajan turnos largos → ventana de renovación de 3 horas
+    private static final long VENTANA_RENOVACION_MS = 3L * 60 * 60 * 1000;
 
     // ── Generación ───────────────────────────────────────────────────────────
 
@@ -33,12 +36,18 @@ public class JwtService {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
+        boolean esJefaCocina = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch("ROLE_JEFA_COCINA"::equals);
+
+        long expiracion = esJefaCocina ? EXPIRACION_JEFA_COCINA_MS : EXPIRACION_MS;
+
         return Jwts.builder()
                 .subject(userDetails.getUsername())
                 .claim("roles", roles)
                 .claim("vrms", VENTANA_RENOVACION_MS)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + EXPIRACION_MS))
+                .expiration(new Date(System.currentTimeMillis() + expiracion))
                 .signWith(getSigningKey())
                 .compact();
     }

@@ -55,4 +55,7 @@ public class PedidoDomicilioCocina {
 
     @Column(name = "precio_tarifa", nullable = false, precision = 6, scale = 2)
     private BigDecimal precioTarifa;
+
+    @Column(name = "tarifas_especiales", precision = 5, scale = 2)
+    private BigDecimal tarifasEspeciales;
 }

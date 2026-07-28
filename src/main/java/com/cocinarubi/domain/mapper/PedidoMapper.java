@@ -142,16 +142,18 @@ public class PedidoMapper {
 
     public PedidoDomicilioResponseDTO toDomicilioDTO(PedidoDomicilio pd) {
         // La ruta puede ser null si se eliminó del catálogo después de crear el pedido.
-        return new PedidoDomicilioResponseDTO(
+        PedidoDomicilioResponseDTO dto = new PedidoDomicilioResponseDTO(
                 pd.getRuta() != null ? pd.getRuta().getIdRuta() : 0,
                 pd.getRuta() != null ? pd.getRuta().getNombre() : null,
                 pd.getDireccion(),
                 pd.getCodigo()
         );
+        dto.setTarifasEspeciales(pd.getTarifasEspeciales());
+        return dto;
     }
 
     public PedidoDomicilioCocinaResponseDTO toDomicilioCocinaDTO(PedidoDomicilioCocina pdc) {
-        return new PedidoDomicilioCocinaResponseDTO(
+        PedidoDomicilioCocinaResponseDTO dto = new PedidoDomicilioCocinaResponseDTO(
                 pdc.getIdPedido(),
                 pdc.getRegistroCliente().getIdRegistroCliente(),
                 pdc.getRegistroCliente().getNombre(),
@@ -161,6 +163,8 @@ public class PedidoMapper {
                 pdc.getDomicilio(),
                 pdc.getPrecioTarifa()
         );
+        dto.setTarifasEspeciales(pdc.getTarifasEspeciales());
+        return dto;
     }
 
     public PedidoCocinaResponseDTO toPedidoCocinaDTO(PedidoCocina pc) {
