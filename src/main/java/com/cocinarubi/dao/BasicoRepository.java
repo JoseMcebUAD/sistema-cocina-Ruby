@@ -32,4 +32,14 @@ public interface BasicoRepository extends JpaRepository<Basico, Integer> {
     @Query(value = "SELECT b FROM Basico b WHERE b.estatus = :estatus ORDER BY b.destacado DESC, b.comida.nombreComida ASC",
            countQuery = "SELECT COUNT(b) FROM Basico b WHERE b.estatus = :estatus")
     Page<Basico> findDisponiblesPaginado(@Param("estatus") DBConstants.Estatus estatus, Pageable pageable);
+
+    @Query("SELECT DISTINCT b FROM Basico b " +
+           "JOIN FETCH b.comida c " +
+           "LEFT JOIN FETCH b.complementos bc " +
+           "LEFT JOIN FETCH bc.complemento " +
+           "WHERE LOWER(b.descripcion) LIKE LOWER(CONCAT('%', :termino, '%')) " +
+           "AND b.estatus = :estatus " +
+           "ORDER BY b.destacado DESC, c.nombreComida ASC")
+    List<Basico> buscarDisponiblesPorDescripcion(@Param("termino") String termino,
+                                                 @Param("estatus") DBConstants.Estatus estatus);
 }

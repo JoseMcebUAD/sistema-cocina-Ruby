@@ -1,10 +1,13 @@
 package com.cocinarubi.presentation.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BasicoPedidoDTO {
 
@@ -18,6 +21,10 @@ public class BasicoPedidoDTO {
     @JsonProperty("precioUnitario")
     private BigDecimal precioUnitario;
 
+    @Valid
+    @JsonProperty("extras")
+    private List<BasicoPedidoExtraDTO> extras = new ArrayList<>();
+
     public BasicoPedidoDTO() {}
 
     public BasicoPedidoDTO(Integer idBasico, BigDecimal precioUnitario) {
@@ -30,4 +37,7 @@ public class BasicoPedidoDTO {
 
     public BigDecimal getPrecioUnitario() { return precioUnitario; }
     public void setPrecioUnitario(BigDecimal precioUnitario) { this.precioUnitario = precioUnitario; }
+
+    public List<BasicoPedidoExtraDTO> getExtras() { return extras; }
+    public void setExtras(List<BasicoPedidoExtraDTO> extras) { this.extras = extras != null ? extras : new ArrayList<>(); }
 }
