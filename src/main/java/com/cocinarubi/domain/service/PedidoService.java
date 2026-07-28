@@ -120,6 +120,13 @@ public class PedidoService {
         pedidoRepository.save(pedido);
     }
 
+    @Transactional
+    public void marcarPagado(int id) {
+        Pedido pedido = findEntityById(id);
+        pedido.setPagado(true);
+        pedidoRepository.save(pedido);
+    }
+
     public void delete(int id) {
         if (!pedidoRepository.existsById(id)) {
             throw new BusinessException(
@@ -138,6 +145,7 @@ public class PedidoService {
                 .uuidCliente(dto.getUuidCliente())
                 .fechaExpedicionPedido(LocalDateTime.now())
                 .impreso(false)
+                .pagado(false)
                 .build();
     }
 

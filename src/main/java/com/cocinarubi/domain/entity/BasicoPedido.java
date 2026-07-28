@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Línea de pedido para un paquete básico.
@@ -47,4 +49,13 @@ public class BasicoPedido {
 
     @Column(name = "precio_unitario", nullable = false, precision = 5, scale = 2)
     private BigDecimal precioUnitario;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "basicoPedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<BasicoPedidoExtra> extras = new ArrayList<>();
+
+    public void addExtra(BasicoPedidoExtra item) {
+        item.setBasicoPedido(this);
+        this.extras.add(item);
+    }
 }

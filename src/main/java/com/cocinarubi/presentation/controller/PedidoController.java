@@ -58,6 +58,13 @@ public class PedidoController {
         return ResponseEntity.noContent().build();
     }
 
+    @SkipAudit
+    @PatchMapping("/{id}/marcar-pagado")
+    public ResponseEntity<Void> marcarPagado(@PathVariable int id) {
+        pedidoService.marcarPagado(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable int id) {
         pedidoService.delete(id);
