@@ -30,6 +30,13 @@ public class PedidoController {
                 pedidoService.findAll()));
     }
 
+    @SkipAudit
+    @GetMapping("/contador")
+    public ResponseEntity<ApiResponse<Long>> contador() {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Contador de pedidos WEB sin imprimir",
+                pedidoService.contarWebSinImprimir()));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PedidoResponseDTO>> findById(@PathVariable int id) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Pedido encontrado",
@@ -55,6 +62,13 @@ public class PedidoController {
     @PatchMapping("/{id}/marcar-impreso")
     public ResponseEntity<Void> marcarImpreso(@PathVariable int id) {
         pedidoService.marcarImpreso(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @SkipAudit
+    @PatchMapping("/{id}/marcar-pagado")
+    public ResponseEntity<Void> marcarPagado(@PathVariable int id) {
+        pedidoService.marcarPagado(id);
         return ResponseEntity.noContent().build();
     }
 

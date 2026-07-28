@@ -131,6 +131,11 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                 }
             }
         } else {
+            if (dto.getPedidoDomicilioCocina() != null) {
+                throw new BusinessException(
+                        "Un pedido WEB no puede incluir el campo 'pedidoDomicilioCocina'",
+                        HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
+            }
             if (esDomicilio) {
                 if (dto.getDomicilio() == null) {
                     throw new BusinessException(
@@ -138,7 +143,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
                 }
 
-            }if(dto.getTipoPedido() == TipoPedido.MOSTRADOR){
+            } else if(dto.getTipoPedido() == TipoPedido.MOSTRADOR){
                 throw new BusinessException(
                             "El pedido de carrito no puede ser por mostrador, por favor modifica el tipo de envío",
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);

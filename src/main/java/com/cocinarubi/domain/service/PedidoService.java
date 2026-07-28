@@ -1,15 +1,18 @@
 package com.cocinarubi.domain.service;
 
+import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.dao.PedidoRepository;
 import com.cocinarubi.dao.TarifaEspecialRepository;
 import com.cocinarubi.domain.entity.Pedido;
 import com.cocinarubi.domain.entity.TarifaEspecial;
 import com.cocinarubi.domain.mapper.PedidoMapper;
+import com.cocinarubi.event.ws.PedidoWebActualizadoEvent;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
 import com.cocinarubi.presentation.strategy.strategyImplementation.PedidoConfirmationImp;
 import com.cocinarubi.presentation.strategy.strategyImplementation.PedidoValidationImp;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +39,7 @@ public class PedidoService {
     private final PedidoConfirmationImp pedidoConfirmation;
     private final PedidoMapper pedidoMapper;
     private final CatalogoPedidoService catalogoPedido;
+    private final ApplicationEventPublisher eventPublisher;
     private final TarifaEspecialRepository tarifaEspecialRepository;
 
     public PedidoService(PedidoRepository pedidoRepository,
@@ -43,12 +47,14 @@ public class PedidoService {
                          PedidoConfirmationImp pedidoConfirmation,
                          PedidoMapper pedidoMapper,
                          CatalogoPedidoService catalogoPedido,
+                         ApplicationEventPublisher eventPublisher,
                          TarifaEspecialRepository tarifaEspecialRepository) {
         this.pedidoRepository = pedidoRepository;
         this.pedidoValidation = pedidoValidation;
         this.pedidoConfirmation = pedidoConfirmation;
         this.pedidoMapper = pedidoMapper;
         this.catalogoPedido = catalogoPedido;
+        this.eventPublisher = eventPublisher;
         this.tarifaEspecialRepository = tarifaEspecialRepository;
     }
 
@@ -77,6 +83,9 @@ public class PedidoService {
         PedidoResponseDTO response = pedidoMapper.toResponseDTO(pedidoRepository.save(pedido));
         if (!mensajesTarifas.isEmpty()) {
             response.setTarifasAplicadas(mensajesTarifas);
+        }
+        if (PedidoCreadoDesde.WEB.equals(dto.getPedidoCreadoDesde())) {
+            eventPublisher.publishEvent(new PedidoWebActualizadoEvent(this));
         }
         return response;
     }
@@ -118,14 +127,44 @@ public class PedidoService {
         Pedido pedido = findEntityById(id);
         pedido.setImpreso(true);
         pedidoRepository.save(pedido);
+        //llamamos a los sockets
+        if (PedidoCreadoDesde.WEB.equals(pedido.getPedidoCreadoDesde())) {
+            eventPublisher.publishEvent(new PedidoWebActualizadoEvent(this));
+        }
     }
 
+    @Transactional
+    public void marcarPagado(int id) {
+        Pedido pedido = findEntityById(id);
+        pedido.setPagado(true);
+        pedidoRepository.save(pedido);
+    }
+
+    @Transactional
     public void delete(int id) {
-        if (!pedidoRepository.existsById(id)) {
-            throw new BusinessException(
-                    "Pedido no encontrado con id: " + id, HttpStatus.NOT_FOUND);
-        }
+        Pedido pedido = findEntityById(id);
+        boolean eraWebSinImprimir = PedidoCreadoDesde.WEB.equals(pedido.getPedidoCreadoDesde())
+                && !pedido.isImpreso();
         pedidoRepository.deleteById(id);
+        if (eraWebSinImprimir) {
+            eventPublisher.publishEvent(new PedidoWebActualizadoEvent(this));
+        }
+    }
+
+    //Encontrar los pedidos web sin imprimir para la lista del frontEnd
+    @Transactional(readOnly = true)
+    public List<PedidoResponseDTO> findWebSinImprimir() {
+        return pedidoRepository.findByPedidoCreadoDesdeAndImpresoFalse(PedidoCreadoDesde.WEB)
+                .stream()
+                .map(pedidoMapper::toResponseDTO)
+                .toList();
+    }
+
+    //contar pedidos web sin imprimir para el contador del frontEnd
+
+    @Transactional(readOnly = true)
+    public long contarWebSinImprimir() {
+        return pedidoRepository.countByPedidoCreadoDesdeAndImpresoFalse(PedidoCreadoDesde.WEB);
     }
 
     private Pedido construirPedido(PedidoRequestDTO dto) {
@@ -138,6 +177,7 @@ public class PedidoService {
                 .uuidCliente(dto.getUuidCliente())
                 .fechaExpedicionPedido(LocalDateTime.now())
                 .impreso(false)
+                .pagado(false)
                 .build();
     }
 

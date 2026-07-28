@@ -7,6 +7,7 @@ import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.BasicoPedido;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.domain.entity.ComidaPedido;
+import com.cocinarubi.domain.entity.BasicoPedidoExtra;
 import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.domain.entity.ComplementoComidaPedido;
 import com.cocinarubi.domain.entity.Desayuno;
@@ -21,6 +22,7 @@ import com.cocinarubi.domain.entity.RegistroCliente;
 import com.cocinarubi.domain.entity.Ruta;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.BasicoPedidoDTO;
+import com.cocinarubi.presentation.dto.request.BasicoPedidoExtraDTO;
 import com.cocinarubi.presentation.dto.request.ComidaPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComplementoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.DesayunoPedidoDTO;
@@ -131,10 +133,19 @@ public class CatalogoPedidoService {
             Basico basico = basicoRepository.findByIdWithComplementos(linea.getIdBasico())
                     .orElseThrow(() -> new BusinessException(
                             "Básico no encontrado con id: " + linea.getIdBasico(), HttpStatus.BAD_REQUEST));
-            pedido.addBasicoPedido(BasicoPedido.builder()
+            BasicoPedido item = BasicoPedido.builder()
                     .basico(basico)
                     .precioUnitario(linea.getPrecioUnitario())
-                    .build());
+                    .build();
+            for (BasicoPedidoExtraDTO extraDto : linea.getExtras()) {
+                Complemento c = complementoService.findById(extraDto.getIdComplemento());
+                item.addExtra(BasicoPedidoExtra.builder()
+                        .complemento(c)
+                        .cantidad((byte) extraDto.getCantidad().intValue())
+                        .precio(c.getPrecioExtra())
+                        .build());
+            }
+            pedido.addBasicoPedido(item);
         }
     }
 
@@ -162,6 +173,9 @@ public class CatalogoPedidoService {
         }
         for (BasicoPedido bp : pedido.getBasicosPedido()) {
             total = total.add(bp.getPrecioUnitario());
+            for (BasicoPedidoExtra extra : bp.getExtras()) {
+                total = total.add(extra.getPrecio().multiply(BigDecimal.valueOf(extra.getCantidad())));
+            }
         }
         for (ProductoCocinaPedido pcp : pedido.getProductosCocina()) {
             total = total.add(pcp.getPrecioUnitario().multiply(BigDecimal.valueOf(pcp.getCantidad())));
