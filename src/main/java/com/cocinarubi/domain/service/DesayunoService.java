@@ -53,7 +53,7 @@ public class DesayunoService {
         // Evitar eliminación si el desayuno está asociado a pedidos históricos
         if (desayunoRepository.countEnPedidos(id) > 0) {
             throw new BusinessException(
-                    "No se puede eliminar el desayuno porque está referenciado en pedidos existentes",
+                    "Este producto no se puede eliminar ya que tiene pedidos asignados, puede deshabilitarlo mejor",
                     HttpStatus.CONFLICT);
         }
         desayunoRepository.deleteById(id);

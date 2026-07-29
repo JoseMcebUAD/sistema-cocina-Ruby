@@ -112,6 +112,11 @@ public class BasicoService {
         if (!basicoRepository.existsById(id)) {
             throw new BusinessException("Básico no encontrado con id: " + id, HttpStatus.NOT_FOUND);
         }
+        if (basicoRepository.countEnPedidos(id) > 0) {
+            throw new BusinessException(
+                    "Este producto no se puede eliminar ya que tiene pedidos asignados, puede deshabilitarlo mejor",
+                    HttpStatus.CONFLICT);
+        }
         basicoRepository.deleteById(id);
     }
 

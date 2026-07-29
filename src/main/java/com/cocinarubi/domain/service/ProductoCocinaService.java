@@ -4,7 +4,6 @@ import com.cocinarubi.DBConstants;
 import com.cocinarubi.dao.ProductoCocinaRepository;
 import com.cocinarubi.domain.entity.ProductoCocina;
 import com.cocinarubi.exception.BusinessException;
-import com.cocinarubi.exception.ErrorCode;
 import com.cocinarubi.presentation.dto.request.ProductoCocinaRequestDTO;
 import com.cocinarubi.presentation.dto.response.ProductoCocinaResponseDTO;
 import com.cocinarubi.presentation.strategy.strategyImplementation.ProductoCocinaConfirmationImp;
@@ -115,8 +114,8 @@ public class ProductoCocinaService {
         // RF-014/017: bloquear eliminación si el producto tiene pedidos asociados
         if (productoCocinaRepository.countEnPedidos(id) > 0) {
             throw new BusinessException(
-                    "No se puede eliminar el producto porque tiene pedidos asociados",
-                    HttpStatus.CONFLICT, ErrorCode.VALIDACION);
+                    "Este producto no se puede eliminar ya que tiene pedidos asignados, puede deshabilitarlo mejor",
+                    HttpStatus.CONFLICT);
         }
         productoCocinaRepository.deleteById(id);
     }
