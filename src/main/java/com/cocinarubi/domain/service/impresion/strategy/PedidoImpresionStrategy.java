@@ -62,6 +62,15 @@ public class PedidoImpresionStrategy implements ImpresionStrategy {
         data.setBasicos(dto.getBasicos());
         data.setProductosCocina(dto.getProductosCocina());
         data.setDomicilio(dto.getTipoPedido() == TipoPedido.DOMICILIO ? dto.getDomicilio() : null);
+        data.setDomicilioCocina(dto.getTipoPedido() == TipoPedido.DOMICILIO ? dto.getDomicilioCocina() : null);
+
+        if (dto.getPedidoCocina() != null) {
+            data.setNombreCliente(dto.getPedidoCocina().getNombreCliente());
+        } else if (dto.getDomicilioCocina() != null) {
+            data.setNombreCliente(dto.getDomicilioCocina().getNombreCliente());
+        }
+
+        data.setComentario(dto.getComentario());
         return data;
     }
 }
