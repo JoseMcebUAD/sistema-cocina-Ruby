@@ -22,7 +22,8 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
 
     List<Pedido> findByPedidoCreadoDesdeAndImpresoFalse(PedidoCreadoDesde pedidoCreadoDesde);
 
-    long countByPedidoCreadoDesdeAndImpresoFalse(PedidoCreadoDesde pedidoCreadoDesde);
+    long countByPedidoCreadoDesdeAndImpresoFalseAndFechaExpedicionPedidoBetween(
+            PedidoCreadoDesde pedidoCreadoDesde, LocalDateTime desde, LocalDateTime hasta);
 
     /**
      * Página de pedidos filtrada por rango de fechas, tipo y origen.

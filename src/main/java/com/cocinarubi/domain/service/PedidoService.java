@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -162,11 +163,14 @@ public class PedidoService {
                 .toList();
     }
 
-    //contar pedidos web sin imprimir para el contador del frontEnd
+    //contar pedidos web sin imprimir del día actual para el contador del frontEnd
 
     @Transactional(readOnly = true)
     public long contarWebSinImprimir() {
-        return pedidoRepository.countByPedidoCreadoDesdeAndImpresoFalse(PedidoCreadoDesde.WEB);
+        LocalDateTime inicioDia = LocalDate.now(Constants.ZONA_MERIDA).atStartOfDay();
+        LocalDateTime finDia = inicioDia.plusDays(1).minusNanos(1);
+        return pedidoRepository.countByPedidoCreadoDesdeAndImpresoFalseAndFechaExpedicionPedidoBetween(
+                PedidoCreadoDesde.WEB, inicioDia, finDia);
     }
 
     private Pedido construirPedido(PedidoRequestDTO dto) {
