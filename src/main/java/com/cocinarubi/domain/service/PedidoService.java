@@ -104,6 +104,7 @@ public class PedidoService {
         existente.setPedidoCreadoDesde(dto.getPedidoCreadoDesde());
         existente.setPagoCliente(dto.getPagoCliente());
         existente.setUuidCliente(dto.getUuidCliente());
+        existente.setComentario(dto.getComentario());
 
         // Se limpian las colecciones en lugar de mergear elemento a elemento
         // para evitar referencias huérfanas en las tablas de detalle.
@@ -179,6 +180,7 @@ public class PedidoService {
                 .fechaExpedicionPedido(LocalDateTime.now(Constants.ZONA_MERIDA))
                 .impreso(false)
                 .pagado(false)
+                .comentario(dto.getComentario())
                 .build();
     }
 
