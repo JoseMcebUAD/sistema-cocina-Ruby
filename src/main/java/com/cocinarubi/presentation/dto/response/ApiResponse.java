@@ -1,10 +1,10 @@
 package com.cocinarubi.presentation.dto.response;
 
+import com.cocinarubi.Constants;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -18,7 +18,7 @@ public class ApiResponse<T> {
     private final T data;
 
     private ApiResponse(int status, String message, String errorCode, T data) {
-        this.timestamp = LocalDateTime.now(ZoneId.of("America/Merida"));
+        this.timestamp = LocalDateTime.now(Constants.ZONA_MERIDA);
         this.status = status;
         this.message = message;
         this.errorCode = errorCode;
