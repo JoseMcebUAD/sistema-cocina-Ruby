@@ -35,25 +35,25 @@ public class Complemento {
     @Column(name = "id_complemento")
     private Integer idComplemento;
 
-    @Column(name = "uuid_complemento", nullable = false, length = 45)
+    @Column(name = "uuid_complemento")
     private String uuidComplemento;
 
-    @Column(name = "nombre_complemento", nullable = false, length = 255)
+    @Column(name = "nombre_complemento")
     private String nombreComplemento;
 
-    @Column(name = "descripcion", length = 255)
+    @Column(name = "descripcion")
     private String descripcion;
 
-    @Column(name = "precio_extra", nullable = false, precision = 5, scale = 2)
+    @Column(name = "precio_extra")
     private BigDecimal precioExtra;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "estatus", nullable = false)
+    @Column(name = "estatus")
     private Estatus estatus;
 
-    @Column(name = "destacado", nullable = false)
+    @Column(name = "destacado")
     private boolean destacado;
 
-    @Column(name = "cobrar_siempre", nullable = false)
+    @Column(name = "cobrar_siempre")
     private boolean cobrarSiempre;
 }

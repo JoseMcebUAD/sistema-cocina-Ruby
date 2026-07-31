@@ -57,4 +57,8 @@ public class Comida {
 
     @Column(name = "destacado", nullable = false)
     private boolean destacado;
+
+    @Builder.Default
+    @Column(name = "limite_complemento", nullable = false)
+    private Integer limiteComplemento = 3;
 }
