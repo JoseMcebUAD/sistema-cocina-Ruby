@@ -18,6 +18,7 @@ public class VistaResumenPedidoConMetricasResponseDTO {
 
     private Page<PedidoResponseDTO> pedidos;
     private long cantidadTotal;
+    private long cantidadTotalGeneral;
     private long cantidadImpresos;
     private long cantidadNoImpresos;
     private BigDecimal ingresoTotal;

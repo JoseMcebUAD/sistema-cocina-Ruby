@@ -34,6 +34,7 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
               AND (:hasta IS NULL OR p.fechaExpedicionPedido <= :hasta)
               AND (:tipoPedido IS NULL OR p.tipoPedido = :tipoPedido)
               AND (:creadoDesde IS NULL OR p.pedidoCreadoDesde = :creadoDesde)
+              AND (:pagado IS NULL OR p.pagado = :pagado)
             ORDER BY p.fechaExpedicionPedido DESC
             """)
     Page<Pedido> findByFiltros(
@@ -41,6 +42,7 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
             @Param("hasta") LocalDateTime hasta,
             @Param("tipoPedido") DBConstants.TipoPedido tipoPedido,
             @Param("creadoDesde") DBConstants.PedidoCreadoDesde creadoDesde,
+            @Param("pagado") Boolean pagado,
             Pageable pageable
     );
 }
