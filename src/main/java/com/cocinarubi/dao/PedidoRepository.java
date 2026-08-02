@@ -6,6 +6,7 @@ import com.cocinarubi.domain.entity.Pedido;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -21,6 +22,15 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
     /*SOCKETS */
 
     List<Pedido> findByPedidoCreadoDesdeAndImpresoFalse(PedidoCreadoDesde pedidoCreadoDesde);
+
+    /**
+     * Marca el pedido como impreso solo si aún no lo estaba (impreso = false).
+     * Retorna el número de filas afectadas: 1 si se otorgó el cambio, 0 si ya estaba impreso.
+     * El WHERE impreso = false garantiza atomicidad bajo concurrencia sin bloqueos explícitos.
+     */
+    @Modifying
+    @Query("UPDATE Pedido p SET p.impreso = true WHERE p.idPedido = :id AND p.impreso = false")
+    int marcarImpresoSiNoImpreso(@Param("id") int id);
 
     long countByPedidoCreadoDesdeAndImpresoFalseAndFechaExpedicionPedidoBetween(
             PedidoCreadoDesde pedidoCreadoDesde, LocalDateTime desde, LocalDateTime hasta);

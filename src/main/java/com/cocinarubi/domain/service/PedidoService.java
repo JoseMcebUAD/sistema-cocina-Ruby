@@ -125,15 +125,22 @@ public class PedidoService {
         return response;
     }
 
+    /**
+     * Intenta marcar el pedido como impreso de forma atómica (0→1).
+     * Si dos solicitudes concurrentes llegan al mismo tiempo, solo una obtendrá
+     * rowsAffected=1; la otra verá rowsAffected=0 porque el WHERE impreso=false ya no se cumple.
+     * Retorna true si se otorgó el cambio, false si ya estaba impreso.
+     */
     @Transactional
-    public void marcarImpreso(int id) {
+    public boolean marcarImpreso(int id) {
+        // Verificamos que el pedido existe antes del UPDATE para poder lanzar 404 si no existe
         Pedido pedido = findEntityById(id);
-        pedido.setImpreso(true);
-        pedidoRepository.save(pedido);
-        //llamamos a los sockets
-        if (PedidoCreadoDesde.WEB.equals(pedido.getPedidoCreadoDesde())) {
+        int filasAfectadas = pedidoRepository.marcarImpresoSiNoImpreso(id);
+        boolean otorgado = filasAfectadas > 0;
+        if (otorgado && PedidoCreadoDesde.WEB.equals(pedido.getPedidoCreadoDesde())) {
             eventPublisher.publishEvent(new PedidoWebActualizadoEvent(this));
         }
+        return otorgado;
     }
 
     @Transactional
