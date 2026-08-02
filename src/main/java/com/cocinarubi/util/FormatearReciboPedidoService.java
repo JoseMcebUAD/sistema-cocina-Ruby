@@ -60,12 +60,8 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
 
         if (hayComplementos) {
             for (ComplementoResponseDTO compl : complementos) {
-                BigDecimal precioComp = compl.getPrecioExtra();
-                if (precioComp != null && precioComp.compareTo(BigDecimal.ZERO) != 0) {
-                    lineas.add(construirLineaConPrecio(compl.getNombreComplemento(), FORMATO_PRECIO.format(precioComp), anchoEfectivo));
-                } else {
-                    lineas.add(compl.getNombreComplemento());
-                }
+                // Complementos del paquete sin precio: ya incluidos en el total
+                lineas.add(compl.getNombreComplemento());
             }
         }
 
