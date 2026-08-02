@@ -1,6 +1,7 @@
 package com.cocinarubi.util.template.impl;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 
 import com.cocinarubi.Constants;
@@ -36,17 +37,15 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         if (data.getNombreCliente() != null && !data.getNombreCliente().isBlank()) {
             escpos.writeLF("Cliente: " + data.getNombreCliente());
         }
-
+        
+        if (data.getMetodoPagoSecundario() != null) {
+            printDobleMetodoPago(escpos, data);
+        } else {
+            escpos.writeLF("Método de pago: " + data.getMetodoPagoPrincipal().name());
+            
+        }
         // Método de pago y totales
-        String pago = data.getMetodoPagoPrincipal() + (data.getMetodoPagoSecundario() != null ? " / " + data.getMetodoPagoSecundario() : "");
-        escpos.writeLF("Pago: " + pago);
         escpos.writeLF(subtitleStyle, formatter.formatearLineaTotal("TOTAL", FORMATO_PRECIO.format(data.getPrecioFinalOrden())));
-        if (data.getPagoCliente() != null) {
-            escpos.writeLF(formatter.formatearLineaTotal("PAGO CLIENTE", FORMATO_PRECIO.format(data.getPagoCliente())));
-        }
-        if (data.getCambio() != null) {
-            escpos.writeLF(formatter.formatearLineaTotal("CAMBIO", FORMATO_PRECIO.format(data.getCambio())));
-        }
 
         // Sección de entrega a domicilio (WEB usa PedidoDomicilioResponseDTO,
         // COCINA usa PedidoDomicilioCocinaResponseDTO)
@@ -160,6 +159,14 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
             escpos.writeLF("Tel: " + domicilio.getTelefono());
         }
         escpos.writeLF(Constants.SEPARADOR_TICKET);
+    }
+
+    private void printDobleMetodoPago(EscPos escpos, PedidoTicketData data) throws IOException {
+        BigDecimal pagoSecundario = data.getPrecioFinalOrden().subtract(data.getPagoCliente());
+        escpos.write("Pago en " + data.getMetodoPagoPrincipal().name() + ": ")
+              .writeLF(subtitleStyle, FORMATO_PRECIO.format(data.getPagoCliente()));
+        escpos.write("Pago en " + data.getMetodoPagoSecundario().name() + ": ")
+              .writeLF(subtitleStyle, FORMATO_PRECIO.format(pagoSecundario));
     }
 
     // Nota libre del operador; se imprime al final antes del corte
