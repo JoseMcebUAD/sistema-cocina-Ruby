@@ -1,11 +1,12 @@
 package com.cocinarubi.presentation.controller.sockets;
 
+import com.cocinarubi.Constants;
 import com.cocinarubi.domain.service.PedidoService;
-import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
+import com.cocinarubi.presentation.dto.response.SnapshotPedidoWebResponseDTO;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.stereotype.Controller;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 /**
  * Entrega el estado inicial de pedidos WEB al cliente en el momento de la suscripción.
@@ -25,10 +26,13 @@ public class WsPedidoWebController {
         this.pedidoService = pedidoService;
     }
 
-    /** Retorna la lista completa de pedidos WEB sin imprimir al momento de suscribirse. */
+    /** Retorna la lista completa de pedidos WEB sin imprimir y el timestamp del servidor al momento de suscribirse. */
     @SubscribeMapping("/pedido-web/lista")
-    public List<PedidoResponseDTO> snapshotLista() {
-        return pedidoService.findWebSinImprimir();
+    public SnapshotPedidoWebResponseDTO snapshotLista() {
+        return new SnapshotPedidoWebResponseDTO(
+                LocalDateTime.now(Constants.ZONA_MERIDA),
+                pedidoService.findWebSinImprimir()
+        );
     }
 
     /** Retorna el conteo de pedidos WEB sin imprimir al momento de suscribirse. */
