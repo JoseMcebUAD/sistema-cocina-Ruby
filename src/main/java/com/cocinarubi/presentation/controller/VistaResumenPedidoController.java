@@ -50,11 +50,12 @@ public class VistaResumenPedidoController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime hasta,
             @RequestParam(required = false) DBConstants.TipoPedido tipoPedido,
             @RequestParam(required = false) DBConstants.PedidoCreadoDesde pedidoCreadoDesde,
+            @RequestParam(required = false) Boolean pagado,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
         VistaResumenPedidoConMetricasResponseDTO resultado = vistaResumenPedidoService.findVistaConMetricas(
-                desde, hasta, tipoPedido, pedidoCreadoDesde, PageRequest.of(page, size));
+                desde, hasta, tipoPedido, pedidoCreadoDesde, pagado, PageRequest.of(page, size));
 
         return ResponseEntity.ok(ApiResponse.exito(200, "Vista y métricas de pedidos obtenidas correctamente", resultado));
     }

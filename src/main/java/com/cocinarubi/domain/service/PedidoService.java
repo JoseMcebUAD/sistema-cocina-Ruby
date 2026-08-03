@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -104,6 +105,7 @@ public class PedidoService {
         existente.setPedidoCreadoDesde(dto.getPedidoCreadoDesde());
         existente.setPagoCliente(dto.getPagoCliente());
         existente.setUuidCliente(dto.getUuidCliente());
+        existente.setComentario(dto.getComentario());
 
         // Se limpian las colecciones en lugar de mergear elemento a elemento
         // para evitar referencias huérfanas en las tablas de detalle.
@@ -123,15 +125,22 @@ public class PedidoService {
         return response;
     }
 
+    /**
+     * Intenta marcar el pedido como impreso de forma atómica (0→1).
+     * Si dos solicitudes concurrentes llegan al mismo tiempo, solo una obtendrá
+     * rowsAffected=1; la otra verá rowsAffected=0 porque el WHERE impreso=false ya no se cumple.
+     * Retorna true si se otorgó el cambio, false si ya estaba impreso.
+     */
     @Transactional
-    public void marcarImpreso(int id) {
+    public boolean marcarImpreso(int id) {
+        // Verificamos que el pedido existe antes del UPDATE para poder lanzar 404 si no existe
         Pedido pedido = findEntityById(id);
-        pedido.setImpreso(true);
-        pedidoRepository.save(pedido);
-        //llamamos a los sockets
-        if (PedidoCreadoDesde.WEB.equals(pedido.getPedidoCreadoDesde())) {
+        int filasAfectadas = pedidoRepository.marcarImpresoSiNoImpreso(id);
+        boolean otorgado = filasAfectadas > 0;
+        if (otorgado && PedidoCreadoDesde.WEB.equals(pedido.getPedidoCreadoDesde())) {
             eventPublisher.publishEvent(new PedidoWebActualizadoEvent(this));
         }
+        return otorgado;
     }
 
     @Transactional
@@ -161,11 +170,14 @@ public class PedidoService {
                 .toList();
     }
 
-    //contar pedidos web sin imprimir para el contador del frontEnd
+    //contar pedidos web sin imprimir del día actual para el contador del frontEnd
 
     @Transactional(readOnly = true)
     public long contarWebSinImprimir() {
-        return pedidoRepository.countByPedidoCreadoDesdeAndImpresoFalse(PedidoCreadoDesde.WEB);
+        LocalDateTime inicioDia = LocalDate.now(Constants.ZONA_MERIDA).atStartOfDay();
+        LocalDateTime finDia = inicioDia.plusDays(1).minusNanos(1);
+        return pedidoRepository.countByPedidoCreadoDesdeAndImpresoFalseAndFechaExpedicionPedidoBetween(
+                PedidoCreadoDesde.WEB, inicioDia, finDia);
     }
 
     private Pedido construirPedido(PedidoRequestDTO dto) {
@@ -179,6 +191,7 @@ public class PedidoService {
                 .fechaExpedicionPedido(LocalDateTime.now(Constants.ZONA_MERIDA))
                 .impreso(false)
                 .pagado(false)
+                .comentario(dto.getComentario())
                 .build();
     }
 

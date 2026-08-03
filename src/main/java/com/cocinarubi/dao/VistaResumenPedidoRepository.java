@@ -87,8 +87,25 @@ public interface VistaResumenPedidoRepository extends JpaRepository<VistaResumen
               AND (:hasta IS NULL OR v.fechaExpedicionPedido <= :hasta)
               AND (:tipoPedido IS NULL OR v.tipoPedido = :tipoPedido)
               AND (:creadoDesde IS NULL OR v.pedidoCreadoDesde = :creadoDesde)
+              AND (:pagado IS NULL OR v.pagado = :pagado)
             """)
     VistaResumenMetricasProjection findMetricasConFiltros(
+            @Param("desde") LocalDateTime desde,
+            @Param("hasta") LocalDateTime hasta,
+            @Param("tipoPedido") DBConstants.TipoPedido tipoPedido,
+            @Param("creadoDesde") DBConstants.PedidoCreadoDesde creadoDesde,
+            @Param("pagado") Boolean pagado
+    );
+
+    @Query("""
+            SELECT COUNT(v)
+            FROM VistaResumenPedido v
+            WHERE (:desde IS NULL OR v.fechaExpedicionPedido >= :desde)
+              AND (:hasta IS NULL OR v.fechaExpedicionPedido <= :hasta)
+              AND (:tipoPedido IS NULL OR v.tipoPedido = :tipoPedido)
+              AND (:creadoDesde IS NULL OR v.pedidoCreadoDesde = :creadoDesde)
+            """)
+    long countConFiltrosSinPagado(
             @Param("desde") LocalDateTime desde,
             @Param("hasta") LocalDateTime hasta,
             @Param("tipoPedido") DBConstants.TipoPedido tipoPedido,

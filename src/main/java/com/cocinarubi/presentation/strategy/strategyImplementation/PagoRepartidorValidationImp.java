@@ -103,7 +103,7 @@ public class PagoRepartidorValidationImp implements ValidationStrategy<PagoRepar
         LocalDateTime hasta = dia.atTime(LocalTime.MAX);
         // VistaResumenPedidoService: retorna métricas del día; solo se consume ingresoTotal.
         VistaResumenPedidoConMetricasResponseDTO metricas = vistaResumenPedidoService
-                .findVistaConMetricas(desde, hasta, null, null, PageRequest.of(0, 1));
+                .findVistaConMetricas(desde, hasta, null, null, null, PageRequest.of(0, 1));
 
         BigDecimal ingresoTotal = metricas.getIngresoTotal();
         if (pago.compareTo(ingresoTotal) > 0) {

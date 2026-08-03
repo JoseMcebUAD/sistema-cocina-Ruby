@@ -57,20 +57,25 @@ public class VistaResumenPedidoService {
                                                                         LocalDateTime hasta,
                                                                         DBConstants.TipoPedido tipoPedido,
                                                                         DBConstants.PedidoCreadoDesde creadoDesde,
+                                                                        Boolean pagado,
                                                                         Pageable pageable) {
         validarRango(desde, hasta);
 
         // PedidoRepository: pedidos completos con relaciones lazy resueltas dentro de la transacción
         Page<PedidoResponseDTO> pedidos = pedidoRepository
-                .findByFiltros(desde, hasta, tipoPedido, creadoDesde, pageable)
+                .findByFiltros(desde, hasta, tipoPedido, creadoDesde, pagado, pageable)
                 .map(pedidoMapper::toResponseDTO);
 
         VistaResumenMetricasProjection m = repository.findMetricasConFiltros(
-                desde, hasta, tipoPedido, creadoDesde);
+                desde, hasta, tipoPedido, creadoDesde, pagado);
+
+        // Total sin filtro de pagado — para el badge del tab (muestra todos independiente del estado de pago)
+        long totalGeneral = repository.countConFiltrosSinPagado(desde, hasta, tipoPedido, creadoDesde);
 
         return VistaResumenPedidoConMetricasResponseDTO.builder()
                 .pedidos(pedidos)
                 .cantidadTotal(pedidos.getTotalElements())
+                .cantidadTotalGeneral(totalGeneral)
                 .cantidadImpresos(nullSafeLong(m.getCantidadImpresos()))
                 .cantidadNoImpresos(nullSafeLong(m.getCantidadNoImpresos()))
                 .ingresoTotal(nullSafeBigDecimal(m.getIngresoTotal()))

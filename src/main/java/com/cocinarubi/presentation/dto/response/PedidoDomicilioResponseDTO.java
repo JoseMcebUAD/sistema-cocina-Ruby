@@ -8,6 +8,7 @@ public class PedidoDomicilioResponseDTO {
     private String nombreRuta;
     private String direccion;
     private String codigo;
+    private BigDecimal tarifa;
     private BigDecimal tarifasEspeciales;
 
     public PedidoDomicilioResponseDTO() {}
@@ -30,6 +31,9 @@ public class PedidoDomicilioResponseDTO {
 
     public String getCodigo() { return codigo; }
     public void setCodigo(String codigo) { this.codigo = codigo; }
+
+    public BigDecimal getTarifa() { return tarifa; }
+    public void setTarifa(BigDecimal tarifa) { this.tarifa = tarifa; }
 
     public BigDecimal getTarifasEspeciales() { return tarifasEspeciales; }
     public void setTarifasEspeciales(BigDecimal tarifasEspeciales) { this.tarifasEspeciales = tarifasEspeciales; }

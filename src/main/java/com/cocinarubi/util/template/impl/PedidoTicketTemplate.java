@@ -1,12 +1,14 @@
 package com.cocinarubi.util.template.impl;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 
 import com.cocinarubi.Constants;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.DesayunoPedidoResponseDTO;
+import com.cocinarubi.presentation.dto.response.PedidoDomicilioCocinaResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioResponseDTO;
 import com.cocinarubi.presentation.dto.response.ProductoCocinaPedidoResponseDTO;
 import com.cocinarubi.util.FormatearReciboPedidoService;
@@ -27,29 +29,40 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
     protected void renderSpecificDetails(EscPos escpos) throws IOException {
         PedidoTicketData data = getData();
 
+        // Encabezado: fecha, tipo y nombre de cliente (COCINA PICK_UP / MOSTRADOR / DOMICILIO)
         if (data.getFechaExpedicionPedido() != null) {
             escpos.writeLF(FORMATO_FECHA.format(data.getFechaExpedicionPedido()));
         }
         escpos.writeLF("Tipo: " + data.getTipoPedido());
-        String pago = data.getMetodoPagoPrincipal() + (data.getMetodoPagoSecundario() != null ? " / " + data.getMetodoPagoSecundario() : "");
-        escpos.writeLF("Pago: " + pago);
-        escpos.writeLF(subtitleStyle ,formatter.formatearLineaTotal("TOTAL", FORMATO_PRECIO.format(data.getPrecioFinalOrden())));
+        if (data.getNombreCliente() != null && !data.getNombreCliente().isBlank()) {
+            escpos.writeLF("Cliente: " + data.getNombreCliente());
+        }
         
-        if (data.getPagoCliente() != null) {
-            escpos.writeLF(formatter.formatearLineaTotal("PAGO CLIENTE", FORMATO_PRECIO.format(data.getPagoCliente())));
+        if (data.getMetodoPagoSecundario() != null) {
+            printDobleMetodoPago(escpos, data);
+        } else {
+            escpos.writeLF("Método de pago: " + data.getMetodoPagoPrincipal().name());
+            
         }
-        if (data.getCambio() != null) {
-            escpos.writeLF(formatter.formatearLineaTotal("CAMBIO", FORMATO_PRECIO.format(data.getCambio())));
-        }
+        // Método de pago y totales
+        escpos.writeLF(subtitleStyle, formatter.formatearLineaTotal("TOTAL", FORMATO_PRECIO.format(data.getPrecioFinalOrden())));
+
+        // Sección de entrega a domicilio (WEB usa PedidoDomicilioResponseDTO,
+        // COCINA usa PedidoDomicilioCocinaResponseDTO)
         renderDomicilio(escpos, data.getDomicilio());
+        renderDomicilioCocina(escpos, data.getDomicilioCocina());
         escpos.feed(1);
 
+        // Líneas de productos
         renderComidas(escpos, data.getComidas());
         renderDesayunos(escpos, data.getDesayunos());
         renderBasicos(escpos, data.getBasicos());
         renderProductosCocina(escpos, data.getProductosCocina());
-        escpos.feed(5).cut(EscPos.CutMode.FULL);
 
+        // Nota libre del operador (comentario del pedido)
+        renderComentario(escpos, data.getComentario());
+
+        escpos.feed(5).cut(EscPos.CutMode.FULL);
     }
 
     @Override
@@ -102,12 +115,19 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         }
     }
 
+    // Domicilio WEB: ruta, tarifa base, tarifas especiales y dirección
     private void renderDomicilio(EscPos escpos, PedidoDomicilioResponseDTO domicilio) throws IOException {
         if (domicilio == null) return;
         escpos.feed(1);
         escpos.writeLF("DOMICILIO");
         if (domicilio.getNombreRuta() != null) {
             escpos.writeLF("Ruta: " + domicilio.getNombreRuta());
+        }
+        if (domicilio.getTarifa() != null) {
+            escpos.writeLF(formatter.formatearLineaTotal("Tarifa", FORMATO_PRECIO.format(domicilio.getTarifa())));
+        }
+        if (domicilio.getTarifasEspeciales() != null) {
+            escpos.writeLF(formatter.formatearLineaTotal("T. especial", FORMATO_PRECIO.format(domicilio.getTarifasEspeciales())));
         }
         if (domicilio.getDireccion() != null) {
             escpos.writeLF("Dir: " + domicilio.getDireccion());
@@ -116,5 +136,44 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
             escpos.writeLF("Cod: " + domicilio.getCodigo());
         }
         escpos.writeLF(Constants.SEPARADOR_TICKET);
+    }
+
+    // Domicilio COCINA: nombre cliente, ruta, tarifa, tarifas especiales y dirección
+    private void renderDomicilioCocina(EscPos escpos, PedidoDomicilioCocinaResponseDTO domicilio) throws IOException {
+        if (domicilio == null) return;
+        escpos.feed(1);
+        escpos.writeLF("DOMICILIO");
+        if (domicilio.getNombreRuta() != null) {
+            escpos.writeLF("Ruta: " + domicilio.getNombreRuta());
+        }
+        if (domicilio.getPrecioTarifa() != null) {
+            escpos.writeLF(formatter.formatearLineaTotal("Tarifa", FORMATO_PRECIO.format(domicilio.getPrecioTarifa())));
+        }
+        if (domicilio.getTarifasEspeciales() != null) {
+            escpos.writeLF(formatter.formatearLineaTotal("T. especial", FORMATO_PRECIO.format(domicilio.getTarifasEspeciales())));
+        }
+        if (domicilio.getDomicilio() != null) {
+            escpos.writeLF("Dir: " + domicilio.getDomicilio());
+        }
+        if (domicilio.getTelefono() != null) {
+            escpos.writeLF("Tel: " + domicilio.getTelefono());
+        }
+        escpos.writeLF(Constants.SEPARADOR_TICKET);
+    }
+
+    private void printDobleMetodoPago(EscPos escpos, PedidoTicketData data) throws IOException {
+        BigDecimal pagoSecundario = data.getPrecioFinalOrden().subtract(data.getPagoCliente());
+        escpos.write("Pago en " + data.getMetodoPagoPrincipal().name() + ": ")
+              .writeLF(subtitleStyle, FORMATO_PRECIO.format(data.getPagoCliente()));
+        escpos.write("Pago en " + data.getMetodoPagoSecundario().name() + ": ")
+              .writeLF(subtitleStyle, FORMATO_PRECIO.format(pagoSecundario));
+    }
+
+    // Nota libre del operador; se imprime al final antes del corte
+    private void renderComentario(EscPos escpos, String comentario) throws IOException {
+        if (comentario == null || comentario.isBlank()) return;
+        escpos.feed(1);
+        escpos.writeLF(Constants.SEPARADOR_TICKET);
+        escpos.writeLF("Nota: " + comentario);
     }
 }

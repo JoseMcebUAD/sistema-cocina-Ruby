@@ -80,6 +80,8 @@ public class PedidoMapper {
                 cambio,
                 pedido.getUuidCliente(),
                 pedido.isPagado(),
+                pedido.isImpreso(),
+                pedido.getComentario(),
                 comidas, desayunos, basicos, productos, domicilio, domicilioCocina, pedidoCocina
         );
     }
@@ -159,6 +161,7 @@ public class PedidoMapper {
                 pd.getDireccion(),
                 pd.getCodigo()
         );
+        dto.setTarifa(pd.getTarifa());
         dto.setTarifasEspeciales(pd.getTarifasEspeciales());
         return dto;
     }

@@ -21,6 +21,8 @@ public class PedidoResponseDTO {
     private BigDecimal cambio;
     private String uuidCliente;
     private boolean pagado;
+    private boolean impreso;
+    private String comentario;
     private List<ComidaPedidoResponseDTO> comidas;
     private List<DesayunoPedidoResponseDTO> desayunos;
     private List<BasicoPedidoResponseDTO> basicos;
@@ -36,7 +38,7 @@ public class PedidoResponseDTO {
                              TipoPedido tipoPedido,
                              LocalDateTime fechaExpedicionPedido, PedidoCreadoDesde pedidoCreadoDesde,
                              BigDecimal precioFinalOrden, BigDecimal pagoCliente, BigDecimal cambio,
-                             String uuidCliente, boolean pagado,
+                             String uuidCliente, boolean pagado, boolean impreso, String comentario,
                              List<ComidaPedidoResponseDTO> comidas,
                              List<DesayunoPedidoResponseDTO> desayunos,
                              List<BasicoPedidoResponseDTO> basicos,
@@ -55,6 +57,8 @@ public class PedidoResponseDTO {
         this.cambio = cambio;
         this.uuidCliente = uuidCliente;
         this.pagado = pagado;
+        this.impreso = impreso;
+        this.comentario = comentario;
         this.comidas = comidas;
         this.desayunos = desayunos;
         this.basicos = basicos;
@@ -96,6 +100,12 @@ public class PedidoResponseDTO {
 
     public boolean isPagado() { return pagado; }
     public void setPagado(boolean pagado) { this.pagado = pagado; }
+
+    public boolean isImpreso() { return impreso; }
+    public void setImpreso(boolean impreso) { this.impreso = impreso; }
+
+    public String getComentario() { return comentario; }
+    public void setComentario(String comentario) { this.comentario = comentario; }
 
     public List<ComidaPedidoResponseDTO> getComidas() { return comidas; }
     public void setComidas(List<ComidaPedidoResponseDTO> comidas) { this.comidas = comidas; }

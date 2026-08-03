@@ -6,6 +6,7 @@ import com.cocinarubi.DBConstants.TipoPedido;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -60,6 +61,10 @@ public class PedidoRequestDTO {
     @JsonProperty("domicilio")
     private PedidoDomicilioDTO domicilio;
 
+    @Size(max = 100, message = "El comentario no puede exceder 100 caracteres")
+    @JsonProperty("comentario")
+    private String comentario;
+
     @JsonProperty("saltarConfirmacion")
     private boolean saltarConfirmacion = false;
 
@@ -111,6 +116,9 @@ public class PedidoRequestDTO {
 
     public PedidoDomicilioDTO getDomicilio() { return domicilio; }
     public void setDomicilio(PedidoDomicilioDTO domicilio) { this.domicilio = domicilio; }
+
+    public String getComentario() { return comentario; }
+    public void setComentario(String comentario) { this.comentario = comentario; }
 
     public boolean isSaltarConfirmacion() { return saltarConfirmacion; }
     public void setSaltarConfirmacion(boolean saltarConfirmacion) { this.saltarConfirmacion = saltarConfirmacion; }

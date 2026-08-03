@@ -88,6 +88,9 @@ public class Pedido {
     @Column(name = "pagado")
     private boolean pagado;
 
+    @Column(name = "comentario")
+    private String comentario;
+
 
     @Builder.Default
     @OneToOne(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

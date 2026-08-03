@@ -64,7 +64,7 @@ public class EstadisticasService {
         validarRango(desde, hasta);
 
         VistaResumenMetricasProjection metricas =
-                vistaResumenPedidoRepository.findMetricasConFiltros(desde, hasta, tipoPedido, null);
+                vistaResumenPedidoRepository.findMetricasConFiltros(desde, hasta, tipoPedido, null, null);
 
         BigDecimal tarifasWeb = estadisticasRepository.findSumTarifaWeb(desde, hasta, tipoPedido);
         BigDecimal tarifasCocina = estadisticasRepository.findSumTarifaCocina(desde, hasta, tipoPedido);

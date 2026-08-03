@@ -4,6 +4,7 @@ import com.cocinarubi.aop.SkipAudit;
 import com.cocinarubi.domain.service.PedidoService;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
+import com.cocinarubi.presentation.dto.response.MarcarImpresoResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -60,9 +61,10 @@ public class PedidoController {
 
     @SkipAudit
     @PatchMapping("/{id}/marcar-impreso")
-    public ResponseEntity<Void> marcarImpreso(@PathVariable int id) {
-        pedidoService.marcarImpreso(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<ApiResponse<MarcarImpresoResponseDTO>> marcarImpreso(@PathVariable int id) {
+        boolean otorgado = pedidoService.marcarImpreso(id);
+        return ResponseEntity.ok(ApiResponse.exito(200, "Operación completada",
+                new MarcarImpresoResponseDTO(otorgado)));
     }
 
     @SkipAudit

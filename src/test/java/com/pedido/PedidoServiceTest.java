@@ -34,6 +34,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+import org.mockito.ArgumentCaptor;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -328,5 +330,43 @@ public class PedidoServiceTest {
         assertThrows(BusinessException.class, () -> pedidoService.delete(99));
         verify(pedidoRepository, never()).deleteById(anyInt());
         System.out.println("[OK] delete lanzó BusinessException para id=99");
+    }
+
+    @Test
+    @DisplayName("save - El comentario del DTO se persiste en el Pedido que se guarda")
+    public void save_comentarioPersistidoEnPedido() {
+        when(catalogoPedido.calcularTotal(any(Pedido.class))).thenReturn(BigDecimal.ZERO);
+        when(pedidoRepository.save(any(Pedido.class))).thenReturn(PEDIDO_PREPARED);
+
+        PedidoRequestDTO dto = crearDtoMostrador();
+        dto.setComentario("sin cebolla");
+        pedidoService.save(dto);
+
+        ArgumentCaptor<Pedido> captor = ArgumentCaptor.forClass(Pedido.class);
+        verify(pedidoRepository).save(captor.capture());
+        assertEquals("sin cebolla", captor.getValue().getComentario());
+        System.out.println("[OK] save persistió comentario: " + captor.getValue().getComentario());
+    }
+
+    @Test
+    @DisplayName("findById - El DTO de respuesta expone los campos impreso y comentario del Pedido")
+    public void findById_exposesImpresoYComentario() {
+        Pedido pedidoConCampos = Pedido.builder()
+                .idPedido(10)
+                .metodoPagoPrincipal(MetodoPago.EFECTIVO)
+                .tipoPedido(TipoPedido.MOSTRADOR)
+                .pedidoCreadoDesde(PedidoCreadoDesde.COCINA)
+                .precioFinalOrden(BigDecimal.ZERO)
+                .impreso(true)
+                .comentario("sin cebolla")
+                .build();
+        when(pedidoRepository.findById(10)).thenReturn(Optional.of(pedidoConCampos));
+
+        PedidoResponseDTO result = pedidoService.findById(10);
+
+        assertTrue(result.isImpreso());
+        assertEquals("sin cebolla", result.getComentario());
+        System.out.println("[OK] findById expuso impreso=" + result.isImpreso()
+                + " comentario=" + result.getComentario());
     }
 }
