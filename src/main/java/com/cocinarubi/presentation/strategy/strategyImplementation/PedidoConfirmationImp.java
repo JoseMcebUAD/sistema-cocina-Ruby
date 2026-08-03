@@ -132,7 +132,7 @@ public class PedidoConfirmationImp implements ConfirmationStrategy<PedidoRequest
         for (ProductoCocinaPedidoDTO linea : dto.getProductosCocina()) {
             ProductoCocina p = productoCocinaRepository.findById(linea.getIdProductoCocina())
                     .orElseThrow(() -> new BusinessException(
-                            "El producto de cocina con id " + linea.getIdProductoCocina() + " no existe",
+                            "El producto  " + linea.getIdProductoCocina() + " no existe",
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
             if (p.getEstatus() != Estatus.DISPONIBLE) {
                 throw new BusinessException(

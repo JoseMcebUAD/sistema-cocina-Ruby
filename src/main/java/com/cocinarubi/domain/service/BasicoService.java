@@ -64,6 +64,12 @@ public class BasicoService {
     }
 
     @Transactional(readOnly = true)
+    public Page<BasicoResponseDTO> findDisponibles(Pageable pageable) {
+        return basicoRepository.findDisponiblesPaginado(DBConstants.Estatus.DISPONIBLE, pageable)
+                .map(this::toResponseDTO);
+    }
+
+    @Transactional(readOnly = true)
     public BasicoResponseDTO findById(int id) {
         return toResponseDTO(findEntityById(id));
     }
@@ -106,7 +112,19 @@ public class BasicoService {
         if (!basicoRepository.existsById(id)) {
             throw new BusinessException("Básico no encontrado con id: " + id, HttpStatus.NOT_FOUND);
         }
+        if (basicoRepository.countEnPedidos(id) > 0) {
+            throw new BusinessException(
+                    "Este producto no se puede eliminar ya que tiene pedidos asignados, puede deshabilitarlo mejor",
+                    HttpStatus.CONFLICT);
+        }
         basicoRepository.deleteById(id);
+    }
+
+    @Transactional
+    public BasicoResponseDTO toggleDestacado(int id) {
+        Basico basico = findEntityById(id);
+        basico.setDestacado(!basico.isDestacado());
+        return toResponseDTO(basicoRepository.save(basico));
     }
 
     /** Vincula los complementos al básico; no hace nada si la lista está vacía o es nula. */

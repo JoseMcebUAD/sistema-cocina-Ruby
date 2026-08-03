@@ -35,6 +35,9 @@ public class VistaResumenPedido {
     @Column(name = "impreso")
     private Boolean impreso;
 
+    @Column(name = "pagado")
+    private Boolean pagado;
+
     @Column(name = "nombre_cliente")
     private String nombreCliente;
 

@@ -17,7 +17,12 @@ public interface ProductoCocinaRepository extends JpaRepository<ProductoCocina, 
     @Query("SELECT p FROM ProductoCocina p WHERE p.estatus = :estatus ORDER BY p.nombreProducto ASC")
     List<ProductoCocina> findDisponiblesOrdenados(@Param("estatus") DBConstants.Estatus estatus);
 
+    @Query(value = "SELECT p FROM ProductoCocina p WHERE p.estatus = :estatus ORDER BY p.destacado DESC, p.tipoProducto ASC, p.nombreProducto ASC",
+           countQuery = "SELECT COUNT(p) FROM ProductoCocina p WHERE p.estatus = :estatus")
+    Page<ProductoCocina> findDisponiblesPaginado(@Param("estatus") DBConstants.Estatus estatus, Pageable pageable);
+
     @Query(value = "SELECT p FROM ProductoCocina p ORDER BY " +
+                   "p.destacado DESC, " +
                    "CASE p.estatus WHEN 'DISPONIBLE' THEN 0 WHEN 'NO_DISPONIBLE' THEN 1 WHEN 'AGOTADO' THEN 2 ELSE 3 END, " +
                    "p.tipoProducto ASC, " +
                    "p.nombreProducto ASC",
@@ -31,4 +36,11 @@ public interface ProductoCocinaRepository extends JpaRepository<ProductoCocina, 
     Page<ProductoCocina> findByTipoProductoPaginado(@Param("tipo") DBConstants.TipoProducto tipo, Pageable pageable);
 
     boolean existsByIdProductoCocinaAndTipoProducto(Integer idProductoCocina, DBConstants.TipoProducto tipoProducto);
+
+    @Query("SELECT p FROM ProductoCocina p " +
+           "WHERE LOWER(p.nombreProducto) LIKE LOWER(CONCAT('%', :termino, '%')) " +
+           "AND p.estatus = :estatus " +
+           "ORDER BY p.destacado DESC, p.tipoProducto ASC, p.nombreProducto ASC")
+    List<ProductoCocina> buscarDisponiblesPorNombre(@Param("termino") String termino,
+                                                    @Param("estatus") DBConstants.Estatus estatus);
 }

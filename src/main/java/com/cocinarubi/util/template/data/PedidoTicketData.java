@@ -5,6 +5,7 @@ import com.cocinarubi.DBConstants.TipoPedido;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.DesayunoPedidoResponseDTO;
+import com.cocinarubi.presentation.dto.response.PedidoDomicilioCocinaResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioResponseDTO;
 import com.cocinarubi.presentation.dto.response.ProductoCocinaPedidoResponseDTO;
 
@@ -32,6 +33,9 @@ public class PedidoTicketData {
     private List<BasicoPedidoResponseDTO> basicos;
     private List<ProductoCocinaPedidoResponseDTO> productosCocina;
     private PedidoDomicilioResponseDTO domicilio;
+    private PedidoDomicilioCocinaResponseDTO domicilioCocina;
+    private String nombreCliente;
+    private String comentario;
 
     public PedidoTicketData() {}
 
@@ -73,4 +77,13 @@ public class PedidoTicketData {
 
     public PedidoDomicilioResponseDTO getDomicilio() { return domicilio; }
     public void setDomicilio(PedidoDomicilioResponseDTO domicilio) { this.domicilio = domicilio; }
+
+    public PedidoDomicilioCocinaResponseDTO getDomicilioCocina() { return domicilioCocina; }
+    public void setDomicilioCocina(PedidoDomicilioCocinaResponseDTO domicilioCocina) { this.domicilioCocina = domicilioCocina; }
+
+    public String getNombreCliente() { return nombreCliente; }
+    public void setNombreCliente(String nombreCliente) { this.nombreCliente = nombreCliente; }
+
+    public String getComentario() { return comentario; }
+    public void setComentario(String comentario) { this.comentario = comentario; }
 }

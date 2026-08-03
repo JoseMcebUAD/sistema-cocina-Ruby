@@ -68,8 +68,4 @@ public class ArchivoResponseDTO {
     public LocalDateTime getCreadoEn() { return creadoEn; }
     public void setCreadoEn(LocalDateTime creadoEn) { this.creadoEn = creadoEn; }
 
-    public String getUrlOptimizada() {
-        if (pathArchivo == null) return null;
-        return pathArchivo.replace("/upload/", "/upload/w_800,q_auto,f_auto/");
-    }
 }

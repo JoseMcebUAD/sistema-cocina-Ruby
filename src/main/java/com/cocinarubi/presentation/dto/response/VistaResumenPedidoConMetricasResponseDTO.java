@@ -16,8 +16,9 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class VistaResumenPedidoConMetricasResponseDTO {
 
-    private Page<VistaResumenPedidoResponseDTO> pedidos;
+    private Page<PedidoResponseDTO> pedidos;
     private long cantidadTotal;
+    private long cantidadTotalGeneral;
     private long cantidadImpresos;
     private long cantidadNoImpresos;
     private BigDecimal ingresoTotal;

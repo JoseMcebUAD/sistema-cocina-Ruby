@@ -3,9 +3,13 @@ package com.vistaresumenpedido;
 import com.cocinarubi.DBConstants.MetodoPago;
 import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.DBConstants.TipoPedido;
+import com.cocinarubi.dao.PedidoRepository;
 import com.cocinarubi.dao.VistaResumenPedidoRepository;
 import com.cocinarubi.dao.VistaResumenPedidoRepository.VistaResumenMetricasProjection;
+import com.cocinarubi.domain.entity.Pedido;
+import com.cocinarubi.domain.mapper.PedidoMapper;
 import com.cocinarubi.domain.service.VistaResumenPedidoService;
+import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.VistaResumenPedidoConMetricasResponseDTO;
 import com.cocinarubi.presentation.dto.response.VistaResumenPedidoResponseDTO;
 import org.junit.jupiter.api.DisplayName;
@@ -30,6 +34,8 @@ import static org.mockito.Mockito.*;
 public class VistaResumenPedidoServiceTest {
 
     @Mock private VistaResumenPedidoRepository repository;
+    @Mock private PedidoRepository pedidoRepository;
+    @Mock private PedidoMapper pedidoMapper;
     @InjectMocks private VistaResumenPedidoService service;
 
     private final Pageable PAGEABLE = PageRequest.of(0, 10);
@@ -63,10 +69,35 @@ public class VistaResumenPedidoServiceTest {
             .pagoClientePrincipal(BigDecimal.valueOf(100))
             .build();
 
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private VistaResumenMetricasProjection proj(Long impresos, Long noImpresos,
+                                                BigDecimal total, BigDecimal efectivo,
+                                                BigDecimal transferencia, BigDecimal tarjeta) {
+        return new VistaResumenMetricasProjection() {
+            @Override public Long getCantidadImpresos()       { return impresos; }
+            @Override public Long getCantidadNoImpresos()     { return noImpresos; }
+            @Override public BigDecimal getIngresoTotal()     { return total; }
+            @Override public BigDecimal getIngresoEfectivo()  { return efectivo; }
+            @Override public BigDecimal getIngresoTransferencia() { return transferencia; }
+            @Override public BigDecimal getIngresoTarjeta()   { return tarjeta; }
+        };
+    }
+
+    /** Página de Pedido mínimos y un DTO de respuesta vacío para satisfacer el mapper. */
+    private Page<Pedido> pedidosPage(int count) {
+        List<Pedido> lista = List.of(Pedido.builder().idPedido(1).build(),
+                Pedido.builder().idPedido(2).build()).subList(0, count);
+        return new PageImpl<>(lista, PAGEABLE, count);
+    }
+
+    // ── findVista (sin cambios en la firma, sin pruebas rotas) ────────────────
+
     @Test
     @DisplayName("findVista - Debe delegar filtros y pageable al repositorio y retornar la página")
     public void findVista_delegaAlRepositorio() {
-        Page<VistaResumenPedidoResponseDTO> page = new PageImpl<>(List.of(FILA_WEB_DOMICILIO, FILA_COCINA_MOSTRADOR));
+        Page<VistaResumenPedidoResponseDTO> page =
+                new PageImpl<>(List.of(FILA_WEB_DOMICILIO, FILA_COCINA_MOSTRADOR));
         when(repository.findVistaConFiltros(DESDE, HASTA, TipoPedido.DOMICILIO, PedidoCreadoDesde.WEB, PAGEABLE))
                 .thenReturn(page);
 
@@ -92,26 +123,29 @@ public class VistaResumenPedidoServiceTest {
         System.out.println("[OK] findVista con filtros nulos delegó correctamente");
     }
 
+    // ── findVistaConMetricas ──────────────────────────────────────────────────
+
     @Test
     @DisplayName("findVistaConMetricas - Debe componer el DTO con la página y las métricas")
     public void findVistaConMetricas_componeDto() {
-        Page<VistaResumenPedidoResponseDTO> page = new PageImpl<>(
-                List.of(FILA_WEB_DOMICILIO, FILA_COCINA_MOSTRADOR),
-                PAGEABLE,
-                2);
-        VistaResumenMetricasProjection proj = proj(1L, 1L,
+        Page<Pedido> pedidosPaged = pedidosPage(2);
+        PedidoResponseDTO dto = new PedidoResponseDTO();
+        VistaResumenMetricasProjection metricas = proj(1L, 1L,
                 BigDecimal.valueOf(230), BigDecimal.valueOf(80),
                 BigDecimal.ZERO, BigDecimal.valueOf(150));
 
-        when(repository.findVistaConFiltros(null, null, null, null, PAGEABLE)).thenReturn(page);
-        when(repository.findMetricasConFiltros(null, null, null, null)).thenReturn(proj);
+        when(pedidoRepository.findByFiltros(null, null, null, null, null, PAGEABLE)).thenReturn(pedidosPaged);
+        when(pedidoMapper.toResponseDTO(any(Pedido.class))).thenReturn(dto);
+        when(repository.findMetricasConFiltros(null, null, null, null, null)).thenReturn(metricas);
+        when(repository.countConFiltrosSinPagado(null, null, null, null)).thenReturn(2L);
 
-        VistaResumenPedidoConMetricasResponseDTO result = service.findVistaConMetricas(
-                null, null, null, null, PAGEABLE);
+        VistaResumenPedidoConMetricasResponseDTO result =
+                service.findVistaConMetricas(null, null, null, null, null, PAGEABLE);
 
         assertNotNull(result);
         assertEquals(2, result.getPedidos().getTotalElements());
         assertEquals(2, result.getCantidadTotal());
+        assertEquals(2, result.getCantidadTotalGeneral());
         assertEquals(1, result.getCantidadImpresos());
         assertEquals(1, result.getCantidadNoImpresos());
         assertEquals(0, BigDecimal.valueOf(230).compareTo(result.getIngresoTotal()));
@@ -119,7 +153,8 @@ public class VistaResumenPedidoServiceTest {
         assertEquals(0, BigDecimal.ZERO.compareTo(result.getIngresoTransferencia()));
         assertEquals(0, BigDecimal.valueOf(150).compareTo(result.getIngresoTarjeta()));
 
-        assertEquals(result.getCantidadImpresos() + result.getCantidadNoImpresos(), result.getCantidadTotal());
+        // Sin filtro de pagado, el total de la página y el general son iguales
+        assertEquals(result.getCantidadTotal(), result.getCantidadTotalGeneral());
         BigDecimal sumaMetodos = result.getIngresoEfectivo()
                 .add(result.getIngresoTransferencia())
                 .add(result.getIngresoTarjeta());
@@ -131,18 +166,21 @@ public class VistaResumenPedidoServiceTest {
     @Test
     @DisplayName("findVistaConMetricas - Debe soportar proyección con nulls (sin resultados)")
     public void findVistaConMetricas_nullSafe() {
-        Page<VistaResumenPedidoResponseDTO> page = new PageImpl<>(List.of(), PAGEABLE, 0);
-        VistaResumenMetricasProjection proj = proj(null, null, null, null, null, null);
+        Page<Pedido> paginaVacia = new PageImpl<>(List.of(), PAGEABLE, 0);
+        VistaResumenMetricasProjection proyeccionVacia = proj(null, null, null, null, null, null);
 
-        when(repository.findVistaConFiltros(DESDE, HASTA, TipoPedido.PICK_UP, PedidoCreadoDesde.COCINA, PAGEABLE))
-                .thenReturn(page);
-        when(repository.findMetricasConFiltros(DESDE, HASTA, TipoPedido.PICK_UP, PedidoCreadoDesde.COCINA))
-                .thenReturn(proj);
+        when(pedidoRepository.findByFiltros(DESDE, HASTA, TipoPedido.PICK_UP, PedidoCreadoDesde.COCINA, null, PAGEABLE))
+                .thenReturn(paginaVacia);
+        when(repository.findMetricasConFiltros(DESDE, HASTA, TipoPedido.PICK_UP, PedidoCreadoDesde.COCINA, null))
+                .thenReturn(proyeccionVacia);
+        when(repository.countConFiltrosSinPagado(DESDE, HASTA, TipoPedido.PICK_UP, PedidoCreadoDesde.COCINA))
+                .thenReturn(0L);
 
         VistaResumenPedidoConMetricasResponseDTO result = service.findVistaConMetricas(
-                DESDE, HASTA, TipoPedido.PICK_UP, PedidoCreadoDesde.COCINA, PAGEABLE);
+                DESDE, HASTA, TipoPedido.PICK_UP, PedidoCreadoDesde.COCINA, null, PAGEABLE);
 
         assertEquals(0, result.getCantidadTotal());
+        assertEquals(0, result.getCantidadTotalGeneral());
         assertEquals(0, result.getCantidadImpresos());
         assertEquals(0, result.getCantidadNoImpresos());
         assertEquals(BigDecimal.ZERO, result.getIngresoTotal());
@@ -152,16 +190,57 @@ public class VistaResumenPedidoServiceTest {
         System.out.println("[OK] findVistaConMetricas null-safe: todos los agregados en cero");
     }
 
-    private VistaResumenMetricasProjection proj(Long impresos, Long noImpresos,
-                                                BigDecimal total, BigDecimal efectivo,
-                                                BigDecimal transferencia, BigDecimal tarjeta) {
-        return new VistaResumenMetricasProjection() {
-            @Override public Long getCantidadImpresos() { return impresos; }
-            @Override public Long getCantidadNoImpresos() { return noImpresos; }
-            @Override public BigDecimal getIngresoTotal() { return total; }
-            @Override public BigDecimal getIngresoEfectivo() { return efectivo; }
-            @Override public BigDecimal getIngresoTransferencia() { return transferencia; }
-            @Override public BigDecimal getIngresoTarjeta() { return tarjeta; }
-        };
+    @Test
+    @DisplayName("findVistaConMetricas - El filtro pagado=false se propaga a pedidoRepository y a las métricas")
+    public void findVistaConMetricas_conFiltroPagadoFalse_delegaFiltroARepositorios() {
+        Page<Pedido> pedidosNoPagados = pedidosPage(1);
+        PedidoResponseDTO dto = new PedidoResponseDTO();
+        VistaResumenMetricasProjection metricasNoPagados = proj(0L, 1L,
+                BigDecimal.valueOf(90), BigDecimal.valueOf(90), BigDecimal.ZERO, BigDecimal.ZERO);
+
+        when(pedidoRepository.findByFiltros(null, null, null, null, false, PAGEABLE)).thenReturn(pedidosNoPagados);
+        when(pedidoMapper.toResponseDTO(any(Pedido.class))).thenReturn(dto);
+        when(repository.findMetricasConFiltros(null, null, null, null, false)).thenReturn(metricasNoPagados);
+        when(repository.countConFiltrosSinPagado(null, null, null, null)).thenReturn(5L);
+
+        VistaResumenPedidoConMetricasResponseDTO result =
+                service.findVistaConMetricas(null, null, null, null, false, PAGEABLE);
+
+        // La página y las métricas reflejan solo los no-pagados
+        assertEquals(1, result.getCantidadTotal());
+        assertEquals(0, result.getCantidadImpresos());
+        assertEquals(1, result.getCantidadNoImpresos());
+
+        // El badge (cantidadTotalGeneral) muestra el total sin filtro de pagado
+        assertEquals(5, result.getCantidadTotalGeneral());
+        assertNotEquals(result.getCantidadTotal(), result.getCantidadTotalGeneral());
+
+        verify(pedidoRepository).findByFiltros(null, null, null, null, false, PAGEABLE);
+        verify(repository).findMetricasConFiltros(null, null, null, null, false);
+        verify(repository).countConFiltrosSinPagado(null, null, null, null);
+        System.out.println("[OK] pagado=false: cantidadTotal=" + result.getCantidadTotal()
+                + " cantidadTotalGeneral=" + result.getCantidadTotalGeneral());
+    }
+
+    @Test
+    @DisplayName("findVistaConMetricas - Sin filtro pagado, cantidadTotalGeneral coincide con cantidadTotal")
+    public void findVistaConMetricas_sinFiltroPagado_totalGeneralIgualATotal() {
+        Page<Pedido> todosPedidos = pedidosPage(2);
+        PedidoResponseDTO dto = new PedidoResponseDTO();
+        VistaResumenMetricasProjection metricas = proj(1L, 1L, BigDecimal.valueOf(200),
+                BigDecimal.valueOf(200), BigDecimal.ZERO, BigDecimal.ZERO);
+
+        when(pedidoRepository.findByFiltros(null, null, null, null, null, PAGEABLE)).thenReturn(todosPedidos);
+        when(pedidoMapper.toResponseDTO(any(Pedido.class))).thenReturn(dto);
+        when(repository.findMetricasConFiltros(null, null, null, null, null)).thenReturn(metricas);
+        when(repository.countConFiltrosSinPagado(null, null, null, null)).thenReturn(2L);
+
+        VistaResumenPedidoConMetricasResponseDTO result =
+                service.findVistaConMetricas(null, null, null, null, null, PAGEABLE);
+
+        // Sin filtro, ambos totales deben coincidir (el badge no agrega información extra)
+        assertEquals(result.getCantidadTotal(), result.getCantidadTotalGeneral());
+        System.out.println("[OK] sin filtro pagado: cantidadTotal==cantidadTotalGeneral="
+                + result.getCantidadTotal());
     }
 }

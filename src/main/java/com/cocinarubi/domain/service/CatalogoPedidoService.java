@@ -7,6 +7,7 @@ import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.BasicoPedido;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.domain.entity.ComidaPedido;
+import com.cocinarubi.domain.entity.BasicoPedidoExtra;
 import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.domain.entity.ComplementoComidaPedido;
 import com.cocinarubi.domain.entity.Desayuno;
@@ -21,6 +22,7 @@ import com.cocinarubi.domain.entity.RegistroCliente;
 import com.cocinarubi.domain.entity.Ruta;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.BasicoPedidoDTO;
+import com.cocinarubi.presentation.dto.request.BasicoPedidoExtraDTO;
 import com.cocinarubi.presentation.dto.request.ComidaPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComplementoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.DesayunoPedidoDTO;
@@ -32,6 +34,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -105,14 +108,84 @@ public class CatalogoPedidoService {
                     .precioUnitario(linea.getPrecioUnitario())
                     .tamanoPorcion(linea.getTamanoPorcion())
                     .build();
-            for (ComplementoPedidoDTO compDto : linea.getComplementos()) {
-                Complemento c = complementoService.findById(compDto.getIdComplemento());
-                item.addComplemento(ComplementoComidaPedido.builder()
-                        .complemento(c)
-                        .precioUnitario(c.getPrecioExtra())
-                        .build());
-            }
+            agregarComplementosConLimite(item, linea.getComplementos(), comida.getLimiteComplemento());
             pedido.addComidaPedido(item);
+        }
+    }
+
+    /**
+     * Agrega los complementos de una línea de comida validando el límite de complementos gratuitos.
+     *
+     * <p>Sin límite (null): usa el precio del catálogo para cada complemento, comportamiento original.
+     * Con límite: el frontend envía los precios calculados respetando la regla de slots gratuitos
+     * (cobrar_siempre consume slots y siempre tiene precio; los no-cobrar en exceso deben tener precio).
+     * El servidor valida coherencia antes de persistir.
+     */
+    private void agregarComplementosConLimite(ComidaPedido item,
+                                               List<ComplementoPedidoDTO> dtos,
+                                               Integer limite) {
+        if (limite == null) {
+            for (ComplementoPedidoDTO dto : dtos) {
+                Complemento c = complementoService.findById(dto.getIdComplemento());
+                item.addComplemento(ComplementoComidaPedido.builder()
+                        .complemento(c).precioUnitario(c.getPrecioExtra()).build());
+            }
+            return;
+        }
+
+        // Resolver todas las entidades en el mismo orden que los DTOs
+        List<Complemento> complementos = new ArrayList<>(dtos.size());
+        for (ComplementoPedidoDTO dto : dtos) {
+            complementos.add(complementoService.findById(dto.getIdComplemento()));
+        }
+
+        // Calcular cuántos no-cobrar pueden ser gratuitos y cuántos deben tener precio
+        long countSiempre = complementos.stream().filter(Complemento::isCobrarSiempre).count();
+        long slotsLibres = Math.max(0L, limite - countSiempre);
+        long countNoCobrar = complementos.size() - countSiempre;
+        long exceso = Math.max(0L, countNoCobrar - slotsLibres);
+
+        if (exceso > 0) {
+            long noCobrarConPrecio = 0;
+            for (int i = 0; i < dtos.size(); i++) {
+                if (!complementos.get(i).isCobrarSiempre()) {
+                    BigDecimal precio = dtos.get(i).getPrecioUnitario();
+                    if (precio != null && precio.compareTo(BigDecimal.ZERO) > 0) {
+                        noCobrarConPrecio++;
+                    }
+                }
+            }
+            if (noCobrarConPrecio < exceso) {
+                throw new BusinessException(
+                        "Al menos " + exceso + " complemento(s) exceden el límite permitido y deben tener un precio extra.",
+                        HttpStatus.BAD_REQUEST);
+            }
+        }
+
+        // Validar precios y persistir
+        for (int i = 0; i < dtos.size(); i++) {
+            Complemento complemento = complementos.get(i);
+            BigDecimal precio = dtos.get(i).getPrecioUnitario();
+            if (complemento.isCobrarSiempre() && (precio == null || precio.compareTo(BigDecimal.ZERO) == 0)) {
+                throw new BusinessException(
+                        "El complemento '" + complemento.getNombreComplemento()
+                                + "' siempre se cobra y debe llevar un precio en la solicitud.",
+                        HttpStatus.BAD_REQUEST);
+            }
+            if (precio != null && precio.compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal precioEntidad = complemento.getPrecioExtra() != null
+                        ? complemento.getPrecioExtra() : BigDecimal.ZERO;
+                if (precio.compareTo(precioEntidad) != 0) {
+                    throw new BusinessException(
+                            "El precio del complemento '" + complemento.getNombreComplemento()
+                                    + "' no coincide con el catálogo.",
+                            HttpStatus.BAD_REQUEST);
+                }
+            }
+            item.addComplemento(ComplementoComidaPedido.builder()
+                    .complemento(complemento)
+                    .precioUnitario(precio != null ? precio : BigDecimal.ZERO)
+                    .build());
         }
     }
 
@@ -131,10 +204,19 @@ public class CatalogoPedidoService {
             Basico basico = basicoRepository.findByIdWithComplementos(linea.getIdBasico())
                     .orElseThrow(() -> new BusinessException(
                             "Básico no encontrado con id: " + linea.getIdBasico(), HttpStatus.BAD_REQUEST));
-            pedido.addBasicoPedido(BasicoPedido.builder()
+            BasicoPedido item = BasicoPedido.builder()
                     .basico(basico)
                     .precioUnitario(linea.getPrecioUnitario())
-                    .build());
+                    .build();
+            for (BasicoPedidoExtraDTO extraDto : linea.getExtras()) {
+                Complemento c = complementoService.findById(extraDto.getIdComplemento());
+                item.addExtra(BasicoPedidoExtra.builder()
+                        .complemento(c)
+                        .cantidad((byte) extraDto.getCantidad().intValue())
+                        .precio(c.getPrecioExtra())
+                        .build());
+            }
+            pedido.addBasicoPedido(item);
         }
     }
 
@@ -162,6 +244,9 @@ public class CatalogoPedidoService {
         }
         for (BasicoPedido bp : pedido.getBasicosPedido()) {
             total = total.add(bp.getPrecioUnitario());
+            for (BasicoPedidoExtra extra : bp.getExtras()) {
+                total = total.add(extra.getPrecio().multiply(BigDecimal.valueOf(extra.getCantidad())));
+            }
         }
         for (ProductoCocinaPedido pcp : pedido.getProductosCocina()) {
             total = total.add(pcp.getPrecioUnitario().multiply(BigDecimal.valueOf(pcp.getCantidad())));

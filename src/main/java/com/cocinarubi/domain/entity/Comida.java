@@ -36,25 +36,28 @@ public class Comida {
     @Column(name = "id_comida")
     private Integer idComida;
 
-    @Column(name = "uuid_comida", nullable = false, length = 45)
+    @Column(name = "uuid_comida")
     private String uuidComida;
 
-    @Column(name = "nombre_comida", nullable = false, length = 255)
+    @Column(name = "nombre_comida")
     private String nombreComida;
 
-    @Column(name = "descripcion", length = 255)
+    @Column(name = "descripcion")
     private String descripcion;
 
-    @Column(name = "precio_media", nullable = false, precision = 10, scale = 2)
+    @Column(name = "precio_media")
     private BigDecimal precioMedia;
 
-    @Column(name = "precio_entera", nullable = false, precision = 10, scale = 2)
+    @Column(name = "precio_entera")
     private BigDecimal precioEntera;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "estatus", nullable = false)
+    @Column(name = "estatus")
     private Estatus estatus;
 
-    @Column(name = "destacado", nullable = false)
+    @Column(name = "destacado")
     private boolean destacado;
+
+    @Column(name = "limite_complemento")
+    private Integer limiteComplemento;
 }

@@ -108,6 +108,7 @@ public class SecurityConfig {
                     // ── Rutas públicas ────────────────────────────────────
                     .requestMatchers(
                             "/auth/**",
+                            "/todos/**",
                             "/v3/api-docs/**",
                             "/swagger-ui/**",
                             "/swagger-ui.html",
@@ -121,26 +122,38 @@ public class SecurityConfig {
                     // ── Solo JEFA_COCINA ──────────────────────────────────
                     .requestMatchers(
                             "/usuario/**",
-                            "/auditoria/**"
-                        ).hasRole("JEFA_COCINA")
-                        
-                        // ── Ambos roles ───────────────────────────────────────
-                        .requestMatchers(
+                            "/auditoria/**",
+                            "/estadisticas/**"
+                    ).hasRole("JEFA_COCINA")
+
+                    // ── Ambos roles ───────────────────────────────────────
+                    .requestMatchers(
+                            "/anuncio/**",
+                            "/basico/**",
+                            "/busqueda-catalogo/**",
+                            "/cliente/**",
+                            "/produccion/**",
+                            "/codigoCliente/**",
                             "/comida/**",
+                            "/complemento/**",
                             "/desayuno/**",
+                            "/favoritoCliente/**",
+                            "/files/**",
+                            "/horario-atencion/**",
+                            "/impresora/**",
+                            "/inventarioComida/**",
+                            "/menu-digital/**",
+                            "/pago-repartidor/**",
+                            "/pedido/**",
+                            "/productoCocina/**",
+                            "/registro-cliente/**",
                             "/ruta/**",
                             "/tarifa-especial/**",
-                            "/horario-atencion/**",
-                            "/anuncio/**",
-                            "/codigoCliente/**",
-                            "/complemento/**",
-                            "/basico/**",
-                            "/registro-cliente/**",
-                            "/cliente/**",
-                            "/pago-repartidor/**"
+                            "/vista-resumen-pedido/**"
                     ).hasAnyRole("JEFA_COCINA", "COCINA")
 
-                    .anyRequest().authenticated()
+                    // ── Cualquier otra ruta no especificada: denegada ────
+                    .anyRequest().denyAll()
             )
 
             // ── Orden: GlobalRateLimit → LoginRateLimit → Correlation → JWT → Spring ──
@@ -167,11 +180,17 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         // Ajustar orígenes para producción
-        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        config.setAllowedOriginPatterns(List.of(
+                "https://api.cocinarubi.com",
+                "https://api-test.cocinarubi.com",
+                "https://carrito.cocinarubi.com",
+                "https://carrito-test.cocinarubi.com"
+        ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        // Necesario para que el frontend pueda leer el header Authorization renovado
-        config.setExposedHeaders(List.of("Authorization", "X-Correlation-ID"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-API-Key",
+                "X-Correlation-ID"));
+        config.setExposedHeaders(List.of("Authorization", "X-Correlation-ID",
+                "X-RateLimit-Remaining", "Retry-After"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 

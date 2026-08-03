@@ -4,6 +4,7 @@ import com.cocinarubi.aop.SkipAudit;
 import com.cocinarubi.domain.service.PedidoService;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
+import com.cocinarubi.presentation.dto.response.MarcarImpresoResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -30,6 +31,13 @@ public class PedidoController {
                 pedidoService.findAll()));
     }
 
+    @SkipAudit
+    @GetMapping("/contador")
+    public ResponseEntity<ApiResponse<Long>> contador() {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Contador de pedidos WEB sin imprimir",
+                pedidoService.contarWebSinImprimir()));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PedidoResponseDTO>> findById(@PathVariable int id) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Pedido encontrado",
@@ -53,8 +61,16 @@ public class PedidoController {
 
     @SkipAudit
     @PatchMapping("/{id}/marcar-impreso")
-    public ResponseEntity<Void> marcarImpreso(@PathVariable int id) {
-        pedidoService.marcarImpreso(id);
+    public ResponseEntity<ApiResponse<MarcarImpresoResponseDTO>> marcarImpreso(@PathVariable int id) {
+        boolean otorgado = pedidoService.marcarImpreso(id);
+        return ResponseEntity.ok(ApiResponse.exito(200, "Operación completada",
+                new MarcarImpresoResponseDTO(otorgado)));
+    }
+
+    @SkipAudit
+    @PatchMapping("/{id}/marcar-pagado")
+    public ResponseEntity<Void> marcarPagado(@PathVariable int id) {
+        pedidoService.marcarPagado(id);
         return ResponseEntity.noContent().build();
     }
 

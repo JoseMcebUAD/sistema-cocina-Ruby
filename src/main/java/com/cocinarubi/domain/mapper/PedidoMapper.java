@@ -2,6 +2,7 @@ package com.cocinarubi.domain.mapper;
 
 import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.BasicoPedido;
+import com.cocinarubi.domain.entity.BasicoPedidoExtra;
 import com.cocinarubi.domain.entity.ComidaPedido;
 import com.cocinarubi.domain.entity.DesayunoPedido;
 import com.cocinarubi.domain.entity.Pedido;
@@ -9,6 +10,7 @@ import com.cocinarubi.domain.entity.PedidoCocina;
 import com.cocinarubi.domain.entity.PedidoDomicilio;
 import com.cocinarubi.domain.entity.PedidoDomicilioCocina;
 import com.cocinarubi.domain.entity.ProductoCocinaPedido;
+import com.cocinarubi.presentation.dto.response.BasicoPedidoExtraResponseDTO;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.BasicoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
@@ -77,6 +79,9 @@ public class PedidoMapper {
                 pedido.getPagoCliente(),
                 cambio,
                 pedido.getUuidCliente(),
+                pedido.isPagado(),
+                pedido.isImpreso(),
+                pedido.getComentario(),
                 comidas, desayunos, basicos, productos, domicilio, domicilioCocina, pedidoCocina
         );
     }
@@ -127,7 +132,15 @@ public class PedidoMapper {
                 b.getEstatus(),
                 comps
         );
-        return new BasicoPedidoResponseDTO(bp.getIdBasicoPedido(), basicoDTO, bp.getPrecioUnitario());
+        List<BasicoPedidoExtraResponseDTO> extras = bp.getExtras().stream()
+                .map(e -> new BasicoPedidoExtraResponseDTO(
+                        e.getIdBasicoPedidoExtra(),
+                        e.getComplemento().getIdComplemento(),
+                        e.getComplemento().getNombreComplemento(),
+                        e.getCantidad(),
+                        e.getPrecio()))
+                .collect(Collectors.toList());
+        return new BasicoPedidoResponseDTO(bp.getIdBasicoPedido(), basicoDTO, bp.getPrecioUnitario(), extras);
     }
 
     public ProductoCocinaPedidoResponseDTO toProductoCocinaPedidoDTO(ProductoCocinaPedido pcp) {
@@ -142,16 +155,19 @@ public class PedidoMapper {
 
     public PedidoDomicilioResponseDTO toDomicilioDTO(PedidoDomicilio pd) {
         // La ruta puede ser null si se eliminó del catálogo después de crear el pedido.
-        return new PedidoDomicilioResponseDTO(
+        PedidoDomicilioResponseDTO dto = new PedidoDomicilioResponseDTO(
                 pd.getRuta() != null ? pd.getRuta().getIdRuta() : 0,
                 pd.getRuta() != null ? pd.getRuta().getNombre() : null,
                 pd.getDireccion(),
                 pd.getCodigo()
         );
+        dto.setTarifa(pd.getTarifa());
+        dto.setTarifasEspeciales(pd.getTarifasEspeciales());
+        return dto;
     }
 
     public PedidoDomicilioCocinaResponseDTO toDomicilioCocinaDTO(PedidoDomicilioCocina pdc) {
-        return new PedidoDomicilioCocinaResponseDTO(
+        PedidoDomicilioCocinaResponseDTO dto = new PedidoDomicilioCocinaResponseDTO(
                 pdc.getIdPedido(),
                 pdc.getRegistroCliente().getIdRegistroCliente(),
                 pdc.getRegistroCliente().getNombre(),
@@ -161,6 +177,8 @@ public class PedidoMapper {
                 pdc.getDomicilio(),
                 pdc.getPrecioTarifa()
         );
+        dto.setTarifasEspeciales(pdc.getTarifasEspeciales());
+        return dto;
     }
 
     public PedidoCocinaResponseDTO toPedidoCocinaDTO(PedidoCocina pc) {

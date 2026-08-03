@@ -2,6 +2,7 @@ package com.cocinarubi.domain.service.files;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.cocinarubi.Constants;
 import com.cocinarubi.DBConstants.TipoCatalogoProducto;
 import com.cocinarubi.dao.ArchivoRepository;
 import com.cocinarubi.domain.entity.Archivo;
@@ -114,7 +115,7 @@ public class FileServiceImpl implements FileUploadService {
                     .entityType(entityType)
                     .idEntidad(idEntidad)
                     .publicId(publicId)
-                    .creadoEn(LocalDateTime.now())
+                    .creadoEn(LocalDateTime.now(Constants.ZONA_MERIDA))
                     .build();
 
             // Persiste los metadatos del archivo recién subido en la tabla archivo

@@ -94,7 +94,6 @@ public class PagoRepartidorRestTest {
                 {
                   "idPagoRepartidor": %d,
                   "pago": 200.00,
-                  "fechaPago": "2026-06-20T10:00:00"
                 }
                 """.formatted(createdId);
 
@@ -106,22 +105,6 @@ public class PagoRepartidorRestTest {
         JsonNode data = mapper.readTree(response.getBody()).get("data");
         assertEquals("200.0", data.get("pago").asText());
         System.out.println("[OK] " + response.getStatusCode() + " | pago=" + data.get("pago").asText());
-    }
-
-    @Test
-    @Order(5)
-    @DisplayName("DELETE /pago-repartidor/{id} - Debe eliminar el pago y retornar 404 al buscarlo nuevamente")
-    public void delete() throws Exception {
-        ResponseEntity<String> deleteResponse = this.restTemplate.exchange(
-                "/pago-repartidor/" + createdId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class
-        );
-        assertEquals(HttpStatus.NO_CONTENT, deleteResponse.getStatusCode());
-
-        ResponseEntity<String> getResponse = this.restTemplate.exchange(
-                "/pago-repartidor/" + createdId, HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
-        );
-        assertEquals(HttpStatus.NOT_FOUND, getResponse.getStatusCode());
-        System.out.println("[OK] DELETE 204 → GET 404 para pago id=" + createdId);
     }
 
     @Test

@@ -99,7 +99,9 @@ GET /vista-resumen-pedido?desde=2026-07-01T00:00:00&hasta=2026-07-20T23:59:59&ti
 
 ### 2. `GET /vista-resumen-pedido/metricas`
 
-Devuelve **la misma vista paginada** más **métricas agregadas** calculadas sobre el rango/filtros aplicados (no solo sobre la página).
+Devuelve una **página de pedidos con detalle completo** (`PedidoResponseDTO`) más **métricas agregadas** calculadas sobre el rango/filtros aplicados (no solo sobre la página).
+
+> A diferencia de `GET /vista-resumen-pedido`, cada pedido en `content` incluye los items ordenados (comidas, desayunos, basicos, productosCocina) y el objeto de entrega completo (domicilio, domicilioCocina o pedidoCocina).
 
 #### Query params
 
@@ -122,7 +124,41 @@ GET /vista-resumen-pedido/metricas?desde=2026-07-01T00:00:00&hasta=2026-07-20T23
   "message": "Vista y métricas de pedidos obtenidas correctamente",
   "data": {
     "pedidos": {
-      "content": [ /* array de VistaResumenPedidoResponseDTO (mismo shape que el endpoint anterior) */ ],
+      "content": [
+        {
+          "idPedido": 101,
+          "metodoPagoPrincipal": "EFECTIVO",
+          "metodoPagoSecundario": null,
+          "tipoPedido": "DOMICILIO",
+          "fechaExpedicionPedido": "2026-07-20T13:15:00",
+          "pedidoCreadoDesde": "COCINA",
+          "precioFinalOrden": 250.00,
+          "pagoCliente": 300.00,
+          "cambio": 50.00,
+          "uuidCliente": null,
+          "comidas": [
+            { "idComidaPedido": 1, "idComida": 5, "nombreComida": "Pollo en salsa", "precioUnitario": 85.00, "tamanoPorcion": "NORMAL", "complementos": [] }
+          ],
+          "desayunos": [],
+          "basicos": [],
+          "productosCocina": [
+            { "idProductoCocinaPedido": 3, "idProductoCocina": 2, "nombreProducto": "Refresco", "precioUnitario": 20.00, "cantidad": 2 }
+          ],
+          "domicilio": null,
+          "domicilioCocina": {
+            "idPedido": 101,
+            "idRegistroCliente": 7,
+            "nombreCliente": "Juan Pérez",
+            "telefono": "9991234567",
+            "idRuta": 2,
+            "nombreRuta": "Ruta Centro",
+            "domicilio": "Calle 60 #123, Mérida",
+            "precioTarifa": 30.00,
+            "tarifasEspeciales": []
+          },
+          "pedidoCocina": null
+        }
+      ],
       "totalElements": 57,
       "totalPages": 3,
       "number": 0,
@@ -166,16 +202,41 @@ GET /vista-resumen-pedido/metricas?desde=2026-07-01T00:00:00&hasta=2026-07-20T23
 
 ### `VistaResumenPedidoConMetricasResponseDTO`
 
-| Campo                  | Tipo                                    | Notas                                                        |
-|------------------------|-----------------------------------------|--------------------------------------------------------------|
-| `pedidos`              | `Page<VistaResumenPedidoResponseDTO>`   | Página de resultados (misma estructura que el endpoint base).|
-| `cantidadTotal`        | `long`                                  | Total de pedidos en el rango filtrado.                       |
-| `cantidadImpresos`     | `long`                                  | Pedidos con `impreso = true`.                                |
-| `cantidadNoImpresos`   | `long`                                  | Pedidos con `impreso = false`.                               |
-| `ingresoTotal`         | `BigDecimal`                            | Suma de `precioFinalOrden`.                                  |
-| `ingresoEfectivo`      | `BigDecimal`                            | Ingresos cobrados en efectivo.                               |
-| `ingresoTransferencia` | `BigDecimal`                            | Ingresos cobrados por transferencia.                         |
-| `ingresoTarjeta`       | `BigDecimal`                            | Ingresos cobrados con tarjeta.                               |
+| Campo                  | Tipo                          | Notas                                                                                  |
+|------------------------|-------------------------------|----------------------------------------------------------------------------------------|
+| `pedidos`              | `Page<PedidoResponseDTO>`     | Página de pedidos con detalle completo (items, domicilio, etc.). Ver forma abajo.      |
+| `cantidadTotal`        | `long`                        | Total de pedidos en el rango filtrado.                                                 |
+| `cantidadImpresos`     | `long`                        | Pedidos con `impreso = true`.                                                          |
+| `cantidadNoImpresos`   | `long`                        | Pedidos con `impreso = false`.                                                         |
+| `ingresoTotal`         | `BigDecimal`                  | Suma de `precioFinalOrden`.                                                            |
+| `ingresoEfectivo`      | `BigDecimal`                  | Ingresos cobrados en efectivo.                                                         |
+| `ingresoTransferencia` | `BigDecimal`                  | Ingresos cobrados por transferencia.                                                   |
+| `ingresoTarjeta`       | `BigDecimal`                  | Ingresos cobrados con tarjeta.                                                         |
+
+### `PedidoResponseDTO` (usado en `pedidos.content` de `/metricas`)
+
+| Campo                  | Tipo                                    | Notas                                                                  |
+|------------------------|-----------------------------------------|------------------------------------------------------------------------|
+| `idPedido`             | `int`                                   | ID del pedido.                                                         |
+| `metodoPagoPrincipal`  | `MetodoPago`                            | `TARJETA`, `EFECTIVO`, `TRANSFERENCIA`.                                |
+| `metodoPagoSecundario` | `MetodoPago`                            | Opcional (pagos mixtos).                                               |
+| `tipoPedido`           | `TipoPedido`                            | `PICK_UP`, `DOMICILIO`, `MOSTRADOR`.                                   |
+| `fechaExpedicionPedido`| `LocalDateTime`                         | Formato: `yyyy-MM-dd'T'HH:mm:ss`.                                      |
+| `pedidoCreadoDesde`    | `PedidoCreadoDesde`                     | `COCINA`, `WEB`.                                                       |
+| `precioFinalOrden`     | `BigDecimal`                            | Total cobrado al cliente.                                              |
+| `pagoCliente`          | `BigDecimal`                            | Monto entregado por el cliente (solo efectivo).                        |
+| `cambio`               | `BigDecimal`                            | `pagoCliente - precioFinalOrden`; `null` si pago exacto.               |
+| `uuidCliente`          | `String`                                | UUID del cliente WEB; `null` para pedidos de cocina.                   |
+| `comidas`              | `ComidaPedidoResponseDTO[]`             | Items de comida con complementos.                                      |
+| `desayunos`            | `DesayunoPedidoResponseDTO[]`           | Items de desayuno.                                                     |
+| `basicos`              | `BasicoPedidoResponseDTO[]`             | Items de paquete básico.                                               |
+| `productosCocina`      | `ProductoCocinaPedidoResponseDTO[]`     | Snacks/bebidas con cantidad.                                           |
+| `domicilio`            | `PedidoDomicilioResponseDTO \| null`    | Solo WEB + DOMICILIO.                                                  |
+| `domicilioCocina`      | `PedidoDomicilioCocinaResponseDTO \| null` | Solo COCINA + DOMICILIO. Incluye `telefono` del cliente.            |
+| `pedidoCocina`         | `PedidoCocinaResponseDTO \| null`       | Solo COCINA + PICK_UP/MOSTRADOR. Incluye `nombreCliente`.              |
+
+> **Celular del cliente:** para COCINA+DOMICILIO está en `domicilioCocina.telefono`; para WEB+DOMICILIO no está en el pedido (se consulta por separado vía `/cliente`).  
+> **Items:** combinar `comidas`, `desayunos`, `basicos` y `productosCocina` para obtener todos los productos del pedido. Solo `productosCocina` puede tener `cantidad > 1`.
 
 ### Enums
 
@@ -226,8 +287,84 @@ export interface SpringPage<T> {
   numberOfElements: number;
 }
 
+// Sub-tipos usados dentro de PedidoResponseDTO
+export interface ComidaPedidoResponseDTO {
+  idComidaPedido: number;
+  idComida: number;
+  nombreComida: string;
+  precioUnitario: number;
+  tamanoPorcion: string;
+  complementos: { idComplemento: number; nombreComplemento: string; precioUnitario: number }[];
+}
+
+export interface DesayunoPedidoResponseDTO {
+  idDesayunoPedido: number;
+  idDesayuno: number;
+  nombreDesayuno: string;
+  precio: number;
+}
+
+export interface BasicoPedidoResponseDTO {
+  idBasicoPedido: number;
+  basico: { idBasico: number; nombreComida: string; precioBasico: number };
+  precioUnitario: number;
+}
+
+export interface ProductoCocinaPedidoResponseDTO {
+  idProductoCocinaPedido: number;
+  idProductoCocina: number;
+  nombreProducto: string;
+  precioUnitario: number;
+  cantidad: number;
+}
+
+export interface PedidoDomicilioCocinaResponseDTO {
+  idPedido: number;
+  idRegistroCliente: number;
+  nombreCliente: string;
+  telefono: string | null;   // celular del cliente COCINA+DOMICILIO
+  idRuta: number;
+  nombreRuta: string;
+  domicilio: string;
+  precioTarifa: number;
+  tarifasEspeciales: string[];
+}
+
+export interface PedidoDomicilioResponseDTO {
+  idRuta: number;
+  nombreRuta: string | null;
+  direccion: string;
+  codigo: string | null;
+  tarifasEspeciales: string[];
+}
+
+export interface PedidoCocinaResponseDTO {
+  idPedido: number;
+  nombreCliente: string | null;
+}
+
+export interface PedidoResponseDTO {
+  idPedido: number;
+  metodoPagoPrincipal: MetodoPago;
+  metodoPagoSecundario: MetodoPago | null;
+  tipoPedido: TipoPedido;
+  fechaExpedicionPedido: string;
+  pedidoCreadoDesde: PedidoCreadoDesde;
+  precioFinalOrden: number;
+  pagoCliente: number | null;
+  cambio: number | null;
+  uuidCliente: string | null;
+  comidas: ComidaPedidoResponseDTO[];
+  desayunos: DesayunoPedidoResponseDTO[];
+  basicos: BasicoPedidoResponseDTO[];
+  productosCocina: ProductoCocinaPedidoResponseDTO[];
+  domicilio: PedidoDomicilioResponseDTO | null;
+  domicilioCocina: PedidoDomiciliaCocinaResponseDTO | null;
+  pedidoCocina: PedidoCocinaResponseDTO | null;
+}
+
 export interface VistaResumenPedidoConMetricasResponseDTO {
-  pedidos: SpringPage<VistaResumenPedidoResponseDTO>;
+  pedidos: SpringPage<PedidoResponseDTO>;
   cantidadTotal: number;
   cantidadImpresos: number;
   cantidadNoImpresos: number;
@@ -274,6 +411,17 @@ const res = await fetch(`${API}/vista-resumen-pedido/metricas?${params}`);
 const json: ApiResponse<VistaResumenPedidoConMetricasResponseDTO> = await res.json();
 
 const { pedidos, ingresoTotal, cantidadImpresos } = json.data;
+
+// Obtener el teléfono del cliente (COCINA+DOMICILIO)
+const telefono = pedidos.content[0]?.domicilioCocina?.telefono;
+
+// Listar todos los items de un pedido
+const items = [
+  ...pedidos.content[0].comidas.map(c => ({ nombre: c.nombreComida, cantidad: 1, precio: c.precioUnitario })),
+  ...pedidos.content[0].desayunos.map(d => ({ nombre: d.nombreDesayuno, cantidad: 1, precio: d.precio })),
+  ...pedidos.content[0].basicos.map(b => ({ nombre: b.basico.nombreComida, cantidad: 1, precio: b.precioUnitario })),
+  ...pedidos.content[0].productosCocina.map(p => ({ nombre: p.nombreProducto, cantidad: p.cantidad, precio: p.precioUnitario })),
+];
 ```
 
 ---

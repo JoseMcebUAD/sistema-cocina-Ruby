@@ -1,5 +1,6 @@
 package com.cocinarubi.domain.service;
 
+import com.cocinarubi.Constants;
 import com.cocinarubi.dao.RolUsuarioRepository;
 import com.cocinarubi.dao.UsuarioRepository;
 import com.cocinarubi.presentation.dto.request.UsuarioRequestDTO;
@@ -11,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -57,7 +57,7 @@ public class UsuarioService {
                 .nombreUsuario(dto.getNombreUsuario())
                 .contrasena(passwordEncoder.encode(dto.getContrasena()))
                 // Zona horaria fija del restaurante para evitar ambigüedades al comparar fechas
-                .creadoEn(LocalDateTime.now(ZoneId.of("America/Merida")))
+                .creadoEn(LocalDateTime.now(Constants.ZONA_MERIDA))
                 .build();
         return toResponseDTO(usuarioRepository.save(usuario));
     }

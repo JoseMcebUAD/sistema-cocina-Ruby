@@ -32,6 +32,10 @@ public class ComidaService {
         return comidaRepository.findDisponiblesOrdenados(DBConstants.Estatus.DISPONIBLE);
     }
 
+    public Page<Comida> findDisponibles(Pageable pageable) {
+        return comidaRepository.findDisponiblesPaginado(DBConstants.Estatus.DISPONIBLE, pageable);
+    }
+
     public Comida findById(int id) {
         return comidaRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(
@@ -56,7 +60,7 @@ public class ComidaService {
         // Guardar integridad referencial: la DB no tiene ON DELETE CASCADE para estas relaciones
         if (comidaRepository.countEnPedidos(id) > 0) {
             throw new BusinessException(
-                    "No se puede eliminar la comida porque está referenciada en pedidos existentes",
+                    "Este producto no se puede eliminar ya que tiene pedidos asignados, puede deshabilitarlo mejor",
                     HttpStatus.CONFLICT);
         }
         if (comidaRepository.countEnBasicos(id) > 0) {
@@ -65,5 +69,11 @@ public class ComidaService {
                     HttpStatus.CONFLICT);
         }
         comidaRepository.deleteById(id);
+    }
+
+    public Comida toggleDestacado(int id) {
+        Comida comida = findById(id);
+        comida.setDestacado(!comida.isDestacado());
+        return comidaRepository.save(comida);
     }
 }
