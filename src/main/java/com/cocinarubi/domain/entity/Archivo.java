@@ -15,13 +15,12 @@ import java.time.LocalDateTime;
  * Cloudinary y {@code public_id} guarda el identificador único del recurso,
  * necesario para eliminar o transformar el archivo vía API.</p>
  *
- * <p>El campo {@code entity_type} clasifica el archivo dentro del catálogo de
- * productos. El campo {@code orden} permite controlar la posición del archivo
- * en galerías (por ejemplo, varias imágenes de la misma comida).</p>
+ * <p>Discriminador dual: cada fila usa <b>exactamente uno</b> de
+ * {@code entity_type} (BASICO/COMIDA/DESAYUNO) o {@code id_categoria}
+ * (categorías dinámicas). CHECK constraint en BD.</p>
  *
- * <p>El módulo no puede eliminarse si tiene archivos asociados (ON DELETE RESTRICT).</p>
- *
- * <p>Relaciones: {@code @ManyToOne} LAZY a {@link ArchivoModulo}.</p>
+ * <p>Relaciones: {@code @ManyToOne} LAZY a {@link ArchivoModulo} y a
+ * {@link Categoria} (nullable).</p>
  */
 @Entity
 @Table(name = "archivo")
@@ -39,31 +38,35 @@ public class Archivo {
     private Integer idArchivo;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_archivo_modulo", nullable = false)
+    @JoinColumn(name = "id_archivo_modulo")
     private ArchivoModulo archivoModulo;
 
-    @Column(name = "path_archivo", nullable = false, length = 255)
+    @Column(name = "path_archivo")
     private String pathArchivo;
 
-    @Column(name = "mime_type", nullable = false, length = 50)
+    @Column(name = "mime_type")
     private String mimeType;
 
-    @Column(name = "nombre_archivo", nullable = false, length = 255)
+    @Column(name = "nombre_archivo")
     private String nombreArchivo;
 
     @Column(name = "orden")
     private Integer orden;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "entity_type", nullable = false)
+    @Column(name = "entity_type")
     private TipoCatalogoProducto entityType;
 
-    @Column(name = "id_entidad", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_categoria")
+    private Categoria categoria;
+
+    @Column(name = "id_entidad")
     private Integer idEntidad;
 
-    @Column(name = "public_id", nullable = false, unique = true, length = 255)
+    @Column(name = "public_id")
     private String publicId;
 
-    @Column(name = "creado_en", nullable = false, updatable = false)
+    @Column()
     private LocalDateTime creadoEn;
 }
