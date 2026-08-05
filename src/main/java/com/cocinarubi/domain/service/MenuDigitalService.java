@@ -1,16 +1,17 @@
 package com.cocinarubi.domain.service;
 
 import com.cocinarubi.DBConstants.Estatus;
-import com.cocinarubi.DBConstants.TipoProducto;
 import com.cocinarubi.dao.BasicoRepository;
+import com.cocinarubi.dao.CategoriaRepository;
 import com.cocinarubi.dao.ComidaRepository;
 import com.cocinarubi.dao.ComplementoRepository;
 import com.cocinarubi.dao.ProductoCocinaRepository;
 import com.cocinarubi.domain.entity.Basico;
-import com.cocinarubi.domain.entity.BasicoComplemento;
+import com.cocinarubi.domain.entity.Categoria;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.domain.entity.ProductoCocina;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,10 @@ import java.util.stream.Collectors;
 /**
  * Genera el texto del menú diario de Cocina Rubi listo para copiar y enviar por WhatsApp.
  * Capa: Service — lógica de composición del menú a partir de ítems con estatus DISPONIBLE.
+ *
+ * <p>Las categorías del seeder inicial (BEBIDA, SNACK, CHAROLA, POSTRE) conservan
+ * su formato custom (emojis, headers, agrupación por precio). Cualquier categoría
+ * creada por el usuario en Fase 2+ se renderiza con la plantilla genérica.</p>
  */
 @Service
 @Transactional(readOnly = true)
@@ -64,15 +69,18 @@ public class MenuDigitalService {
     private final BasicoRepository basicoRepository;
     private final ComplementoRepository complementoRepository;
     private final ProductoCocinaRepository productoCocinaRepository;
+    private final CategoriaRepository categoriaRepository;
 
     public MenuDigitalService(ComidaRepository comidaRepository,
                               BasicoRepository basicoRepository,
                               ComplementoRepository complementoRepository,
-                              ProductoCocinaRepository productoCocinaRepository) {
+                              ProductoCocinaRepository productoCocinaRepository,
+                              CategoriaRepository categoriaRepository) {
         this.comidaRepository = comidaRepository;
         this.basicoRepository = basicoRepository;
         this.complementoRepository = complementoRepository;
         this.productoCocinaRepository = productoCocinaRepository;
+        this.categoriaRepository = categoriaRepository;
     }
 
     /**
@@ -89,26 +97,61 @@ public class MenuDigitalService {
         Map<Integer, List<Basico>> basicosPorComida = basicos.stream()
                 .collect(Collectors.groupingBy(b -> b.getComida().getIdComida()));
 
-        List<ProductoCocina> bebidas = filtrarPorTipo(productos, TipoProducto.BEBIDA);
-        List<ProductoCocina> snacks = filtrarPorTipo(productos, TipoProducto.SNACK);
-        List<ProductoCocina> charolas = filtrarPorTipo(productos, TipoProducto.CHAROLA);
-        List<ProductoCocina> postres = filtrarPorTipo(productos, TipoProducto.POSTRE);
+        // Agrupa productos por idCategoria una sola vez para O(1) lookup por sección
+        Map<Integer, List<ProductoCocina>> productosPorCategoria = productos.stream()
+                .collect(Collectors.groupingBy(p -> p.getCategoria().getIdCategoria()));
 
         StringBuilder sb = new StringBuilder(HEADER);
 
         appendComidas(sb, comidas, basicosPorComida);
-        appendBebidas(sb, bebidas);
-        appendSnacks(sb, snacks);
-        appendComplementos(sb, complementos);
 
+        // Orden fijo para las 4 categorías del seeder (mantiene el layout histórico).
+        // Cualquier categoría extra se anexa al final con plantilla genérica.
+        List<Categoria> categorias = categoriaRepository.findAll(Sort.by(Sort.Direction.ASC, "nombre"));
+
+        renderCategoriaEstatica(sb, categorias, productosPorCategoria, "BEBIDA", this::appendBebidas);
+        renderCategoriaEstatica(sb, categorias, productosPorCategoria, "SNACK", this::appendSnacks);
+
+        appendComplementos(sb, complementos);
         sb.append(OTROS);
 
-        appendCharolas(sb, charolas);
-        appendPostres(sb, postres);
+        renderCategoriaEstatica(sb, categorias, productosPorCategoria, "CHAROLA", this::appendCharolas);
+        renderCategoriaEstatica(sb, categorias, productosPorCategoria, "POSTRE", this::appendPostres);
+
+        // Categorías dinámicas (creadas por el usuario después de la Fase 2)
+        for (Categoria cat : categorias) {
+            if (esSeed(cat.getNombre())) continue;
+            List<ProductoCocina> items = productosPorCategoria.getOrDefault(cat.getIdCategoria(), List.of());
+            appendCategoriaGenerica(sb, cat.getNombre(), items);
+        }
 
         sb.append(FOOTER);
-
         return sb.toString();
+    }
+
+    /**
+     * Busca la categoría por nombre y delega al render específico si existe.
+     * Silencioso si el seeder fue alterado y la categoría no está — la sección
+     * simplemente no aparece en el mensaje.
+     */
+    private void renderCategoriaEstatica(StringBuilder sb, List<Categoria> categorias,
+                                         Map<Integer, List<ProductoCocina>> productosPorCategoria,
+                                         String nombre, SeccionRenderer renderer) {
+        categorias.stream()
+                .filter(c -> nombre.equalsIgnoreCase(c.getNombre()))
+                .findFirst()
+                .ifPresent(c -> renderer.render(sb, productosPorCategoria.getOrDefault(c.getIdCategoria(), List.of())));
+    }
+
+    private boolean esSeed(String nombre) {
+        String upper = nombre.toUpperCase();
+        return upper.equals("BEBIDA") || upper.equals("SNACK")
+                || upper.equals("CHAROLA") || upper.equals("POSTRE");
+    }
+
+    @FunctionalInterface
+    private interface SeccionRenderer {
+        void render(StringBuilder sb, List<ProductoCocina> items);
     }
 
     private void appendComidas(StringBuilder sb,
@@ -225,10 +268,14 @@ public class MenuDigitalService {
         }
     }
 
-    private List<ProductoCocina> filtrarPorTipo(List<ProductoCocina> productos, TipoProducto tipo) {
-        return productos.stream()
-                .filter(p -> p.getTipoProducto() == tipo)
-                .collect(Collectors.toList());
+    /** Plantilla neutra para categorías creadas dinámicamente. */
+    private void appendCategoriaGenerica(StringBuilder sb, String nombreCategoria, List<ProductoCocina> items) {
+        if (items.isEmpty()) return;
+        sb.append("\n").append(nombreCategoria.toUpperCase()).append("\n");
+        for (ProductoCocina p : items) {
+            sb.append("▪️").append(p.getNombreProducto())
+                    .append(" $").append(formatPrecio(getPrecioEfectivo(p))).append("\n");
+        }
     }
 
     private BigDecimal getPrecioEfectivo(ProductoCocina producto) {
