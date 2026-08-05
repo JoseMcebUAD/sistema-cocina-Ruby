@@ -59,6 +59,8 @@ public class AuditoriaParser {
             case "codigo_cliente"     -> describirCodigoCliente(accion, despues, antes, id, fecha);
             case "pago_repartidor"    -> describirPagoRepartidor(accion, despues, antes, id, fecha);
             case "horario_atencion"   -> describirHorarioAtencion(accion, despues, antes, id, fecha);
+            case "categoria"          -> describirCategoria(accion, despues, antes, id, fecha);
+            case "subcategoria"       -> describirSubcategoria(accion, despues, antes, id, fecha);
             default                   -> accion + " en " + tabla + (id != null ? " #" + id : "");
         };
     }
@@ -269,6 +271,40 @@ public class AuditoriaParser {
             }
             case PUT    -> "Se actualizó el horario de atención #" + id;
             case DELETE -> "Se eliminó el horario de atención #" + id;
+        };
+    }
+
+    private String describirCategoria(TipoOperacion accion, JsonNode despues, JsonNode antes, Integer id, LocalDateTime fecha) {
+        return switch (accion) {
+            case POST -> {
+                String nombre = textOrElse(despues, "nombre", "desconocida");
+                yield "Se creó la categoría '" + nombre + "'";
+            }
+            case PUT -> {
+                String nombreDespues = textOrElse(despues, "nombre", null);
+                String nombreAntes = textOrElse(antes, "nombre", null);
+                String nombre = nombreDespues != null ? nombreDespues : (nombreAntes != null ? nombreAntes : "#" + id);
+                yield "Se actualizó la categoría '" + nombre + "'";
+            }
+            case DELETE -> "Se eliminó la categoría #" + id;
+        };
+    }
+
+    private String describirSubcategoria(TipoOperacion accion, JsonNode despues, JsonNode antes, Integer id, LocalDateTime fecha) {
+        return switch (accion) {
+            case POST -> {
+                String nombre = textOrElse(despues, "nombre", "desconocida");
+                String cat = textOrElse(despues, "nombreCategoria", "");
+                String sufijo = cat.isBlank() ? "" : " en '" + cat + "'";
+                yield "Se creó la subcategoría '" + nombre + "'" + sufijo;
+            }
+            case PUT -> {
+                String nombreDespues = textOrElse(despues, "nombre", null);
+                String nombreAntes = textOrElse(antes, "nombre", null);
+                String nombre = nombreDespues != null ? nombreDespues : (nombreAntes != null ? nombreAntes : "#" + id);
+                yield "Se actualizó la subcategoría '" + nombre + "'";
+            }
+            case DELETE -> "Se eliminó la subcategoría #" + id;
         };
     }
 
