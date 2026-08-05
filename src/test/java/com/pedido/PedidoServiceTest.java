@@ -11,6 +11,7 @@ import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.domain.entity.Pedido;
 import com.cocinarubi.domain.mapper.PedidoMapper;
+import com.cocinarubi.dao.TarifaEspecialRepository;
 import com.cocinarubi.domain.service.CatalogoPedidoService;
 import com.cocinarubi.domain.service.PedidoService;
 import com.cocinarubi.exception.BusinessException;
@@ -28,6 +29,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
@@ -46,6 +48,8 @@ public class PedidoServiceTest {
     @Mock private PedidoValidationImp pedidoValidation;
     @Mock private PedidoConfirmationImp pedidoConfirmation;
     @Mock private CatalogoPedidoService catalogoPedido;
+    @Mock private ApplicationEventPublisher eventPublisher;
+    @Mock private TarifaEspecialRepository tarifaEspecialRepository;
     @Spy  private PedidoMapper pedidoMapper = new PedidoMapper();
 
     @InjectMocks
@@ -255,7 +259,7 @@ public class PedidoServiceTest {
     @Test
     @DisplayName("delete - Debe eliminar el pedido cuando el ID existe")
     public void delete_exitoso() {
-        when(pedidoRepository.existsById(10)).thenReturn(true);
+        when(pedidoRepository.findById(10)).thenReturn(Optional.of(PEDIDO_PREPARED));
 
         assertDoesNotThrow(() -> pedidoService.delete(10));
         verify(pedidoRepository).deleteById(10);
@@ -325,7 +329,7 @@ public class PedidoServiceTest {
     @Test
     @DisplayName("delete - Debe lanzar excepción cuando el ID no existe")
     public void delete_noEncontrado() {
-        when(pedidoRepository.existsById(99)).thenReturn(false);
+        when(pedidoRepository.findById(99)).thenReturn(Optional.empty());
 
         assertThrows(BusinessException.class, () -> pedidoService.delete(99));
         verify(pedidoRepository, never()).deleteById(anyInt());
