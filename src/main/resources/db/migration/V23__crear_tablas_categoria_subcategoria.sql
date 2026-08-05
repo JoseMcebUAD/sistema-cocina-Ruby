@@ -35,4 +35,5 @@ INSERT INTO categoria (nombre) VALUES
     ('BEBIDA'),
     ('CHAROLA'),
     ('SNACK'),
-    ('POSTRE');
+    ('POSTRE'),
+    ('EXTRAS');
