@@ -2,6 +2,7 @@ package com.cocinarubi.presentation.strategy.strategyImplementation;
 
 import com.cocinarubi.DBConstants;
 import com.cocinarubi.dao.ProductoCocinaRepository;
+import com.cocinarubi.domain.entity.Categoria;
 import com.cocinarubi.domain.entity.ProductoCocina;
 import com.cocinarubi.presentation.dto.response.ProductoCocinaResponseDTO;
 import com.cocinarubi.presentation.strategy.BusquedaProductoStrategy;
@@ -38,6 +39,7 @@ public class ProductoCocinaBusquedaImp implements BusquedaProductoStrategy {
     }
 
     private ProductoCocinaResponseDTO toResponseDTO(ProductoCocina p) {
+        Categoria cat = p.getCategoria();
         return new ProductoCocinaResponseDTO(
                 p.getIdProductoCocina(),
                 p.getNombreProducto(),
@@ -46,7 +48,10 @@ public class ProductoCocinaBusquedaImp implements BusquedaProductoStrategy {
                 p.getPrecioNormal(),
                 p.getEstatus(),
                 p.isDestacado(),
-                p.getTipoProducto()
+                cat != null ? cat.getIdCategoria() : 0,
+                cat != null ? cat.getNombre() : null,
+                // Búsqueda de catálogo no necesita subcategorías en el resultado
+                List.of()
         );
     }
 }
