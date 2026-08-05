@@ -131,6 +131,7 @@ public class SecurityConfig {
                             "/anuncio/**",
                             "/basico/**",
                             "/busqueda-catalogo/**",
+                            "/categoria/**",
                             "/cliente/**",
                             "/produccion/**",
                             "/codigoCliente/**",
@@ -148,6 +149,7 @@ public class SecurityConfig {
                             "/productoCocina/**",
                             "/registro-cliente/**",
                             "/ruta/**",
+                            "/subcategoria/**",
                             "/tarifa-especial/**",
                             "/vista-resumen-pedido/**"
                     ).hasAnyRole("JEFA_COCINA", "COCINA")
