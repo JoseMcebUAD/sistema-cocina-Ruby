@@ -1,9 +1,12 @@
 package com.productococina;
 
 import com.cocinarubi.DBConstants.Estatus;
-import com.cocinarubi.DBConstants.TipoProducto;
 import com.cocinarubi.dao.ProductoCocinaRepository;
+import com.cocinarubi.dao.SubcategoriaRepository;
+import com.cocinarubi.domain.entity.Categoria;
 import com.cocinarubi.domain.entity.ProductoCocina;
+import com.cocinarubi.domain.entity.Subcategoria;
+import com.cocinarubi.domain.service.CategoriaService;
 import com.cocinarubi.domain.service.ProductoCocinaService;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.ProductoCocinaRequestDTO;
@@ -22,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,8 +40,18 @@ public class ProductoCocinaServiceTest {
     @Mock
     private ProductoCocinaConfirmationImp productoCocinaConfirmation;
 
+    @Mock
+    private CategoriaService categoriaService;
+
+    @Mock
+    private SubcategoriaRepository subcategoriaRepository;
+
     @InjectMocks
     private ProductoCocinaService productoCocinaService;
+
+    // Ids alineados con V23: BEBIDA=1, CHAROLA=2, SNACK=3, POSTRE=4
+    private final Categoria SNACK  = Categoria.builder().idCategoria(3).nombre("SNACK").build();
+    private final Categoria POSTRE = Categoria.builder().idCategoria(4).nombre("POSTRE").build();
 
     public ProductoCocina PREPARED = ProductoCocina.builder()
             .idProductoCocina(10)
@@ -48,18 +62,18 @@ public class ProductoCocinaServiceTest {
             .precioNormal(BigDecimal.valueOf(25.00))
             .estatus(Estatus.DISPONIBLE)
             .destacado(false)
-            .tipoProducto(TipoProducto.SNACK)
+            .categoria(SNACK)
             .build();
 
     public ProductoCocinaRequestDTO DTO = crearDto("Snack Test", "Snack de prueba",
-            BigDecimal.valueOf(35.00), BigDecimal.valueOf(25.00), Estatus.DISPONIBLE, false, TipoProducto.SNACK);
+            BigDecimal.valueOf(35.00), BigDecimal.valueOf(25.00), Estatus.DISPONIBLE, false, 3, List.of());
 
     public ProductoCocinaRequestDTO DTO_MODIFIED = crearDto("Snack Test Actualizado", "Descripción actualizada",
-            BigDecimal.valueOf(40.00), BigDecimal.valueOf(30.00), Estatus.DISPONIBLE, true, TipoProducto.SNACK);
+            BigDecimal.valueOf(40.00), BigDecimal.valueOf(30.00), Estatus.DISPONIBLE, true, 3, List.of());
 
     private ProductoCocinaRequestDTO crearDto(String nombre, String descripcion, BigDecimal precioDomicilio,
                                                BigDecimal precioNormal, Estatus estatus, boolean destacado,
-                                               TipoProducto tipo) {
+                                               Integer idCategoria, List<Integer> idSubcategorias) {
         ProductoCocinaRequestDTO dto = new ProductoCocinaRequestDTO();
         dto.setNombreProducto(nombre);
         dto.setDescripcion(descripcion);
@@ -67,7 +81,8 @@ public class ProductoCocinaServiceTest {
         dto.setPrecioNormal(precioNormal);
         dto.setEstatus(estatus);
         dto.setDestacado(destacado);
-        dto.setTipoProducto(tipo);
+        dto.setIdCategoria(idCategoria);
+        dto.setIdSubcategorias(idSubcategorias);
         dto.setSaltarConfirmacion(true);
         return dto;
     }
@@ -81,14 +96,15 @@ public class ProductoCocinaServiceTest {
 
         assertEquals(1, result.size());
         assertEquals("Snack Test", result.get(0).getNombreProducto());
-        assertEquals(TipoProducto.SNACK, result.get(0).getTipoProducto());
+        assertEquals("SNACK", result.get(0).getNombreCategoria());
+        assertEquals(3, result.get(0).getIdCategoria());
         System.out.println("[OK] findAll retornó " + result.size() + " producto(s): " + result.get(0).getNombreProducto());
     }
 
     @Test
     @DisplayName("findById - Debe retornar el producto cuando el ID existe")
     public void findById_encontrado() {
-        when(productoCocinaRepository.findById(10)).thenReturn(Optional.of(PREPARED));
+        when(productoCocinaRepository.findByIdConSubcategorias(10)).thenReturn(Optional.of(PREPARED));
 
         ProductoCocinaResponseDTO result = productoCocinaService.findById(10);
 
@@ -101,30 +117,50 @@ public class ProductoCocinaServiceTest {
     @Test
     @DisplayName("findById - Debe lanzar excepción cuando el ID no existe")
     public void findById_noEncontrado() {
-        when(productoCocinaRepository.findById(99)).thenReturn(Optional.empty());
+        when(productoCocinaRepository.findByIdConSubcategorias(99)).thenReturn(Optional.empty());
 
         assertThrows(BusinessException.class, () -> productoCocinaService.findById(99));
         System.out.println("[OK] findById lanzó BusinessException para id=99");
     }
 
     @Test
-    @DisplayName("save - Debe guardar y retornar el producto correctamente")
-    public void save_exitoso() {
+    @DisplayName("save - Debe guardar sin subcategorías (0..N permitido)")
+    public void save_exitoso_sinSubcategorias() {
+        when(categoriaService.findEntityById(3)).thenReturn(SNACK);
         when(productoCocinaRepository.save(any(ProductoCocina.class))).thenReturn(PREPARED);
 
         ProductoCocinaResponseDTO result = productoCocinaService.save(DTO);
 
         assertNotNull(result);
         assertEquals("Snack Test", result.getNombreProducto());
-        assertEquals(TipoProducto.SNACK, result.getTipoProducto());
+        assertEquals("SNACK", result.getNombreCategoria());
+        assertTrue(result.getSubcategorias().isEmpty());
         verify(productoCocinaRepository).save(any(ProductoCocina.class));
-        System.out.println("[OK] save guardó producto: " + result.getNombreProducto());
+        System.out.println("[OK] save guardó producto sin subcategorías");
+    }
+
+    @Test
+    @DisplayName("save - CONFLICT si alguna subcategoría pertenece a otra categoría")
+    public void save_conflictSubcategoriaDeOtraCategoria() {
+        Subcategoria subFueraDeCat = Subcategoria.builder()
+                .idSubcategoria(99).categoria(POSTRE).nombre("Frío").build();
+        ProductoCocinaRequestDTO dto = crearDto("Snack Test", "d",
+                BigDecimal.valueOf(30), BigDecimal.valueOf(25), Estatus.DISPONIBLE, false, 3, List.of(99));
+
+        when(categoriaService.findEntityById(3)).thenReturn(SNACK);
+        when(subcategoriaRepository.findAllById(List.of(99))).thenReturn(List.of(subFueraDeCat));
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> productoCocinaService.save(dto));
+        assertEquals(409, ex.getHttpStatus().value());
+        verify(productoCocinaRepository, never()).save(any(ProductoCocina.class));
+        System.out.println("[OK] save lanzó 409 por subcategoría de otra categoría");
     }
 
     @Test
     @DisplayName("update - Debe actualizar y retornar el producto correctamente")
     public void update_exitoso() {
         when(productoCocinaRepository.findById(10)).thenReturn(Optional.of(PREPARED));
+        when(categoriaService.findEntityById(3)).thenReturn(SNACK);
         ProductoCocina actualizado = ProductoCocina.builder()
                 .idProductoCocina(10)
                 .uuidProductoCocina("uuid-prod-cocina-10")
@@ -134,7 +170,7 @@ public class ProductoCocinaServiceTest {
                 .precioNormal(BigDecimal.valueOf(30.00))
                 .estatus(Estatus.DISPONIBLE)
                 .destacado(true)
-                .tipoProducto(TipoProducto.SNACK)
+                .categoria(SNACK)
                 .build();
         when(productoCocinaRepository.save(any(ProductoCocina.class))).thenReturn(actualizado);
 

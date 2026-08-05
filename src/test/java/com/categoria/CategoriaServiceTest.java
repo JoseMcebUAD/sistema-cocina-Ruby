@@ -1,10 +1,12 @@
 package com.categoria;
 
 import com.cocinarubi.dao.CategoriaRepository;
+import com.cocinarubi.dao.ProductoCocinaRepository;
 import com.cocinarubi.dao.SubcategoriaRepository;
 import com.cocinarubi.domain.entity.Categoria;
 import com.cocinarubi.domain.entity.Subcategoria;
 import com.cocinarubi.domain.service.CategoriaService;
+import com.cocinarubi.domain.service.files.ArchivoModuloService;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.CategoriaRequestDTO;
 import com.cocinarubi.presentation.dto.response.CategoriaResponseDTO;
@@ -33,11 +35,17 @@ public class CategoriaServiceTest {
     @Mock
     private SubcategoriaRepository subcategoriaRepository;
 
+    @Mock
+    private ProductoCocinaRepository productoCocinaRepository;
+
+    @Mock
+    private ArchivoModuloService archivoModuloService;
+
     @InjectMocks
     private CategoriaService categoriaService;
 
     private final Categoria BEBIDA = Categoria.builder().idCategoria(1).nombre("BEBIDA").build();
-    private final Categoria SNACK  = Categoria.builder().idCategoria(2).nombre("SNACK").build();
+    private final Categoria SNACK  = Categoria.builder().idCategoria(3).nombre("SNACK").build();
 
     private CategoriaRequestDTO dto(String nombre) {
         CategoriaRequestDTO d = new CategoriaRequestDTO();
@@ -65,7 +73,6 @@ public class CategoriaServiceTest {
         Subcategoria sub2 = Subcategoria.builder()
                 .idSubcategoria(11).categoria(BEBIDA).nombre("Caliente").build();
 
-        // Hidrata las subcategorías en las entidades
         BEBIDA.setSubcategorias(List.of(sub1, sub2));
         SNACK.setSubcategorias(List.of());
 
@@ -80,7 +87,7 @@ public class CategoriaServiceTest {
         assertEquals(2, bebida.getSubcategorias().size());
 
         CategoriaResponseDTO snack = arbol.stream()
-                .filter(c -> c.getIdCategoria() == 2).findFirst().orElseThrow();
+                .filter(c -> c.getIdCategoria() == 3).findFirst().orElseThrow();
         assertTrue(snack.getSubcategorias().isEmpty());
         System.out.println("[OK] findAllConSubcategorias — BEBIDA con " +
                 bebida.getSubcategorias().size() + " subs, SNACK sin subs");
@@ -95,18 +102,19 @@ public class CategoriaServiceTest {
     }
 
     @Test
-    @DisplayName("save - guarda y retorna la categoría cuando el nombre no existe")
-    public void save_exitoso() {
+    @DisplayName("save - guarda y dispara la creación del archivo_modulo asociado")
+    public void save_exitoso_creaModulo() {
         when(categoriaRepository.existsByNombreIgnoreCase("POSTRE")).thenReturn(false);
-        Categoria persisted = Categoria.builder().idCategoria(3).nombre("POSTRE").build();
+        Categoria persisted = Categoria.builder().idCategoria(4).nombre("POSTRE").build();
         when(categoriaRepository.save(any(Categoria.class))).thenReturn(persisted);
 
         CategoriaResponseDTO result = categoriaService.save(dto("POSTRE"));
 
-        assertEquals(3, result.getIdCategoria());
+        assertEquals(4, result.getIdCategoria());
         assertEquals("POSTRE", result.getNombre());
         verify(categoriaRepository).save(any(Categoria.class));
-        System.out.println("[OK] save creó categoría id=" + result.getIdCategoria());
+        verify(archivoModuloService).crearParaCategoria(persisted);
+        System.out.println("[OK] save creó categoría y disparó crearParaCategoria");
     }
 
     @Test
@@ -118,12 +126,13 @@ public class CategoriaServiceTest {
                 () -> categoriaService.save(dto("bebida")));
         assertEquals(409, ex.getHttpStatus().value());
         verify(categoriaRepository, never()).save(any(Categoria.class));
+        verify(archivoModuloService, never()).crearParaCategoria(any());
         System.out.println("[OK] save lanzó 409 por nombre duplicado");
     }
 
     @Test
-    @DisplayName("update - actualiza el nombre respetando la unicidad excluyendo el propio id")
-    public void update_exitoso() {
+    @DisplayName("update - cambia el nombre y sincroniza la ruta del módulo cuando el nombre difiere")
+    public void update_exitoso_sincronizaModulo() {
         when(categoriaRepository.findById(1)).thenReturn(Optional.of(BEBIDA));
         when(categoriaRepository.existsByNombreIgnoreCaseAndIdCategoriaNot("BEBIDAS", 1))
                 .thenReturn(false);
@@ -133,7 +142,8 @@ public class CategoriaServiceTest {
         CategoriaResponseDTO result = categoriaService.update(1, dto("BEBIDAS"));
 
         assertEquals("BEBIDAS", result.getNombre());
-        System.out.println("[OK] update cambió BEBIDA → BEBIDAS");
+        verify(archivoModuloService).actualizarRutaParaCategoria(persisted);
+        System.out.println("[OK] update cambió BEBIDA → BEBIDAS y actualizó módulo");
     }
 
     @Test
@@ -145,18 +155,35 @@ public class CategoriaServiceTest {
         BusinessException ex = assertThrows(BusinessException.class, () -> categoriaService.delete(1));
         assertEquals(409, ex.getHttpStatus().value());
         verify(categoriaRepository, never()).deleteById(anyInt());
+        verify(archivoModuloService, never()).eliminarParaCategoria(anyInt());
         System.out.println("[OK] delete lanzó 409 por tener subcategorías");
     }
 
     @Test
-    @DisplayName("delete - elimina cuando no hay subcategorías")
+    @DisplayName("delete - bloquea con CONFLICT cuando la categoría tiene productos asociados")
+    public void delete_conProductos() {
+        when(categoriaRepository.existsById(1)).thenReturn(true);
+        when(subcategoriaRepository.countByCategoria_IdCategoria(1)).thenReturn(0L);
+        when(productoCocinaRepository.countByCategoria_IdCategoria(1)).thenReturn(5L);
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> categoriaService.delete(1));
+        assertEquals(409, ex.getHttpStatus().value());
+        verify(categoriaRepository, never()).deleteById(anyInt());
+        verify(archivoModuloService, never()).eliminarParaCategoria(anyInt());
+        System.out.println("[OK] delete lanzó 409 por tener productos asociados");
+    }
+
+    @Test
+    @DisplayName("delete - elimina cuando no hay subcategorías ni productos y limpia su módulo")
     public void delete_exitoso() {
         when(categoriaRepository.existsById(1)).thenReturn(true);
         when(subcategoriaRepository.countByCategoria_IdCategoria(1)).thenReturn(0L);
+        when(productoCocinaRepository.countByCategoria_IdCategoria(1)).thenReturn(0L);
 
         assertDoesNotThrow(() -> categoriaService.delete(1));
+        verify(archivoModuloService).eliminarParaCategoria(1);
         verify(categoriaRepository).deleteById(1);
-        System.out.println("[OK] delete eliminó categoría id=1");
+        System.out.println("[OK] delete eliminó categoría id=1 y limpió módulo");
     }
 
     @Test
