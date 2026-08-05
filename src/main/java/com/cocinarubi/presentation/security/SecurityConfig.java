@@ -146,7 +146,7 @@ public class SecurityConfig {
                             "/menu-digital/**",
                             "/pago-repartidor/**",
                             "/pedido/**",
-                            "/productoCocina/**",
+                            "/producto-cocina/**",
                             "/registro-cliente/**",
                             "/ruta/**",
                             "/subcategoria/**",
