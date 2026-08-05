@@ -1,9 +1,11 @@
 package com.cocinarubi.domain.service;
 
 import com.cocinarubi.dao.CategoriaRepository;
+import com.cocinarubi.dao.ProductoCocinaRepository;
 import com.cocinarubi.dao.SubcategoriaRepository;
 import com.cocinarubi.domain.entity.Categoria;
 import com.cocinarubi.domain.entity.Subcategoria;
+import com.cocinarubi.domain.service.files.ArchivoModuloService;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.CategoriaRequestDTO;
 import com.cocinarubi.presentation.dto.response.CategoriaResponseDTO;
@@ -20,6 +22,10 @@ import java.util.stream.Collectors;
  * Servicio de dominio para {@link Categoria}. CRUD + endpoint especial que arma
  * el árbol categoría → subcategorías para el catálogo de configuración.
  *
+ * <p>Fase 2: cada POST /categoria dispara la creación de un {@code archivo_modulo}
+ * asociado (vía {@link ArchivoModuloService}), y el DELETE se bloquea con 409 si
+ * la categoría tiene subcategorías <b>o</b> productos_cocina asociados.</p>
+ *
  * <p>Capa: Service — lógica de negocio de catálogo de productoCocina.</p>
  */
 @Service
@@ -27,11 +33,17 @@ public class CategoriaService {
 
     private final CategoriaRepository categoriaRepository;
     private final SubcategoriaRepository subcategoriaRepository;
+    private final ProductoCocinaRepository productoCocinaRepository;
+    private final ArchivoModuloService archivoModuloService;
 
     public CategoriaService(CategoriaRepository categoriaRepository,
-                            SubcategoriaRepository subcategoriaRepository) {
+                            SubcategoriaRepository subcategoriaRepository,
+                            ProductoCocinaRepository productoCocinaRepository,
+                            ArchivoModuloService archivoModuloService) {
         this.categoriaRepository = categoriaRepository;
         this.subcategoriaRepository = subcategoriaRepository;
+        this.productoCocinaRepository = productoCocinaRepository;
+        this.archivoModuloService = archivoModuloService;
     }
 
     @Transactional(readOnly = true)
@@ -67,7 +79,11 @@ public class CategoriaService {
         String nombre = normalizar(dto.getNombre());
         validarNombreDisponible(nombre, null);
         Categoria entidad = Categoria.builder().nombre(nombre).build();
-        return toResponseDTO(categoriaRepository.save(entidad));
+        Categoria persistida = categoriaRepository.save(entidad);
+        // Genera automáticamente la carpeta Cloudinary y la fila archivo_modulo
+        // para que el usuario pueda subir imágenes de productos de esta categoría.
+        archivoModuloService.crearParaCategoria(persistida);
+        return toResponseDTO(persistida);
     }
 
     @Transactional
@@ -75,8 +91,14 @@ public class CategoriaService {
         Categoria existente = findEntityById(id);
         String nombre = normalizar(dto.getNombre());
         validarNombreDisponible(nombre, id);
+        boolean cambioNombre = !nombre.equalsIgnoreCase(existente.getNombre());
         existente.setNombre(nombre);
-        return toResponseDTO(categoriaRepository.save(existente));
+        Categoria actualizada = categoriaRepository.save(existente);
+        if (cambioNombre) {
+            // Ajusta la ruta del archivo_modulo (cocina_rubi/<nuevo-nombre-lower>)
+            archivoModuloService.actualizarRutaParaCategoria(actualizada);
+        }
+        return toResponseDTO(actualizada);
     }
 
     @Transactional
@@ -85,13 +107,19 @@ public class CategoriaService {
             throw new BusinessException(
                     "Categoría no encontrada con id: " + id, HttpStatus.NOT_FOUND);
         }
-        // Fase 1: bloquea eliminación si existen subcategorías asociadas.
-        // Fase 2 agregará la validación de productos asociados.
+        // Bloquea si tiene subcategorías (evita orfandad) o productos asociados.
         if (subcategoriaRepository.countByCategoria_IdCategoria(id) > 0) {
             throw new BusinessException(
                     "No se puede eliminar la categoría porque tiene subcategorías asociadas",
                     HttpStatus.CONFLICT);
         }
+        if (productoCocinaRepository.countByCategoria_IdCategoria(id) > 0) {
+            throw new BusinessException(
+                    "No se puede eliminar la categoría porque tiene productos de cocina asociados",
+                    HttpStatus.CONFLICT);
+        }
+        // ArchivoModuloService borra la fila archivo_modulo; archivos hijos caen por CASCADE.
+        archivoModuloService.eliminarParaCategoria(id);
         categoriaRepository.deleteById(id);
     }
 
