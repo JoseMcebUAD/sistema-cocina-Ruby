@@ -85,7 +85,7 @@ public class CodigoClienteRestTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
         assertEquals(createdId, data.get("idCodigoCliente").asInt());
-        assertEquals("TREST001", data.get("codigoCliente").asText());
+        assertEquals("TRAasST001", data.get("codigoCliente").asText());
         System.out.println("[OK] " + response.getStatusCode() + " | id=" + data.get("idCodigoCliente").asInt());
     }
 
@@ -96,7 +96,7 @@ public class CodigoClienteRestTest {
         String json = """
                 {
                   "identificador": "Código Test REST Actualizado",
-                  "codigoCliente": "TREST001",
+                  "codigoCliente": "TRAasST001",
                   "tarifaEspecial": 18.50,
                   "estatus": "DISPONIBLE"
                 }

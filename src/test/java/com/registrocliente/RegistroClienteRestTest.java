@@ -36,10 +36,10 @@ public class RegistroClienteRestTest {
 
     @Test
     @Order(1)
-    @DisplayName("GET /registroCliente - Debe retornar lista paginada con status 200")
+    @DisplayName("GET /registro-cliente - Debe retornar lista paginada con status 200")
     public void findAll() throws Exception {
         ResponseEntity<String> response = this.restTemplate.exchange(
-                "/registroCliente", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
+                "/registro-cliente", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -51,7 +51,7 @@ public class RegistroClienteRestTest {
 
     @Test
     @Order(2)
-    @DisplayName("POST /registroCliente - Debe crear un registro y retornar status 201")
+    @DisplayName("POST /registro-cliente - Debe crear un registro y retornar status 201")
     public void save() throws Exception {
         String json = """
                 {
@@ -62,7 +62,7 @@ public class RegistroClienteRestTest {
                 """;
 
         ResponseEntity<String> response = this.restTemplate.exchange(
-                "/registroCliente", HttpMethod.POST, new HttpEntity<>(json, authHeaders), String.class
+                "/registro-cliente", HttpMethod.POST, new HttpEntity<>(json, authHeaders), String.class
         );
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -77,10 +77,10 @@ public class RegistroClienteRestTest {
 
     @Test
     @Order(3)
-    @DisplayName("GET /registroCliente/{id} - Debe retornar el registro con status 200")
+    @DisplayName("GET /registro-cliente/{id} - Debe retornar el registro con status 200")
     public void findById() throws Exception {
         ResponseEntity<String> response = this.restTemplate.exchange(
-                "/registroCliente/" + createdId, HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
+                "/registro-cliente/" + createdId, HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -92,10 +92,10 @@ public class RegistroClienteRestTest {
 
     @Test
     @Order(4)
-    @DisplayName("GET /registroCliente/buscar?telefono= - Debe retornar coincidencias paginadas con 200")
+    @DisplayName("GET /registro-cliente/buscar?telefono= - Debe retornar coincidencias paginadas con 200")
     public void buscarPorTelefono() throws Exception {
         ResponseEntity<String> response = this.restTemplate.exchange(
-                "/registroCliente/buscar?telefono=5551112222", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
+                "/registro-cliente/buscar?telefono=5551112222", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -106,7 +106,7 @@ public class RegistroClienteRestTest {
 
     @Test
     @Order(5)
-    @DisplayName("PUT /registroCliente/{id} - Debe actualizar el registro y retornar 200")
+    @DisplayName("PUT /registro-cliente/{id} - Debe actualizar el registro y retornar 200")
     public void update() throws Exception {
         String json = """
                 {
@@ -116,7 +116,7 @@ public class RegistroClienteRestTest {
                 """;
 
         ResponseEntity<String> response = this.restTemplate.exchange(
-                "/registroCliente/" + createdId, HttpMethod.PUT, new HttpEntity<>(json, authHeaders), String.class
+                "/registro-cliente/" + createdId, HttpMethod.PUT, new HttpEntity<>(json, authHeaders), String.class
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -128,15 +128,15 @@ public class RegistroClienteRestTest {
 
     @Test
     @Order(6)
-    @DisplayName("DELETE /registroCliente/{id} - Debe eliminar y retornar 404 al buscarlo de nuevo")
+    @DisplayName("DELETE /registro-cliente/{id} - Debe eliminar y retornar 404 al buscarlo de nuevo")
     public void delete() throws Exception {
         ResponseEntity<String> deleteResponse = this.restTemplate.exchange(
-                "/registroCliente/" + createdId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class
+                "/registro-cliente/" + createdId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class
         );
         assertEquals(HttpStatus.NO_CONTENT, deleteResponse.getStatusCode());
 
         ResponseEntity<String> getResponse = this.restTemplate.exchange(
-                "/registroCliente/" + createdId, HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
+                "/registro-cliente/" + createdId, HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
         assertEquals(HttpStatus.NOT_FOUND, getResponse.getStatusCode());
         System.out.println("[OK] DELETE 204 → GET 404 para registroCliente id=" + createdId);
@@ -144,10 +144,10 @@ public class RegistroClienteRestTest {
 
     @Test
     @Order(7)
-    @DisplayName("GET /registroCliente - sin token debe responder 401")
+    @DisplayName("GET /registro-cliente - sin token debe responder 401")
     public void seguridad_sinToken() {
         ResponseEntity<String> response = this.restTemplate.exchange(
-                "/registroCliente", HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), String.class
+                "/registro-cliente", HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), String.class
         );
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         System.out.println("[OK] sin token → 401");
