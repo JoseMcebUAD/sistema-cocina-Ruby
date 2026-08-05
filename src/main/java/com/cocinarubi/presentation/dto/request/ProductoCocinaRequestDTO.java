@@ -1,13 +1,13 @@
 package com.cocinarubi.presentation.dto.request;
 
 import com.cocinarubi.DBConstants.Estatus;
-import com.cocinarubi.DBConstants.TipoProducto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public class ProductoCocinaRequestDTO {
 
@@ -35,9 +35,14 @@ public class ProductoCocinaRequestDTO {
     @JsonProperty("destacado")
     private boolean destacado;
 
-    @NotNull(message = "El tipo de producto no puede ser nulo")
-    @JsonProperty("tipoProducto")
-    private TipoProducto tipoProducto;
+    @NotNull(message = "El id de la categoría no puede ser nulo")
+    @JsonProperty("idCategoria")
+    private Integer idCategoria;
+
+    // Subcategorías asignadas al producto (0..N). Todas deben pertenecer a la
+    // categoría indicada en idCategoria; el service valida con 409 si mezclan.
+    @JsonProperty("idSubcategorias")
+    private List<Integer> idSubcategorias;
 
     @JsonProperty("saltarConfirmacion")
     private boolean saltarConfirmacion = false;
@@ -46,14 +51,16 @@ public class ProductoCocinaRequestDTO {
 
     public ProductoCocinaRequestDTO(String nombreProducto, String descripcion,
                                     BigDecimal precioDomicilio, BigDecimal precioNormal,
-                                    Estatus estatus, boolean destacado, TipoProducto tipoProducto) {
+                                    Estatus estatus, boolean destacado,
+                                    Integer idCategoria, List<Integer> idSubcategorias) {
         this.nombreProducto = nombreProducto;
         this.descripcion = descripcion;
         this.precioDomicilio = precioDomicilio;
         this.precioNormal = precioNormal;
         this.estatus = estatus;
         this.destacado = destacado;
-        this.tipoProducto = tipoProducto;
+        this.idCategoria = idCategoria;
+        this.idSubcategorias = idSubcategorias;
     }
 
     public String getNombreProducto() { return nombreProducto; }
@@ -74,8 +81,11 @@ public class ProductoCocinaRequestDTO {
     public boolean isDestacado() { return destacado; }
     public void setDestacado(boolean destacado) { this.destacado = destacado; }
 
-    public TipoProducto getTipoProducto() { return tipoProducto; }
-    public void setTipoProducto(TipoProducto tipoProducto) { this.tipoProducto = tipoProducto; }
+    public Integer getIdCategoria() { return idCategoria; }
+    public void setIdCategoria(Integer idCategoria) { this.idCategoria = idCategoria; }
+
+    public List<Integer> getIdSubcategorias() { return idSubcategorias; }
+    public void setIdSubcategorias(List<Integer> idSubcategorias) { this.idSubcategorias = idSubcategorias; }
 
     public boolean isSaltarConfirmacion() { return saltarConfirmacion; }
     public void setSaltarConfirmacion(boolean saltarConfirmacion) { this.saltarConfirmacion = saltarConfirmacion; }

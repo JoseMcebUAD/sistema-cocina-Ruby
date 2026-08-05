@@ -1,19 +1,19 @@
 package com.cocinarubi.presentation.dto.response;
 
-import com.cocinarubi.DBConstants.TipoCatalogoProducto;
+import com.cocinarubi.DBConstants.TipoProductoFavorito;
 
 public class FavoritoClienteResponseDTO {
 
     private int idFavoritoCliente;
     private String sessionToken;
     private int idProducto;
-    private TipoCatalogoProducto tipoCatalogoProducto;
+    private TipoProductoFavorito tipoCatalogoProducto;
     private String nombreProducto;
 
     public FavoritoClienteResponseDTO() {}
 
     public FavoritoClienteResponseDTO(int idFavoritoCliente, String sessionToken, int idProducto,
-                                      TipoCatalogoProducto tipoCatalogoProducto, String nombreProducto) {
+                                      TipoProductoFavorito tipoCatalogoProducto, String nombreProducto) {
         this.idFavoritoCliente = idFavoritoCliente;
         this.sessionToken = sessionToken;
         this.idProducto = idProducto;
@@ -30,8 +30,8 @@ public class FavoritoClienteResponseDTO {
     public int getIdProducto() { return idProducto; }
     public void setIdProducto(int idProducto) { this.idProducto = idProducto; }
 
-    public TipoCatalogoProducto getTipoCatalogoProducto() { return tipoCatalogoProducto; }
-    public void setTipoCatalogoProducto(TipoCatalogoProducto tipoCatalogoProducto) {
+    public TipoProductoFavorito getTipoCatalogoProducto() { return tipoCatalogoProducto; }
+    public void setTipoCatalogoProducto(TipoProductoFavorito tipoCatalogoProducto) {
         this.tipoCatalogoProducto = tipoCatalogoProducto;
     }
 
