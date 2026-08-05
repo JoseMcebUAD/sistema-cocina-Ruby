@@ -10,8 +10,8 @@ import java.util.List;
 /**
  * Categoría de clasificación de {@link ProductoCocina} (por ejemplo BEBIDA, SNACK, POSTRE).
  *
- * <p>Reemplaza en Fase 2 al enum estático {@code DBConstants.TipoProducto} permitiendo
- * que el usuario amplíe libremente el catálogo desde la vista de configuración.</p>
+ * <p>Reemplazó al enum estático {@code DBConstants.TipoProducto} eliminado en Fase 2,
+ * permitiendo que el usuario amplíe libremente el catálogo desde la vista de configuración.</p>
  *
  * <p>Capa: Entity — persistencia. Unicidad de {@code nombre} enforced en BD
  * (constraint {@code uq_categoria_nombre}).</p>
