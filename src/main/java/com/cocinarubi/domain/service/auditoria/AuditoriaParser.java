@@ -158,8 +158,13 @@ public class AuditoriaParser {
         return switch (accion) {
             case POST -> {
                 String nombre = textOrElse(despues, "nombreProducto", "desconocido");
-                String tipo = textOrElse(despues, "tipoProducto", "");
-                String sufijo = tipo.isBlank() ? "" : " (" + tipo + ")";
+                // El nombre de la categoría llega en el payload de despues.categoria.nombre
+                // cuando Jackson serializa la relación completa; si no, cae en id_categoria.
+                String cat = textOrElse(despues.path("categoria"), "nombre", "");
+                if (cat.isBlank()) {
+                    cat = textOrElse(despues, "idCategoria", "");
+                }
+                String sufijo = cat.isBlank() ? "" : " (" + cat + ")";
                 yield "Se creó el producto de cocina '" + nombre + "'" + sufijo;
             }
             case PUT -> {
