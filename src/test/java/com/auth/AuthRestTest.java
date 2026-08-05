@@ -35,7 +35,7 @@ public class AuthRestTest {
         String json = """
                 {
                   "nombreUsuario": "rubi",
-                  "contrasena": "%s"
+                  "contrasena": "1234"
                 }
                 """.formatted(rubi_PASSWORD);
 

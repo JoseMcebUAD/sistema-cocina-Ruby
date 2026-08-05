@@ -40,7 +40,7 @@ public class ComidaRestTest {
     @DisplayName("GET /comida - Debe retornar lista de comidas con status 200")
     public void findAll() throws Exception {
         ResponseEntity<String> response = this.restTemplate.exchange(
-                "/comida", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
+                "/comida/todos", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -61,7 +61,8 @@ public class ComidaRestTest {
                   "precioMedia": 55.00,
                   "precioEntera": 90.00,
                   "estatus": "DISPONIBLE",
-                  "destacado": false
+                  "destacado": false,
+                  "limiteComplemento": 3
                 }
                 """;
 
@@ -104,7 +105,8 @@ public class ComidaRestTest {
                   "precioMedia": 60.00,
                   "precioEntera": 100.00,
                   "estatus": "DISPONIBLE",
-                  "destacado": true
+                  "destacado": true,
+                  "limiteComplemento": 3
                 }
                 """.formatted(createdId);
 
