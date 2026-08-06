@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -170,7 +171,7 @@ public class ProductoCocinaService {
      */
     private List<Subcategoria> resolverSubcategorias(List<Integer> ids, Categoria categoria) {
         if (ids == null || ids.isEmpty()) {
-            return List.of();
+            return new ArrayList<>();
         }
         List<Subcategoria> subs = subcategoriaRepository.findAllById(ids);
         if (subs.size() != ids.size()) {
