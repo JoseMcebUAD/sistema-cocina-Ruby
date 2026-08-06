@@ -13,11 +13,11 @@ import java.util.Optional;
 
 public interface ProductoCocinaRepository extends JpaRepository<ProductoCocina, Integer> {
 
-    @Query("SELECT COUNT(pcp) FROM ProductoCocinaPedido pcp WHERE pcp.productoCocina.idProductoCocina = :id")
-    int countEnPedidos(@Param("id") int id);
+    @Query("SELECT CASE WHEN COUNT(pcp) > 0 THEN true ELSE false END FROM ProductoCocinaPedido pcp WHERE pcp.productoCocina.idProductoCocina = :id")
+    boolean existsEnPedidos(@Param("id") int id);
 
     // Usado por CategoriaService.delete para bloquear la baja si hay productos asociados.
-    long countByCategoria_IdCategoria(Integer idCategoria);
+    boolean existsByCategoria_IdCategoria(Integer idCategoria);
 
     @Query("SELECT p FROM ProductoCocina p WHERE p.estatus = :estatus ORDER BY p.nombreProducto ASC")
     List<ProductoCocina> findDisponiblesOrdenados(@Param("estatus") DBConstants.Estatus estatus);

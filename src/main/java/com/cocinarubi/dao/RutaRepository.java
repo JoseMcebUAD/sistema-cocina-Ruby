@@ -14,9 +14,9 @@ public interface RutaRepository extends JpaRepository<Ruta, Integer> {
 
     boolean existsByNombre(String nombre);
 
-    @Query("SELECT COUNT(c) FROM Cliente c WHERE c.ruta.idRuta = :id")
-    long countClientesConRuta(@Param("id") int id);
+    @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM Cliente c WHERE c.ruta.idRuta = :id")
+    boolean existsClientesConRuta(@Param("id") int id);
 
-    @Query("SELECT COUNT(pd) FROM PedidoDomicilio pd WHERE pd.ruta.idRuta = :id")
-    long countPedidosDomicilioConRuta(@Param("id") int id);
+    @Query("SELECT CASE WHEN COUNT(pd) > 0 THEN true ELSE false END FROM PedidoDomicilio pd WHERE pd.ruta.idRuta = :id")
+    boolean existsPedidosDomicilioConRuta(@Param("id") int id);
 }

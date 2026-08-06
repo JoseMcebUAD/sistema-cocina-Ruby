@@ -17,5 +17,5 @@ public interface SubcategoriaRepository extends JpaRepository<Subcategoria, Inte
     boolean existsByCategoria_IdCategoriaAndNombreIgnoreCaseAndIdSubcategoriaNot(
             Integer idCategoria, String nombre, Integer idSubcategoria);
 
-    long countByCategoria_IdCategoria(Integer idCategoria);
+    boolean existsByCategoria_IdCategoria(Integer idCategoria);
 }

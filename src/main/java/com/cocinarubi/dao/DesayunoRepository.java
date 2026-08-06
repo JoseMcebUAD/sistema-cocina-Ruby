@@ -17,8 +17,8 @@ public interface DesayunoRepository extends JpaRepository<Desayuno, Integer> {
 
     boolean existsByNombreDesayuno(String nombreDesayuno);
 
-    @Query("SELECT COUNT(dp) FROM DesayunoPedido dp WHERE dp.desayuno.idDesayuno = :id")
-    long countEnPedidos(@Param("id") int id);
+    @Query("SELECT CASE WHEN COUNT(dp) > 0 THEN true ELSE false END FROM DesayunoPedido dp WHERE dp.desayuno.idDesayuno = :id")
+    boolean existsEnPedidos(@Param("id") int id);
 
     @Query("SELECT d FROM Desayuno d WHERE d.estatus = :estatus ORDER BY d.nombreDesayuno ASC")
     List<Desayuno> findDisponiblesOrdenados(@Param("estatus") DBConstants.Estatus estatus);

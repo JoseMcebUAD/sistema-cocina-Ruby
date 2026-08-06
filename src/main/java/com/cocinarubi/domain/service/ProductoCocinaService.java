@@ -129,7 +129,7 @@ public class ProductoCocinaService {
                     "Producto de cocina no encontrado con id: " + id, HttpStatus.NOT_FOUND);
         }
         // RF-014/017: bloquear eliminación si el producto tiene pedidos asociados
-        if (productoCocinaRepository.countEnPedidos(id) > 0) {
+        if (productoCocinaRepository.existsEnPedidos(id)) {
             throw new BusinessException(
                     "Este producto no se puede eliminar ya que tiene pedidos asignados, puede deshabilitarlo mejor",
                     HttpStatus.CONFLICT);

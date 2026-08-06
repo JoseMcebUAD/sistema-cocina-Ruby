@@ -108,12 +108,12 @@ public class CategoriaService {
                     "Categoría no encontrada con id: " + id, HttpStatus.NOT_FOUND);
         }
         // Bloquea si tiene subcategorías (evita orfandad) o productos asociados.
-        if (subcategoriaRepository.countByCategoria_IdCategoria(id) > 0) {
+        if (subcategoriaRepository.existsByCategoria_IdCategoria(id)) {
             throw new BusinessException(
                     "No se puede eliminar la categoría porque tiene subcategorías asociadas",
                     HttpStatus.CONFLICT);
         }
-        if (productoCocinaRepository.countByCategoria_IdCategoria(id) > 0) {
+        if (productoCocinaRepository.existsByCategoria_IdCategoria(id)) {
             throw new BusinessException(
                     "No se puede eliminar la categoría porque tiene productos de cocina asociados",
                     HttpStatus.CONFLICT);
