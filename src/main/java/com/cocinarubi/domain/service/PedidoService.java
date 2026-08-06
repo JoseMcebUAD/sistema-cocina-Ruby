@@ -113,6 +113,7 @@ public class PedidoService {
         existente.getDesayunosPedido().clear();
         existente.getBasicosPedido().clear();
         existente.getProductosCocina().clear();
+        existente.getPaquetesPedido().clear();
         existente.setPedidoDomicilio(null);
         existente.setPedidoDomicilioCocina(null);
         existente.setPedidoCocina(null);
@@ -205,6 +206,7 @@ public class PedidoService {
         catalogoPedido.agregarDesayunos(pedido, dto.getDesayunos());
         catalogoPedido.agregarBasicos(pedido, dto.getBasicos());
         catalogoPedido.agregarProductosCocina(pedido, dto.getProductosCocina());
+        catalogoPedido.agregarPaquetes(pedido, dto.getPaquetes());
         catalogoPedido.handleTipoPedido(pedido, dto);
         pedido.setPrecioFinalOrden(catalogoPedido.calcularTotal(pedido));
         return aplicarTarifasActivas(pedido);
