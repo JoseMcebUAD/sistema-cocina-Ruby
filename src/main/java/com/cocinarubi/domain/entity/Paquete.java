@@ -45,10 +45,9 @@ public class Paquete {
     @Column(name = "estatus")
     private Estatus estatus;
 
-    // Cascade + orphanRemoval: la lista de líneas se sincroniza al persistir el paquete;
-    // eliminar una línea del set la borra en BD.
+    // Cascade ALL + orphanRemoval: permite clear() + rebuild en update sin syncLineas manual.
     @OneToMany(mappedBy = "paquete",
-               cascade ={CascadeType.DETACH,CascadeType.MERGE, CascadeType.REFRESH, CascadeType.REFRESH},
+               cascade = CascadeType.ALL,
                orphanRemoval = true,
                fetch = FetchType.LAZY)
     @Builder.Default
