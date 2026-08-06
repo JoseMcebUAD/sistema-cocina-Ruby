@@ -35,6 +35,7 @@ public interface AuditoriaRepository extends JpaRepository<Auditoria, Integer> {
                   WHEN a.tabla = 'horario_atencion'   THEN 'Horarios'
                   WHEN a.tabla = 'categoria'          THEN 'Categorías'
                   WHEN a.tabla = 'subcategoria'       THEN 'Subcategorías'
+                  WHEN a.tabla = 'paquete'            THEN 'Paquetes'
                   ELSE 'Desconocido'
                 END,
                 a.creadoEn,

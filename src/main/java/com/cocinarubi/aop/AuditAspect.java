@@ -173,6 +173,7 @@ public class AuditAspect {
             "getIdProductoCocinaPedido", "getIdPedidoDomicilio",
             "getIdArchivo", "getIdArchivoModulo", "getIdRol",
             "getIdCategoria", "getIdSubcategoria",
+            "getIdPaquete", "getIdPaqueteProducto", "getIdPaquetePedido",
             "getId"
     };
 

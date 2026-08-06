@@ -61,7 +61,24 @@ public class AuditoriaParser {
             case "horario_atencion"   -> describirHorarioAtencion(accion, despues, antes, id, fecha);
             case "categoria"          -> describirCategoria(accion, despues, antes, id, fecha);
             case "subcategoria"       -> describirSubcategoria(accion, despues, antes, id, fecha);
+            case "paquete"            -> describirPaquete(accion, despues, antes, id, fecha);
             default                   -> accion + " en " + tabla + (id != null ? " #" + id : "");
+        };
+    }
+
+    private String describirPaquete(TipoOperacion accion, JsonNode despues, JsonNode antes, Integer id, LocalDateTime fecha) {
+        return switch (accion) {
+            case POST -> {
+                String desc = textOrElse(despues, "descripcion", "sin descripción");
+                yield "Se creó el paquete '" + desc + "'";
+            }
+            case PUT -> {
+                String descDespues = textOrElse(despues, "descripcion", null);
+                String descAntes = textOrElse(antes, "descripcion", null);
+                String desc = descDespues != null ? descDespues : (descAntes != null ? descAntes : "#" + id);
+                yield "Se actualizó el paquete '" + desc + "'";
+            }
+            case DELETE -> "Se eliminó el paquete #" + id;
         };
     }
 
