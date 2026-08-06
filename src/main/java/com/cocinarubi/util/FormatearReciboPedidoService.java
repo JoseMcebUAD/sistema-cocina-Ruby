@@ -8,6 +8,7 @@ import com.cocinarubi.presentation.dto.response.BasicoPedidoExtraResponseDTO;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComplementoResponseDTO;
+import com.cocinarubi.presentation.dto.response.PaquetePedidoResponseDTO;
 
 public class FormatearReciboPedidoService extends FormatearReciboService {
 
@@ -77,6 +78,36 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
             }
         }
 
+        lineas.add(alinearDerechaCompleto(precio, anchoEfectivo));
+        return lineas;
+    }
+
+    /**
+     * Formato del bloque Paquete para el ticket:
+     * <pre>
+     * PAQUETE nombrePaquete
+     *   - producto1
+     *   - producto2
+     *                                 $precio
+     * </pre>
+     * Si no hay productos (paquete recién creado sin líneas), se imprime en una sola línea
+     * con el precio a la derecha, igual que un ComidaPedido sin complementos.
+     */
+    public List<String> formatPaqueteBlock(PaquetePedidoResponseDTO paquete, String precio, int anchoEfectivo) {
+        List<String> lineas = new ArrayList<>();
+        String encabezado = "PAQUETE " + (paquete.getDescripcion() != null ? paquete.getDescripcion() : "");
+        List<String> nombres = paquete.getNombresProductos();
+        boolean hayProductos = nombres != null && !nombres.isEmpty();
+
+        if (!hayProductos) {
+            lineas.add(construirLineaConPrecio(encabezado, precio, anchoEfectivo));
+            return lineas;
+        }
+
+        lineas.add(encabezado);
+        for (String nombre : nombres) {
+            lineas.add("  - " + nombre);
+        }
         lineas.add(alinearDerechaCompleto(precio, anchoEfectivo));
         return lineas;
     }

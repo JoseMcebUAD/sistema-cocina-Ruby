@@ -61,6 +61,7 @@ public class PedidoImpresionStrategy implements ImpresionStrategy {
         data.setDesayunos(dto.getDesayunos());
         data.setBasicos(dto.getBasicos());
         data.setProductosCocina(dto.getProductosCocina());
+        data.setPaquetes(dto.getPaquetes());
         data.setDomicilio(dto.getTipoPedido() == TipoPedido.DOMICILIO ? dto.getDomicilio() : null);
         data.setDomicilioCocina(dto.getTipoPedido() == TipoPedido.DOMICILIO ? dto.getDomicilioCocina() : null);
 
