@@ -67,6 +67,6 @@ public class Archivo {
     @Column(name = "public_id")
     private String publicId;
 
-    @Column()
+    @Column(name = "creadoEn")
     private LocalDateTime creadoEn;
 }
