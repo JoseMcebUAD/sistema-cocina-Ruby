@@ -150,7 +150,7 @@ public class CategoriaServiceTest {
     @DisplayName("delete - bloquea con CONFLICT cuando la categoría tiene subcategorías")
     public void delete_conSubcategorias() {
         when(categoriaRepository.existsById(1)).thenReturn(true);
-        when(subcategoriaRepository.countByCategoria_IdCategoria(1)).thenReturn(3L);
+        when(subcategoriaRepository.existsByCategoria_IdCategoria(1)).thenReturn(true);
 
         BusinessException ex = assertThrows(BusinessException.class, () -> categoriaService.delete(1));
         assertEquals(409, ex.getHttpStatus().value());
@@ -163,8 +163,8 @@ public class CategoriaServiceTest {
     @DisplayName("delete - bloquea con CONFLICT cuando la categoría tiene productos asociados")
     public void delete_conProductos() {
         when(categoriaRepository.existsById(1)).thenReturn(true);
-        when(subcategoriaRepository.countByCategoria_IdCategoria(1)).thenReturn(0L);
-        when(productoCocinaRepository.countByCategoria_IdCategoria(1)).thenReturn(5L);
+        when(subcategoriaRepository.existsByCategoria_IdCategoria(1)).thenReturn(false);
+        when(productoCocinaRepository.existsByCategoria_IdCategoria(1)).thenReturn(true);
 
         BusinessException ex = assertThrows(BusinessException.class, () -> categoriaService.delete(1));
         assertEquals(409, ex.getHttpStatus().value());
@@ -177,8 +177,8 @@ public class CategoriaServiceTest {
     @DisplayName("delete - elimina cuando no hay subcategorías ni productos y limpia su módulo")
     public void delete_exitoso() {
         when(categoriaRepository.existsById(1)).thenReturn(true);
-        when(subcategoriaRepository.countByCategoria_IdCategoria(1)).thenReturn(0L);
-        when(productoCocinaRepository.countByCategoria_IdCategoria(1)).thenReturn(0L);
+        when(subcategoriaRepository.existsByCategoria_IdCategoria(1)).thenReturn(false);
+        when(productoCocinaRepository.existsByCategoria_IdCategoria(1)).thenReturn(false);
 
         assertDoesNotThrow(() -> categoriaService.delete(1));
         verify(archivoModuloService).eliminarParaCategoria(1);

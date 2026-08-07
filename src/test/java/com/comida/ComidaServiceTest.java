@@ -90,8 +90,8 @@ public class ComidaServiceTest {
     @DisplayName("delete - Debe eliminar la comida cuando no tiene referencias")
     public void deleteComida() {
         when(comidaRepository.existsById(10)).thenReturn(true);
-        when(comidaRepository.countEnPedidos(10)).thenReturn(0L);
-        when(comidaRepository.countEnBasicos(10)).thenReturn(0L);
+        when(comidaRepository.existsEnPedidos(10)).thenReturn(false);
+        when(comidaRepository.existsEnBasicos(10)).thenReturn(false);
 
         assertDoesNotThrow(() -> comidaService.delete(10));
         verify(comidaRepository).deleteById(10);
@@ -112,7 +112,7 @@ public class ComidaServiceTest {
     @DisplayName("delete - Debe lanzar excepción cuando la comida está referenciada en pedidos")
     public void deleteComida_enPedidos() {
         when(comidaRepository.existsById(10)).thenReturn(true);
-        when(comidaRepository.countEnPedidos(10)).thenReturn(5L);
+        when(comidaRepository.existsEnPedidos(10)).thenReturn(true);
 
         assertThrows(BusinessException.class, () -> comidaService.delete(10));
         verify(comidaRepository, never()).deleteById(anyInt());
@@ -123,8 +123,8 @@ public class ComidaServiceTest {
     @DisplayName("delete - Debe lanzar excepción cuando la comida está referenciada en paquetes básicos")
     public void deleteComida_enBasicos() {
         when(comidaRepository.existsById(10)).thenReturn(true);
-        when(comidaRepository.countEnPedidos(10)).thenReturn(0L);
-        when(comidaRepository.countEnBasicos(10)).thenReturn(2L);
+        when(comidaRepository.existsEnPedidos(10)).thenReturn(false);
+        when(comidaRepository.existsEnBasicos(10)).thenReturn(true);
 
         assertThrows(BusinessException.class, () -> comidaService.delete(10));
         verify(comidaRepository, never()).deleteById(anyInt());

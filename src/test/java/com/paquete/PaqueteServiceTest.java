@@ -55,6 +55,7 @@ public class PaqueteServiceTest {
         PaqueteRequestDTO dto = new PaqueteRequestDTO();
         dto.setPrecio(new BigDecimal("120.00"));
         dto.setDescripcion("Promo mixta");
+        dto.setDestacado(false);
         dto.setEstatus(Estatus.DISPONIBLE);
         dto.setProductos(lineas);
         return dto;
@@ -90,7 +91,7 @@ public class PaqueteServiceTest {
 
         Paquete persistido = Paquete.builder()
                 .idPaquete(10).precio(dto.getPrecio()).descripcion(dto.getDescripcion())
-                .estatus(dto.getEstatus()).productos(new ArrayList<>()).build();
+                .destacado(dto.getDestacado()).estatus(dto.getEstatus()).productos(new ArrayList<>()).build();
         persistido.addProducto(PaqueteProducto.builder()
                 .idPaqueteProducto(100).tipoProducto(TipoLineaPaquete.COMIDA).idProducto(1).cantidad(1).build());
         persistido.addProducto(PaqueteProducto.builder()
@@ -102,6 +103,7 @@ public class PaqueteServiceTest {
         PaqueteResponseDTO res = service.save(dto);
 
         assertEquals(10, res.getIdPaquete());
+        assertFalse(res.getDestacado());
         assertEquals(3, res.getProductos().size());
         verify(paqueteRepository).save(any(Paquete.class));
         System.out.println("[OK] save persistió paquete con 3 líneas mixtas");
@@ -129,7 +131,7 @@ public class PaqueteServiceTest {
         PaqueteService service = rebuildService();
         Paquete existente = Paquete.builder()
                 .idPaquete(5).precio(new BigDecimal("50.00")).descripcion("viejo")
-                .estatus(Estatus.DISPONIBLE).productos(new ArrayList<>()).build();
+                .destacado(true).estatus(Estatus.DISPONIBLE).productos(new ArrayList<>()).build();
         existente.addProducto(PaqueteProducto.builder()
                 .idPaqueteProducto(50).tipoProducto(TipoLineaPaquete.COMIDA).idProducto(1).cantidad(1).build());
         List<PaqueteProducto> refOriginal = existente.getProductos();
@@ -146,6 +148,7 @@ public class PaqueteServiceTest {
 
         assertSame(refOriginal, existente.getProductos(),
                 "La colección debe ser la misma instancia (orphanRemoval)");
+        assertFalse(existente.isDestacado(), "destacado debe actualizarse al valor del request");
         assertEquals(1, existente.getProductos().size());
         assertEquals(3, existente.getProductos().get(0).getCantidad());
         System.out.println("[OK] update sincronizó líneas sobre la misma colección");
