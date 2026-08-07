@@ -23,6 +23,9 @@ public class PaqueteRequestDTO {
     @JsonProperty("descripcion")
     private String descripcion;
 
+    @JsonProperty("destacado")
+    private boolean destacado;
+
     @NotNull(message = "El estatus no puede ser nulo")
     @JsonProperty("estatus")
     private Estatus estatus;
@@ -42,6 +45,9 @@ public class PaqueteRequestDTO {
 
     public Estatus getEstatus() { return estatus; }
     public void setEstatus(Estatus estatus) { this.estatus = estatus; }
+
+    public Boolean getDestacado() { return destacado; }
+    public void setDestacado(Boolean destacado) { this.destacado = destacado; }
 
     public List<PaqueteLineaRequestDTO> getProductos() { return productos; }
     public void setProductos(List<PaqueteLineaRequestDTO> productos) {

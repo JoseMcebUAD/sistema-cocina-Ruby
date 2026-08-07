@@ -119,6 +119,7 @@ public class PaqueteService {
         existente.setDescripcion(dto.getDescripcion());
         existente.setEstatus(dto.getEstatus());
         existente.getProductos().clear();
+        existente.setDestacado(dto.getDestacado());
         dto.getProductos().forEach(l -> existente.addProducto(PaqueteProducto.builder()
                 .tipoProducto(l.getTipoProducto())
                 .idProducto(l.getIdProducto())

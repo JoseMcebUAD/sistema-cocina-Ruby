@@ -31,6 +31,7 @@ public class PaqueteMapper {
         Paquete paquete = Paquete.builder()
                 .precio(dto.getPrecio())
                 .descripcion(dto.getDescripcion())
+                .destacado(dto.getDestacado())
                 .estatus(dto.getEstatus())
                 .build();
         for (PaqueteLineaRequestDTO linea : dto.getProductos()) {
@@ -66,6 +67,7 @@ public class PaqueteMapper {
                 p.getPrecio(),
                 p.getDescripcion(),
                 p.getEstatus(),
+                p.isDestacado(),
                 lineas);
     }
 

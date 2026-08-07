@@ -11,16 +11,17 @@ public class PaqueteResponseDTO {
     private BigDecimal precio;
     private String descripcion;
     private Estatus estatus;
-    private List<PaqueteLineaResponseDTO> productos;
+    private boolean destacado;    private List<PaqueteLineaResponseDTO> productos;
 
     public PaqueteResponseDTO() {}
 
     public PaqueteResponseDTO(int idPaquete, BigDecimal precio, String descripcion,
-                              Estatus estatus, List<PaqueteLineaResponseDTO> productos) {
+                              Estatus estatus, boolean destacado ,List<PaqueteLineaResponseDTO> productos) {
         this.idPaquete = idPaquete;
         this.precio = precio;
         this.descripcion = descripcion;
         this.estatus = estatus;
+        this.destacado = destacado;
         this.productos = productos;
     }
 
@@ -32,6 +33,9 @@ public class PaqueteResponseDTO {
 
     public String getDescripcion() { return descripcion; }
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+
+    public boolean getDestacado() { return destacado; }
+    public void setDestacado(boolean destacado) { this.destacado = destacado; }
 
     public Estatus getEstatus() { return estatus; }
     public void setEstatus(Estatus estatus) { this.estatus = estatus; }
