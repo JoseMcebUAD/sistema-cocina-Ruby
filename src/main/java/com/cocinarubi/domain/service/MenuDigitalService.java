@@ -53,15 +53,6 @@ public class MenuDigitalService {
             "❤️❤️‼️🥰🥰\n" +
             "\n";
 
-    private static final String OTROS =
-            "\n" +
-            "*Otros:*\n" +
-            "*$32kilo de tortilla*\n" +
-            "*$16 ½ kilo de tortilla*\n" +
-            "$10 pesos ¼ kilo de tortilla\n" +
-            "$6 pieza de limón \n" +
-            "$4 pieza de chile habanero \n" +
-            "$5 Paquete de cubiertos\n";
 
     private static final String FOOTER = "\n🔺precios solo para envíos";
 
@@ -113,7 +104,6 @@ public class MenuDigitalService {
         renderCategoriaEstatica(sb, categorias, productosPorCategoria, "SNACK", this::appendSnacks);
 
         appendComplementos(sb, complementos);
-        sb.append(OTROS);
 
         renderCategoriaEstatica(sb, categorias, productosPorCategoria, "CHAROLA", this::appendCharolas);
         renderCategoriaEstatica(sb, categorias, productosPorCategoria, "POSTRE", this::appendPostres);

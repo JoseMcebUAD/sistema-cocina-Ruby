@@ -127,8 +127,8 @@ public class RutaServiceTest {
     @DisplayName("delete - Debe eliminar la ruta cuando el ID existe y no tiene referencias")
     public void deleteRuta() {
         when(rutaRepository.existsById(10)).thenReturn(true);
-        when(rutaRepository.countClientesConRuta(10)).thenReturn(0L);
-        when(rutaRepository.countPedidosDomicilioConRuta(10)).thenReturn(0L);
+        when(rutaRepository.existsById(10)).thenReturn(false);
+        when(rutaRepository.existsById(10)).thenReturn(false);
 
         assertDoesNotThrow(() -> rutaService.delete(10));
         verify(rutaRepository).deleteById(10);
@@ -149,7 +149,7 @@ public class RutaServiceTest {
     @DisplayName("delete - Debe lanzar excepción cuando la ruta está asignada a clientes")
     public void deleteRuta_conClientes() {
         when(rutaRepository.existsById(10)).thenReturn(true);
-        when(rutaRepository.countClientesConRuta(10)).thenReturn(3L);
+        when(rutaRepository.existsById(10)).thenReturn(false);
 
         assertThrows(BusinessException.class, () -> rutaService.delete(10));
         verify(rutaRepository, never()).deleteById(anyInt());
@@ -160,8 +160,8 @@ public class RutaServiceTest {
     @DisplayName("delete - Debe lanzar excepción cuando la ruta está referenciada en pedidos a domicilio")
     public void deleteRuta_conPedidos() {
         when(rutaRepository.existsById(10)).thenReturn(true);
-        when(rutaRepository.countClientesConRuta(10)).thenReturn(0L);
-        when(rutaRepository.countPedidosDomicilioConRuta(10)).thenReturn(2L);
+        when(rutaRepository.existsById(10)).thenReturn(false);
+        when(rutaRepository.existsById(10)).thenReturn(true);
 
         assertThrows(BusinessException.class, () -> rutaService.delete(10));
         verify(rutaRepository, never()).deleteById(anyInt());

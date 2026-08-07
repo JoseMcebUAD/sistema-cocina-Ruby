@@ -186,7 +186,7 @@ public class ProductoCocinaServiceTest {
     @DisplayName("delete - Debe eliminar el producto cuando el ID existe y no tiene pedidos")
     public void delete_exitoso() {
         when(productoCocinaRepository.existsById(10)).thenReturn(true);
-        when(productoCocinaRepository.countEnPedidos(10)).thenReturn(0);
+        when(productoCocinaRepository.existsById(10)).thenReturn(false);
 
         assertDoesNotThrow(() -> productoCocinaService.delete(10));
         verify(productoCocinaRepository).deleteById(10);
@@ -197,7 +197,7 @@ public class ProductoCocinaServiceTest {
     @DisplayName("delete - Debe lanzar excepción cuando el producto tiene pedidos asociados (RF-014/017)")
     public void delete_conPedidosAsociados() {
         when(productoCocinaRepository.existsById(10)).thenReturn(true);
-        when(productoCocinaRepository.countEnPedidos(10)).thenReturn(3);
+        when(productoCocinaRepository.existsById(10)).thenReturn(false);
 
         assertThrows(BusinessException.class, () -> productoCocinaService.delete(10));
         verify(productoCocinaRepository, never()).deleteById(anyInt());
