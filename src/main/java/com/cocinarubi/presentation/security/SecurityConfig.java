@@ -137,7 +137,6 @@ public class SecurityConfig {
                             "/comida/**",
                             "/complemento/**",
                             "/desayuno/**",
-                            "/favoritoCliente/**",
                             "/files/**",
                             "/horario-atencion/**",
                             "/impresora/**",

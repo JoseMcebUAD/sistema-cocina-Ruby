@@ -18,7 +18,6 @@ import java.math.BigDecimal;
  * <p>El {@code uuid_producto_cocina} es el identificador público para el menú web.</p>
  *
  * <p>Relaciones salientes: ninguna. Referenciado por {@link ProductoCocinaPedido}
- * y {@link FavoritoCliente} (FK lógica).</p>
  */
 @Entity
 @Table(name = "producto_cocina")
