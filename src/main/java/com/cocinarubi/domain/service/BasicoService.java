@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -82,6 +83,7 @@ public class BasicoService {
         }
         Comida comida = comidaService.findById(dto.getIdComida());
         Basico basico = Basico.builder()
+                .uuidBasico(UUID.randomUUID().toString())
                 .comida(comida)
                 .descripcion(dto.getDescripcion())
                 .destacado(dto.isDestacado())
@@ -153,6 +155,7 @@ public class BasicoService {
                 .collect(Collectors.toList());
         return new BasicoResponseDTO(
                 basico.getIdBasico(),
+                basico.getUuidBasico(),
                 basico.getComida().getIdComida(),
                 basico.getComida().getNombreComida(),
                 basico.getDescripcion(),

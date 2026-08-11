@@ -35,6 +35,9 @@ public class Ruta {
     @Column(name = "id_ruta")
     private Integer idRuta;
 
+    @Column(name = "uuid_ruta")
+    private String uuidRuta;
+
     @Column(name = "nombre", nullable = false, length = 45)
     private String nombre;
 
