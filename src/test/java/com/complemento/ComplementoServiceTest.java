@@ -90,8 +90,8 @@ public class ComplementoServiceTest {
     @DisplayName("delete - Debe eliminar el complemento cuando el ID existe y no tiene referencias")
     public void deleteComplemento() {
         when(complementoRepository.existsById(10)).thenReturn(true);
-        when(complementoRepository.countEnBasicos(10)).thenReturn(0L);
-        when(complementoRepository.countEnPedidos(10)).thenReturn(0L);
+        when(complementoRepository.existsEnBasicos(10)).thenReturn(false);
+        when(complementoRepository.existsEnPedidos(10)).thenReturn(false);
 
         assertDoesNotThrow(() -> complementoService.delete(10));
         verify(complementoRepository).deleteById(10);
@@ -112,7 +112,7 @@ public class ComplementoServiceTest {
     @DisplayName("delete - Debe lanzar excepción cuando el complemento está en paquetes básicos")
     public void deleteComplemento_enBasicos() {
         when(complementoRepository.existsById(10)).thenReturn(true);
-        when(complementoRepository.countEnBasicos(10)).thenReturn(2L);
+        when(complementoRepository.existsEnBasicos(10)).thenReturn(true);
 
         assertThrows(BusinessException.class, () -> complementoService.delete(10));
         verify(complementoRepository, never()).deleteById(anyInt());
@@ -123,8 +123,8 @@ public class ComplementoServiceTest {
     @DisplayName("delete - Debe lanzar excepción cuando el complemento está referenciado en pedidos")
     public void deleteComplemento_enPedidos() {
         when(complementoRepository.existsById(10)).thenReturn(true);
-        when(complementoRepository.countEnBasicos(10)).thenReturn(0L);
-        when(complementoRepository.countEnPedidos(10)).thenReturn(3L);
+        when(complementoRepository.existsEnBasicos(10)).thenReturn(false);
+        when(complementoRepository.existsEnPedidos(10)).thenReturn(true);
 
         assertThrows(BusinessException.class, () -> complementoService.delete(10));
         verify(complementoRepository, never()).deleteById(anyInt());

@@ -47,12 +47,12 @@ public class ComplementoService {
             throw new BusinessException("Complemento no encontrado con id: " + id, HttpStatus.NOT_FOUND);
         }
         // Guardar integridad referencial: la DB no tiene ON DELETE CASCADE para estas relaciones
-        if (complementoRepository.countEnBasicos(id) > 0) {
+        if (complementoRepository.existsEnBasicos(id)) {
             throw new BusinessException(
                     "No se puede eliminar el complemento porque está referenciado en paquetes básicos",
                     HttpStatus.CONFLICT);
         }
-        if (complementoRepository.countEnPedidos(id) > 0) {
+        if (complementoRepository.existsEnPedidos(id)) {
             throw new BusinessException(
                     "No se puede eliminar el complemento porque está referenciado en pedidos existentes",
                     HttpStatus.CONFLICT);

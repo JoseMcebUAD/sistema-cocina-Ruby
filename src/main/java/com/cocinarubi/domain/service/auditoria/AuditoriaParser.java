@@ -58,7 +58,26 @@ public class AuditoriaParser {
             case "codigo_cliente"     -> describirCodigoCliente(accion, despues, antes, id, fecha);
             case "pago_repartidor"    -> describirPagoRepartidor(accion, despues, antes, id, fecha);
             case "horario_atencion"   -> describirHorarioAtencion(accion, despues, antes, id, fecha);
+            case "categoria"          -> describirCategoria(accion, despues, antes, id, fecha);
+            case "subcategoria"       -> describirSubcategoria(accion, despues, antes, id, fecha);
+            case "paquete"            -> describirPaquete(accion, despues, antes, id, fecha);
             default                   -> accion + " en " + tabla + (id != null ? " #" + id : "");
+        };
+    }
+
+    private String describirPaquete(TipoOperacion accion, JsonNode despues, JsonNode antes, Integer id, LocalDateTime fecha) {
+        return switch (accion) {
+            case POST -> {
+                String desc = textOrElse(despues, "descripcion", "sin descripción");
+                yield "Se creó el paquete '" + desc + "'";
+            }
+            case PUT -> {
+                String descDespues = textOrElse(despues, "descripcion", null);
+                String descAntes = textOrElse(antes, "descripcion", null);
+                String desc = descDespues != null ? descDespues : (descAntes != null ? descAntes : "#" + id);
+                yield "Se actualizó el paquete '" + desc + "'";
+            }
+            case DELETE -> "Se eliminó el paquete #" + id;
         };
     }
 
@@ -155,8 +174,13 @@ public class AuditoriaParser {
         return switch (accion) {
             case POST -> {
                 String nombre = textOrElse(despues, "nombreProducto", "desconocido");
-                String tipo = textOrElse(despues, "tipoProducto", "");
-                String sufijo = tipo.isBlank() ? "" : " (" + tipo + ")";
+                // El nombre de la categoría llega en el payload de despues.categoria.nombre
+                // cuando Jackson serializa la relación completa; si no, cae en id_categoria.
+                String cat = textOrElse(despues.path("categoria"), "nombre", "");
+                if (cat.isBlank()) {
+                    cat = textOrElse(despues, "idCategoria", "");
+                }
+                String sufijo = cat.isBlank() ? "" : " (" + cat + ")";
                 yield "Se creó el producto de cocina '" + nombre + "'" + sufijo;
             }
             case PUT -> {
@@ -260,6 +284,40 @@ public class AuditoriaParser {
             }
             case PUT    -> "Se actualizó el horario de atención #" + id;
             case DELETE -> "Se eliminó el horario de atención #" + id;
+        };
+    }
+
+    private String describirCategoria(TipoOperacion accion, JsonNode despues, JsonNode antes, Integer id, LocalDateTime fecha) {
+        return switch (accion) {
+            case POST -> {
+                String nombre = textOrElse(despues, "nombre", "desconocida");
+                yield "Se creó la categoría '" + nombre + "'";
+            }
+            case PUT -> {
+                String nombreDespues = textOrElse(despues, "nombre", null);
+                String nombreAntes = textOrElse(antes, "nombre", null);
+                String nombre = nombreDespues != null ? nombreDespues : (nombreAntes != null ? nombreAntes : "#" + id);
+                yield "Se actualizó la categoría '" + nombre + "'";
+            }
+            case DELETE -> "Se eliminó la categoría #" + id;
+        };
+    }
+
+    private String describirSubcategoria(TipoOperacion accion, JsonNode despues, JsonNode antes, Integer id, LocalDateTime fecha) {
+        return switch (accion) {
+            case POST -> {
+                String nombre = textOrElse(despues, "nombre", "desconocida");
+                String cat = textOrElse(despues, "nombreCategoria", "");
+                String sufijo = cat.isBlank() ? "" : " en '" + cat + "'";
+                yield "Se creó la subcategoría '" + nombre + "'" + sufijo;
+            }
+            case PUT -> {
+                String nombreDespues = textOrElse(despues, "nombre", null);
+                String nombreAntes = textOrElse(antes, "nombre", null);
+                String nombre = nombreDespues != null ? nombreDespues : (nombreAntes != null ? nombreAntes : "#" + id);
+                yield "Se actualizó la subcategoría '" + nombre + "'";
+            }
+            case DELETE -> "Se eliminó la subcategoría #" + id;
         };
     }
 

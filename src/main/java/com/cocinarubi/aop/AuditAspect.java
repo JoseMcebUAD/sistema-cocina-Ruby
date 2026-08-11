@@ -171,7 +171,10 @@ public class AuditAspect {
             "getIdComidaPedido", "getIdBasicoPedido", "getIdDesayunoPedido",
             "getIdBasicoComplemento", "getIdComplementoComidaPedido",
             "getIdProductoCocinaPedido", "getIdPedidoDomicilio",
-            "getIdArchivo", "getIdArchivoModulo", "getIdRol", "getId"
+            "getIdArchivo", "getIdArchivoModulo", "getIdRol",
+            "getIdCategoria", "getIdSubcategoria",
+            "getIdPaquete", "getIdPaqueteProducto", "getIdPaquetePedido",
+            "getId"
     };
 
     private Integer extraerIdDeObjeto(Object obj) {

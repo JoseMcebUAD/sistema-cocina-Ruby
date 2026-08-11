@@ -2,20 +2,25 @@ package com.cocinarubi.domain.mapper;
 
 import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.BasicoPedido;
-import com.cocinarubi.domain.entity.BasicoPedidoExtra;
+import com.cocinarubi.DBConstants.TipoLineaPaquete;
 import com.cocinarubi.domain.entity.ComidaPedido;
 import com.cocinarubi.domain.entity.DesayunoPedido;
+import com.cocinarubi.domain.entity.Paquete;
+import com.cocinarubi.domain.entity.PaquetePedido;
+import com.cocinarubi.domain.entity.PaqueteProducto;
 import com.cocinarubi.domain.entity.Pedido;
 import com.cocinarubi.domain.entity.PedidoCocina;
 import com.cocinarubi.domain.entity.PedidoDomicilio;
 import com.cocinarubi.domain.entity.PedidoDomicilioCocina;
 import com.cocinarubi.domain.entity.ProductoCocinaPedido;
+import com.cocinarubi.domain.service.PaqueteService;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoExtraResponseDTO;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.BasicoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComplementoResponseDTO;
 import com.cocinarubi.presentation.dto.response.DesayunoPedidoResponseDTO;
+import com.cocinarubi.presentation.dto.response.PaquetePedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoCocinaResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioCocinaResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioResponseDTO;
@@ -24,7 +29,9 @@ import com.cocinarubi.presentation.dto.response.ProductoCocinaPedidoResponseDTO;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -42,6 +49,12 @@ import java.util.stream.Collectors;
 @Component
 public class PedidoMapper {
 
+    private final PaqueteService paqueteService;
+
+    public PedidoMapper(PaqueteService paqueteService) {
+        this.paqueteService = paqueteService;
+    }
+
     public PedidoResponseDTO toResponseDTO(Pedido pedido) {
         List<ComidaPedidoResponseDTO> comidas = pedido.getComidasPedido().stream()
                 .map(this::toComidaPedidoDTO).collect(Collectors.toList());
@@ -51,6 +64,15 @@ public class PedidoMapper {
                 .map(this::toBasicoPedidoDTO).collect(Collectors.toList());
         List<ProductoCocinaPedidoResponseDTO> productos = pedido.getProductosCocina().stream()
                 .map(this::toProductoCocinaPedidoDTO).collect(Collectors.toList());
+        // Pre-computa nombres de productos de todos los paquetes en batch para evitar N+1 al mapear
+        List<Paquete> paquetesEntidades = pedido.getPaquetesPedido().stream()
+                .map(PaquetePedido::getPaquete).collect(Collectors.toList());
+        Map<TipoLineaPaquete, Map<Integer, String>> nombresPaquete = paquetesEntidades.isEmpty()
+                ? Map.of()
+                : paqueteService.resolverNombresPara(paquetesEntidades);
+        List<PaquetePedidoResponseDTO> paquetes = pedido.getPaquetesPedido().stream()
+                .map(pp -> toPaquetePedidoDTO(pp, nombresPaquete))
+                .collect(Collectors.toList());
         PedidoDomicilioResponseDTO domicilio = pedido.getPedidoDomicilio() != null
                 ? toDomicilioDTO(pedido.getPedidoDomicilio())
                 : null;
@@ -82,7 +104,26 @@ public class PedidoMapper {
                 pedido.isPagado(),
                 pedido.isImpreso(),
                 pedido.getComentario(),
-                comidas, desayunos, basicos, productos, domicilio, domicilioCocina, pedidoCocina
+                comidas, desayunos, basicos, productos, paquetes, domicilio, domicilioCocina, pedidoCocina
+        );
+    }
+
+    public PaquetePedidoResponseDTO toPaquetePedidoDTO(PaquetePedido pp,
+                                                       Map<TipoLineaPaquete, Map<Integer, String>> nombres) {
+        Paquete paquete = pp.getPaquete();
+        List<String> nombresProductos = new ArrayList<>(paquete.getProductos().size());
+        for (PaqueteProducto linea : paquete.getProductos()) {
+            String nombre = nombres.getOrDefault(linea.getTipoProducto(), Map.of())
+                    .getOrDefault(linea.getIdProducto(), "(eliminado)");
+            nombresProductos.add(nombre);
+        }
+        return new PaquetePedidoResponseDTO(
+                pp.getIdPaquetePedido(),
+                paquete.getIdPaquete(),
+                paquete.getDescripcion(),
+                pp.getPrecioUnitario(),
+                pp.getCantidad(),
+                nombresProductos
         );
     }
 

@@ -13,10 +13,17 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Test de integración para /producto-cocina (kebab-case desde Fase 2).
+ * Los productos referencian la Categoria SNACK del seeder V23 (idCategoria=3).
+ */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = com.cocinarubi.Application.class)
 public class ProductoCocinaRestTest {
+
+    // Seeder V23: BEBIDA=1, CHAROLA=2, SNACK=3, POSTRE=4
+    private static final int ID_CATEGORIA_SNACK = 3;
 
     @Autowired private JwtService jwtService;
     @Autowired private UsuarioDetailsService usuarioDetailsService;
@@ -37,10 +44,10 @@ public class ProductoCocinaRestTest {
 
     @Test
     @Order(1)
-    @DisplayName("GET /productoCocina - Debe retornar lista de productos con status 200")
+    @DisplayName("GET /producto-cocina - Debe retornar lista de productos con status 200")
     public void findAll() throws Exception {
         ResponseEntity<String> response = this.restTemplate.exchange(
-                "/productoCocina/todos", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
+                "/producto-cocina/todos", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -51,7 +58,7 @@ public class ProductoCocinaRestTest {
 
     @Test
     @Order(2)
-    @DisplayName("POST /productoCocina - Debe crear un producto y retornar status 201")
+    @DisplayName("POST /producto-cocina - Debe crear un producto y retornar status 201")
     public void save() throws Exception {
         String json = """
                 {
@@ -61,28 +68,30 @@ public class ProductoCocinaRestTest {
                   "precioNormal": 25.00,
                   "estatus": "DISPONIBLE",
                   "destacado": false,
-                  "tipoProducto": "SNACK",
+                  "idCategoria": %d,
+                  "idSubcategorias": [],
                   "saltarConfirmacion": true
                 }
-                """;
+                """.formatted(ID_CATEGORIA_SNACK);
 
         ResponseEntity<String> response = this.restTemplate.exchange(
-                "/productoCocina", HttpMethod.POST, new HttpEntity<>(json, authHeaders), String.class
+                "/producto-cocina", HttpMethod.POST, new HttpEntity<>(json, authHeaders), String.class
         );
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
         createdId = data.get("idProductoCocina").asInt();
         assertTrue(createdId > 0);
+        assertEquals("SNACK", data.get("nombreCategoria").asText());
         System.out.println("[OK] " + response.getStatusCode() + " | id=" + createdId);
     }
 
     @Test
     @Order(3)
-    @DisplayName("GET /productoCocina/{id} - Debe retornar el producto correspondiente al ID con status 200")
+    @DisplayName("GET /producto-cocina/{id} - Debe retornar el producto correspondiente al ID con status 200")
     public void findById() throws Exception {
         ResponseEntity<String> response = this.restTemplate.exchange(
-                "/productoCocina/" + createdId, HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
+                "/producto-cocina/" + createdId, HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -94,7 +103,7 @@ public class ProductoCocinaRestTest {
 
     @Test
     @Order(4)
-    @DisplayName("PUT /productoCocina/{id} - Debe actualizar el producto y retornar status 200")
+    @DisplayName("PUT /producto-cocina/{id} - Debe actualizar el producto y retornar status 200")
     public void update() throws Exception {
         String json = """
                 {
@@ -104,13 +113,14 @@ public class ProductoCocinaRestTest {
                   "precioNormal": 30.00,
                   "estatus": "DISPONIBLE",
                   "destacado": true,
-                  "tipoProducto": "SNACK",
+                  "idCategoria": %d,
+                  "idSubcategorias": [],
                   "saltarConfirmacion": true
                 }
-                """;
+                """.formatted(ID_CATEGORIA_SNACK);
 
         ResponseEntity<String> response = this.restTemplate.exchange(
-                "/productoCocina/" + createdId, HttpMethod.PUT, new HttpEntity<>(json, authHeaders), String.class
+                "/producto-cocina/" + createdId, HttpMethod.PUT, new HttpEntity<>(json, authHeaders), String.class
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -122,15 +132,15 @@ public class ProductoCocinaRestTest {
 
     @Test
     @Order(5)
-    @DisplayName("DELETE /productoCocina/{id} - Debe eliminar el producto y retornar 404 al buscarlo nuevamente")
+    @DisplayName("DELETE /producto-cocina/{id} - Debe eliminar el producto y retornar 404 al buscarlo nuevamente")
     public void delete() throws Exception {
         ResponseEntity<String> deleteResponse = this.restTemplate.exchange(
-                "/productoCocina/" + createdId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class
+                "/producto-cocina/" + createdId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class
         );
         assertEquals(HttpStatus.NO_CONTENT, deleteResponse.getStatusCode());
 
         ResponseEntity<String> getResponse = this.restTemplate.exchange(
-                "/productoCocina/" + createdId, HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
+                "/producto-cocina/" + createdId, HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
         assertEquals(HttpStatus.NOT_FOUND, getResponse.getStatusCode());
         System.out.println("[OK] DELETE 204 → GET 404 para producto id=" + createdId);
@@ -138,10 +148,10 @@ public class ProductoCocinaRestTest {
 
     @Test
     @Order(6)
-    @DisplayName("GET /productoCocina - sin token debe responder 401")
+    @DisplayName("GET /producto-cocina - sin token debe responder 401")
     public void seguridad_sinToken() {
         ResponseEntity<String> response = this.restTemplate.exchange(
-                "/productoCocina", HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), String.class
+                "/producto-cocina", HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), String.class
         );
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         System.out.println("[OK] sin token → 401");

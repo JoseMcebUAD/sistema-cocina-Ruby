@@ -2,7 +2,6 @@ package com.cocinarubi.dao;
 
 import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.DBConstants.TipoPedido;
-import com.cocinarubi.DBConstants.TipoProducto;
 import com.cocinarubi.domain.entity.Pedido;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -103,11 +102,13 @@ public interface ResumenProduccionRepository extends JpaRepository<Pedido, Integ
     );
 
     /**
-     * Suma de productos cocina agrupados por TipoProducto (SNACK, BEBIDA, CHAROLA, POSTRE).
-     * Columnas Object[]: [0] TipoProducto, [1] Long suma de cantidad.
+     * Suma de productos cocina agrupados por Categoria.
+     * Columnas Object[]: [0] Integer idCategoria, [1] String nombreCategoria,
+     * [2] Long suma de cantidad.
      */
     @Query("""
-            SELECT pc.tipoProducto, COALESCE(SUM(pcp.cantidad), 0)
+            SELECT pc.categoria.idCategoria, pc.categoria.nombre,
+                   COALESCE(SUM(pcp.cantidad), 0)
             FROM ProductoCocinaPedido pcp
             JOIN pcp.productoCocina pc
             JOIN pcp.pedido p
@@ -120,9 +121,10 @@ public interface ResumenProduccionRepository extends JpaRepository<Pedido, Integ
               AND (:tipoPedido IS NULL OR p.tipoPedido = :tipoPedido)
               AND (:pedidoCreadoDesde IS NULL OR p.pedidoCreadoDesde = :pedidoCreadoDesde)
               AND (:filtrarRuta = false OR pr.idRuta IN :idRutas OR pcr.idRuta IN :idRutas)
-            GROUP BY pc.tipoProducto
+            GROUP BY pc.categoria.idCategoria, pc.categoria.nombre
+            ORDER BY pc.categoria.nombre ASC
             """)
-    List<Object[]> countProductosCocinaAgrupadoPorTipo(
+    List<Object[]> countProductosCocinaAgrupadoPorCategoria(
             @Param("inicio") LocalDateTime inicio,
             @Param("fin") LocalDateTime fin,
             @Param("tipoPedido") TipoPedido tipoPedido,
@@ -222,7 +224,7 @@ public interface ResumenProduccionRepository extends JpaRepository<Pedido, Integ
     );
 
     /**
-     * Detalle de productos cocina de un tipo específico: nombre y suma de cantidad.
+     * Detalle de productos cocina de una categoría específica: nombre y suma de cantidad.
      * Columnas Object[]: [0] String nombreProducto, [1] Long suma de cantidad.
      */
     @Query("""
@@ -234,7 +236,7 @@ public interface ResumenProduccionRepository extends JpaRepository<Pedido, Integ
             LEFT JOIN pd.ruta pr
             LEFT JOIN p.pedidoDomicilioCocina pdc
             LEFT JOIN pdc.ruta pcr
-            WHERE pc.tipoProducto = :tipoProducto
+            WHERE pc.categoria.idCategoria = :idCategoria
               AND p.fechaExpedicionPedido >= :inicio
               AND p.fechaExpedicionPedido < :fin
               AND (:tipoPedido IS NULL OR p.tipoPedido = :tipoPedido)
@@ -243,8 +245,8 @@ public interface ResumenProduccionRepository extends JpaRepository<Pedido, Integ
             GROUP BY pc.idProductoCocina, pc.nombreProducto
             ORDER BY COALESCE(SUM(pcp.cantidad), 0) DESC
             """)
-    List<Object[]> findDetalleProductosCocina(
-            @Param("tipoProducto") TipoProducto tipoProducto,
+    List<Object[]> findDetalleProductosCocinaPorCategoria(
+            @Param("idCategoria") Integer idCategoria,
             @Param("inicio") LocalDateTime inicio,
             @Param("fin") LocalDateTime fin,
             @Param("tipoPedido") TipoPedido tipoPedido,

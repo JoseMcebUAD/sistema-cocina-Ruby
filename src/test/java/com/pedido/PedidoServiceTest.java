@@ -22,13 +22,15 @@ import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
 import com.cocinarubi.presentation.strategy.strategyImplementation.PedidoConfirmationImp;
 import com.cocinarubi.presentation.strategy.strategyImplementation.PedidoValidationImp;
+import com.cocinarubi.domain.service.PaqueteService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.mockito.Mockito.spy;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 
@@ -50,10 +52,18 @@ public class PedidoServiceTest {
     @Mock private CatalogoPedidoService catalogoPedido;
     @Mock private ApplicationEventPublisher eventPublisher;
     @Mock private TarifaEspecialRepository tarifaEspecialRepository;
-    @Spy  private PedidoMapper pedidoMapper = new PedidoMapper();
+    @Mock private PaqueteService paqueteService;
 
-    @InjectMocks
+    private PedidoMapper pedidoMapper;
     private PedidoService pedidoService;
+
+    @BeforeEach
+    void setUp() {
+        pedidoMapper = spy(new PedidoMapper(paqueteService));
+        pedidoService = new PedidoService(
+                pedidoRepository, pedidoValidation, pedidoConfirmation,
+                pedidoMapper, catalogoPedido, eventPublisher, tarifaEspecialRepository);
+    }
 
     public Pedido PEDIDO_PREPARED = Pedido.builder()
             .idPedido(10)

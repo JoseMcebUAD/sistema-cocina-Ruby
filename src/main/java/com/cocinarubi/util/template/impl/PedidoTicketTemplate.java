@@ -8,6 +8,7 @@ import com.cocinarubi.Constants;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.DesayunoPedidoResponseDTO;
+import com.cocinarubi.presentation.dto.response.PaquetePedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioCocinaResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioResponseDTO;
 import com.cocinarubi.presentation.dto.response.ProductoCocinaPedidoResponseDTO;
@@ -58,6 +59,7 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         renderDesayunos(escpos, data.getDesayunos());
         renderBasicos(escpos, data.getBasicos());
         renderProductosCocina(escpos, data.getProductosCocina());
+        renderPaquetes(escpos, data.getPaquetes());
 
         // Nota libre del operador (comentario del pedido)
         renderComentario(escpos, data.getComentario());
@@ -111,6 +113,20 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
                     p.getPrecioUnitario().multiply(java.math.BigDecimal.valueOf(p.getCantidad())));
             for (String linea : formatter.formatearDetalleOrden(descripcion, precio)) {
                 escpos.writeLF(subtitleStyle, linea);
+            }
+        }
+    }
+
+    // Renderiza cada paquete como un bloque tipo comida: encabezado "PAQUETE <nombre>",
+    // sublíneas "  - producto" por cada producto incluido, y precio (unitario × cantidad) alineado a la derecha.
+    private void renderPaquetes(EscPos escpos, List<PaquetePedidoResponseDTO> paquetes) throws IOException {
+        if (paquetes == null || paquetes.isEmpty()) return;
+        for (PaquetePedidoResponseDTO p : paquetes) {
+            String precio = FORMATO_PRECIO.format(
+                    p.getPrecioUnitario().multiply(java.math.BigDecimal.valueOf(p.getCantidad())));
+            for (String linea : formatter.formatPaqueteBlock(p, precio, anchoEfectivo)) {
+                if (linea.isEmpty()) escpos.feed(1);
+                else escpos.writeLF(subtitleStyle, linea);
             }
         }
     }

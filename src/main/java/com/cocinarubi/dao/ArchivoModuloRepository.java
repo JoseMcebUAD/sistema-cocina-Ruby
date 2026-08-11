@@ -9,13 +9,20 @@ import java.util.Optional;
 
 /**
  * Repositorio JPA para ArchivoModulo. Cada fila define la carpeta destino en Cloudinary
- * y los MIME types permitidos para un TipoCatalogoProducto específico.
+ * y los MIME types permitidos para un TipoCatalogoProducto estático (BASICO/COMIDA/DESAYUNO)
+ * o para una Categoria dinámica.
  */
 public interface ArchivoModuloRepository extends JpaRepository<ArchivoModulo, Integer> {
 
-    // Recupera la configuración de módulo para un tipo de catálogo concreto
+    // Módulos estáticos identificados por enum (BASICO, COMIDA, DESAYUNO).
     Optional<ArchivoModulo> findByTipoCatalogoProducto(TipoCatalogoProducto tipo);
 
-    // Usado por ArchivoModuloCache al arrancar para cargar todos los módulos catalogados
+    // Módulos dinámicos identificados por FK a categoria.
+    Optional<ArchivoModulo> findByCategoria_IdCategoria(Integer idCategoria);
+
+    // Carga inicial del cache: módulos estáticos.
     List<ArchivoModulo> findByTipoCatalogoProductoIsNotNull();
+
+    // Carga inicial del cache: módulos dinámicos por categoria.
+    List<ArchivoModulo> findByCategoriaIsNotNull();
 }

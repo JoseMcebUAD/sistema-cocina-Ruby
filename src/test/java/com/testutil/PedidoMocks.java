@@ -5,8 +5,8 @@ import com.cocinarubi.DBConstants.MetodoPago;
 import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.DBConstants.TamanoPorcion;
 import com.cocinarubi.DBConstants.TipoPedido;
-import com.cocinarubi.DBConstants.TipoProducto;
 import com.cocinarubi.domain.entity.Basico;
+import com.cocinarubi.domain.entity.Categoria;
 import com.cocinarubi.domain.entity.BasicoPedido;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.domain.entity.ComidaPedido;
@@ -67,6 +67,17 @@ public class PedidoMocks {
                 .build();
     }
 
+    // IDs de categoría alineados con el seeder de V23:
+    //   ('BEBIDA')=1, ('CHAROLA')=2, ('SNACK')=3, ('POSTRE')=4.
+    public static final Categoria CATEGORIA_BEBIDA  =
+            Categoria.builder().idCategoria(1).nombre("BEBIDA").build();
+    public static final Categoria CATEGORIA_CHAROLA =
+            Categoria.builder().idCategoria(2).nombre("CHAROLA").build();
+    public static final Categoria CATEGORIA_SNACK   =
+            Categoria.builder().idCategoria(3).nombre("SNACK").build();
+    public static final Categoria CATEGORIA_POSTRE  =
+            Categoria.builder().idCategoria(4).nombre("POSTRE").build();
+
     public static ProductoCocina snack() {
         return ProductoCocina.builder()
                 .idProductoCocina(10)
@@ -77,7 +88,7 @@ public class PedidoMocks {
                 .precioNormal(BigDecimal.valueOf(25))
                 .estatus(Estatus.DISPONIBLE)
                 .destacado(false)
-                .tipoProducto(TipoProducto.SNACK)
+                .categoria(CATEGORIA_SNACK)
                 .build();
     }
 
@@ -90,7 +101,7 @@ public class PedidoMocks {
                 .precioNormal(BigDecimal.valueOf(15))
                 .estatus(Estatus.DISPONIBLE)
                 .destacado(false)
-                .tipoProducto(TipoProducto.BEBIDA)
+                .categoria(CATEGORIA_BEBIDA)
                 .build();
     }
 
@@ -103,7 +114,7 @@ public class PedidoMocks {
                 .precioNormal(BigDecimal.valueOf(45))
                 .estatus(Estatus.DISPONIBLE)
                 .destacado(false)
-                .tipoProducto(TipoProducto.CHAROLA)
+                .categoria(CATEGORIA_CHAROLA)
                 .build();
     }
 
@@ -116,7 +127,7 @@ public class PedidoMocks {
                 .precioNormal(BigDecimal.valueOf(20))
                 .estatus(Estatus.DISPONIBLE)
                 .destacado(false)
-                .tipoProducto(TipoProducto.POSTRE)
+                .categoria(CATEGORIA_POSTRE)
                 .build();
     }
 
