@@ -124,6 +124,7 @@ public class PedidoMapper {
                 .collect(Collectors.toList());
         BasicoResponseDTO basicoDTO = new BasicoResponseDTO(
                 b.getIdBasico(),
+                b.getUuidBasico(),
                 b.getComida().getIdComida(),
                 b.getComida().getNombreComida(),
                 b.getDescripcion(),
