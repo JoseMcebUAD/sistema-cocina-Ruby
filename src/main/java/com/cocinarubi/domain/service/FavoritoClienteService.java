@@ -1,6 +1,6 @@
 package com.cocinarubi.domain.service;
 
-import com.cocinarubi.DBConstants.TipoCatalogoProducto;
+import com.cocinarubi.DBConstants.TipoProductoFavorito;
 import com.cocinarubi.dao.BasicoRepository;
 import com.cocinarubi.dao.ClienteRepository;
 import com.cocinarubi.dao.ComidaRepository;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 /**
  * Gestiona los favoritos del cliente con resolución polimórfica del producto
- * referenciado según {@link TipoCatalogoProducto}.
+ * referenciado según {@link TipoProductoFavorito}.
  */
 @Service
 public class FavoritoClienteService {
@@ -118,7 +118,7 @@ public class FavoritoClienteService {
     }
 
     /** Resuelve el nombre del producto consultando la tabla correspondiente según el tipo. */
-    private String resolverNombreProducto(TipoCatalogoProducto tipo, int idProducto) {
+    private String resolverNombreProducto(TipoProductoFavorito tipo, int idProducto) {
         return switch (tipo) {
             case COMIDA -> comidaRepository.findById(idProducto)
                     .map(c -> c.getNombreComida()).orElse("(producto eliminado)");

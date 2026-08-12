@@ -1,30 +1,32 @@
 package com.cocinarubi.domain.service.files.handler;
 
 import com.cocinarubi.DBConstants.TipoCatalogoProducto;
-import com.cocinarubi.DBConstants.TipoProducto;
 import com.cocinarubi.domain.service.ProductoCocinaService;
+import org.springframework.stereotype.Component;
 
+/**
+ * Handler universal para todas las categorías dinámicas de ProductoCocina.
+ * Comparten la misma tabla, así que una única instancia sirve a cualquier
+ * {@code idCategoria}. Se registra en el factory por el slot "universal"
+ * ({@link #getEntityType()} devuelve {@code null}).
+ */
+@Component
 public class ProductoCocinaHandler implements CatalogoProductoHandler {
 
     private final ProductoCocinaService productoCocinaService;
-    private final TipoCatalogoProducto entityType;
-    private final TipoProducto tipoProducto;
 
-    public ProductoCocinaHandler(ProductoCocinaService productoCocinaService,
-                                 TipoCatalogoProducto entityType,
-                                 TipoProducto tipoProducto) {
+    public ProductoCocinaHandler(ProductoCocinaService productoCocinaService) {
         this.productoCocinaService = productoCocinaService;
-        this.entityType = entityType;
-        this.tipoProducto = tipoProducto;
     }
 
     @Override
     public TipoCatalogoProducto getEntityType() {
-        return entityType;
+        // Universal — no atado a un enum estático.
+        return null;
     }
 
     @Override
     public boolean exists(Integer idEntidad) {
-        return productoCocinaService.existsByIdAndTipo(idEntidad, tipoProducto);
+        return productoCocinaService.existsById(idEntidad);
     }
 }

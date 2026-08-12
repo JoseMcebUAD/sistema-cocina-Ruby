@@ -1,13 +1,12 @@
 package com.cocinarubi.presentation.strategy.strategyImplementation;
 
-import com.cocinarubi.DBConstants.TipoCatalogoProducto;
+import com.cocinarubi.DBConstants.TipoProductoFavorito;
 import com.cocinarubi.dao.BasicoRepository;
 import com.cocinarubi.dao.ClienteRepository;
 import com.cocinarubi.dao.ComidaRepository;
 import com.cocinarubi.dao.ComplementoRepository;
 import com.cocinarubi.dao.DesayunoRepository;
 import com.cocinarubi.dao.ProductoCocinaRepository;
-import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.exception.ErrorCode;
 import com.cocinarubi.presentation.dto.request.FavoritoClienteRequestDTO;
@@ -49,8 +48,8 @@ public class FavoritoClienteValidationImp implements ValidationStrategy<Favorito
         validarExistenciaProducto(dto.getTipoCatalogoProducto(), dto.getIdProducto());
     }
 
-    /** Validación polimórfica: la tabla destino depende del TipoCatalogoProducto. */
-    private void validarExistenciaProducto(TipoCatalogoProducto tipo, Integer idProducto) {
+    /** Validación polimórfica: la tabla destino depende del TipoProductoFavorito. */
+    private void validarExistenciaProducto(TipoProductoFavorito tipo, Integer idProducto) {
         boolean existe = switch (tipo) {
             case COMIDA -> comidaRepository.existsById(idProducto);
             case COMPLEMENTO -> complementoRepository.existsById(idProducto);

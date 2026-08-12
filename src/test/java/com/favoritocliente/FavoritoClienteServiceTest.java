@@ -1,6 +1,6 @@
 package com.favoritocliente;
 
-import com.cocinarubi.DBConstants.TipoCatalogoProducto;
+import com.cocinarubi.DBConstants.TipoProductoFavorito;
 import com.cocinarubi.dao.BasicoRepository;
 import com.cocinarubi.dao.ClienteRepository;
 import com.cocinarubi.dao.ComidaRepository;
@@ -73,12 +73,12 @@ public class FavoritoClienteServiceTest {
             .idFavoritoCliente(10)
             .cliente(CLIENTE_PREPARED)
             .idProducto(5)
-            .tipoCatalogoProducto(TipoCatalogoProducto.COMIDA)
+            .tipoCatalogoProducto(TipoProductoFavorito.COMIDA)
             .build();
 
-    public FavoritoClienteRequestDTO DTO = crearDto("token-favorito-abc123", 5, TipoCatalogoProducto.COMIDA);
+    public FavoritoClienteRequestDTO DTO = crearDto("token-favorito-abc123", 5, TipoProductoFavorito.COMIDA);
 
-    private FavoritoClienteRequestDTO crearDto(String token, int idProducto, TipoCatalogoProducto tipo) {
+    private FavoritoClienteRequestDTO crearDto(String token, int idProducto, TipoProductoFavorito tipo) {
         FavoritoClienteRequestDTO dto = new FavoritoClienteRequestDTO();
         dto.setSessionToken(token);
         dto.setIdProducto(idProducto);
@@ -110,7 +110,7 @@ public class FavoritoClienteServiceTest {
 
         assertNotNull(result);
         assertEquals(10, result.getIdFavoritoCliente());
-        assertEquals(TipoCatalogoProducto.COMIDA, result.getTipoCatalogoProducto());
+        assertEquals(TipoProductoFavorito.COMIDA, result.getTipoCatalogoProducto());
         System.out.println("[OK] findById retornó favorito id=" + result.getIdFavoritoCliente());
     }
 
@@ -147,7 +147,7 @@ public class FavoritoClienteServiceTest {
         FavoritoClienteResponseDTO result = favoritoClienteService.save(DTO);
 
         assertNotNull(result);
-        assertEquals(TipoCatalogoProducto.COMIDA, result.getTipoCatalogoProducto());
+        assertEquals(TipoProductoFavorito.COMIDA, result.getTipoCatalogoProducto());
         verify(favoritoClienteRepository).save(any(FavoritoCliente.class));
         System.out.println("[OK] save guardó favorito: tipo=" + result.getTipoCatalogoProducto());
     }
@@ -170,12 +170,12 @@ public class FavoritoClienteServiceTest {
                 .idFavoritoCliente(10)
                 .cliente(CLIENTE_PREPARED)
                 .idProducto(7)
-                .tipoCatalogoProducto(TipoCatalogoProducto.COMIDA)
+                .tipoCatalogoProducto(TipoProductoFavorito.COMIDA)
                 .build();
         when(favoritoClienteRepository.save(any(FavoritoCliente.class))).thenReturn(actualizado);
         when(comidaRepository.findById(7)).thenReturn(Optional.of(COMIDA_PREPARED));
 
-        FavoritoClienteRequestDTO dtoUpdate = crearDto("token-favorito-abc123", 7, TipoCatalogoProducto.COMIDA);
+        FavoritoClienteRequestDTO dtoUpdate = crearDto("token-favorito-abc123", 7, TipoProductoFavorito.COMIDA);
         FavoritoClienteResponseDTO result = favoritoClienteService.update(10, dtoUpdate);
 
         assertNotNull(result);

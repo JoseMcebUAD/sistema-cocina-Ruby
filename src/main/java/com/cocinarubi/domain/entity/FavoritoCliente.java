@@ -1,6 +1,6 @@
 package com.cocinarubi.domain.entity;
 
-import com.cocinarubi.DBConstants.TipoCatalogoProducto;
+import com.cocinarubi.DBConstants.TipoProductoFavorito;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -51,5 +51,5 @@ public class FavoritoCliente {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_catalogo_producto", nullable = false)
-    private TipoCatalogoProducto tipoCatalogoProducto;
+    private TipoProductoFavorito tipoCatalogoProducto;
 }

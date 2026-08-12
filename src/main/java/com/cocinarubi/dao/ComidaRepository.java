@@ -17,11 +17,11 @@ public interface ComidaRepository extends JpaRepository<Comida, Integer> {
 
     boolean existsByNombreComida(String nombreComida);
 
-    @Query("SELECT COUNT(cp) FROM ComidaPedido cp WHERE cp.comida.idComida = :id")
-    long countEnPedidos(@Param("id") int id);
+    @Query("SELECT CASE WHEN COUNT(cp) > 0 THEN true ELSE false END FROM ComidaPedido cp WHERE cp.comida.idComida = :id")
+    boolean existsEnPedidos(@Param("id") int id);
 
-    @Query("SELECT COUNT(b) FROM Basico b WHERE b.comida.idComida = :id")
-    long countEnBasicos(@Param("id") int id);
+    @Query("SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END FROM Basico b WHERE b.comida.idComida = :id")
+    boolean existsEnBasicos(@Param("id") int id);
 
     @Query("SELECT c FROM Comida c WHERE c.estatus = :estatus ORDER BY c.nombreComida ASC")
     List<Comida> findDisponiblesOrdenados(@Param("estatus") DBConstants.Estatus estatus);

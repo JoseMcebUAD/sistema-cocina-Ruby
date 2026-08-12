@@ -1,20 +1,24 @@
 package com.catalogopedido;
 
+import com.cocinarubi.DBConstants.Estatus;
 import com.cocinarubi.DBConstants.TamanoPorcion;
 import com.cocinarubi.dao.BasicoRepository;
 import com.cocinarubi.dao.RegistroClienteRepository;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.domain.entity.Complemento;
+import com.cocinarubi.domain.entity.Paquete;
 import com.cocinarubi.domain.entity.Pedido;
 import com.cocinarubi.domain.service.CatalogoPedidoService;
 import com.cocinarubi.domain.service.ComidaService;
 import com.cocinarubi.domain.service.ComplementoService;
 import com.cocinarubi.domain.service.DesayunoService;
+import com.cocinarubi.domain.service.PaqueteService;
 import com.cocinarubi.domain.service.ProductoCocinaService;
 import com.cocinarubi.domain.service.RutaService;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.ComidaPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComplementoPedidoDTO;
+import com.cocinarubi.presentation.dto.request.PaquetePedidoDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +42,7 @@ public class CatalogoPedidoServiceTest {
     @Mock private ProductoCocinaService productoCocinaService;
     @Mock private RutaService rutaService;
     @Mock private RegistroClienteRepository registroClienteRepository;
+    @Mock private PaqueteService paqueteService;
 
     @InjectMocks
     private CatalogoPedidoService catalogoPedidoService;
@@ -181,5 +186,79 @@ public class CatalogoPedidoServiceTest {
                                 compDto(4, null))))));
         assertTrue(ex.getMessage().contains("Al menos 1"));
         System.out.println("[OK] exceso sin precios suficientes lanza: " + ex.getMessage());
+    }
+
+    // ── Tests agregarPaquetes ─────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("agregarPaquetes - agrega línea al pedido cuando el paquete existe y está DISPONIBLE")
+    public void agregarPaquetes_paqueteDisponible_agregaLineaAlPedido() {
+        Paquete paquete = Paquete.builder()
+                .idPaquete(7)
+                .descripcion("Promo Familiar")
+                .precio(new BigDecimal("150.00"))
+                .estatus(Estatus.DISPONIBLE)
+                .build();
+        when(paqueteService.findEntityById(7)).thenReturn(paquete);
+
+        PaquetePedidoDTO dto = new PaquetePedidoDTO(7, new BigDecimal("140.00"), 2);
+        Pedido pedido = Pedido.builder().build();
+        catalogoPedidoService.agregarPaquetes(pedido, List.of(dto));
+
+        assertEquals(1, pedido.getPaquetesPedido().size());
+        assertEquals(7, pedido.getPaquetesPedido().get(0).getPaquete().getIdPaquete());
+        assertEquals(0, new BigDecimal("140.00").compareTo(pedido.getPaquetesPedido().get(0).getPrecioUnitario()));
+        assertEquals(2, pedido.getPaquetesPedido().get(0).getCantidad());
+        // El helper addPaquetePedido debe haber seteado la relación bidireccional
+        assertSame(pedido, pedido.getPaquetesPedido().get(0).getPedido());
+        System.out.println("[OK] agregarPaquetes agregó 1 línea con id=7, cantidad=2, precio=140.00");
+    }
+
+    @Test
+    @DisplayName("agregarPaquetes - lanza BusinessException cuando el paquete NO_DISPONIBLE")
+    public void agregarPaquetes_paqueteNoDisponible_lanzaError() {
+        Paquete paquete = Paquete.builder()
+                .idPaquete(8)
+                .descripcion("Promo Cerrada")
+                .precio(new BigDecimal("90.00"))
+                .estatus(Estatus.NO_DISPONIBLE)
+                .build();
+        when(paqueteService.findEntityById(8)).thenReturn(paquete);
+
+        PaquetePedidoDTO dto = new PaquetePedidoDTO(8, new BigDecimal("90.00"), 1);
+        Pedido pedido = Pedido.builder().build();
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> catalogoPedidoService.agregarPaquetes(pedido, List.of(dto)));
+        assertTrue(ex.getMessage().contains("no está disponible"));
+        assertTrue(pedido.getPaquetesPedido().isEmpty());
+        System.out.println("[OK] agregarPaquetes lanzó error por paquete NO_DISPONIBLE");
+    }
+
+    @Test
+    @DisplayName("agregarPaquetes - lanza BusinessException cuando el paquete AGOTADO")
+    public void agregarPaquetes_paqueteAgotado_lanzaError() {
+        Paquete paquete = Paquete.builder()
+                .idPaquete(9)
+                .descripcion("Promo Fin de Semana")
+                .precio(new BigDecimal("80.00"))
+                .estatus(Estatus.AGOTADO)
+                .build();
+        when(paqueteService.findEntityById(9)).thenReturn(paquete);
+
+        PaquetePedidoDTO dto = new PaquetePedidoDTO(9, new BigDecimal("80.00"), 1);
+        Pedido pedido = Pedido.builder().build();
+        assertThrows(BusinessException.class,
+                () -> catalogoPedidoService.agregarPaquetes(pedido, List.of(dto)));
+        System.out.println("[OK] agregarPaquetes lanzó error por paquete AGOTADO");
+    }
+
+    @Test
+    @DisplayName("agregarPaquetes - lista vacía no toca el pedido")
+    public void agregarPaquetes_listaVacia_noHaceNada() {
+        Pedido pedido = Pedido.builder().build();
+        catalogoPedidoService.agregarPaquetes(pedido, List.of());
+        assertTrue(pedido.getPaquetesPedido().isEmpty());
+        verifyNoInteractions(paqueteService);
+        System.out.println("[OK] agregarPaquetes con lista vacía no interactúa con PaqueteService");
     }
 }

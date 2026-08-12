@@ -51,7 +51,7 @@ public class DesayunoService {
             throw new BusinessException("Desayuno no encontrado con id: " + id, HttpStatus.NOT_FOUND);
         }
         // Evitar eliminación si el desayuno está asociado a pedidos históricos
-        if (desayunoRepository.countEnPedidos(id) > 0) {
+        if (desayunoRepository.existsEnPedidos(id)) {
             throw new BusinessException(
                     "Este producto no se puede eliminar ya que tiene pedidos asignados, puede deshabilitarlo mejor",
                     HttpStatus.CONFLICT);
