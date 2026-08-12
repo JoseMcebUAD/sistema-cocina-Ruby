@@ -41,7 +41,7 @@ public class Paquete {
     @Column(name = "descripcion")
     private String descripcion;
 
-    @Column(name = "destacado")
+    @Column(name = "destacada")
     private boolean destacado;
 
     @Enumerated(EnumType.STRING)
