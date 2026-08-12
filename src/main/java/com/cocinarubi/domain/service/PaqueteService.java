@@ -85,6 +85,15 @@ public class PaqueteService {
     }
 
     @Transactional(readOnly = true)
+    public List<PaqueteResponseDTO> findDisponibles() {
+        List<Paquete> paquetes = paqueteRepository.findByEstatusWithProductos(Estatus.DISPONIBLE);
+        Map<TipoLineaPaquete, Map<Integer, String>> nombres = resolverNombres(paquetes);
+        return paquetes.stream()
+                .map(p -> paqueteMapper.toResponse(p, nombres))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public Page<PaqueteResponseDTO> findByEstatusPaginado(Estatus estatus, Pageable pageable) {
         Page<Paquete> pagina = paqueteRepository.findByEstatusWithProductosPaginado(estatus, pageable);
         Map<TipoLineaPaquete, Map<Integer, String>> nombres = resolverNombres(pagina.getContent());
