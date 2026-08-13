@@ -67,6 +67,7 @@ public class PedidoRestTest {
         );
         testRegistroClienteId = mapper.readTree(clienteResp.getBody()).get("datos").get("idRegistroCliente").asInt();
 
+        // idCategoria=1 → BEBIDA en el seeder de V23
         String productoJson = """
                 {
                   "nombreProducto": "Agua Test Pedido",
@@ -74,12 +75,13 @@ public class PedidoRestTest {
                   "precioNormal": 10.00,
                   "estatus": "DISPONIBLE",
                   "destacado": false,
-                  "tipoProducto": "BEBIDA",
+                  "idCategoria": 1,
+                  "idSubcategorias": [],
                   "saltarConfirmacion": true
                 }
                 """;
         ResponseEntity<String> productoResp = restTemplate.exchange(
-                "/productoCocina", HttpMethod.POST, new HttpEntity<>(productoJson, authHeaders), String.class
+                "/producto-cocina", HttpMethod.POST, new HttpEntity<>(productoJson, authHeaders), String.class
         );
         testProductoId = mapper.readTree(productoResp.getBody()).get("datos").get("idProductoCocina").asInt();
 
@@ -97,7 +99,7 @@ public class PedidoRestTest {
             restTemplate.exchange("/pedido/" + createdCocinaDomicilioId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
         }
         if (testProductoId > 0) {
-            restTemplate.exchange("/productoCocina/" + testProductoId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
+            restTemplate.exchange("/producto-cocina/" + testProductoId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
         }
         if (testRegistroClienteId > 0) {
             restTemplate.exchange("/registroCliente/" + testRegistroClienteId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);

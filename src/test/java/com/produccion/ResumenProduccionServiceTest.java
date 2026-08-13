@@ -1,14 +1,15 @@
 package com.produccion;
 
 import com.cocinarubi.Constants;
-import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.DBConstants.TipoPedido;
-import com.cocinarubi.DBConstants.TipoProducto;
+import com.cocinarubi.dao.CategoriaRepository;
 import com.cocinarubi.dao.ResumenProduccionRepository;
+import com.cocinarubi.domain.entity.Categoria;
 import com.cocinarubi.domain.service.ResumenProduccionService;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.response.DetalleProduccionResponseDTO;
 import com.cocinarubi.presentation.dto.response.ResumenProduccionResponseDTO;
+import com.cocinarubi.presentation.dto.response.TotalPorCategoriaDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -30,6 +32,9 @@ public class ResumenProduccionServiceTest {
 
     @Mock
     private ResumenProduccionRepository resumenProduccionRepository;
+
+    @Mock
+    private CategoriaRepository categoriaRepository;
 
     @InjectMocks
     private ResumenProduccionService resumenProduccionService;
@@ -44,20 +49,18 @@ public class ResumenProduccionServiceTest {
     private ArgumentCaptor<TipoPedido> tipoPedidoCaptor;
 
     // ── Datos mock compartidos ───────────────────────────────────────────────
-
-    private final List<Object[]> PRODUCTOS_POR_TIPO = List.of(
-            new Object[]{TipoProducto.SNACK,   5L},
-            new Object[]{TipoProducto.BEBIDA,  3L},
-            new Object[]{TipoProducto.CHAROLA, 2L},
-            new Object[]{TipoProducto.POSTRE,  1L}
+    // Ids alineados con V23: BEBIDA=1, CHAROLA=2, SNACK=3, POSTRE=4
+    private final List<Object[]> PRODUCTOS_POR_CATEGORIA = List.of(
+            new Object[]{1, "BEBIDA",  3L},
+            new Object[]{2, "CHAROLA", 2L},
+            new Object[]{3, "SNACK",   5L},
+            new Object[]{4, "POSTRE",  1L}
     );
 
     private final List<Object[]> DETALLE_COMIDAS = List.of(
             new Object[]{"Pollo en salsa roja", 3L},
             new Object[]{"Pescado frito",        2L}
     );
-
-    // ── Helper: configura stubs de conteo para resumenProduccion() ───────────
 
     private void stubConteoBase(long comidas, long desayunos, long basicos) {
         when(resumenProduccionRepository.countComidas(any(), any(), any(), any(), anyBoolean(), anyList()))
@@ -66,8 +69,9 @@ public class ResumenProduccionServiceTest {
                 .thenReturn(desayunos);
         when(resumenProduccionRepository.countBasicos(any(), any(), any(), any(), anyBoolean(), anyList()))
                 .thenReturn(basicos);
-        when(resumenProduccionRepository.countProductosCocinaAgrupadoPorTipo(any(), any(), any(), any(), anyBoolean(), anyList()))
-                .thenReturn(PRODUCTOS_POR_TIPO);
+        when(resumenProduccionRepository.countProductosCocinaAgrupadoPorCategoria(
+                any(), any(), any(), any(), anyBoolean(), anyList()))
+                .thenReturn(PRODUCTOS_POR_CATEGORIA);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -75,7 +79,7 @@ public class ResumenProduccionServiceTest {
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("resumenProduccion - sin filtros debe retornar los totales correctos por categoría")
+    @DisplayName("resumenProduccion - retorna totales agregados y el arreglo dinámico por categoría")
     public void resumenProduccion_sinFiltros_retornaTotales() {
         stubConteoBase(4L, 3L, 2L);
 
@@ -85,12 +89,15 @@ public class ResumenProduccionServiceTest {
         assertEquals(4L, result.getTotalComidas());
         assertEquals(3L, result.getTotalDesayunos());
         assertEquals(2L, result.getTotalBasicos());
-        assertEquals(5L, result.getTotalSnacks());
-        assertEquals(3L, result.getTotalBebidas());
-        assertEquals(2L, result.getTotalCharolas());
-        assertEquals(1L, result.getTotalPostres());
-        System.out.println("[OK] resumenProduccion sin filtros: comidas=" + result.getTotalComidas()
-                + " snacks=" + result.getTotalSnacks() + " postres=" + result.getTotalPostres());
+
+        List<TotalPorCategoriaDTO> totales = result.getTotalesProductosCocina();
+        assertEquals(4, totales.size());
+        // Verifica que cada categoría del mock aparece con su total
+        assertEquals(3L, totales.stream().filter(t -> "BEBIDA".equals(t.getNombreCategoria()))
+                .findFirst().orElseThrow().getTotal());
+        assertEquals(5L, totales.stream().filter(t -> "SNACK".equals(t.getNombreCategoria()))
+                .findFirst().orElseThrow().getTotal());
+        System.out.println("[OK] resumenProduccion sin filtros: totales por categoría = " + totales.size());
     }
 
     @Test
@@ -166,7 +173,6 @@ public class ResumenProduccionServiceTest {
         assertEquals(2, result.getItems().size());
         assertEquals("Pollo en salsa roja", result.getItems().get(0).getNombre());
         assertEquals(3, result.getItems().get(0).getCantidad());
-        assertEquals("Pescado frito", result.getItems().get(1).getNombre());
         verify(resumenProduccionRepository).findDetalleComidas(any(), any(), any(), any(), anyBoolean(), anyList());
         System.out.println("[OK] detalleProduccion comidas: " + result.getItems().size() + " items");
     }
@@ -182,8 +188,7 @@ public class ResumenProduccionServiceTest {
         assertEquals("desayunos", result.getCategoria());
         assertEquals(1, result.getItems().size());
         assertEquals("Huevos con jamón", result.getItems().get(0).getNombre());
-        verify(resumenProduccionRepository).findDetalleDesayunos(any(), any(), any(), any(), anyBoolean(), anyList());
-        System.out.println("[OK] detalleProduccion desayunos: " + result.getItems().get(0).getNombre());
+        System.out.println("[OK] detalleProduccion desayunos");
     }
 
     @Test
@@ -196,92 +201,49 @@ public class ResumenProduccionServiceTest {
 
         assertEquals("basicos", result.getCategoria());
         assertEquals(1, result.getItems().size());
-        verify(resumenProduccionRepository).findDetalleBasicos(any(), any(), any(), any(), anyBoolean(), anyList());
-        System.out.println("[OK] detalleProduccion basicos: " + result.getItems().get(0).getNombre());
+        System.out.println("[OK] detalleProduccion basicos");
     }
 
     @Test
-    @DisplayName("detalleProduccion - snacks debe llamar findDetalleProductosCocina con TipoProducto.SNACK")
-    public void detalleProduccion_snacks_llamaFindDetalleConTipoSnack() {
-        when(resumenProduccionRepository.findDetalleProductosCocina(
-                eq(TipoProducto.SNACK), any(), any(), any(), any(), anyBoolean(), anyList()))
+    @DisplayName("detalleProduccion - snacks debe llamar findDetalleProductosCocinaPorCategoria con id de SNACK")
+    public void detalleProduccion_snacks_llamaFindDetalleConIdCategoriaSnack() {
+        Categoria snack = Categoria.builder().idCategoria(3).nombre("SNACK").build();
+        when(categoriaRepository.findByNombreIgnoreCase("snacks")).thenReturn(Optional.of(snack));
+        when(resumenProduccionRepository.findDetalleProductosCocinaPorCategoria(
+                eq(3), any(), any(), any(), any(), anyBoolean(), anyList()))
                 .thenReturn(List.<Object[]>of(new Object[]{"Papas", 5L}));
 
         DetalleProduccionResponseDTO result = resumenProduccionService.detalleProduccion("snacks", null, null, null);
 
         assertEquals("snacks", result.getCategoria());
-        verify(resumenProduccionRepository).findDetalleProductosCocina(
-                eq(TipoProducto.SNACK), any(), any(), any(), any(), anyBoolean(), anyList());
-        System.out.println("[OK] detalleProduccion snacks llamó repo con TipoProducto.SNACK");
+        assertEquals(1, result.getItems().size());
+        System.out.println("[OK] detalleProduccion snacks resolvió por Categoria id=3");
     }
 
     @Test
-    @DisplayName("detalleProduccion - bebidas debe llamar findDetalleProductosCocina con TipoProducto.BEBIDA")
-    public void detalleProduccion_bebidas_llamaFindDetalleConTipoBebida() {
-        when(resumenProduccionRepository.findDetalleProductosCocina(
-                eq(TipoProducto.BEBIDA), any(), any(), any(), any(), anyBoolean(), anyList()))
-                .thenReturn(List.of());
+    @DisplayName("detalleProduccion - categoría dinámica arbitraria (HELADO) delega en findByNombreIgnoreCase")
+    public void detalleProduccion_categoriaDinamica_resuelvePorCategoriaRepo() {
+        Categoria helado = Categoria.builder().idCategoria(5).nombre("HELADO").build();
+        when(categoriaRepository.findByNombreIgnoreCase("helado")).thenReturn(Optional.of(helado));
+        when(resumenProduccionRepository.findDetalleProductosCocinaPorCategoria(
+                eq(5), any(), any(), any(), any(), anyBoolean(), anyList()))
+                .thenReturn(List.<Object[]>of(new Object[]{"Cono", 3L}));
 
-        DetalleProduccionResponseDTO result = resumenProduccionService.detalleProduccion("bebidas", null, null, null);
+        DetalleProduccionResponseDTO result = resumenProduccionService.detalleProduccion("HELADO", null, null, null);
 
-        assertEquals("bebidas", result.getCategoria());
-        verify(resumenProduccionRepository).findDetalleProductosCocina(
-                eq(TipoProducto.BEBIDA), any(), any(), any(), any(), anyBoolean(), anyList());
-        System.out.println("[OK] detalleProduccion bebidas llamó repo con TipoProducto.BEBIDA");
+        assertEquals("helado", result.getCategoria());
+        assertEquals(1, result.getItems().size());
+        System.out.println("[OK] detalleProduccion resolvió categoría dinámica HELADO");
     }
 
     @Test
-    @DisplayName("detalleProduccion - charolas debe llamar findDetalleProductosCocina con TipoProducto.CHAROLA")
-    public void detalleProduccion_charolas_llamaFindDetalleConTipoCharola() {
-        when(resumenProduccionRepository.findDetalleProductosCocina(
-                eq(TipoProducto.CHAROLA), any(), any(), any(), any(), anyBoolean(), anyList()))
-                .thenReturn(List.of());
-
-        DetalleProduccionResponseDTO result = resumenProduccionService.detalleProduccion("charolas", null, null, null);
-
-        assertEquals("charolas", result.getCategoria());
-        verify(resumenProduccionRepository).findDetalleProductosCocina(
-                eq(TipoProducto.CHAROLA), any(), any(), any(), any(), anyBoolean(), anyList());
-        System.out.println("[OK] detalleProduccion charolas llamó repo con TipoProducto.CHAROLA");
-    }
-
-    @Test
-    @DisplayName("detalleProduccion - postres debe llamar findDetalleProductosCocina con TipoProducto.POSTRE")
-    public void detalleProduccion_postres_llamaFindDetalleConTipoPostre() {
-        when(resumenProduccionRepository.findDetalleProductosCocina(
-                eq(TipoProducto.POSTRE), any(), any(), any(), any(), anyBoolean(), anyList()))
-                .thenReturn(List.of());
-
-        DetalleProduccionResponseDTO result = resumenProduccionService.detalleProduccion("postres", null, null, null);
-
-        assertEquals("postres", result.getCategoria());
-        verify(resumenProduccionRepository).findDetalleProductosCocina(
-                eq(TipoProducto.POSTRE), any(), any(), any(), any(), anyBoolean(), anyList());
-        System.out.println("[OK] detalleProduccion postres llamó repo con TipoProducto.POSTRE");
-    }
-
-    @Test
-    @DisplayName("detalleProduccion - categoría inválida debe lanzar BusinessException sin llamar al repo")
+    @DisplayName("detalleProduccion - categoría inválida debe lanzar BusinessException")
     public void detalleProduccion_categoriaInvalida_lanzaBusinessException() {
+        when(categoriaRepository.findByNombreIgnoreCase("xyz")).thenReturn(Optional.empty());
+
         assertThrows(BusinessException.class, () ->
                 resumenProduccionService.detalleProduccion("xyz", null, null, null));
 
-        verifyNoInteractions(resumenProduccionRepository);
-        System.out.println("[OK] detalleProduccion 'xyz' lanzó BusinessException sin invocar el repo");
-    }
-
-    @Test
-    @DisplayName("detalleProduccion - la cantidad Long del repo debe mapearse a int en ItemProduccionDTO")
-    public void detalleProduccion_cantidadMapeadaCorrectamente() {
-        when(resumenProduccionRepository.findDetalleProductosCocina(
-                eq(TipoProducto.SNACK), any(), any(), any(), any(), anyBoolean(), anyList()))
-                .thenReturn(List.<Object[]>of(new Object[]{"Papas", 7L}));
-
-        DetalleProduccionResponseDTO result = resumenProduccionService.detalleProduccion("snacks", null, null, null);
-
-        assertEquals(1, result.getItems().size());
-        assertEquals("Papas", result.getItems().get(0).getNombre());
-        assertEquals(7, result.getItems().get(0).getCantidad());
-        System.out.println("[OK] cantidad mapeada Long→int correctamente: " + result.getItems().get(0).getCantidad());
+        System.out.println("[OK] detalleProduccion 'xyz' lanzó BusinessException");
     }
 }

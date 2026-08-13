@@ -12,13 +12,18 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Caché en memoria de los registros de archivo_modulo. Al arrancar la aplicación
- * carga todos los módulos catalogados y pre-parsea sus MIME types aceptados para
- * evitar consultas repetidas a BD en cada solicitud de subida de archivo.
+ * carga tanto los módulos estáticos (COMIDA / DESAYUNO / BASICO) como los dinámicos
+ * (uno por Categoria) y pre-parsea sus MIME types aceptados para evitar consultas
+ * repetidas a BD en cada subida de archivo.
+ *
+ * <p>El caché es mutable a través de {@link #refresh()} — el service de creación
+ * de categorías lo invoca tras insertar/eliminar módulos dinámicos.</p>
  */
 @Component
 public class ArchivoModuloCache {
@@ -31,28 +36,56 @@ public class ArchivoModuloCache {
     private final Map<TipoCatalogoProducto, List<String>> mimesPorTipo =
             new EnumMap<>(TipoCatalogoProducto.class);
 
+    private final Map<Integer, ArchivoModulo> modulosPorCategoria = new HashMap<>();
+    private final Map<Integer, List<String>> mimesPorCategoria = new HashMap<>();
+
     public ArchivoModuloCache(ArchivoModuloRepository archivoModuloRepository) {
         this.archivoModuloRepository = archivoModuloRepository;
     }
 
     @PostConstruct
     void init() {
-        // Carga todos los módulos con tipo asignado; uno por cada TipoCatalogoProducto catalogado
-        List<ArchivoModulo> modulos = archivoModuloRepository.findByTipoCatalogoProductoIsNotNull();
-        for (ArchivoModulo modulo : modulos) {
+        refresh();
+    }
+
+    /**
+     * Recarga completamente los dos mapas desde BD. Invocado por
+     * {@code ArchivoModuloService} cuando se crea/elimina un módulo dinámico
+     * para que el nuevo estado sea visible sin reiniciar la app.
+     */
+    public synchronized void refresh() {
+        modulosPorTipo.clear();
+        mimesPorTipo.clear();
+        modulosPorCategoria.clear();
+        mimesPorCategoria.clear();
+
+        for (ArchivoModulo modulo : archivoModuloRepository.findByTipoCatalogoProductoIsNotNull()) {
             TipoCatalogoProducto tipo = modulo.getTipoCatalogoProducto();
             modulosPorTipo.put(tipo, modulo);
-            // Pre-parsea el JSON de MIME types una vez al arrancar para no repetirlo en cada petición
             mimesPorTipo.put(tipo, parseMimes(modulo.getArchivosAceptados()));
+        }
+        for (ArchivoModulo modulo : archivoModuloRepository.findByCategoriaIsNotNull()) {
+            Integer idCategoria = modulo.getCategoria().getIdCategoria();
+            modulosPorCategoria.put(idCategoria, modulo);
+            mimesPorCategoria.put(idCategoria, parseMimes(modulo.getArchivosAceptados()));
         }
     }
 
     public ArchivoModulo get(TipoCatalogoProducto tipo) {
         ArchivoModulo modulo = modulosPorTipo.get(tipo);
         if (modulo == null) {
-            // Indica que falta la fila en archivo_modulo para ese tipo; error de configuración
             throw new BusinessException(
                     "No existe configuración de módulo para el tipo: " + tipo,
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return modulo;
+    }
+
+    public ArchivoModulo get(Integer idCategoria) {
+        ArchivoModulo modulo = modulosPorCategoria.get(idCategoria);
+        if (modulo == null) {
+            throw new BusinessException(
+                    "No existe configuración de módulo para la categoría con id: " + idCategoria,
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return modulo;
@@ -62,12 +95,15 @@ public class ArchivoModuloCache {
         return mimesPorTipo.getOrDefault(tipo, Collections.emptyList());
     }
 
+    public List<String> allowedMimeTypes(Integer idCategoria) {
+        return mimesPorCategoria.getOrDefault(idCategoria, Collections.emptyList());
+    }
+
     private List<String> parseMimes(String json) {
         if (json == null || json.isBlank()) {
             return Collections.emptyList();
         }
         try {
-            // Deserializa el arreglo JSON de strings (ej. ["image/jpeg","image/png","image/webp"])
             return objectMapper.readValue(json, new TypeReference<List<String>>() {});
         } catch (Exception e) {
             throw new BusinessException(

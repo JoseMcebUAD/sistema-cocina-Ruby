@@ -1,6 +1,6 @@
 package com.cocinarubi.dao;
 
-import com.cocinarubi.DBConstants.TipoCatalogoProducto;
+import com.cocinarubi.DBConstants.TipoProductoFavorito;
 import com.cocinarubi.domain.entity.FavoritoCliente;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -11,5 +11,5 @@ public interface FavoritoClienteRepository extends JpaRepository<FavoritoCliente
     List<FavoritoCliente> findByCliente_SessionToken(String sessionToken);
 
     boolean existsByCliente_SessionTokenAndIdProductoAndTipoCatalogoProducto(
-            String sessionToken, Integer idProducto, TipoCatalogoProducto tipoCatalogoProducto);
+            String sessionToken, Integer idProducto, TipoProductoFavorito tipoCatalogoProducto);
 }

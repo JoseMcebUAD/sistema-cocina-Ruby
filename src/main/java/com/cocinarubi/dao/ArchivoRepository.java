@@ -12,32 +12,31 @@ import java.util.Optional;
 
 /**
  * Repositorio JPA para la entidad Archivo. Provee consultas para obtener archivos
- * por entidad (tipo + id) y calcular el orden máximo para nuevas subidas.
+ * por entidad y calcular el orden máximo. Cada método viene en dos variantes:
+ * por {@code entityType} (módulos estáticos) y por {@code idCategoria}
+ * (módulos dinámicos generados a partir de {@code Categoria}).
  */
 public interface ArchivoRepository extends JpaRepository<Archivo, Integer> {
 
-    // Devuelve los archivos de una entidad ordenados por 'orden' ascendente
+    // ── Vía enum estático (COMIDA / DESAYUNO / BASICO) ────────────────────────
+
     List<Archivo> findByEntityTypeAndIdEntidadOrderByOrdenAsc(
             TipoCatalogoProducto entityType, Integer idEntidad);
 
-    // Permite localizar un archivo directamente por su public_id de Cloudinary
     Optional<Archivo> findByPublicId(String publicId);
 
-    // Retorna el orden más alto registrado para la entidad; 0 si no hay filas (COALESCE)
     @Query("SELECT COALESCE(MAX(a.orden), 0) FROM Archivo a " +
             "WHERE a.entityType = :type AND a.idEntidad = :idEntidad")
     Integer findMaxOrdenForEntity(
             @Param("type") TipoCatalogoProducto type,
             @Param("idEntidad") Integer idEntidad);
 
-    // Batch: archivos de varias entidades del mismo tipo, ordenados por entidad y luego por orden
     @Query("SELECT a FROM Archivo a WHERE a.entityType = :type AND a.idEntidad IN :ids " +
             "ORDER BY a.idEntidad ASC, a.orden ASC")
     List<Archivo> findByEntityTypeAndIdEntidadIn(
             @Param("type") TipoCatalogoProducto type,
             @Param("ids") List<Integer> ids);
 
-    // Desplaza +1 el orden de los archivos en el rango [from, to] para hacer hueco al archivo que sube
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Archivo a SET a.orden = a.orden + 1 " +
             "WHERE a.entityType = :type AND a.idEntidad = :idEntidad AND a.orden BETWEEN :from AND :to")
@@ -47,12 +46,52 @@ public interface ArchivoRepository extends JpaRepository<Archivo, Integer> {
             @Param("from") Integer from,
             @Param("to") Integer to);
 
-    // Desplaza -1 el orden de los archivos en el rango [from, to] para cerrar el hueco del archivo que baja
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Archivo a SET a.orden = a.orden - 1 " +
             "WHERE a.entityType = :type AND a.idEntidad = :idEntidad AND a.orden BETWEEN :from AND :to")
     void decrementOrdenBetween(
             @Param("type") TipoCatalogoProducto type,
+            @Param("idEntidad") Integer idEntidad,
+            @Param("from") Integer from,
+            @Param("to") Integer to);
+
+    // ── Vía FK a categoria (módulos dinámicos) ────────────────────────────────
+
+    @Query("SELECT a FROM Archivo a " +
+            "WHERE a.categoria.idCategoria = :idCategoria AND a.idEntidad = :idEntidad " +
+            "ORDER BY a.orden ASC")
+    List<Archivo> findByCategoriaAndIdEntidadOrderByOrdenAsc(
+            @Param("idCategoria") Integer idCategoria,
+            @Param("idEntidad") Integer idEntidad);
+
+    @Query("SELECT COALESCE(MAX(a.orden), 0) FROM Archivo a " +
+            "WHERE a.categoria.idCategoria = :idCategoria AND a.idEntidad = :idEntidad")
+    Integer findMaxOrdenForEntityCategoria(
+            @Param("idCategoria") Integer idCategoria,
+            @Param("idEntidad") Integer idEntidad);
+
+    @Query("SELECT a FROM Archivo a WHERE a.categoria.idCategoria = :idCategoria AND a.idEntidad IN :ids " +
+            "ORDER BY a.idEntidad ASC, a.orden ASC")
+    List<Archivo> findByCategoriaAndIdEntidadIn(
+            @Param("idCategoria") Integer idCategoria,
+            @Param("ids") List<Integer> ids);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Archivo a SET a.orden = a.orden + 1 " +
+            "WHERE a.categoria.idCategoria = :idCategoria AND a.idEntidad = :idEntidad " +
+            "  AND a.orden BETWEEN :from AND :to")
+    void incrementOrdenBetweenCategoria(
+            @Param("idCategoria") Integer idCategoria,
+            @Param("idEntidad") Integer idEntidad,
+            @Param("from") Integer from,
+            @Param("to") Integer to);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Archivo a SET a.orden = a.orden - 1 " +
+            "WHERE a.categoria.idCategoria = :idCategoria AND a.idEntidad = :idEntidad " +
+            "  AND a.orden BETWEEN :from AND :to")
+    void decrementOrdenBetweenCategoria(
+            @Param("idCategoria") Integer idCategoria,
             @Param("idEntidad") Integer idEntidad,
             @Param("from") Integer from,
             @Param("to") Integer to);

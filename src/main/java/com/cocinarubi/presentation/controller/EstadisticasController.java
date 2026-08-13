@@ -2,11 +2,14 @@ package com.cocinarubi.presentation.controller;
 
 import com.cocinarubi.DBConstants;
 import com.cocinarubi.domain.service.EstadisticasService;
+import com.cocinarubi.domain.service.helpers.EstadisticaHelper.TipoCategoriaCatalogo;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.presentation.dto.response.EstadisticaRutaItemDTO;
 import com.cocinarubi.presentation.dto.response.EstadisticasVentasResponseDTO;
 import com.cocinarubi.presentation.dto.response.ResumenDiasSemanaEstadisticaDTO;
 import com.cocinarubi.presentation.dto.response.ResumenHorarioEstadisticaDTO;
+import com.cocinarubi.presentation.dto.response.estadisticas.CatalogoEstadisticaDTO;
+import com.cocinarubi.presentation.dto.response.estadisticas.CatalogoProductoEstadisticaDTO;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -105,5 +108,54 @@ public class EstadisticasController {
 
         ResumenHorarioEstadisticaDTO datos = estadisticasService.resumenHorario(desde, hasta, rango);
         return ResponseEntity.ok(ApiResponse.exito(200, "Resumen por horario obtenido correctamente", datos));
+    }
+
+    /**
+     * Ventas agrupadas por categoría de catálogo: comida, desayuno, básico, complemento,
+     * paquete y cada categoría dinámica de ProductoCocina con al menos una venta.
+     *
+     * @param desde      fecha de inicio del período (inclusive, opcional)
+     * @param hasta      fecha de fin del período (inclusive, opcional)
+     * @param tipoPedido filtro por canal de venta (PICK_UP / DOMICILIO / MOSTRADOR, opcional)
+     */
+    @GetMapping("/catalogo")
+    public ResponseEntity<ApiResponse<CatalogoEstadisticaDTO>> getCatalogo(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            @RequestParam(required = false) DBConstants.TipoPedido tipoPedido) {
+
+        LocalDateTime desdeTs = desde != null ? desde.atStartOfDay() : null;
+        LocalDateTime hastaTs = hasta != null ? hasta.atTime(23, 59, 59) : null;
+
+        CatalogoEstadisticaDTO datos = estadisticasService.getCatalogo(desdeTs, hastaTs, tipoPedido);
+        return ResponseEntity.ok(ApiResponse.exito(200, "Catálogo de estadísticas obtenido correctamente", datos));
+    }
+
+    /**
+     * Detalle de productos vendidos dentro de una categoría de catálogo.
+     * Para PRODUCTO_COCINA es obligatorio pasar {@code idCategoria}.
+     *
+     * @param desde          fecha de inicio del período (inclusive, opcional)
+     * @param hasta          fecha de fin del período (inclusive, opcional)
+     * @param tipoPedido     filtro por canal de venta (opcional)
+     * @param tipoCategoria  categoría seleccionada — obligatorio
+     * @param idCategoria    id de la Categoría dinámica (obligatorio si tipoCategoria=PRODUCTO_COCINA)
+     * @param idSubcategoria filtro opcional de subcategoría (solo aplica para PRODUCTO_COCINA)
+     */
+    @GetMapping("/catalogo/productos")
+    public ResponseEntity<ApiResponse<CatalogoProductoEstadisticaDTO>> getCatalogoProductos(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            @RequestParam(required = false) DBConstants.TipoPedido tipoPedido,
+            @RequestParam TipoCategoriaCatalogo tipoCategoria,
+            @RequestParam(required = false) Integer idCategoria,
+            @RequestParam(required = false) Integer idSubcategoria) {
+
+        LocalDateTime desdeTs = desde != null ? desde.atStartOfDay() : null;
+        LocalDateTime hastaTs = hasta != null ? hasta.atTime(23, 59, 59) : null;
+
+        CatalogoProductoEstadisticaDTO datos = estadisticasService.getCatalogoProductos(
+                desdeTs, hastaTs, tipoPedido, tipoCategoria, idCategoria, idSubcategoria);
+        return ResponseEntity.ok(ApiResponse.exito(200, "Productos del catálogo obtenidos correctamente", datos));
     }
 }

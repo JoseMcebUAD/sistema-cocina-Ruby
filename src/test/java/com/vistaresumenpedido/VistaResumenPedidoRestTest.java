@@ -64,6 +64,7 @@ public class VistaResumenPedidoRestTest {
                 "/registroCliente", HttpMethod.POST, new HttpEntity<>(clienteJson, authHeaders), String.class);
         testRegistroClienteId = mapper.readTree(clienteResp.getBody()).get("data").get("idRegistroCliente").asInt();
 
+        // idCategoria=1 → BEBIDA en el seeder de V23
         String productoJson = """
                 {
                   "nombreProducto": "Producto Test VistaResumen",
@@ -71,12 +72,13 @@ public class VistaResumenPedidoRestTest {
                   "precioNormal": 50.00,
                   "estatus": "DISPONIBLE",
                   "destacado": false,
-                  "tipoProducto": "BEBIDA",
+                  "idCategoria": 1,
+                  "idSubcategorias": [],
                   "saltarConfirmacion": true
                 }
                 """;
         ResponseEntity<String> productoResp = restTemplate.exchange(
-                "/productoCocina", HttpMethod.POST, new HttpEntity<>(productoJson, authHeaders), String.class);
+                "/producto-cocina", HttpMethod.POST, new HttpEntity<>(productoJson, authHeaders), String.class);
         testProductoId = mapper.readTree(productoResp.getBody()).get("data").get("idProductoCocina").asInt();
 
         // Pedido 1: COCINA MOSTRADOR, EFECTIVO puro (sin secundario) — 50.00
@@ -139,7 +141,7 @@ public class VistaResumenPedidoRestTest {
             restTemplate.exchange("/pedido/" + pedidoCocinaDomicilioId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
         }
         if (testProductoId > 0) {
-            restTemplate.exchange("/productoCocina/" + testProductoId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
+            restTemplate.exchange("/producto-cocina/" + testProductoId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
         }
         if (testRegistroClienteId > 0) {
             restTemplate.exchange("/registroCliente/" + testRegistroClienteId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);

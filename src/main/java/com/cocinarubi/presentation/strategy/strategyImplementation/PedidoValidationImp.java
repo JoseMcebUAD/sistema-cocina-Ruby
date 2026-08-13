@@ -1,21 +1,29 @@
 package com.cocinarubi.presentation.strategy.strategyImplementation;
 
+import com.cocinarubi.DBConstants.Estatus;
 import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.DBConstants.TipoPedido;
 import com.cocinarubi.dao.BasicoRepository;
 import com.cocinarubi.dao.ComidaRepository;
 import com.cocinarubi.dao.ComplementoRepository;
 import com.cocinarubi.dao.DesayunoRepository;
+import com.cocinarubi.dao.PaqueteRepository;
 import com.cocinarubi.dao.ProductoCocinaRepository;
 import com.cocinarubi.dao.RegistroClienteRepository;
 import com.cocinarubi.dao.RutaRepository;
-import com.cocinarubi.domain.entity.RegistroCliente;
+import com.cocinarubi.domain.entity.Basico;
+import com.cocinarubi.domain.entity.Comida;
+import com.cocinarubi.domain.entity.Complemento;
+import com.cocinarubi.domain.entity.Desayuno;
+import com.cocinarubi.domain.entity.Paquete;
+import com.cocinarubi.domain.entity.ProductoCocina;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.exception.ErrorCode;
 import com.cocinarubi.presentation.dto.request.BasicoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComidaPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComplementoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.DesayunoPedidoDTO;
+import com.cocinarubi.presentation.dto.request.PaquetePedidoDTO;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.request.ProductoCocinaPedidoDTO;
 import com.cocinarubi.presentation.strategy.ValidationStrategy;
@@ -23,6 +31,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * Valida la integridad estructural y referencial de un {@link com.cocinarubi.presentation.dto.request.PedidoRequestDTO}
@@ -51,6 +64,10 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
     private final ComplementoRepository complementoRepository;
     private final RutaRepository rutaRepository;
     private final RegistroClienteRepository registroClienteRepository;
+    private final PaqueteRepository paqueteRepository;
+
+    // Virtual threads (Java 21): un hilo virtual por tarea, sin pool fijo — ideal para I/O bloqueante.
+    private static final Executor EXECUTOR_VALIDACION = Executors.newVirtualThreadPerTaskExecutor();
 
     public PedidoValidationImp(ComidaRepository comidaRepository,
                                DesayunoRepository desayunoRepository,
@@ -58,7 +75,8 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                                ProductoCocinaRepository productoCocinaRepository,
                                ComplementoRepository complementoRepository,
                                RutaRepository rutaRepository,
-                               RegistroClienteRepository registroClienteRepository) {
+                               RegistroClienteRepository registroClienteRepository,
+                               PaqueteRepository paqueteRepository) {
         this.comidaRepository = comidaRepository;
         this.desayunoRepository = desayunoRepository;
         this.basicoRepository = basicoRepository;
@@ -66,24 +84,32 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
         this.complementoRepository = complementoRepository;
         this.rutaRepository = rutaRepository;
         this.registroClienteRepository = registroClienteRepository;
+        this.paqueteRepository = paqueteRepository;
     }
 
     @Override
     public void validarPost(PedidoRequestDTO dto) {
+        List<CompletableFuture<Void>> tareas = List.of(
+                CompletableFuture.runAsync(() -> validarAlMenosUnProducto(dto),       EXECUTOR_VALIDACION),
+                CompletableFuture.runAsync(() -> validarConsistenciaDomicilio(dto),   EXECUTOR_VALIDACION),
+                CompletableFuture.runAsync(() -> validarLineasComida(dto),            EXECUTOR_VALIDACION),
+                CompletableFuture.runAsync(() -> validarLineasDesayuno(dto),          EXECUTOR_VALIDACION),
+                CompletableFuture.runAsync(() -> validarLineasBasico(dto),            EXECUTOR_VALIDACION),
+                CompletableFuture.runAsync(() -> validarLineasProductoCocina(dto),    EXECUTOR_VALIDACION),
+                CompletableFuture.runAsync(() -> validarPaquetesDisponibles(dto),     EXECUTOR_VALIDACION),
+                CompletableFuture.runAsync(() -> validarDomicilioWeb(dto),            EXECUTOR_VALIDACION),
+                CompletableFuture.runAsync(() -> validarRutaDomicilioCocina(dto),     EXECUTOR_VALIDACION),
+                CompletableFuture.runAsync(() -> validarRegistroCliente(dto),         EXECUTOR_VALIDACION),
+                CompletableFuture.runAsync(() -> validarMetodosPagoNoDuplicados(dto), EXECUTOR_VALIDACION),
+                CompletableFuture.runAsync(() -> validarPagoClienteNoExcedaTotal(dto),EXECUTOR_VALIDACION)
+        );
         try {
-            validarAlMenosUnProducto(dto);
-            validarConsistenciaDomicilio(dto);
-            validarLineasComida(dto);
-            validarLineasDesayuno(dto);
-            validarLineasBasico(dto);
-            validarLineasProductoCocina(dto);
-            validarDomicilioWeb(dto);
-            validarRutaDomicilioCocina(dto);
-            validarRegistroCliente(dto);
-            validarPagoClienteNoExcedaTotal(dto);
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
+            CompletableFuture.allOf(tareas.toArray(new CompletableFuture[0])).join();
+        } catch (CompletionException ex) {
+            Throwable causa = ex.getCause();
+            if (causa instanceof BusinessException be) {
+                throw be;
+            }
             throw new BusinessException(
                     "El pedido es incorrecto, por favor verifique su pedido",
                     HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
@@ -160,15 +186,23 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
 
     private void validarLineasComida(PedidoRequestDTO dto) {
         for (ComidaPedidoDTO linea : dto.getComidas()) {
-            if (!comidaRepository.existsById(linea.getIdComida())) {
+            Comida comida = comidaRepository.findById(linea.getIdComida())
+                    .orElseThrow(() -> new BusinessException(
+                            "La comida " + linea.getIdComida() + " no existe",
+                            HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
+            if (comida.getEstatus() != Estatus.DISPONIBLE) {
                 throw new BusinessException(
-                        "La comida " + linea.getIdComida() + " no existe",
+                        "La comida " + linea.getIdComida() + " no está disponible",
                         HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
             }
             for (ComplementoPedidoDTO comp : linea.getComplementos()) {
-                if (!complementoRepository.existsById(comp.getIdComplemento())) {
+                Complemento complemento = complementoRepository.findById(comp.getIdComplemento())
+                        .orElseThrow(() -> new BusinessException(
+                                "El complemento " + comp.getIdComplemento() + " no existe",
+                                HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
+                if (complemento.getEstatus() != Estatus.DISPONIBLE) {
                     throw new BusinessException(
-                            "El complemento " + comp.getIdComplemento() + " no existe",
+                            "El complemento " + comp.getIdComplemento() + " no está disponible",
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
                 }
             }
@@ -177,9 +211,13 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
 
     private void validarLineasDesayuno(PedidoRequestDTO dto) {
         for (DesayunoPedidoDTO linea : dto.getDesayunos()) {
-            if (!desayunoRepository.existsById(linea.getIdDesayuno())) {
+            Desayuno desayuno = desayunoRepository.findById(linea.getIdDesayuno())
+                    .orElseThrow(() -> new BusinessException(
+                            "El desayuno " + linea.getIdDesayuno() + " no existe",
+                            HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
+            if (desayuno.getEstatus() != Estatus.DISPONIBLE) {
                 throw new BusinessException(
-                        "El desayuno " + linea.getIdDesayuno() + " no existe",
+                        "El desayuno " + linea.getIdDesayuno() + " no está disponible",
                         HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
             }
         }
@@ -187,9 +225,13 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
 
     private void validarLineasBasico(PedidoRequestDTO dto) {
         for (BasicoPedidoDTO linea : dto.getBasicos()) {
-            if (!basicoRepository.existsById(linea.getIdBasico())) {
+            Basico basico = basicoRepository.findById(linea.getIdBasico())
+                    .orElseThrow(() -> new BusinessException(
+                            "El básico " + linea.getIdBasico() + " no existe",
+                            HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
+            if (basico.getEstatus() != Estatus.DISPONIBLE) {
                 throw new BusinessException(
-                        "El básico " + linea.getIdBasico() + " no existe",
+                        "El básico " + linea.getIdBasico() + " no está disponible",
                         HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
             }
         }
@@ -197,9 +239,13 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
 
     private void validarLineasProductoCocina(PedidoRequestDTO dto) {
         for (ProductoCocinaPedidoDTO linea : dto.getProductosCocina()) {
-            if (!productoCocinaRepository.existsById(linea.getIdProductoCocina())) {
+            ProductoCocina producto = productoCocinaRepository.findById(linea.getIdProductoCocina())
+                    .orElseThrow(() -> new BusinessException(
+                            "El producto de cocina " + linea.getIdProductoCocina() + " no existe",
+                            HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
+            if (producto.getEstatus() != Estatus.DISPONIBLE) {
                 throw new BusinessException(
-                        "El producto de cocina " + linea.getIdProductoCocina() + " no existe",
+                        "El producto de cocina " + linea.getIdProductoCocina() + " no está disponible",
                         HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
             }
         }
@@ -231,6 +277,29 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                 .orElseThrow(() -> new BusinessException(
                         "El cliente especificado no existe, por favor verificar que sea un cliente dentro del sistema",
                         HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
+    }
+
+    private void validarMetodosPagoNoDuplicados(PedidoRequestDTO dto) {
+        if (dto.getMetodoPagoSecundario() == null) return;
+        if (dto.getMetodoPagoSecundario() == dto.getMetodoPagoPrincipal()) {
+            throw new BusinessException(
+                    "El método de pago secundario no puede ser igual al método de pago principal",
+                    HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
+        }
+    }
+
+    private void validarPaquetesDisponibles(PedidoRequestDTO dto) {
+        for (PaquetePedidoDTO linea : dto.getPaquetes()) {
+            Paquete paquete = paqueteRepository.findById(linea.getIdPaquete())
+                    .orElseThrow(() -> new BusinessException(
+                            "El paquete " + linea.getIdPaquete() + " no existe",
+                            HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
+            if (paquete.getEstatus() != Estatus.DISPONIBLE) {
+                throw new BusinessException(
+                        "El paquete " + linea.getIdPaquete() + " no está disponible",
+                        HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
+            }
+        }
     }
 
     /**

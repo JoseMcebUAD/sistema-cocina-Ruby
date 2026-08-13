@@ -90,7 +90,7 @@ public class DesayunoServiceTest {
     @DisplayName("delete - Debe eliminar el desayuno cuando el ID existe y no tiene referencias")
     public void deleteDesayuno() {
         when(desayunoRepository.existsById(10)).thenReturn(true);
-        when(desayunoRepository.countEnPedidos(10)).thenReturn(0L);
+        when(desayunoRepository.existsEnPedidos(10)).thenReturn(false);
 
         assertDoesNotThrow(() -> desayunoService.delete(10));
         verify(desayunoRepository).deleteById(10);
@@ -111,7 +111,7 @@ public class DesayunoServiceTest {
     @DisplayName("delete - Debe lanzar excepción cuando el desayuno está referenciado en pedidos")
     public void deleteDesayuno_enPedidos() {
         when(desayunoRepository.existsById(10)).thenReturn(true);
-        when(desayunoRepository.countEnPedidos(10)).thenReturn(2L);
+        when(desayunoRepository.existsEnPedidos(10)).thenReturn(true);
 
         assertThrows(BusinessException.class, () -> desayunoService.delete(10));
         verify(desayunoRepository, never()).deleteById(anyInt());

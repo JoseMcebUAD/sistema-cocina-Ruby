@@ -5,10 +5,30 @@ package com.cocinarubi;
 */
 public class DBConstants {
 
-    /** Catálogo de producto al que puede asociarse un archivo subido en la tabla de ARCHIVOMODULO. */
-    public enum TipoCatalogoProducto { BASICO, COMIDA, DESAYUNO, SNACK, CHAROLA, BEBIDA, POSTRE, COMPLEMENTO }
+    /**
+     * Catálogo estático de módulos de archivo. Las categorías dinámicas de
+     * ProductoCocina (SNACK, CHAROLA, BEBIDA, POSTRE y las creadas por el
+     * usuario) ya no viven aquí — se resuelven vía FK a la tabla categoria.
+     */
+    public enum TipoCatalogoProducto { BASICO, COMIDA, DESAYUNO }
 
-    
+    /**
+     * Discriminador polimórfico para {@code favorito_cliente.tipo_catalogo_producto}.
+     * Mantiene los 8 valores originales porque la columna en BD sigue soportando
+     * los 4 tipos que antes vivían en {@link TipoCatalogoProducto}
+     * (SNACK, CHAROLA, BEBIDA, POSTRE) y COMPLEMENTO, sin migración destructiva.
+     */
+    public enum TipoProductoFavorito {
+        BASICO, COMIDA, DESAYUNO, COMPLEMENTO, SNACK, CHAROLA, BEBIDA, POSTRE
+    }
+
+    /**
+     * Discriminador polimórfico para {@code paquete_producto.tipo_producto}.
+     * Una línea de paquete referencia UNA de estas cuatro tablas maestras según el valor.
+     */
+    public enum TipoLineaPaquete { COMIDA, DESAYUNO, COMPLEMENTO, PRODUCTO_COCINA }
+
+
     /** Estado de disponibilidad de platillos para el menú web. */
     public enum Estatus { DISPONIBLE, NO_DISPONIBLE, AGOTADO }
 
@@ -17,9 +37,6 @@ public class DBConstants {
 
     /** Tipo de turno: menú de comidas del día o menú de desayunos para la tabla HorarioAtencion. */
     public enum TipoHorario { DESAYUNO, COMIDAS }
-
-    /*Tipo de producto genérico con nombre,percio, estatus e imágenes para la tabla ProductoCocina */
-    public enum TipoProducto { SNACK, CHAROLA, BEBIDA, POSTRE }
 
     /***PEDIDO */
     /** Forma de pago utilizada por el cliente. para  */

@@ -1,6 +1,5 @@
 package com.cocinarubi.presentation.controller;
 
-import com.cocinarubi.DBConstants;
 import com.cocinarubi.domain.service.ProductoCocinaService;
 import com.cocinarubi.presentation.dto.request.ProductoCocinaRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
@@ -16,8 +15,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/productoCocina")
-@Tag(name = "Producto Cocina", description = "CRUD para snacks, charolas y bebidas")
+@RequestMapping("/producto-cocina")
+@Tag(name = "Producto Cocina",
+     description = "CRUD para productos de cocina clasificados por Categoria (BEBIDA, SNACK, CHAROLA, POSTRE y EXTRAS y las creadas por el usuario)")
 public class ProductoCocinaController {
 
     private final ProductoCocinaService productoCocinaService;
@@ -32,15 +32,6 @@ public class ProductoCocinaController {
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Productos de cocina obtenidos correctamente",
                 productoCocinaService.findAll(PageRequest.of(page, size))));
-    }
-
-    @GetMapping("/tipo")
-    public ResponseEntity<ApiResponse<Page<ProductoCocinaResponseDTO>>> findByTipoProducto(
-            @RequestParam DBConstants.TipoProducto tipoProducto,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(ApiResponse.exito(200, "Productos de cocina obtenidos correctamente",
-                productoCocinaService.findByTipoProducto(tipoProducto, PageRequest.of(page, size))));
     }
 
     @GetMapping("/todos")

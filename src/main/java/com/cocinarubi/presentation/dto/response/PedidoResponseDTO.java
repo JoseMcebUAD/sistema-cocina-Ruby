@@ -27,6 +27,7 @@ public class PedidoResponseDTO {
     private List<DesayunoPedidoResponseDTO> desayunos;
     private List<BasicoPedidoResponseDTO> basicos;
     private List<ProductoCocinaPedidoResponseDTO> productosCocina;
+    private List<PaquetePedidoResponseDTO> paquetes;
     private PedidoDomicilioResponseDTO domicilio;
     private PedidoDomicilioCocinaResponseDTO domicilioCocina;
     private PedidoCocinaResponseDTO pedidoCocina;
@@ -43,6 +44,7 @@ public class PedidoResponseDTO {
                              List<DesayunoPedidoResponseDTO> desayunos,
                              List<BasicoPedidoResponseDTO> basicos,
                              List<ProductoCocinaPedidoResponseDTO> productosCocina,
+                             List<PaquetePedidoResponseDTO> paquetes,
                              PedidoDomicilioResponseDTO domicilio,
                              PedidoDomicilioCocinaResponseDTO domicilioCocina,
                              PedidoCocinaResponseDTO pedidoCocina) {
@@ -63,6 +65,7 @@ public class PedidoResponseDTO {
         this.desayunos = desayunos;
         this.basicos = basicos;
         this.productosCocina = productosCocina;
+        this.paquetes = paquetes;
         this.domicilio = domicilio;
         this.domicilioCocina = domicilioCocina;
         this.pedidoCocina = pedidoCocina;
@@ -118,6 +121,9 @@ public class PedidoResponseDTO {
 
     public List<ProductoCocinaPedidoResponseDTO> getProductosCocina() { return productosCocina; }
     public void setProductosCocina(List<ProductoCocinaPedidoResponseDTO> productosCocina) { this.productosCocina = productosCocina; }
+
+    public List<PaquetePedidoResponseDTO> getPaquetes() { return paquetes; }
+    public void setPaquetes(List<PaquetePedidoResponseDTO> paquetes) { this.paquetes = paquetes; }
 
     public PedidoDomicilioResponseDTO getDomicilio() { return domicilio; }
     public void setDomicilio(PedidoDomicilioResponseDTO domicilio) { this.domicilio = domicilio; }

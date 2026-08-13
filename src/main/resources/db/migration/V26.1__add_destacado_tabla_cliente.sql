@@ -1,0 +1,2 @@
+ALTER TABLE paquete
+    ADD COLUMN destacada TINYINT NOT NULL DEFAULT 0;

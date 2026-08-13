@@ -17,11 +17,11 @@ public interface ComplementoRepository extends JpaRepository<Complemento, Intege
 
     boolean existsByNombreComplemento(String nombreComplemento);
 
-    @Query("SELECT COUNT(bc) FROM BasicoComplemento bc WHERE bc.complemento.idComplemento = :id")
-    long countEnBasicos(@Param("id") int id);
+    @Query("SELECT CASE WHEN COUNT(bc) > 0 THEN true ELSE false END FROM BasicoComplemento bc WHERE bc.complemento.idComplemento = :id")
+    boolean existsEnBasicos(@Param("id") int id);
 
-    @Query("SELECT COUNT(ccp) FROM ComplementoComidaPedido ccp WHERE ccp.complemento.idComplemento = :id")
-    long countEnPedidos(@Param("id") int id);
+    @Query("SELECT CASE WHEN COUNT(ccp) > 0 THEN true ELSE false END FROM ComplementoComidaPedido ccp WHERE ccp.complemento.idComplemento = :id")
+    boolean existsEnPedidos(@Param("id") int id);
 
     @Query("SELECT c FROM Complemento c WHERE c.estatus = :estatus ORDER BY c.nombreComplemento ASC")
     List<Complemento> findDisponiblesOrdenados(@Param("estatus") DBConstants.Estatus estatus);

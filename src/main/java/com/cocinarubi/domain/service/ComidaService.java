@@ -58,12 +58,12 @@ public class ComidaService {
             throw new BusinessException("Comida no encontrada con id: " + id, HttpStatus.NOT_FOUND);
         }
         // Guardar integridad referencial: la DB no tiene ON DELETE CASCADE para estas relaciones
-        if (comidaRepository.countEnPedidos(id) > 0) {
+        if (comidaRepository.existsEnPedidos(id)) {
             throw new BusinessException(
                     "Este producto no se puede eliminar ya que tiene pedidos asignados, puede deshabilitarlo mejor",
                     HttpStatus.CONFLICT);
         }
-        if (comidaRepository.countEnBasicos(id) > 0) {
+        if (comidaRepository.existsEnBasicos(id)) {
             throw new BusinessException(
                     "No se puede eliminar la comida porque está referenciada en paquetes básicos",
                     HttpStatus.CONFLICT);

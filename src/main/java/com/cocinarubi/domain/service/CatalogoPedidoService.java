@@ -1,5 +1,6 @@
 package com.cocinarubi.domain.service;
 
+import com.cocinarubi.DBConstants.Estatus;
 import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.dao.BasicoRepository;
 import com.cocinarubi.dao.RegistroClienteRepository;
@@ -12,6 +13,8 @@ import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.domain.entity.ComplementoComidaPedido;
 import com.cocinarubi.domain.entity.Desayuno;
 import com.cocinarubi.domain.entity.DesayunoPedido;
+import com.cocinarubi.domain.entity.Paquete;
+import com.cocinarubi.domain.entity.PaquetePedido;
 import com.cocinarubi.domain.entity.Pedido;
 import com.cocinarubi.domain.entity.PedidoCocina;
 import com.cocinarubi.domain.entity.PedidoDomicilio;
@@ -26,6 +29,7 @@ import com.cocinarubi.presentation.dto.request.BasicoPedidoExtraDTO;
 import com.cocinarubi.presentation.dto.request.ComidaPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComplementoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.DesayunoPedidoDTO;
+import com.cocinarubi.presentation.dto.request.PaquetePedidoDTO;
 import com.cocinarubi.presentation.dto.request.PedidoDomicilioCocinaDTO;
 import com.cocinarubi.presentation.dto.request.PedidoDomicilioDTO;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
@@ -61,6 +65,7 @@ public class CatalogoPedidoService {
     private final ComplementoService complementoService;
     private final RutaService rutaService;
     private final RegistroClienteRepository registroClienteRepository;
+    private final PaqueteService paqueteService;
 
     public CatalogoPedidoService(ComidaService comidaService,
                                   DesayunoService desayunoService,
@@ -68,7 +73,8 @@ public class CatalogoPedidoService {
                                   ProductoCocinaService productoCocinaService,
                                   ComplementoService complementoService,
                                   RutaService rutaService,
-                                  RegistroClienteRepository registroClienteRepository) {
+                                  RegistroClienteRepository registroClienteRepository,
+                                  PaqueteService paqueteService) {
         this.comidaService = comidaService;
         this.desayunoService = desayunoService;
         this.basicoRepository = basicoRepository;
@@ -76,6 +82,7 @@ public class CatalogoPedidoService {
         this.complementoService = complementoService;
         this.rutaService = rutaService;
         this.registroClienteRepository = registroClienteRepository;
+        this.paqueteService = paqueteService;
     }
 
     /**
@@ -231,6 +238,26 @@ public class CatalogoPedidoService {
         }
     }
 
+    /**
+     * Agrega líneas de Paquete (promoción) al pedido. Valida que cada paquete exista
+     * y esté DISPONIBLE — un paquete NO_DISPONIBLE/AGOTADO no puede venderse.
+     */
+    public void agregarPaquetes(Pedido pedido, List<PaquetePedidoDTO> lineas) {
+        for (PaquetePedidoDTO linea : lineas) {
+            Paquete paquete = paqueteService.findEntityById(linea.getIdPaquete());
+            if (paquete.getEstatus() != Estatus.DISPONIBLE) {
+                throw new BusinessException(
+                        "El paquete #" + paquete.getIdPaquete() + " no está disponible",
+                        HttpStatus.BAD_REQUEST);
+            }
+            pedido.addPaquetePedido(PaquetePedido.builder()
+                    .paquete(paquete)
+                    .precioUnitario(linea.getPrecioUnitario())
+                    .cantidad(linea.getCantidad())
+                    .build());
+        }
+    }
+
     public BigDecimal calcularTotal(Pedido pedido) {
         BigDecimal total = BigDecimal.ZERO;
         for (ComidaPedido cp : pedido.getComidasPedido()) {
@@ -250,6 +277,9 @@ public class CatalogoPedidoService {
         }
         for (ProductoCocinaPedido pcp : pedido.getProductosCocina()) {
             total = total.add(pcp.getPrecioUnitario().multiply(BigDecimal.valueOf(pcp.getCantidad())));
+        }
+        for (PaquetePedido pp : pedido.getPaquetesPedido()) {
+            total = total.add(pp.getPrecioUnitario().multiply(BigDecimal.valueOf(pp.getCantidad())));
         }
         if (pedido.getPedidoDomicilio() != null && pedido.getPedidoDomicilio().getRuta() != null) {
             total = total.add(pedido.getPedidoDomicilio().getRuta().getTarifaEnvio());

@@ -37,6 +37,7 @@ public class ResumenProduccionRestTest {
         authHeaders.setContentType(MediaType.APPLICATION_JSON);
 
         // Crea un SNACK para poder verificar que el endpoint detalle/snacks devuelve items reales
+        // idCategoria=3 → SNACK en el seeder de V23
         String productoJson = """
                 {
                   "nombreProducto": "Snack Test Produccion",
@@ -44,12 +45,13 @@ public class ResumenProduccionRestTest {
                   "precioNormal": 25.00,
                   "estatus": "DISPONIBLE",
                   "destacado": false,
-                  "tipoProducto": "SNACK",
+                  "idCategoria": 3,
+                  "idSubcategorias": [],
                   "saltarConfirmacion": true
                 }
                 """;
         ResponseEntity<String> productoResp = restTemplate.exchange(
-                "/productoCocina", HttpMethod.POST, new HttpEntity<>(productoJson, authHeaders), String.class
+                "/producto-cocina", HttpMethod.POST, new HttpEntity<>(productoJson, authHeaders), String.class
         );
         testProductoId = mapper.readTree(productoResp.getBody()).get("data").get("idProductoCocina").asInt();
 
@@ -84,7 +86,7 @@ public class ResumenProduccionRestTest {
             restTemplate.exchange("/pedido/" + testPedidoId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
         }
         if (testProductoId > 0) {
-            restTemplate.exchange("/productoCocina/" + testProductoId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
+            restTemplate.exchange("/producto-cocina/" + testProductoId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
         }
         System.out.println("[TEARDOWN] datos eliminados: pedidoId=" + testPedidoId + " productoId=" + testProductoId);
     }
@@ -113,13 +115,23 @@ public class ResumenProduccionRestTest {
         assertNotNull(data.get("fecha"));
         assertTrue(data.get("totalComidas").asLong() >= 0);
         assertTrue(data.get("totalDesayunos").asLong() >= 0);
-        assertTrue(data.get("totalSnacks").asLong() >= 2,
-                "totalSnacks debe ser al menos 2 (el pedido del setUp tiene cantidad=2)");
-        assertTrue(data.get("totalBebidas").asLong() >= 0);
-        assertTrue(data.get("totalCharolas").asLong() >= 0);
-        assertTrue(data.get("totalPostres").asLong() >= 0);
         assertTrue(data.get("totalBasicos").asLong() >= 0);
-        System.out.println("[OK] resumen 200 | totalSnacks=" + data.get("totalSnacks").asLong()
+
+        // Desde Fase 2, los totales de producto_cocina son un arreglo dinámico
+        // (una fila por categoría con productos pedidos hoy). El setUp creó un
+        // pedido de SNACK con cantidad=2, así que debe existir esa entrada.
+        JsonNode totales = data.get("totalesProductosCocina");
+        assertNotNull(totales, "Debe existir 'totalesProductosCocina' en el resumen");
+        assertTrue(totales.isArray());
+        boolean snackConAlMenos2 = false;
+        for (JsonNode t : totales) {
+            if ("SNACK".equals(t.get("nombreCategoria").asText()) && t.get("total").asLong() >= 2) {
+                snackConAlMenos2 = true;
+                break;
+            }
+        }
+        assertTrue(snackConAlMenos2, "Debe haber una fila SNACK con total >= 2");
+        System.out.println("[OK] resumen 200 | categorías con productos=" + totales.size()
                 + " fecha=" + data.get("fecha").asText());
     }
 

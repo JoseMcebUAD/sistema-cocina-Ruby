@@ -1,5 +1,5 @@
 -- seeder_pedidos.sql
--- 42 pedidos del 2026-07-21 (martes) al 2026-07-25 (sábado).
+-- 52 pedidos del 2026-07-21 (martes) al 2026-07-25 (sábado).
 -- El sábado sólo contiene pedidos de desayuno.
 -- Todos creados desde COCINA (sin origen WEB).
 --
@@ -38,7 +38,7 @@ INSERT INTO registro_cliente (id_registro_cliente, nombre, telefono, id_ruta, di
 (5, 'Roberto Sánchez', '3310005555', 4, 'Av. Juárez 654, Oriente');
 
 -- ============================================================
--- pedido  (42 registros)
+-- pedido  (52 registros)
 --
 -- precio_final_orden = suma de líneas de producto + tarifa si DOMICILIO
 -- pago_cliente_principal:
@@ -95,7 +95,18 @@ INSERT INTO pedido (id_pedido, metodo_pago_principal, metodo_pago_secundario, ti
 (39, 'EFECTIVO',      'TARJETA',       'PICK_UP',   '2026-07-25 10:15:00', 'COCINA',  87.00,  40.00, NULL, 1),
 (40, 'EFECTIVO',      NULL,            'DOMICILIO', '2026-07-25 08:00:00', 'COCINA', 123.00, 150.00, NULL, 1),
 (41, 'EFECTIVO',      NULL,            'MOSTRADOR', '2026-07-25 09:30:00', 'COCINA',  80.00, 100.00, NULL, 1),
-(42, 'TARJETA',       NULL,            'PICK_UP',   '2026-07-25 10:00:00', 'COCINA',  95.00,   NULL, NULL, 1);
+(42, 'TARJETA',       NULL,            'PICK_UP',   '2026-07-25 10:00:00', 'COCINA',  95.00,   NULL, NULL, 1),
+-- Paquetes y mixtos (martes–viernes) ─────────────────────────────────────────
+(43, 'EFECTIVO',      NULL,            'MOSTRADOR', '2026-07-21 15:00:00', 'COCINA',  90.00, 100.00, NULL, 1),
+(44, 'TARJETA',       NULL,            'PICK_UP',   '2026-07-21 15:45:00', 'COCINA', 110.00,   NULL, NULL, 1),
+(45, 'TRANSFERENCIA', NULL,            'DOMICILIO', '2026-07-22 15:00:00', 'COCINA', 100.00,   NULL, NULL, 1),
+(46, 'EFECTIVO',      'TARJETA',       'MOSTRADOR', '2026-07-22 15:45:00', 'COCINA', 140.00,  80.00, NULL, 1),
+(47, 'EFECTIVO',      NULL,            'PICK_UP',   '2026-07-23 15:00:00', 'COCINA',  90.00, 100.00, NULL, 1),
+(48, 'TARJETA',       NULL,            'MOSTRADOR', '2026-07-23 15:30:00', 'COCINA', 115.00,   NULL, NULL, 1),
+(49, 'EFECTIVO',      NULL,            'DOMICILIO', '2026-07-23 16:00:00', 'COCINA', 145.00, 150.00, NULL, 1),
+(50, 'TRANSFERENCIA', NULL,            'PICK_UP',   '2026-07-24 15:00:00', 'COCINA',  93.00,   NULL, NULL, 1),
+(51, 'EFECTIVO',      'TRANSFERENCIA', 'MOSTRADOR', '2026-07-24 15:30:00', 'COCINA',  85.00,  50.00, NULL, 1),
+(52, 'EFECTIVO',      NULL,            'DOMICILIO', '2026-07-24 16:00:00', 'COCINA', 158.00, 160.00, NULL, 1);
 
 -- ============================================================
 -- pedido_cocina  (PICK_UP y MOSTRADOR desde COCINA)
@@ -132,7 +143,14 @@ INSERT INTO pedido_cocina (id_pedido, nombre_cliente) VALUES
 (38, 'Aurelio'),
 (39, 'Rebeca'),
 (41, 'Francisco'),
-(42, 'Graciela');
+(42, 'Graciela'),
+(43, 'Beatriz'),
+(44, 'Ignacio'),
+(46, 'Silvia'),
+(47, 'Esteban'),
+(48, 'Claudia'),
+(50, 'Marcos'),
+(51, 'Pilar');
 
 -- ============================================================
 -- pedido_domicilio_cocina  (DOMICILIO desde COCINA)
@@ -148,13 +166,17 @@ INSERT INTO pedido_domicilio_cocina (id_pedido, id_registro_cliente, id_ruta, do
 (27, 1, 1, 'Calle Hidalgo 123, Centro',        25.00),
 (30, 3, 3, 'Blvd. Independencia 789, Sur',     35.00),
 (36, 2, 2, 'Av. Revolución 456, Norte',        35.00),
-(40, 1, 1, 'Calle Hidalgo 123, Centro',        25.00);
+(40, 1, 1, 'Calle Hidalgo 123, Centro',        25.00),
+(45, 4, 1, 'Calle Morelos 321, Centro',        25.00),
+(49, 2, 2, 'Av. Revolución 456, Norte',        35.00),
+(52, 5, 4, 'Av. Juárez 654, Oriente',          45.00);
 
 -- ============================================================
 -- comida_pedido
 -- Verificación de totales por pedido:
 --   P1 =  95 (pollo entera)
 --   P3 = 115 (milanesa media 65 + refresco dom. 25 + tarifa 25)
+--   P7 = 103 (enchiladas entera 85 + flan normal 18)
 --   P9 = 120 (camarones entera)
 --   P11= 108 (pollo media 55 + gelatina dom. 18 + tarifa 35)
 --   P13= 125 (milanesa entera 110 + aguacate 15)
@@ -167,6 +189,9 @@ INSERT INTO pedido_domicilio_cocina (id_pedido, id_registro_cliente, id_ruta, do
 --   P27=  98 (pollo media 55 + agua dom. 18 + tarifa 25)
 --   P29= 110 (milanesa entera)
 --   P32= 125 (enchiladas media 50 + básico pollo 75)
+--   P48= 115 (pollo entera 95 + refresco normal 20)
+--   P51=  85 (camarones media 70 + aguacate 15)
+--   P52= 158 (pollo entera 95 + agua dom. 18 + tarifa 45)
 -- ============================================================
 INSERT INTO comida_pedido (id_comida_pedido, id_comida, id_pedido, precio_unitario, tamano_porcion) VALUES
 ( 1, 1,  1,  95.00, 'ENTERA'),
@@ -182,7 +207,11 @@ INSERT INTO comida_pedido (id_comida_pedido, id_comida, id_pedido, precio_unitar
 (11, 2, 25, 120.00, 'ENTERA'),
 (12, 1, 27,  55.00, 'MEDIA'),
 (13, 3, 29, 110.00, 'ENTERA'),
-(14, 5, 32,  50.00, 'MEDIA');
+(14, 5, 32,  50.00, 'MEDIA'),
+(15, 5,  7,  85.00, 'ENTERA'),  -- P7  enchiladas entera
+(16, 1, 48,  95.00, 'ENTERA'),  -- P48 pollo entera
+(17, 2, 51,  70.00, 'MEDIA'),   -- P51 camarones media
+(18, 1, 52,  95.00, 'ENTERA');  -- P52 pollo entera
 
 -- ============================================================
 -- complemento_comida_pedido
@@ -190,7 +219,8 @@ INSERT INTO comida_pedido (id_comida_pedido, id_comida, id_pedido, precio_unitar
 INSERT INTO complemento_comida_pedido (id_complemento_comida_pedido, id_comida_pedido, id_complemento, precio_unitario) VALUES
 (1, 5, 2, 15.00),  -- P13 milanesa entera + aguacate
 (2, 7, 4, 10.00),  -- P18 camarones media + crema y queso
-(3, 8, 2, 15.00);  -- P20 pollo entera + aguacate
+(3, 8,  2, 15.00),  -- P20 pollo entera + aguacate
+(4, 17, 2, 15.00);  -- P51 camarones media + aguacate
 
 -- ============================================================
 -- desayuno_pedido
@@ -235,7 +265,14 @@ INSERT INTO basico_pedido (id_basico_pedido, id_basico, id_pedido, precio_unitar
 (4, 2, 19, 110.00),  -- P19 básico camarones
 (5, 1, 22,  75.00),  -- P22 básico pollo
 (6, 2, 28, 110.00),  -- P28 básico camarones
-(7, 1, 32,  75.00);  -- P32 básico pollo
+( 7, 1, 32,  75.00),  -- P32 básico pollo
+( 8, 1, 43,  75.00),  -- P43 básico pollo
+( 9, 2, 44, 110.00),  -- P44 básico camarones
+(10, 1, 45,  75.00),  -- P45 básico pollo (dom.)
+(11, 2, 46, 110.00),  -- P46 básico camarones
+(12, 1, 47,  75.00),  -- P47 básico pollo
+(13, 2, 49, 110.00),  -- P49 básico camarones (dom.)
+(14, 1, 50,  75.00);  -- P50 básico pollo
 
 -- ============================================================
 -- producto_cocina_pedido
@@ -265,4 +302,10 @@ INSERT INTO producto_cocina_pedido (id_producto_cocina_pedido, id_pedido, id_pro
 (20, 38, 6, 1, 18.00),  -- P38 flan (normal)
 (21, 39, 2, 1, 15.00),  -- P39 agua (normal)
 (22, 41, 7, 1, 15.00),  -- P41 gelatina (normal)
-(23, 42, 2, 1, 15.00);  -- P42 agua (normal)
+(23, 42, 2, 1, 15.00),  -- P42 agua (normal)
+(24, 43, 2, 1, 15.00),  -- P43 agua (normal)
+(25, 46, 3, 1, 30.00),  -- P46 papas fritas
+(26, 47, 7, 1, 15.00),  -- P47 gelatina (normal)
+(27, 48, 1, 1, 20.00),  -- P48 refresco (normal)
+(28, 50, 6, 1, 18.00),  -- P50 flan (normal)
+(29, 52, 2, 1, 18.00);  -- P52 agua (domicilio)

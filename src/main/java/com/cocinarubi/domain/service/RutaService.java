@@ -104,12 +104,12 @@ public class RutaService {
             throw new BusinessException("Ruta no encontrada con id: " + id, HttpStatus.NOT_FOUND);
         }
         // Guardar integridad referencial: clientes y pedidos a domicilio referencian la ruta
-        if (rutaRepository.countClientesConRuta(id) > 0) {
+        if (rutaRepository.existsClientesConRuta(id)) {
             throw new BusinessException(
                     "No se puede eliminar la ruta porque está asignada a clientes existentes",
                     HttpStatus.CONFLICT);
         }
-        if (rutaRepository.countPedidosDomicilioConRuta(id) > 0) {
+        if (rutaRepository.existsPedidosDomicilioConRuta(id)) {
             throw new BusinessException(
                     "No se puede eliminar la ruta porque está referenciada en pedidos a domicilio",
                     HttpStatus.CONFLICT);

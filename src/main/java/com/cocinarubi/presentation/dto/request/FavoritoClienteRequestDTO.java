@@ -1,6 +1,6 @@
 package com.cocinarubi.presentation.dto.request;
 
-import com.cocinarubi.DBConstants.TipoCatalogoProducto;
+import com.cocinarubi.DBConstants.TipoProductoFavorito;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -19,7 +19,7 @@ public class FavoritoClienteRequestDTO {
 
     @NotNull(message = "El tipo de catálogo no puede ser nulo")
     @JsonProperty("tipoCatalogoProducto")
-    private TipoCatalogoProducto tipoCatalogoProducto;
+    private TipoProductoFavorito tipoCatalogoProducto;
 
     @JsonProperty("saltarConfirmacion")
     private boolean saltarConfirmacion = false;
@@ -27,7 +27,7 @@ public class FavoritoClienteRequestDTO {
     public FavoritoClienteRequestDTO() {}
 
     public FavoritoClienteRequestDTO(String sessionToken, Integer idProducto,
-                                     TipoCatalogoProducto tipoCatalogoProducto) {
+                                     TipoProductoFavorito tipoCatalogoProducto) {
         this.sessionToken = sessionToken;
         this.idProducto = idProducto;
         this.tipoCatalogoProducto = tipoCatalogoProducto;
@@ -39,8 +39,8 @@ public class FavoritoClienteRequestDTO {
     public Integer getIdProducto() { return idProducto; }
     public void setIdProducto(Integer idProducto) { this.idProducto = idProducto; }
 
-    public TipoCatalogoProducto getTipoCatalogoProducto() { return tipoCatalogoProducto; }
-    public void setTipoCatalogoProducto(TipoCatalogoProducto tipoCatalogoProducto) {
+    public TipoProductoFavorito getTipoCatalogoProducto() { return tipoCatalogoProducto; }
+    public void setTipoCatalogoProducto(TipoProductoFavorito tipoCatalogoProducto) {
         this.tipoCatalogoProducto = tipoCatalogoProducto;
     }
 

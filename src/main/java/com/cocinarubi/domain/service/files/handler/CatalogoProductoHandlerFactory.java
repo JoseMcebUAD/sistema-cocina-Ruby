@@ -11,16 +11,26 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Factory que centraliza el despacho de handlers por TipoCatalogoProducto.
- * Spring inyecta todos los @Component que implementen CatalogoProductoHandler
- * y los registra en un EnumMap en @PostConstruct.
+ * Factory que despacha handlers de archivos. Soporta dos vías de resolución:
+ * <ul>
+ *   <li>Por {@link TipoCatalogoProducto} — módulos estáticos (COMIDA, DESAYUNO, BASICO).</li>
+ *   <li>Por {@code idCategoria} — módulos dinámicos generados al crear una
+ *       {@link com.cocinarubi.domain.entity.Categoria}. Un único handler universal
+ *       sirve a todos ellos porque comparten la tabla {@code producto_cocina}.</li>
+ * </ul>
+ *
+ * <p>Spring inyecta todos los {@code @Component} que implementan
+ * {@link CatalogoProductoHandler}. El {@code @PostConstruct} los clasifica: los que
+ * devuelven un enum no-nulo en {@link CatalogoProductoHandler#getEntityType()} van al
+ * EnumMap; el que devuelve {@code null} queda como universal.</p>
  */
 @Component
 public class CatalogoProductoHandlerFactory {
 
     private final List<CatalogoProductoHandler> handlers;
-    private final Map<TipoCatalogoProducto, CatalogoProductoHandler> registry =
+    private final Map<TipoCatalogoProducto, CatalogoProductoHandler> registryEstatico =
             new EnumMap<>(TipoCatalogoProducto.class);
+    private CatalogoProductoHandler universal;
 
     public CatalogoProductoHandlerFactory(List<CatalogoProductoHandler> handlers) {
         this.handlers = handlers;
@@ -28,20 +38,36 @@ public class CatalogoProductoHandlerFactory {
 
     @PostConstruct
     void init() {
-        // Registra cada handler usando su propio tipo como clave del mapa
         for (CatalogoProductoHandler handler : handlers) {
-            registry.put(handler.getEntityType(), handler);
+            TipoCatalogoProducto tipo = handler.getEntityType();
+            if (tipo == null) {
+                // Handler universal (ProductoCocinaHandler) — sirve a cualquier idCategoria
+                universal = handler;
+            } else {
+                registryEstatico.put(tipo, handler);
+            }
         }
     }
 
+    /** Resuelve el handler para un módulo estático (COMIDA/DESAYUNO/BASICO). */
     public CatalogoProductoHandler resolve(TipoCatalogoProducto entityType) {
-        CatalogoProductoHandler handler = registry.get(entityType);
+        CatalogoProductoHandler handler = registryEstatico.get(entityType);
         if (handler == null) {
-            // entityType no tiene handler registrado; rechaza la petición con 400
             throw new BusinessException(
                     "Tipo de entidad no soportado para gestión de archivos: " + entityType,
                     HttpStatus.BAD_REQUEST);
         }
         return handler;
+    }
+
+    /** Resuelve el handler universal para un módulo dinámico por categoría. */
+    public CatalogoProductoHandler resolve(Integer idCategoria) {
+        if (universal == null) {
+            // Configuración incorrecta: falta el ProductoCocinaHandler
+            throw new BusinessException(
+                    "No hay handler universal registrado para categorías dinámicas",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return universal;
     }
 }
