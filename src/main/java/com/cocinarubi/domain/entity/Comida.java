@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * Platillo del menú principal de Cocina rubi.
@@ -60,4 +61,10 @@ public class Comida {
 
     @Column(name = "limite_complemento")
     private Integer limiteComplemento;
+
+    
+    @Builder.Default
+    @OneToMany(mappedBy = "comida", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<ComplementoPredeterminadoComida> complementosPredeterminados = new java.util.ArrayList<>();
+
 }
