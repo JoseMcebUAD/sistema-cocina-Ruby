@@ -18,6 +18,7 @@ import com.cocinarubi.presentation.dto.response.BasicoPedidoExtraResponseDTO;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.BasicoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
+import com.cocinarubi.presentation.dto.response.ComplementoPredeterminadoComidaResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComplementoResponseDTO;
 import com.cocinarubi.presentation.dto.response.DesayunoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.PaquetePedidoResponseDTO;
@@ -134,13 +135,25 @@ public class PedidoMapper {
                         ccp.getComplemento().getNombreComplemento(),
                         ccp.getPrecioUnitario()))
                 .collect(Collectors.toList());
+        // Complementos predeterminados de la comida del catálogo (no los elegidos en el pedido)
+        List<ComplementoPredeterminadoComidaResponseDTO> predeterminados =
+                cp.getComida().getComplementosPredeterminados() == null
+                        ? List.of()
+                        : cp.getComida().getComplementosPredeterminados().stream()
+                                .map(c -> new ComplementoPredeterminadoComidaResponseDTO(
+                                        c.getIdComplementoPredeterminadoComida(),
+                                        c.getComplemento().getIdComplemento(),
+                                        c.getComplemento().getNombreComplemento(),
+                                        c.getCantidad()))
+                                .collect(Collectors.toList());
         return new ComidaPedidoResponseDTO(
                 cp.getIdComidaPedido(),
                 cp.getComida().getIdComida(),
                 cp.getComida().getNombreComida(),
                 cp.getPrecioUnitario(),
                 cp.getTamanoPorcion(),
-                complementos
+                complementos,
+                predeterminados
         );
     }
 

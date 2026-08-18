@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -32,6 +33,10 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(readOnly = true)
 public class MenuDigitalService {
+
+    // Categorías que muestran subcategoría como subtítulo en el menú.
+    // Valor: todos los nombres posibles de esa subcategoría en BD (case-insensitive).
+    public final Map<String, List<String>> categoriaConSubcategoria = new HashMap<>();
 
     private static final String HEADER =
             "☀️ Buen día ☀️\n" +
@@ -72,6 +77,8 @@ public class MenuDigitalService {
         this.complementoRepository = complementoRepository;
         this.productoCocinaRepository = productoCocinaRepository;
         this.categoriaRepository = categoriaRepository;
+
+        this.categoriaConSubcategoria.put("BEBIDA", List.of("jugos natural", "jugos naturales"));
     }
 
     /**
@@ -83,7 +90,7 @@ public class MenuDigitalService {
         // BasicoRepository.findDisponiblesOrdenados ya hace JOIN FETCH de bc.complemento
         List<Basico> basicos = basicoRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE);
         List<Complemento> complementos = complementoRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE);
-        List<ProductoCocina> productos = productoCocinaRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE);
+        List<ProductoCocina> productos = productoCocinaRepository.findDisponiblesOrdenadosConSubcategoria(Estatus.DISPONIBLE);
 
         Map<Integer, List<Basico>> basicosPorComida = basicos.stream()
                 .collect(Collectors.groupingBy(b -> b.getComida().getIdComida()));
@@ -205,8 +212,19 @@ public class MenuDigitalService {
     private void appendBebidas(StringBuilder sb, List<ProductoCocina> bebidas) {
         if (bebidas.isEmpty()) return;
         sb.append("Bebidas\n");
-        for (ProductoCocina b : bebidas) {
-            sb.append(b.getNombreProducto()).append(" $").append(formatPrecio(getPrecioEfectivo(b))).append("\n");
+
+        List<String> nombresSubcat = categoriaConSubcategoria.get("BEBIDA");
+        if (nombresSubcat != null) {
+            Map<Boolean, List<ProductoCocina>> particion = ordenarPorSubcategoria(nombresSubcat, bebidas);
+            for (ProductoCocina b : particion.get(false)) {
+                sb.append(b.getNombreProducto()).append(" $").append(formatPrecio(getPrecioEfectivo(b))).append("\n");
+            }
+            // Usa el primer nombre de la lista como etiqueta visible en el menú
+            appendCategoriaGenerica(sb, nombresSubcat.get(0), particion.get(true));
+        } else {
+            for (ProductoCocina b : bebidas) {
+                sb.append(b.getNombreProducto()).append(" $").append(formatPrecio(getPrecioEfectivo(b))).append("\n");
+            }
         }
         sb.append("\n");
     }
@@ -283,4 +301,18 @@ public class MenuDigitalService {
         }
         return precio.stripTrailingZeros().toPlainString();
     }
+
+    /**
+     * Particiona la lista en dos grupos: sin la subcategoría (false) y con ella (true).
+     * Acepta varios nombres posibles para la misma subcategoría (tolerancia a variaciones en BD).
+     */
+    private Map<Boolean, List<ProductoCocina>> ordenarPorSubcategoria(List<String> nombresSubcategoria, List<ProductoCocina> productosCocina) {
+        return productosCocina.stream()
+                .collect(Collectors.partitioningBy(p ->
+                        p.getSubcategorias().stream()
+                                .anyMatch(s -> nombresSubcategoria.stream()
+                                        .anyMatch(nombre -> nombre.equalsIgnoreCase(s.getNombre())))
+                ));
+    }
+
 }

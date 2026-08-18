@@ -15,9 +15,11 @@ import java.util.List;
 public class ComidaService {
 
     private final ComidaRepository comidaRepository;
+    private final ComplementoService complementoService;
 
-    public ComidaService(ComidaRepository comidaRepository) {
+    public ComidaService(ComidaRepository comidaRepository, ComplementoService complementoService) {
         this.comidaRepository = comidaRepository;
+        this.complementoService = complementoService;
     }
 
     public List<Comida> findAll() {
@@ -43,13 +45,17 @@ public class ComidaService {
     }
 
     public Comida save(Comida comida) {
-        //verifica que el precio de la media sea menor al de la entera
         if (comida.getPrecioMedia() != null && comida.getPrecioEntera() != null
                 && comida.getPrecioMedia().compareTo(comida.getPrecioEntera()) >= 0) {
             throw new BusinessException(
                     "El precio de media porción debe ser menor al precio de la porción entera",
                     HttpStatus.BAD_REQUEST);
         }
+        comida.getComplementosPredeterminados().forEach(c -> {
+            c.setComida(comida);
+            // Re-adjunta el Complemento para evitar "detached entity passed to persist"
+            c.setComplemento(complementoService.findById(c.getComplemento().getIdComplemento()));
+        });
         return comidaRepository.save(comida);
     }
 
