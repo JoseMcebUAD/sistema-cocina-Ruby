@@ -85,8 +85,10 @@ public class ComplementoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable int id) {
-        complementoService.delete(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<ApiResponse<?>> delete(
+            @PathVariable int id,
+            @RequestParam(defaultValue = "false") boolean saltarConfirmacion) {
+        complementoService.delete(id, saltarConfirmacion);
+        return ResponseEntity.ok(ApiResponse.exito(200, "Complemento eliminado correctamente", null));
     }
 }

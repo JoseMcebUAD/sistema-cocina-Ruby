@@ -99,8 +99,10 @@ public class ComidaController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable int id) {
-        comidaService.delete(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<ApiResponse<?>> delete(
+            @PathVariable int id,
+            @RequestParam(defaultValue = "false") boolean saltarConfirmacion) {
+        comidaService.delete(id, saltarConfirmacion);
+        return ResponseEntity.ok(ApiResponse.exito(200, "Comida eliminada correctamente", null));
     }
 }

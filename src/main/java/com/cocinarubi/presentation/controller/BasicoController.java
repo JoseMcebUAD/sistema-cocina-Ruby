@@ -79,8 +79,10 @@ public class BasicoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable int id) {
-        basicoService.delete(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<ApiResponse<?>> delete(
+            @PathVariable int id,
+            @RequestParam(defaultValue = "false") boolean saltarConfirmacion) {
+        basicoService.delete(id, saltarConfirmacion);
+        return ResponseEntity.ok(ApiResponse.exito(200, "Básico eliminado correctamente", null));
     }
 }
