@@ -39,16 +39,16 @@ public class ProductoCocinaPedido {
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_pedido", nullable = false)
+    @JoinColumn(name = "id_pedido")
     private Pedido pedido;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_producto_cocina", nullable = false)
+    @JoinColumn(name = "id_producto_cocina")
     private ProductoCocina productoCocina;
 
-    @Column(name = "cantidad", nullable = false)
+    @Column(name = "cantidad")
     private byte cantidad;
 
-    @Column(name = "precio_unitario", nullable = false, precision = 5, scale = 2)
+    @Column(name = "precio_unitario", precision = 5, scale = 2)
     private BigDecimal precioUnitario;
 }

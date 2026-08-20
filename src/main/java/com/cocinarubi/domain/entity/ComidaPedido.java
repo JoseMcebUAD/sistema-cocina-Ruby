@@ -45,18 +45,18 @@ public class ComidaPedido {
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_pedido", nullable = false)
+    @JoinColumn(name = "id_pedido")
     private Pedido pedido;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_comida", nullable = false)
+    @JoinColumn(name = "id_comida")
     private Comida comida;
 
-    @Column(name = "precio_unitario", nullable = false, precision = 5, scale = 2)
+    @Column(name = "precio_unitario", precision = 5, scale = 2)
     private BigDecimal precioUnitario;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "tamano_porcion", nullable = false)
+    @Column(name = "tamano_porcion")
     private TamanoPorcion tamanoPorcion;
 
     @Builder.Default
