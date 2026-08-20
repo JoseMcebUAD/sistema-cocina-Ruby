@@ -8,7 +8,7 @@ import java.util.List;
 public class ComidaPedidoResponseDTO {
 
     private int idComidaPedido;
-    private int idComida;
+    private Integer idComida;
     private String nombreComida;
     private BigDecimal precioUnitario;
     private TamanoPorcion tamanoPorcion;
@@ -17,7 +17,7 @@ public class ComidaPedidoResponseDTO {
 
     public ComidaPedidoResponseDTO() {}
 
-    public ComidaPedidoResponseDTO(int idComidaPedido, int idComida, String nombreComida,
+    public ComidaPedidoResponseDTO(int idComidaPedido, Integer idComida, String nombreComida,
                                    BigDecimal precioUnitario, TamanoPorcion tamanoPorcion,
                                    List<ComplementoResponseDTO> complementos,
                                    List<ComplementoPredeterminadoComidaResponseDTO> complementosPredeterminados) {
@@ -33,8 +33,8 @@ public class ComidaPedidoResponseDTO {
     public int getIdComidaPedido() { return idComidaPedido; }
     public void setIdComidaPedido(int idComidaPedido) { this.idComidaPedido = idComidaPedido; }
 
-    public int getIdComida() { return idComida; }
-    public void setIdComida(int idComida) { this.idComida = idComida; }
+    public Integer getIdComida() { return idComida; }
+    public void setIdComida(Integer idComida) { this.idComida = idComida; }
 
     public String getNombreComida() { return nombreComida; }
     public void setNombreComida(String nombreComida) { this.nombreComida = nombreComida; }
