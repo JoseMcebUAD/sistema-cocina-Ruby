@@ -60,6 +60,12 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
     public List<String> formatBasicoBlock(BasicoPedidoResponseDTO basico, String precio, int anchoEfectivo) {
         List<String> lineas = new ArrayList<>();
 
+        // basicoDTO puede ser null si id_basico fue SET NULL (básico eliminado)
+        if (basico.getBasico() == null) {
+            lineas.add(construirLineaConPrecio("(básico eliminado)", precio, anchoEfectivo));
+            return lineas;
+        }
+
         List<ComplementoResponseDTO> complementos = basico.getBasico().getComplementos();
         List<BasicoPedidoExtraResponseDTO> extras = basico.getExtras();
 
