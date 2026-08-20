@@ -107,15 +107,12 @@ public class BasicoService {
     }
 
 
-    public void delete(int id) {
-        // Verificar existencia antes de borrar para devolver 404 en lugar del silencioso no-op de JPA
+    public void delete(int id, boolean saltarConfirmacion) {
         if (!basicoRepository.existsById(id)) {
             throw new BusinessException("Básico no encontrado con id: " + id, HttpStatus.NOT_FOUND);
         }
-        if (basicoRepository.existsEnPedidos(id)) {
-            throw new BusinessException(
-                    "Este producto no se puede eliminar ya que tiene pedidos asignados, puede deshabilitarlo mejor",
-                    HttpStatus.CONFLICT);
+        if (!saltarConfirmacion) {
+            basicoConfirmation.validarEliminacion(id);
         }
         basicoRepository.deleteById(id);
     }

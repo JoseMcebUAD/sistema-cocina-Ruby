@@ -3,6 +3,7 @@ package com.cocinarubi.domain.service;
 import com.cocinarubi.DBConstants;
 import com.cocinarubi.dao.DesayunoRepository;
 import com.cocinarubi.domain.entity.Desayuno;
+import com.cocinarubi.exception.AdvertenciaEliminacionException;
 import com.cocinarubi.exception.BusinessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,15 +47,13 @@ public class DesayunoService {
         return desayunoRepository.save(desayuno);
     }
 
-    public void delete(int id) {
+    public void delete(int id, boolean saltarConfirmacion) {
         if (!desayunoRepository.existsById(id)) {
             throw new BusinessException("Desayuno no encontrado con id: " + id, HttpStatus.NOT_FOUND);
         }
-        // Evitar eliminación si el desayuno está asociado a pedidos históricos
-        if (desayunoRepository.existsEnPedidos(id)) {
-            throw new BusinessException(
-                    "Este producto no se puede eliminar ya que tiene pedidos asignados, puede deshabilitarlo mejor",
-                    HttpStatus.CONFLICT);
+        if (!saltarConfirmacion && desayunoRepository.existsEnPedidos(id)) {
+            throw new AdvertenciaEliminacionException(
+                    "Este desayuno tiene pedidos relacionados. ¿Desea continuar con la eliminación?");
         }
         desayunoRepository.deleteById(id);
     }

@@ -123,16 +123,13 @@ public class ProductoCocinaService {
         return toResponseDTO(productoCocinaRepository.save(existente));
     }
 
-    public void delete(int id) {
+    public void delete(int id, boolean saltarConfirmacion) {
         if (!productoCocinaRepository.existsById(id)) {
             throw new BusinessException(
                     "Producto de cocina no encontrado con id: " + id, HttpStatus.NOT_FOUND);
         }
-        // RF-014/017: bloquear eliminación si el producto tiene pedidos asociados
-        if (productoCocinaRepository.existsEnPedidos(id)) {
-            throw new BusinessException(
-                    "Este producto no se puede eliminar ya que tiene pedidos asignados, puede deshabilitarlo mejor",
-                    HttpStatus.CONFLICT);
+        if (!saltarConfirmacion) {
+            productoCocinaConfirmation.validarEliminacion(id);
         }
         productoCocinaRepository.deleteById(id);
     }

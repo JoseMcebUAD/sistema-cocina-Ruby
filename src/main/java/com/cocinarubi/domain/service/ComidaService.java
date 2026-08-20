@@ -3,6 +3,7 @@ package com.cocinarubi.domain.service;
 import com.cocinarubi.DBConstants;
 import com.cocinarubi.dao.ComidaRepository;
 import com.cocinarubi.domain.entity.Comida;
+import com.cocinarubi.exception.AdvertenciaEliminacionException;
 import com.cocinarubi.exception.BusinessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -59,20 +60,13 @@ public class ComidaService {
         return comidaRepository.save(comida);
     }
 
-    public void delete(int id) {
+    public void delete(int id, boolean saltarConfirmacion) {
         if (!comidaRepository.existsById(id)) {
             throw new BusinessException("Comida no encontrada con id: " + id, HttpStatus.NOT_FOUND);
         }
-        // Guardar integridad referencial: la DB no tiene ON DELETE CASCADE para estas relaciones
-        if (comidaRepository.existsEnPedidos(id)) {
-            throw new BusinessException(
-                    "Este producto no se puede eliminar ya que tiene pedidos asignados, puede deshabilitarlo mejor",
-                    HttpStatus.CONFLICT);
-        }
-        if (comidaRepository.existsEnBasicos(id)) {
-            throw new BusinessException(
-                    "No se puede eliminar la comida porque está referenciada en paquetes básicos",
-                    HttpStatus.CONFLICT);
+        if (!saltarConfirmacion && comidaRepository.existsEnPedidos(id)) {
+            throw new AdvertenciaEliminacionException(
+                    "Esta comida tiene pedidos relacionados. ¿Desea continuar con la eliminación?");
         }
         comidaRepository.deleteById(id);
     }
