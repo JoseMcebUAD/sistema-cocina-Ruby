@@ -3,6 +3,7 @@ package com.cocinarubi.domain.service;
 import com.cocinarubi.DBConstants;
 import com.cocinarubi.dao.ComplementoRepository;
 import com.cocinarubi.domain.entity.Complemento;
+import com.cocinarubi.exception.AdvertenciaEliminacionException;
 import com.cocinarubi.exception.BusinessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -42,20 +43,13 @@ public class ComplementoService {
         return complementoRepository.save(complemento);
     }
 
-    public void delete(int id) {
+    public void delete(int id, boolean saltarConfirmacion) {
         if (!complementoRepository.existsById(id)) {
             throw new BusinessException("Complemento no encontrado con id: " + id, HttpStatus.NOT_FOUND);
         }
-        // Guardar integridad referencial: la DB no tiene ON DELETE CASCADE para estas relaciones
-        if (complementoRepository.existsEnBasicos(id)) {
-            throw new BusinessException(
-                    "No se puede eliminar el complemento porque está referenciado en paquetes básicos",
-                    HttpStatus.CONFLICT);
-        }
-        if (complementoRepository.existsEnPedidos(id)) {
-            throw new BusinessException(
-                    "No se puede eliminar el complemento porque está referenciado en pedidos existentes",
-                    HttpStatus.CONFLICT);
+        if (!saltarConfirmacion && complementoRepository.existsEnPedidos(id)) {
+            throw new AdvertenciaEliminacionException(
+                    "Este complemento tiene pedidos relacionados. ¿Desea continuar con la eliminación?");
         }
         complementoRepository.deleteById(id);
     }

@@ -1,10 +1,12 @@
 package com.cocinarubi.presentation.strategy.strategyImplementation;
 
 import com.cocinarubi.DBConstants.Estatus;
+import com.cocinarubi.dao.BasicoRepository;
 import com.cocinarubi.dao.ComidaRepository;
 import com.cocinarubi.dao.ComplementoRepository;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.domain.entity.Complemento;
+import com.cocinarubi.exception.AdvertenciaEliminacionException;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.exception.ErrorCode;
 import com.cocinarubi.presentation.dto.request.BasicoRequestDTO;
@@ -17,11 +19,22 @@ public class BasicoConfirmationImp implements ConfirmationStrategy<BasicoRequest
 
     private final ComidaRepository comidaRepository;
     private final ComplementoRepository complementoRepository;
+    private final BasicoRepository basicoRepository;
 
     public BasicoConfirmationImp(ComidaRepository comidaRepository,
-                                  ComplementoRepository complementoRepository) {
+                                  ComplementoRepository complementoRepository,
+                                  BasicoRepository basicoRepository) {
         this.comidaRepository = comidaRepository;
         this.complementoRepository = complementoRepository;
+        this.basicoRepository = basicoRepository;
+    }
+
+    @Override
+    public void validarEliminacion(Integer id) {
+        if (basicoRepository.existsEnPedidos(id)) {
+            throw new AdvertenciaEliminacionException(
+                    "Este básico tiene pedidos relacionados. ¿Desea continuar con la eliminación?");
+        }
     }
 
     @Override

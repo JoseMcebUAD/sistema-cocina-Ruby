@@ -10,14 +10,14 @@ import java.math.BigDecimal;
 public class BasicoPedidoExtraResponseDTO {
 
     private int idBasicoPedidoExtra;
-    private int idComplemento;
+    private Integer idComplemento;
     private String nombreComplemento;
     private int cantidad;
     private BigDecimal precio;
 
     public BasicoPedidoExtraResponseDTO() {}
 
-    public BasicoPedidoExtraResponseDTO(int idBasicoPedidoExtra, int idComplemento,
+    public BasicoPedidoExtraResponseDTO(int idBasicoPedidoExtra, Integer idComplemento,
                                          String nombreComplemento, int cantidad, BigDecimal precio) {
         this.idBasicoPedidoExtra = idBasicoPedidoExtra;
         this.idComplemento = idComplemento;
@@ -29,8 +29,8 @@ public class BasicoPedidoExtraResponseDTO {
     public int getIdBasicoPedidoExtra() { return idBasicoPedidoExtra; }
     public void setIdBasicoPedidoExtra(int idBasicoPedidoExtra) { this.idBasicoPedidoExtra = idBasicoPedidoExtra; }
 
-    public int getIdComplemento() { return idComplemento; }
-    public void setIdComplemento(int idComplemento) { this.idComplemento = idComplemento; }
+    public Integer getIdComplemento() { return idComplemento; }
+    public void setIdComplemento(Integer idComplemento) { this.idComplemento = idComplemento; }
 
     public String getNombreComplemento() { return nombreComplemento; }
     public void setNombreComplemento(String nombreComplemento) { this.nombreComplemento = nombreComplemento; }

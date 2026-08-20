@@ -40,14 +40,14 @@ public class BasicoPedido {
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_pedido", nullable = false)
+    @JoinColumn(name = "id_pedido")
     private Pedido pedido;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_basico", nullable = false)
+    @JoinColumn(name = "id_basico")
     private Basico basico;
 
-    @Column(name = "precio_unitario", nullable = false, precision = 5, scale = 2)
+    @Column(name = "precio_unitario")
     private BigDecimal precioUnitario;
 
     @Builder.Default

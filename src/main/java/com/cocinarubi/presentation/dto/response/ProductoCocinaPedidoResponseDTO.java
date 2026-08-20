@@ -5,14 +5,14 @@ import java.math.BigDecimal;
 public class ProductoCocinaPedidoResponseDTO {
 
     private int idProductoCocinaPedido;
-    private int idProductoCocina;
+    private Integer idProductoCocina;
     private String nombreProducto;
     private BigDecimal precioUnitario;
     private int cantidad;
 
     public ProductoCocinaPedidoResponseDTO() {}
 
-    public ProductoCocinaPedidoResponseDTO(int idProductoCocinaPedido, int idProductoCocina,
+    public ProductoCocinaPedidoResponseDTO(int idProductoCocinaPedido, Integer idProductoCocina,
                                            String nombreProducto, BigDecimal precioUnitario, int cantidad) {
         this.idProductoCocinaPedido = idProductoCocinaPedido;
         this.idProductoCocina = idProductoCocina;
@@ -24,8 +24,8 @@ public class ProductoCocinaPedidoResponseDTO {
     public int getIdProductoCocinaPedido() { return idProductoCocinaPedido; }
     public void setIdProductoCocinaPedido(int idProductoCocinaPedido) { this.idProductoCocinaPedido = idProductoCocinaPedido; }
 
-    public int getIdProductoCocina() { return idProductoCocina; }
-    public void setIdProductoCocina(int idProductoCocina) { this.idProductoCocina = idProductoCocina; }
+    public Integer getIdProductoCocina() { return idProductoCocina; }
+    public void setIdProductoCocina(Integer idProductoCocina) { this.idProductoCocina = idProductoCocina; }
 
     public String getNombreProducto() { return nombreProducto; }
     public void setNombreProducto(String nombreProducto) { this.nombreProducto = nombreProducto; }

@@ -42,13 +42,13 @@ public class DesayunoPedido {
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_pedido", nullable = false)
+    @JoinColumn(name = "id_pedido")
     private Pedido pedido;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_desayuno", nullable = false)
+    @JoinColumn(name = "id_desayuno")
     private Desayuno desayuno;
 
-    @Column(name = "precio", nullable = false, precision = 5, scale = 2)
+    @Column(name = "precio")
     private BigDecimal precio;
 }

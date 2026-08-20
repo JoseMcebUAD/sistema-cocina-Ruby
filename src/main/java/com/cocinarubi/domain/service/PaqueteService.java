@@ -15,6 +15,7 @@ import com.cocinarubi.domain.entity.Paquete;
 import com.cocinarubi.domain.entity.PaqueteProducto;
 import com.cocinarubi.domain.entity.ProductoCocina;
 import com.cocinarubi.domain.mapper.PaqueteMapper;
+import com.cocinarubi.exception.AdvertenciaEliminacionException;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.PaqueteLineaRequestDTO;
 import com.cocinarubi.presentation.dto.request.PaqueteRequestDTO;
@@ -140,16 +141,14 @@ public class PaqueteService {
     }
 
     @Transactional
-    public void delete(int id) {
+    public void delete(int id, boolean saltarConfirmacion) {
         if (!paqueteRepository.existsById(id)) {
             throw new BusinessException(
                     "Paquete no encontrado con id: " + id, HttpStatus.NOT_FOUND);
         }
-        // Bloquea el DELETE si el paquete forma parte de algún Pedido histórico.
-        if (paquetePedidoRepository.existsByPaquete_IdPaquete(id)) {
-            throw new BusinessException(
-                    "No se puede eliminar el paquete porque forma parte de uno o más pedidos",
-                    HttpStatus.CONFLICT);
+        if (!saltarConfirmacion && paquetePedidoRepository.existsByPaquete_IdPaquete(id)) {
+            throw new AdvertenciaEliminacionException(
+                    "Este paquete forma parte de uno o más pedidos. ¿Desea continuar con la eliminación?");
         }
         paqueteRepository.deleteById(id);
     }

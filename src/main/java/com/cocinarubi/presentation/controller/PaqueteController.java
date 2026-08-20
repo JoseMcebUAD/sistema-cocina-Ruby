@@ -74,8 +74,10 @@ public class PaqueteController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable int id) {
-        paqueteService.delete(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<ApiResponse<?>> delete(
+            @PathVariable int id,
+            @RequestParam(defaultValue = "false") boolean saltarConfirmacion) {
+        paqueteService.delete(id, saltarConfirmacion);
+        return ResponseEntity.ok(ApiResponse.exito(200, "Paquete eliminado correctamente", null));
     }
 }
