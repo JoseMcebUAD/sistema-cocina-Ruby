@@ -93,7 +93,7 @@ public class ComplementoServiceTest {
         when(complementoRepository.existsEnBasicos(10)).thenReturn(false);
         when(complementoRepository.existsEnPedidos(10)).thenReturn(false);
 
-        assertDoesNotThrow(() -> complementoService.delete(10));
+        assertDoesNotThrow(() -> complementoService.delete(10,false));
         verify(complementoRepository).deleteById(10);
         System.out.println("[OK] delete eliminó complemento id=10");
     }
@@ -103,7 +103,7 @@ public class ComplementoServiceTest {
     public void deleteComplemento_noEncontrado() {
         when(complementoRepository.existsById(99)).thenReturn(false);
 
-        assertThrows(BusinessException.class, () -> complementoService.delete(99));
+        assertThrows(BusinessException.class, () -> complementoService.delete(99,false));
         verify(complementoRepository, never()).deleteById(anyInt());
         System.out.println("[OK] delete lanzó BusinessException para id=99");
     }
@@ -114,7 +114,7 @@ public class ComplementoServiceTest {
         when(complementoRepository.existsById(10)).thenReturn(true);
         when(complementoRepository.existsEnBasicos(10)).thenReturn(true);
 
-        assertThrows(BusinessException.class, () -> complementoService.delete(10));
+        assertThrows(BusinessException.class, () -> complementoService.delete(10,false));
         verify(complementoRepository, never()).deleteById(anyInt());
         System.out.println("[OK] delete lanzó CONFLICT por complemento en básicos");
     }
@@ -126,7 +126,7 @@ public class ComplementoServiceTest {
         when(complementoRepository.existsEnBasicos(10)).thenReturn(false);
         when(complementoRepository.existsEnPedidos(10)).thenReturn(true);
 
-        assertThrows(BusinessException.class, () -> complementoService.delete(10));
+        assertThrows(BusinessException.class, () -> complementoService.delete(10,false));
         verify(complementoRepository, never()).deleteById(anyInt());
         System.out.println("[OK] delete lanzó CONFLICT por complemento en pedidos");
     }

@@ -188,7 +188,7 @@ public class ProductoCocinaServiceTest {
         when(productoCocinaRepository.existsById(10)).thenReturn(true);
         when(productoCocinaRepository.existsById(10)).thenReturn(false);
 
-        assertDoesNotThrow(() -> productoCocinaService.delete(10));
+        assertDoesNotThrow(() -> productoCocinaService.delete(10,false));
         verify(productoCocinaRepository).deleteById(10);
         System.out.println("[OK] delete eliminó producto id=10");
     }
@@ -199,7 +199,7 @@ public class ProductoCocinaServiceTest {
         when(productoCocinaRepository.existsById(10)).thenReturn(true);
         when(productoCocinaRepository.existsById(10)).thenReturn(false);
 
-        assertThrows(BusinessException.class, () -> productoCocinaService.delete(10));
+        assertThrows(BusinessException.class, () -> productoCocinaService.delete(10,false));
         verify(productoCocinaRepository, never()).deleteById(anyInt());
         System.out.println("[OK] delete lanzó CONFLICT por pedidos asociados (RF-014/017)");
     }
@@ -209,7 +209,7 @@ public class ProductoCocinaServiceTest {
     public void delete_noEncontrado() {
         when(productoCocinaRepository.existsById(99)).thenReturn(false);
 
-        assertThrows(BusinessException.class, () -> productoCocinaService.delete(99));
+        assertThrows(BusinessException.class, () -> productoCocinaService.delete(99,false));
         verify(productoCocinaRepository, never()).deleteById(anyInt());
         System.out.println("[OK] delete lanzó BusinessException para id=99");
     }
