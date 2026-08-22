@@ -134,7 +134,7 @@ public class BasicoServiceTest {
     public void deleteBasico() {
         when(basicoRepository.existsById(1)).thenReturn(true);
 
-        assertDoesNotThrow(() -> basicoService.delete(1));
+        assertDoesNotThrow(() -> basicoService.delete(1,false));
         verify(basicoRepository).deleteById(1);
         System.out.println("[OK] delete eliminó básico id=1");
     }
@@ -144,7 +144,7 @@ public class BasicoServiceTest {
     public void deleteBasico_noEncontrado() {
         when(basicoRepository.existsById(99)).thenReturn(false);
 
-        assertThrows(BusinessException.class, () -> basicoService.delete(99));
+        assertThrows(BusinessException.class, () -> basicoService.delete(99,false));
         verify(basicoRepository, never()).deleteById(anyInt());
         System.out.println("[OK] delete lanzó BusinessException para id=99");
     }
