@@ -20,6 +20,8 @@ import com.cocinarubi.presentation.dto.response.DesayunoMenuItemDTO;
 import com.cocinarubi.presentation.dto.response.MenuWebResponseDTO;
 import com.cocinarubi.presentation.dto.response.PaqueteResponseDTO;
 import com.cocinarubi.presentation.dto.response.ProductoCocinaMenuItemDTO;
+
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,6 +64,7 @@ public class MenuWebService implements IMenuWebService {
     }
 
     @Override
+    @Cacheable(value = "menu-web", key = "'all'")
     public MenuWebResponseDTO getMenu() {
         List<ComidaMenuItemDTO> comidas = comidaRepository
                 .findDisponiblesOrdenados(Estatus.DISPONIBLE)

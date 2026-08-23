@@ -11,6 +11,7 @@ import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.BasicoComplemento;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.exception.BusinessException;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -76,6 +77,7 @@ public class BasicoService {
     }
 
     @Transactional
+    @CacheEvict(value = "menu-web", allEntries = true)
     public BasicoResponseDTO save(BasicoRequestDTO dto) {
         basicoValidation.validarPost(dto);
         if (!dto.isSaltarConfirmacion()) {
@@ -95,6 +97,7 @@ public class BasicoService {
     }
 
     @Transactional
+    @CacheEvict(value = "menu-web", allEntries = true)
     public BasicoResponseDTO update(int id, BasicoRequestDTO dto) {
         Basico existente = findEntityById(id);
         existente.setComida(comidaService.findById(dto.getIdComida()));
@@ -109,6 +112,7 @@ public class BasicoService {
     }
 
 
+    @CacheEvict(value = "menu-web", allEntries = true)
     public void delete(int id, boolean saltarConfirmacion) {
         if (!basicoRepository.existsById(id)) {
             throw new BusinessException("Básico no encontrado con id: " + id, HttpStatus.NOT_FOUND);
@@ -120,6 +124,7 @@ public class BasicoService {
     }
 
     @Transactional
+    @CacheEvict(value = "menu-web", allEntries = true)
     public BasicoResponseDTO toggleDestacado(int id) {
         Basico basico = findEntityById(id);
         basico.setDestacado(!basico.isDestacado());

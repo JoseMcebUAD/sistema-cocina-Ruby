@@ -16,6 +16,7 @@ import com.cocinarubi.domain.entity.PaqueteProducto;
 import com.cocinarubi.domain.entity.ProductoCocina;
 import com.cocinarubi.domain.mapper.PaqueteMapper;
 import com.cocinarubi.exception.AdvertenciaEliminacionException;
+import org.springframework.cache.annotation.CacheEvict;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.PaqueteLineaRequestDTO;
 import com.cocinarubi.presentation.dto.request.PaqueteRequestDTO;
@@ -111,6 +112,7 @@ public class PaqueteService {
     }
 
     @Transactional
+    @CacheEvict(value = "menu-web", allEntries = true)
     public PaqueteResponseDTO save(PaqueteRequestDTO dto) {
         validarLineas(dto.getProductos());
         Paquete paquete = paqueteMapper.toEntity(dto);
@@ -120,6 +122,7 @@ public class PaqueteService {
     }
 
     @Transactional
+    @CacheEvict(value = "menu-web", allEntries = true)
     public PaqueteResponseDTO update(int id, PaqueteRequestDTO dto) {
         validarLineas(dto.getProductos());
         Paquete existente = paqueteRepository.findByIdWithProductos(id)
@@ -141,6 +144,7 @@ public class PaqueteService {
     }
 
     @Transactional
+    @CacheEvict(value = "menu-web", allEntries = true)
     public void delete(int id, boolean saltarConfirmacion) {
         if (!paqueteRepository.existsById(id)) {
             throw new BusinessException(
