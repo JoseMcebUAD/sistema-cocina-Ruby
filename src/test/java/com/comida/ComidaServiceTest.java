@@ -4,6 +4,7 @@ import com.cocinarubi.DBConstants.Estatus;
 import com.cocinarubi.dao.ComidaRepository;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.domain.service.ComidaService;
+import com.cocinarubi.domain.service.ComplementoService;
 import com.cocinarubi.exception.BusinessException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,9 @@ public class ComidaServiceTest {
 
     @Mock
     private ComidaRepository comidaRepository;
+
+    @Mock
+    private ComplementoService complementoService;
 
     @InjectMocks
     private ComidaService comidaService;
@@ -48,6 +52,8 @@ public class ComidaServiceTest {
 
         assertEquals(1, result.size());
         assertEquals("Pollo en salsa roja", result.get(0).getNombreComida());
+        assertNotNull(result.get(0).getComplementosPredeterminados());
+        assertTrue(result.get(0).getComplementosPredeterminados().isEmpty());
         System.out.println("[OK] findAll retornó " + result.size() + " comida(s): " + result.get(0).getNombreComida());
     }
 
@@ -61,6 +67,8 @@ public class ComidaServiceTest {
         assertNotNull(result);
         assertEquals(10, result.getIdComida());
         assertEquals(Estatus.DISPONIBLE, result.getEstatus());
+        assertNotNull(result.getComplementosPredeterminados());
+        assertTrue(result.getComplementosPredeterminados().isEmpty());
         System.out.println("[OK] findById retornó comida id=" + result.getIdComida());
     }
 
@@ -93,7 +101,7 @@ public class ComidaServiceTest {
         when(comidaRepository.existsEnPedidos(10)).thenReturn(false);
         when(comidaRepository.existsEnBasicos(10)).thenReturn(false);
 
-        assertDoesNotThrow(() -> comidaService.delete(10));
+        assertDoesNotThrow(() -> comidaService.delete(10,false));
         verify(comidaRepository).deleteById(10);
         System.out.println("[OK] delete eliminó comida id=10");
     }
@@ -103,7 +111,7 @@ public class ComidaServiceTest {
     public void deleteComida_noEncontrado() {
         when(comidaRepository.existsById(99)).thenReturn(false);
 
-        assertThrows(BusinessException.class, () -> comidaService.delete(99));
+        assertThrows(BusinessException.class, () -> comidaService.delete(99,false));
         verify(comidaRepository, never()).deleteById(anyInt());
         System.out.println("[OK] delete lanzó BusinessException para id=99");
     }
@@ -114,7 +122,7 @@ public class ComidaServiceTest {
         when(comidaRepository.existsById(10)).thenReturn(true);
         when(comidaRepository.existsEnPedidos(10)).thenReturn(true);
 
-        assertThrows(BusinessException.class, () -> comidaService.delete(10));
+        assertThrows(BusinessException.class, () -> comidaService.delete(10,false));
         verify(comidaRepository, never()).deleteById(anyInt());
         System.out.println("[OK] delete lanzó CONFLICT por comida en pedidos");
     }
@@ -126,7 +134,7 @@ public class ComidaServiceTest {
         when(comidaRepository.existsEnPedidos(10)).thenReturn(false);
         when(comidaRepository.existsEnBasicos(10)).thenReturn(true);
 
-        assertThrows(BusinessException.class, () -> comidaService.delete(10));
+        assertThrows(BusinessException.class, () -> comidaService.delete(10,false));
         verify(comidaRepository, never()).deleteById(anyInt());
         System.out.println("[OK] delete lanzó CONFLICT por comida en básicos");
     }

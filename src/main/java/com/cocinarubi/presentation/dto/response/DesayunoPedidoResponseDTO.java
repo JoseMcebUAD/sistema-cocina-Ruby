@@ -5,13 +5,13 @@ import java.math.BigDecimal;
 public class DesayunoPedidoResponseDTO {
 
     private int idDesayunoPedido;
-    private int idDesayuno;
+    private Integer idDesayuno;
     private String nombreDesayuno;
     private BigDecimal precio;
 
     public DesayunoPedidoResponseDTO() {}
 
-    public DesayunoPedidoResponseDTO(int idDesayunoPedido, int idDesayuno, String nombreDesayuno, BigDecimal precio) {
+    public DesayunoPedidoResponseDTO(int idDesayunoPedido, Integer idDesayuno, String nombreDesayuno, BigDecimal precio) {
         this.idDesayunoPedido = idDesayunoPedido;
         this.idDesayuno = idDesayuno;
         this.nombreDesayuno = nombreDesayuno;
@@ -21,8 +21,8 @@ public class DesayunoPedidoResponseDTO {
     public int getIdDesayunoPedido() { return idDesayunoPedido; }
     public void setIdDesayunoPedido(int idDesayunoPedido) { this.idDesayunoPedido = idDesayunoPedido; }
 
-    public int getIdDesayuno() { return idDesayuno; }
-    public void setIdDesayuno(int idDesayuno) { this.idDesayuno = idDesayuno; }
+    public Integer getIdDesayuno() { return idDesayuno; }
+    public void setIdDesayuno(Integer idDesayuno) { this.idDesayuno = idDesayuno; }
 
     public String getNombreDesayuno() { return nombreDesayuno; }
     public void setNombreDesayuno(String nombreDesayuno) { this.nombreDesayuno = nombreDesayuno; }

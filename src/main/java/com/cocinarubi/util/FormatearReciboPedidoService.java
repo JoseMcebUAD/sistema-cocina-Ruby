@@ -7,6 +7,7 @@ import java.util.List;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoExtraResponseDTO;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
+import com.cocinarubi.presentation.dto.response.ComplementoPredeterminadoComidaResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComplementoResponseDTO;
 import com.cocinarubi.presentation.dto.response.PaquetePedidoResponseDTO;
 
@@ -17,9 +18,12 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
         String lineaComida = comida.getTamanoPorcion() + " " + comida.getNombreComida();
 
         List<ComplementoResponseDTO> complementos = comida.getComplementos();
-        boolean hayComplementos = complementos != null && !complementos.isEmpty();
+        List<ComplementoPredeterminadoComidaResponseDTO> predeterminados = comida.getComplementosPredeterminados();
 
-        if (!hayComplementos) {
+        boolean hayComplementos = complementos != null && !complementos.isEmpty();
+        boolean hayPredeterminados = predeterminados != null && !predeterminados.isEmpty();
+
+        if (!hayComplementos && !hayPredeterminados) {
             lineas.add(construirLineaConPrecio(lineaComida, precio, anchoEfectivo));
             return lineas;
         }
@@ -27,13 +31,24 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
         lineas.add(lineaComida);
         lineas.add("");
 
-        for (ComplementoResponseDTO compl : complementos) {
-            String nombreCompl = compl.getNombreComplemento();
-            BigDecimal precioComp = compl.getPrecioExtra();
-            if (precioComp != null && precioComp.compareTo(BigDecimal.ZERO) != 0) {
-                lineas.add(construirLineaConPrecio(nombreCompl, FORMATO_PRECIO.format(precioComp), anchoEfectivo));
-            } else {
-                lineas.add(nombreCompl);
+        if (hayComplementos) {
+            for (ComplementoResponseDTO compl : complementos) {
+                String nombreCompl = compl.getNombreComplemento();
+                BigDecimal precioComp = compl.getPrecioExtra();
+                if (precioComp != null && precioComp.compareTo(BigDecimal.ZERO) != 0) {
+                    lineas.add(construirLineaConPrecio(nombreCompl, FORMATO_PRECIO.format(precioComp), anchoEfectivo));
+                } else {
+                    lineas.add(nombreCompl);
+                }
+            }
+        }
+
+        if (hayPredeterminados) {
+            for (ComplementoPredeterminadoComidaResponseDTO pred : predeterminados) {
+                String nombre = pred.getCantidad() > 1
+                        ? pred.getCantidad() + "x " + pred.getNombreComplemento()
+                        : pred.getNombreComplemento();
+                lineas.add(nombre);
             }
         }
 
@@ -44,6 +59,12 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
 
     public List<String> formatBasicoBlock(BasicoPedidoResponseDTO basico, String precio, int anchoEfectivo) {
         List<String> lineas = new ArrayList<>();
+
+        // basicoDTO puede ser null si id_basico fue SET NULL (básico eliminado)
+        if (basico.getBasico() == null) {
+            lineas.add(construirLineaConPrecio("(básico eliminado)", precio, anchoEfectivo));
+            return lineas;
+        }
 
         List<ComplementoResponseDTO> complementos = basico.getBasico().getComplementos();
         List<BasicoPedidoExtraResponseDTO> extras = basico.getExtras();

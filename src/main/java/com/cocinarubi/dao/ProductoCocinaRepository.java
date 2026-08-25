@@ -22,6 +22,10 @@ public interface ProductoCocinaRepository extends JpaRepository<ProductoCocina, 
     @Query("SELECT p FROM ProductoCocina p WHERE p.estatus = :estatus ORDER BY p.nombreProducto ASC")
     List<ProductoCocina> findDisponiblesOrdenados(@Param("estatus") DBConstants.Estatus estatus);
 
+    // Usado por MenuDigitalService para las categorías: hidrata subcategorías en una sola query (evita N+1).
+    @Query("SELECT DISTINCT p FROM ProductoCocina p LEFT JOIN FETCH p.subcategorias WHERE p.estatus = :estatus ORDER BY p.nombreProducto ASC")
+    List<ProductoCocina> findDisponiblesOrdenadosConSubcategoria(@Param("estatus") DBConstants.Estatus estatus);
+
     @Query(value = "SELECT p FROM ProductoCocina p WHERE p.estatus = :estatus " +
                    "ORDER BY p.destacado DESC, p.categoria.nombre ASC, p.nombreProducto ASC",
            countQuery = "SELECT COUNT(p) FROM ProductoCocina p WHERE p.estatus = :estatus")

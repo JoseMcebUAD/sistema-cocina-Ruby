@@ -161,7 +161,7 @@ public class PaqueteServiceTest {
         when(paqueteRepository.existsById(5)).thenReturn(true);
         when(paquetePedidoRepository.existsByPaquete_IdPaquete(5)).thenReturn(true);
 
-        BusinessException ex = assertThrows(BusinessException.class, () -> service.delete(5));
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.delete(5,false));
         assertEquals(409, ex.getHttpStatus().value());
         verify(paqueteRepository, never()).deleteById(anyInt());
         System.out.println("[OK] delete lanzó 409 por paquete referenciado en pedido");
@@ -173,7 +173,7 @@ public class PaqueteServiceTest {
         PaqueteService service = rebuildService();
         when(paqueteRepository.existsById(99)).thenReturn(false);
 
-        BusinessException ex = assertThrows(BusinessException.class, () -> service.delete(99));
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.delete(99,false));
         assertEquals(404, ex.getHttpStatus().value());
         System.out.println("[OK] delete lanzó 404 para id=99");
     }

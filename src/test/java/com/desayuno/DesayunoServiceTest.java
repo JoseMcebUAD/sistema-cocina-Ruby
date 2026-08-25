@@ -92,7 +92,7 @@ public class DesayunoServiceTest {
         when(desayunoRepository.existsById(10)).thenReturn(true);
         when(desayunoRepository.existsEnPedidos(10)).thenReturn(false);
 
-        assertDoesNotThrow(() -> desayunoService.delete(10));
+        assertDoesNotThrow(() -> desayunoService.delete(10,false));
         verify(desayunoRepository).deleteById(10);
         System.out.println("[OK] delete eliminó desayuno id=10");
     }
@@ -102,7 +102,7 @@ public class DesayunoServiceTest {
     public void deleteDesayuno_noEncontrado() {
         when(desayunoRepository.existsById(99)).thenReturn(false);
 
-        assertThrows(BusinessException.class, () -> desayunoService.delete(99));
+        assertThrows(BusinessException.class, () -> desayunoService.delete(99,false));
         verify(desayunoRepository, never()).deleteById(anyInt());
         System.out.println("[OK] delete lanzó BusinessException para id=99");
     }
@@ -113,7 +113,7 @@ public class DesayunoServiceTest {
         when(desayunoRepository.existsById(10)).thenReturn(true);
         when(desayunoRepository.existsEnPedidos(10)).thenReturn(true);
 
-        assertThrows(BusinessException.class, () -> desayunoService.delete(10));
+        assertThrows(BusinessException.class, () -> desayunoService.delete(10,false));
         verify(desayunoRepository, never()).deleteById(anyInt());
         System.out.println("[OK] delete lanzó CONFLICT por desayuno en pedidos");
     }
