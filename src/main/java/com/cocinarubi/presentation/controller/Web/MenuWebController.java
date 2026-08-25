@@ -1,4 +1,4 @@
-package com.cocinarubi.presentation.controller;
+package com.cocinarubi.presentation.controller.Web;
 
 import com.cocinarubi.domain.interfaces.IMenuWebService;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
