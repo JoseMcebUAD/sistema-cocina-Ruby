@@ -6,6 +6,7 @@ import java.util.List;
 public class RutaResponseDTO {
 
     private int idRuta;
+    private String uuidRuta;
     private String nombre;
     private List<CoordinateDTO> coordinates;
     private boolean active;
@@ -28,9 +29,10 @@ public class RutaResponseDTO {
 
     public RutaResponseDTO() {}
 
-    public RutaResponseDTO(int idRuta, String nombre, List<CoordinateDTO> coordinates, boolean active,
-                           BigDecimal tarifaEnvio, Integer tiempoEstimadoMin, Integer orden) {
+    public RutaResponseDTO(int idRuta, String uuidRuta, String nombre, List<CoordinateDTO> coordinates,
+                           boolean active, BigDecimal tarifaEnvio, Integer tiempoEstimadoMin, Integer orden) {
         this.idRuta = idRuta;
+        this.uuidRuta = uuidRuta;
         this.nombre = nombre;
         this.coordinates = coordinates;
         this.active = active;
@@ -41,6 +43,9 @@ public class RutaResponseDTO {
 
     public int getIdRuta() { return idRuta; }
     public void setIdRuta(int idRuta) { this.idRuta = idRuta; }
+
+    public String getUuidRuta() { return uuidRuta; }
+    public void setUuidRuta(String uuidRuta) { this.uuidRuta = uuidRuta; }
 
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
