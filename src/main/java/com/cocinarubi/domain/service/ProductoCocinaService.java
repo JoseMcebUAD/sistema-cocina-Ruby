@@ -7,7 +7,6 @@ import com.cocinarubi.domain.entity.Categoria;
 import com.cocinarubi.domain.entity.ProductoCocina;
 import com.cocinarubi.domain.entity.Subcategoria;
 import com.cocinarubi.exception.BusinessException;
-import org.springframework.cache.annotation.CacheEvict;
 import com.cocinarubi.presentation.dto.request.ProductoCocinaRequestDTO;
 import com.cocinarubi.presentation.dto.response.ProductoCocinaResponseDTO;
 import com.cocinarubi.presentation.dto.response.SubcategoriaResponseDTO;
@@ -81,7 +80,6 @@ public class ProductoCocinaService {
     }
 
     @Transactional
-    @CacheEvict(value = "menu-web", allEntries = true)
     public ProductoCocinaResponseDTO save(ProductoCocinaRequestDTO dto) {
         productoCocinaValidation.validarPost(dto);
         if (!dto.isSaltarConfirmacion()) {
@@ -105,7 +103,6 @@ public class ProductoCocinaService {
     }
 
     @Transactional
-    @CacheEvict(value = "menu-web", allEntries = true)
     public ProductoCocinaResponseDTO update(int id, ProductoCocinaRequestDTO dto) {
         productoCocinaValidation.validarPost(dto);
         if (!dto.isSaltarConfirmacion()) {
@@ -126,7 +123,6 @@ public class ProductoCocinaService {
         return toResponseDTO(productoCocinaRepository.save(existente));
     }
 
-    @CacheEvict(value = "menu-web", allEntries = true)
     public void delete(int id, boolean saltarConfirmacion) {
         if (!productoCocinaRepository.existsById(id)) {
             throw new BusinessException(
@@ -159,7 +155,6 @@ public class ProductoCocinaService {
     }
 
     @Transactional
-    @CacheEvict(value = "menu-web", allEntries = true)
     public ProductoCocinaResponseDTO toggleDestacado(int id) {
         ProductoCocina entidad = findEntityById(id);
         entidad.setDestacado(!entidad.isDestacado());

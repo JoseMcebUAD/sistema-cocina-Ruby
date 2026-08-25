@@ -5,8 +5,6 @@ import com.cocinarubi.dao.ComidaRepository;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.exception.AdvertenciaEliminacionException;
 import com.cocinarubi.exception.BusinessException;
-
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -47,7 +45,6 @@ public class ComidaService {
                         "Comida no encontrada con id: " + id, HttpStatus.NOT_FOUND));
     }
 
-    @CacheEvict(value = "menu-web", allEntries = true)
     public Comida save(Comida comida) {
         if (comida.getPrecioMedia() != null && comida.getPrecioEntera() != null
                 && comida.getPrecioMedia().compareTo(comida.getPrecioEntera()) >= 0) {
@@ -63,7 +60,6 @@ public class ComidaService {
         return comidaRepository.save(comida);
     }
 
-    @CacheEvict(value = "menu-web", allEntries = true)
     public void delete(int id, boolean saltarConfirmacion) {
         if (!comidaRepository.existsById(id)) {
             throw new BusinessException("Comida no encontrada con id: " + id, HttpStatus.NOT_FOUND);
@@ -75,7 +71,6 @@ public class ComidaService {
         comidaRepository.deleteById(id);
     }
 
-    @CacheEvict(value = "menu-web", allEntries = true)
     public Comida toggleDestacado(int id) {
         Comida comida = findById(id);
         comida.setDestacado(!comida.isDestacado());

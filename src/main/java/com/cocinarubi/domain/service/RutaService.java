@@ -20,7 +20,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -55,7 +54,6 @@ public class RutaService {
     public RutaResponseDTO save(RutaRequestDTO dto) {
         Geometry boundary = parseBoundary(dto.getBoundaryWkt());
         Ruta ruta = Ruta.builder()
-                .uuidRuta(UUID.randomUUID().toString())
                 .nombre(dto.getNombre())
                 .boundary(boundary)
                 .isActive(dto.isActive())
@@ -173,7 +171,6 @@ public class RutaService {
     private RutaSimpleResponseDTO toSimpleResponseDTO(Ruta ruta) {
         return new RutaSimpleResponseDTO(
                 ruta.getIdRuta(),
-                ruta.getUuidRuta(),
                 ruta.getNombre(),
                 ruta.isActive(),
                 ruta.getTarifaEnvio(),
@@ -191,7 +188,6 @@ public class RutaService {
                 .collect(Collectors.toList());
         return new RutaResponseDTO(
                 ruta.getIdRuta(),
-                ruta.getUuidRuta(),
                 ruta.getNombre(),
                 coordinates,
                 ruta.isActive(),

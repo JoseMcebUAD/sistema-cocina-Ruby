@@ -8,7 +8,6 @@ import java.util.List;
 public class BasicoResponseDTO {
 
     private int idBasico;
-    private String uuidBasico;
     private int idComida;
     private String nombreComida;
     private String descripcion;
@@ -20,11 +19,10 @@ public class BasicoResponseDTO {
 
     public BasicoResponseDTO() {}
 
-    public BasicoResponseDTO(int idBasico, String uuidBasico, int idComida, String nombreComida,
-                              String descripcion, boolean destacado, BigDecimal precioBasico,
-                              Estatus estatus, List<ComplementoResponseDTO> complementos) {
+    public BasicoResponseDTO(int idBasico, int idComida, String nombreComida, String descripcion,
+                              boolean destacado, BigDecimal precioBasico, Estatus estatus,
+                              List<ComplementoResponseDTO> complementos) {
         this.idBasico = idBasico;
-        this.uuidBasico = uuidBasico;
         this.idComida = idComida;
         this.nombreComida = nombreComida;
         this.descripcion = descripcion;
@@ -37,9 +35,6 @@ public class BasicoResponseDTO {
 
     public int getIdBasico() { return idBasico; }
     public void setIdBasico(int idBasico) { this.idBasico = idBasico; }
-
-    public String getUuidBasico() { return uuidBasico; }
-    public void setUuidBasico(String uuidBasico) { this.uuidBasico = uuidBasico; }
 
     public int getIdComida() { return idComida; }
     public void setIdComida(int idComida) { this.idComida = idComida; }

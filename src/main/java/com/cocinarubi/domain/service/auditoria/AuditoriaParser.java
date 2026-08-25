@@ -55,6 +55,7 @@ public class AuditoriaParser {
             case "anuncio"            -> describirAnuncio(accion, despues, antes, id, fecha);
             case "ruta"               -> describirRuta(accion, despues, antes, id, fecha);
             case "tarifa_especial"    -> describirTarifaEspecial(accion, despues, antes, id, fecha);
+            case "favorito_cliente"   -> describirFavoritoCliente(accion, despues, antes, id, fecha);
             case "codigo_cliente"     -> describirCodigoCliente(accion, despues, antes, id, fecha);
             case "pago_repartidor"    -> describirPagoRepartidor(accion, despues, antes, id, fecha);
             case "horario_atencion"   -> describirHorarioAtencion(accion, despues, antes, id, fecha);
@@ -253,6 +254,14 @@ public class AuditoriaParser {
             }
             case PUT    -> "Se actualizó la tarifa especial #" + id;
             case DELETE -> "Se eliminó la tarifa especial #" + id;
+        };
+    }
+
+    private String describirFavoritoCliente(TipoOperacion accion, JsonNode despues, JsonNode antes, Integer id, LocalDateTime fecha) {
+        return switch (accion) {
+            case POST   -> "Se agregó un favorito del cliente";
+            case PUT    -> "Se actualizó el favorito #" + id;
+            case DELETE -> "Se eliminó el favorito #" + id;
         };
     }
 
