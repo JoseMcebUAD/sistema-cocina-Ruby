@@ -64,6 +64,10 @@ public class ComidaService {
         if (!comidaRepository.existsById(id)) {
             throw new BusinessException("Comida no encontrada con id: " + id, HttpStatus.NOT_FOUND);
         }
+        if (!saltarConfirmacion && comidaRepository.existsEnBasicos(id)) {
+            throw new AdvertenciaEliminacionException(
+                    "Esta comida forma parte de uno o más paquetes básicos. Al eliminarla, los básicos asociados también serán eliminados. ¿Desea continuar?");
+        }
         if (!saltarConfirmacion && comidaRepository.existsEnPedidos(id)) {
             throw new AdvertenciaEliminacionException(
                     "Esta comida tiene pedidos relacionados. ¿Desea continuar con la eliminación?");
