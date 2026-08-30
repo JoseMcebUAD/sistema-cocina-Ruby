@@ -166,7 +166,7 @@ public class AuditAspect {
     private static final String[] GETTERS_ID = {
             "getIdPedido", "getIdComida", "getIdComplemento", "getIdBasico", "getIdDesayuno",
             "getIdCliente", "getIdProductoCocina", "getIdInventarioComida", "getIdUsuario",
-            "getIdAnuncio", "getIdRuta", "getIdTarifaLluvia",
+            "getIdAnuncio", "getIdRuta", "getIdTarifaLluvia", "getIdFavoritoCliente",
             "getIdCodigoCliente", "getIdPagoRepartidor", "getIdHorarioAtencionComidas",
             "getIdComidaPedido", "getIdBasicoPedido", "getIdDesayunoPedido",
             "getIdBasicoComplemento", "getIdComplementoComidaPedido",

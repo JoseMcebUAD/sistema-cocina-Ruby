@@ -48,7 +48,6 @@ public class BasicoBusquedaImp implements BusquedaProductoStrategy {
                 .collect(Collectors.toList());
         return new BasicoResponseDTO(
                 b.getIdBasico(),
-                b.getUuidBasico(),
                 b.getComida().getIdComida(),
                 b.getComida().getNombreComida(),
                 b.getDescripcion(),

@@ -192,13 +192,10 @@ public class PedidoMapper {
                             bc.getComplemento().getNombreComplemento(),
                             bc.getComplemento().getPrecioExtra()))
                     .collect(Collectors.toList());
-            // id_comida puede ser NULL (SET NULL) si la comida fue eliminada del catálogo
-            var comida = b.getComida();
             basicoDTO = new BasicoResponseDTO(
                     b.getIdBasico(),
-                    b.getUuidBasico(),
-                    comida != null ? comida.getIdComida() : 0,
-                    comida != null ? comida.getNombreComida() : "(eliminado)",
+                    b.getComida().getIdComida(),
+                    b.getComida().getNombreComida(),
                     b.getDescripcion(),
                     b.isDestacado(),
                     b.getPrecioBasico(),

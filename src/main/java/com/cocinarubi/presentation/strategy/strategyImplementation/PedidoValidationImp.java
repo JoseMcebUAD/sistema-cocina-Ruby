@@ -101,8 +101,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                 CompletableFuture.runAsync(() -> validarRutaDomicilioCocina(dto),     EXECUTOR_VALIDACION),
                 CompletableFuture.runAsync(() -> validarRegistroCliente(dto),         EXECUTOR_VALIDACION),
                 CompletableFuture.runAsync(() -> validarMetodosPagoNoDuplicados(dto), EXECUTOR_VALIDACION),
-                CompletableFuture.runAsync(() -> validarPagoClienteNoExcedaTotal(dto),EXECUTOR_VALIDACION),
-                CompletableFuture.runAsync(() -> validarSubtotalMinimoWeb(dto),       EXECUTOR_VALIDACION)
+                CompletableFuture.runAsync(() -> validarPagoClienteNoExcedaTotal(dto),EXECUTOR_VALIDACION)
         );
         try {
             CompletableFuture.allOf(tareas.toArray(new CompletableFuture[0])).join();
@@ -122,8 +121,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
         boolean tieneProductos = !dto.getComidas().isEmpty()
                 || !dto.getDesayunos().isEmpty()
                 || !dto.getBasicos().isEmpty()
-                || !dto.getProductosCocina().isEmpty()
-                || !dto.getPaquetes().isEmpty();
+                || !dto.getProductosCocina().isEmpty();
         if (!tieneProductos) {
             throw new BusinessException(
                     "El pedido debe incluir al menos un producto",
@@ -357,45 +355,5 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
             total = total.add(dto.getPedidoDomicilioCocina().getTarifa());
         }
         return total;
-    }
-
-    /** Solo WEB: el subtotal de productos debe ser mayor a $80.00. */
-    private void validarSubtotalMinimoWeb(PedidoRequestDTO dto) {
-        if (dto.getPedidoCreadoDesde() == PedidoCreadoDesde.COCINA) return;
-
-        BigDecimal subtotal = BigDecimal.ZERO;
-
-        for (ComidaPedidoDTO comida : dto.getComidas()) {
-            if (comida.getPrecioUnitario() != null)
-                subtotal = subtotal.add(comida.getPrecioUnitario());
-            for (ComplementoPedidoDTO comp : comida.getComplementos()) {
-                if (comp.getPrecioUnitario() != null)
-                    subtotal = subtotal.add(comp.getPrecioUnitario());
-            }
-        }
-        for (DesayunoPedidoDTO desayuno : dto.getDesayunos()) {
-            if (desayuno.getPrecio() != null)
-                subtotal = subtotal.add(desayuno.getPrecio());
-        }
-        for (BasicoPedidoDTO basico : dto.getBasicos()) {
-            if (basico.getPrecioUnitario() != null)
-                subtotal = subtotal.add(basico.getPrecioUnitario());
-        }
-        for (ProductoCocinaPedidoDTO producto : dto.getProductosCocina()) {
-            if (producto.getPrecioUnitario() != null && producto.getCantidad() != null)
-                subtotal = subtotal.add(producto.getPrecioUnitario()
-                        .multiply(BigDecimal.valueOf(producto.getCantidad())));
-        }
-        for (PaquetePedidoDTO paquete : dto.getPaquetes()) {
-            if (paquete.getPrecioUnitario() != null && paquete.getCantidad() != null)
-                subtotal = subtotal.add(paquete.getPrecioUnitario()
-                        .multiply(BigDecimal.valueOf(paquete.getCantidad())));
-        }
-
-        if (subtotal.compareTo(new BigDecimal("80")) <= 0) {
-            throw new BusinessException(
-                    "El subtotal de los productos ($" + subtotal + ") debe ser mayor a $80.00 para realizar un pedido web",
-                    HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
-        }
     }
 }

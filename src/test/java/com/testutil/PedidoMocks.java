@@ -6,11 +6,8 @@ import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.DBConstants.TamanoPorcion;
 import com.cocinarubi.DBConstants.TipoPedido;
 import com.cocinarubi.domain.entity.Basico;
-import com.cocinarubi.domain.entity.BasicoComplemento;
 import com.cocinarubi.domain.entity.Categoria;
 import com.cocinarubi.domain.entity.BasicoPedido;
-import com.cocinarubi.domain.entity.Complemento;
-import com.cocinarubi.presentation.dto.response.PaqueteResponseDTO;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.domain.entity.ComidaPedido;
 import com.cocinarubi.domain.entity.Desayuno;
@@ -24,7 +21,6 @@ import com.cocinarubi.domain.entity.Ruta;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * Fábrica estática de entidades mock para tests unitarios.
@@ -133,41 +129,6 @@ public class PedidoMocks {
                 .destacado(false)
                 .categoria(CATEGORIA_POSTRE)
                 .build();
-    }
-
-    /** Basico DISPONIBLE con comida precargada; complementos vacíos. */
-    public static Basico basicoConComida() {
-        return Basico.builder()
-                .idBasico(10)
-                .uuidBasico("uuid-basico-10")
-                .comida(comida())
-                .descripcion("Básico completo")
-                .destacado(false)
-                .precioBasico(BigDecimal.valueOf(80))
-                .estatus(Estatus.DISPONIBLE)
-                .build();
-    }
-
-    /** Basico DISPONIBLE con comida y un complemento (Arroz, precioExtra=0). */
-    public static Basico basicoConComplemento() {
-        Complemento comp = Complemento.builder()
-                .idComplemento(1)
-                .nombreComplemento("Arroz")
-                .precioExtra(BigDecimal.ZERO)
-                .build();
-        BasicoComplemento bc = BasicoComplemento.builder()
-                .idBasicoComplemento(1)
-                .complemento(comp)
-                .build();
-        Basico b = basicoConComida();
-        b.addComplemento(bc);
-        return b;
-    }
-
-    /** PaqueteResponseDTO mínimo para stubbing de PaqueteService.findDisponibles(). */
-    public static PaqueteResponseDTO paqueteResponseDTO() {
-        return new PaqueteResponseDTO(10, BigDecimal.valueOf(120), "Promo mixta",
-                Estatus.DISPONIBLE, false, List.of());
     }
 
     public static Ruta ruta() {

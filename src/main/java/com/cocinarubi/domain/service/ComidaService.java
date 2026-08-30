@@ -5,8 +5,6 @@ import com.cocinarubi.dao.ComidaRepository;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.exception.AdvertenciaEliminacionException;
 import com.cocinarubi.exception.BusinessException;
-
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -47,7 +45,6 @@ public class ComidaService {
                         "Comida no encontrada con id: " + id, HttpStatus.NOT_FOUND));
     }
 
-    @CacheEvict(value = "menu-web", allEntries = true)
     public Comida save(Comida comida) {
         if (comida.getPrecioMedia() != null && comida.getPrecioEntera() != null
                 && comida.getPrecioMedia().compareTo(comida.getPrecioEntera()) >= 0) {
@@ -63,19 +60,24 @@ public class ComidaService {
         return comidaRepository.save(comida);
     }
 
-    @CacheEvict(value = "menu-web", allEntries = true)
     public void delete(int id, boolean saltarConfirmacion) {
         if (!comidaRepository.existsById(id)) {
             throw new BusinessException("Comida no encontrada con id: " + id, HttpStatus.NOT_FOUND);
         }
-        if (!saltarConfirmacion && comidaRepository.existsEnPedidos(id)) {
-            throw new AdvertenciaEliminacionException(
-                    "Esta comida tiene pedidos relacionados. ¿Desea continuar con la eliminación?");
+        if(!saltarConfirmacion){
+            if (comidaRepository.existsEnBasicos(id)) {
+                throw new AdvertenciaEliminacionException(
+                        "Esta comida forma parte de uno o más paquetes básicos. Al eliminarla, los básicos asociados también serán eliminados. ¿Desea continuar?");
+            }
+            
+            if (comidaRepository.existsEnPedidos(id)) {
+                throw new AdvertenciaEliminacionException(
+                        "Esta comida tiene pedidos relacionados. ¿Desea continuar con la eliminación?");
+            }
         }
         comidaRepository.deleteById(id);
     }
 
-    @CacheEvict(value = "menu-web", allEntries = true)
     public Comida toggleDestacado(int id) {
         Comida comida = findById(id);
         comida.setDestacado(!comida.isDestacado());
