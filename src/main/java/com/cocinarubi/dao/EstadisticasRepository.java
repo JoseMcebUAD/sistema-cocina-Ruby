@@ -66,7 +66,7 @@ public interface EstadisticasRepository extends JpaRepository<Pedido, Integer> {
             SELECT new com.cocinarubi.presentation.dto.response.EstadisticaRutaItemDTO(
                 r.idRuta,
                 r.nombre,
-                r.orden,
+                o.idOrdenRuta,
                 COALESCE(SUM(
                     CASE
                         WHEN p.metodoPagoSecundario IS NULL THEN p.precioFinalOrden
@@ -79,11 +79,12 @@ public interface EstadisticasRepository extends JpaRepository<Pedido, Integer> {
             FROM Pedido p
             JOIN p.pedidoDomicilio pd
             JOIN pd.ruta r
+            LEFT JOIN r.ordenRuta o
             WHERE (:desde IS NULL OR p.fechaExpedicionPedido >= :desde)
               AND (:hasta IS NULL OR p.fechaExpedicionPedido <= :hasta)
               AND (:metodoPago IS NULL OR p.metodoPagoPrincipal = :metodoPago OR p.metodoPagoSecundario = :metodoPago)
-            GROUP BY r.idRuta, r.nombre, r.orden
-            ORDER BY r.orden ASC
+            GROUP BY r.idRuta, r.nombre, o.idOrdenRuta
+            ORDER BY o.idOrdenRuta ASC NULLS LAST
             """)
     List<EstadisticaRutaItemDTO> findIngresosPorRutaWeb(
             @Param("desde") LocalDateTime desde,
@@ -99,7 +100,7 @@ public interface EstadisticasRepository extends JpaRepository<Pedido, Integer> {
             SELECT new com.cocinarubi.presentation.dto.response.EstadisticaRutaItemDTO(
                 r.idRuta,
                 r.nombre,
-                r.orden,
+                o.idOrdenRuta,
                 COALESCE(SUM(
                     CASE
                         WHEN p.metodoPagoSecundario IS NULL THEN p.precioFinalOrden
@@ -112,11 +113,12 @@ public interface EstadisticasRepository extends JpaRepository<Pedido, Integer> {
             FROM Pedido p
             JOIN p.pedidoDomicilioCocina pdc
             JOIN pdc.ruta r
+            LEFT JOIN r.ordenRuta o
             WHERE (:desde IS NULL OR p.fechaExpedicionPedido >= :desde)
               AND (:hasta IS NULL OR p.fechaExpedicionPedido <= :hasta)
               AND (:metodoPago IS NULL OR p.metodoPagoPrincipal = :metodoPago OR p.metodoPagoSecundario = :metodoPago)
-            GROUP BY r.idRuta, r.nombre, r.orden
-            ORDER BY r.orden ASC
+            GROUP BY r.idRuta, r.nombre, o.idOrdenRuta
+            ORDER BY o.idOrdenRuta ASC NULLS LAST
             """)
     List<EstadisticaRutaItemDTO> findIngresosPorRutaCocina(
             @Param("desde") LocalDateTime desde,
