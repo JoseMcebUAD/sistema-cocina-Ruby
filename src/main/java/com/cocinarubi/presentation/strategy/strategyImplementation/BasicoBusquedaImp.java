@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Busca básicos DISPONIBLE cuya descripción contenga el término.
+ * Busca básicos DISPONIBLE cuyo nombre de comida contenga el término.
  * El JOIN FETCH del repositorio inicializa comida y complementos antes del mapeo.
  * Retorna List<BasicoResponseDTO> — mismo tipo que BasicoService.
  */
@@ -33,7 +33,7 @@ public class BasicoBusquedaImp implements BusquedaProductoStrategy {
     @Override
     public List<?> buscarTodos(String termino) {
         return basicoRepository
-                .buscarDisponiblesPorDescripcion(termino, DBConstants.Estatus.DISPONIBLE)
+                .buscarDisponiblesPorNombreComida(termino, DBConstants.Estatus.DISPONIBLE)
                 .stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());

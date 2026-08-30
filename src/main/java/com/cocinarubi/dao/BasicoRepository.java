@@ -42,9 +42,9 @@ public interface BasicoRepository extends JpaRepository<Basico, Integer> {
            "JOIN FETCH b.comida c " +
            "LEFT JOIN FETCH b.complementos bc " +
            "LEFT JOIN FETCH bc.complemento " +
-           "WHERE LOWER(b.descripcion) LIKE LOWER(CONCAT('%', :termino, '%')) " +
+           "WHERE LOWER(c.nombreComida) LIKE LOWER(CONCAT('%', :termino, '%')) " +
            "AND b.estatus = :estatus " +
            "ORDER BY b.destacado DESC, c.nombreComida ASC")
-    List<Basico> buscarDisponiblesPorDescripcion(@Param("termino") String termino,
-                                                 @Param("estatus") DBConstants.Estatus estatus);
+    List<Basico> buscarDisponiblesPorNombreComida(@Param("termino") String termino,
+                                                  @Param("estatus") DBConstants.Estatus estatus);
 }
