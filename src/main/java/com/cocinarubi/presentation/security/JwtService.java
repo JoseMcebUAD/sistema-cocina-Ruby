@@ -75,6 +75,8 @@ public class JwtService {
             return parsearClaims(token).getSubject();
         } catch (ExpiredJwtException e) {
             return e.getClaims().getSubject();
+        } catch (JwtException e) {
+            return null;
         }
     }
 
