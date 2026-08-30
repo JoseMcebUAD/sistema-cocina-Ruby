@@ -5,6 +5,7 @@ import com.cocinarubi.presentation.filter.ClienteSessionFilter;
 import com.cocinarubi.presentation.filter.CorrelationFilter;
 import com.cocinarubi.presentation.filter.GlobalRateLimitFilter;
 import com.cocinarubi.presentation.filter.LoginRateLimitFilter;
+import com.cocinarubi.presentation.filter.PedidoWebRateLimitFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -74,6 +75,11 @@ public class SecurityConfig {
     @Bean
     public GlobalRateLimitFilter globalRateLimitFilter() {
         return new GlobalRateLimitFilter(objectMapper);
+    }
+
+    @Bean
+    public PedidoWebRateLimitFilter pedidoWebRateLimitFilter() {
+        return new PedidoWebRateLimitFilter(objectMapper);
     }
 
     @Bean
@@ -169,12 +175,13 @@ public class SecurityConfig {
                     .anyRequest().denyAll()
             )
 
-            // ── Orden: GlobalRateLimit → LoginRateLimit → Correlation → ClienteSession → JWT → Spring ──
+            // ── Orden: GlobalRateLimit → PedidoWebRateLimit → LoginRateLimit → Correlation → ClienteSession → JWT → Spring ──
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(clienteSessionFilter, JwtAuthenticationFilter.class)
             .addFilterBefore(correlationFilter(), ClienteSessionFilter.class)
             .addFilterBefore(loginRateLimitFilter(), CorrelationFilter.class)
-            .addFilterBefore(globalRateLimitFilter(), LoginRateLimitFilter.class)
+            .addFilterBefore(pedidoWebRateLimitFilter(), LoginRateLimitFilter.class)
+            .addFilterBefore(globalRateLimitFilter(), PedidoWebRateLimitFilter.class)
 
             .exceptionHandling(ex -> ex
                     .authenticationEntryPoint(entryPointNoAutorizado)
