@@ -19,7 +19,7 @@ public class EstadisticaRutaItemDTO {
     private Integer idRuta;
     private String nombre;
     @JsonIgnore
-    private Integer orden;
+    private Integer idOrdenRuta;
     private BigDecimal ingresos;
 
     /** Suma ingresos adicionales al fusionar resultados WEB + COCINA en el servicio. */
