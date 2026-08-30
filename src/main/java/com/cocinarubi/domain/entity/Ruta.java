@@ -17,8 +17,8 @@ import java.math.BigDecimal;
  * <p>El número de rutas es fijo (RF011); no se crean ni eliminan desde el dashboard,
  * solo se activan/desactivan con {@code is_active}.</p>
  *
- * <p>Relaciones salientes: ninguna. Es referenciada por {@link TarifaEspecial},
- * {@link Cliente}, {@link PedidoDomicilio} y {@link PagoRepartidor}.</p>
+ * <p>Relaciones salientes: {@link OrdenRuta} (agrupación). Es referenciada por
+ * {@link TarifaEspecial}, {@link Cliente}, {@link PedidoDomicilio} y {@link PagoRepartidor}.</p>
  */
 @Entity
 @Table(name = "ruta")
@@ -50,9 +50,7 @@ public class Ruta {
     @Column(name = "tarifa_envio", nullable = false, precision = 6, scale = 2)
     private BigDecimal tarifaEnvio;
 
-    @Column(name = "tiempo_estimado_min")
-    private Integer tiempoEstimadoMin;
-
-    @Column(name = "orden", nullable = false)
-    private Integer orden;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_orden_ruta")
+    private OrdenRuta ordenRuta;
 }
