@@ -25,6 +25,7 @@ public class MenuWebController {
         this.menuWebService = menuWebService;
     }
 
+    // Retorna el menú completo con todas sus secciones en una sola llamada
     @GetMapping
     public ResponseEntity<ApiResponse<MenuWebResponseDTO>> getMenu() {
         return ResponseEntity.ok(ApiResponse.exito(200, "Menú obtenido correctamente",

@@ -37,6 +37,7 @@ public class ClienteWebController {
         this.pedidoWebService = pedidoWebService;
     }
 
+    // Inicia o recupera la sesión del cliente; prioriza la cookie existente sobre el UUID del body y la genera si no hay ninguno
     @PostMapping("/sesion")
     public ResponseEntity<ApiResponse<ClienteWebResponseDTO>> sesion(
             @Valid @RequestBody ClienteWebRequestDTO dto,
@@ -72,12 +73,14 @@ public class ClienteWebController {
         return UUID.randomUUID().toString();
     }
 
+    // Devuelve la lista de rutas de entrega disponibles
     @GetMapping("/rutas")
     public ResponseEntity<ApiResponse<List<RutaWebResponseDTO>>> rutas() {
         return ResponseEntity.ok(ApiResponse.exito(200, "Rutas obtenidas correctamente",
                 clienteWebService.rutas()));
     }
 
+    // Retorna los últimos pedidos asociados al UUID del cliente
     @GetMapping("/pedidos/{uuidCliente}")
     public ResponseEntity<ApiResponse<List<PedidoResponseDTO>>> ultimosPedidos(
             @PathVariable String uuidCliente) {
@@ -85,6 +88,7 @@ public class ClienteWebController {
                 clienteWebService.ultimosPedidos(uuidCliente)));
     }
 
+    // Registra un nuevo pedido y retorna 201 con el recurso creado
     @PostMapping("/pedidos")
     public ResponseEntity<ApiResponse<PedidoResponseDTO>> crearPedido(
             @Valid @RequestBody PedidoRequestDTO dto) {
@@ -93,6 +97,7 @@ public class ClienteWebController {
                         pedidoWebService.save(dto)));
     }
 
+    // Actualiza los datos de un pedido existente identificado por su ID
     @PutMapping("/pedidos/{id}")
     public ResponseEntity<ApiResponse<PedidoResponseDTO>> actualizarPedido(
             @PathVariable int id,
