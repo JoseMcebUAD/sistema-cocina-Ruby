@@ -82,8 +82,7 @@ public class ClienteWebService implements IClienteWebService {
                         .nombre(r.getNombre())
                         .active(r.isActive())
                         .tarifaEnvio(r.getTarifaEnvio())
-                        .tiempoEstimadoMin(r.getTiempoEstimadoMin())
-                        .orden(r.getOrden())
+                        .idOrdenRuta(r.getOrdenRuta() != null ? r.getOrdenRuta().getIdOrdenRuta() : null)
                         .build())
                 .toList();
     }

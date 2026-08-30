@@ -1,10 +1,13 @@
 package com.cocinarubi.domain.service;
 
+import com.cocinarubi.dao.OrdenRutaRepository;
 import com.cocinarubi.dao.RutaRepository;
-import com.cocinarubi.presentation.dto.request.RutaOrdenItemDTO;
+import com.cocinarubi.presentation.dto.request.AsignarRutasOrdenDTO;
 import com.cocinarubi.presentation.dto.request.RutaRequestDTO;
+import com.cocinarubi.presentation.dto.response.OrdenRutaResponseDTO;
 import com.cocinarubi.presentation.dto.response.RutaResponseDTO;
 import com.cocinarubi.presentation.dto.response.RutaSimpleResponseDTO;
+import com.cocinarubi.domain.entity.OrdenRuta;
 import com.cocinarubi.domain.entity.Ruta;
 import com.cocinarubi.exception.BusinessException;
 import org.locationtech.jts.geom.Coordinate;
@@ -16,24 +19,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
  * Gestiona las rutas de entrega a domicilio. Cada ruta define un área geográfica
- * expresada como polígono en formato WKT, con su tarifa de envío y tiempo estimado.
+ * expresada como polígono en formato WKT, con su tarifa de envío, agrupadas bajo OrdenRuta.
  */
 @Service
 public class RutaService {
 
     private final RutaRepository rutaRepository;
+    private final OrdenRutaRepository ordenRutaRepository;
 
-    public RutaService(RutaRepository rutaRepository) {
+    public RutaService(RutaRepository rutaRepository, OrdenRutaRepository ordenRutaRepository) {
         this.rutaRepository = rutaRepository;
+        this.ordenRutaRepository = ordenRutaRepository;
     }
 
     public List<RutaSimpleResponseDTO> findAllSimple() {
@@ -52,6 +55,12 @@ public class RutaService {
         return toResponseDTO(findEntityById(id));
     }
 
+    public List<RutaSimpleResponseDTO> findByOrden(int idOrden) {
+        return rutaRepository.findByOrdenRutaId(idOrden).stream()
+                .map(this::toSimpleResponseDTO)
+                .collect(Collectors.toList());
+    }
+
     public RutaResponseDTO save(RutaRequestDTO dto) {
         Geometry boundary = parseBoundary(dto.getBoundaryWkt());
         Ruta ruta = Ruta.builder()
@@ -60,8 +69,6 @@ public class RutaService {
                 .boundary(boundary)
                 .isActive(dto.isActive())
                 .tarifaEnvio(dto.getTarifaEnvio())
-                .tiempoEstimadoMin(dto.getTiempoEstimadoMin())
-                .orden(dto.getOrden())
                 .build();
         return toResponseDTO(rutaRepository.save(ruta));
     }
@@ -72,8 +79,6 @@ public class RutaService {
         existente.setBoundary(parseBoundary(dto.getBoundaryWkt()));
         existente.setActive(dto.isActive());
         existente.setTarifaEnvio(dto.getTarifaEnvio());
-        existente.setTiempoEstimadoMin(dto.getTiempoEstimadoMin());
-        existente.setOrden(dto.getOrden());
         return toResponseDTO(rutaRepository.save(existente));
     }
 
@@ -89,14 +94,7 @@ public class RutaService {
             existente.setActive((Boolean) payload.get("isActive"));
         }
         if (payload.containsKey("tarifaEnvio")) {
-            // El payload JSON llega como Double; se convierte a String primero para evitar pérdida de precisión
             existente.setTarifaEnvio(new BigDecimal(payload.get("tarifaEnvio").toString()));
-        }
-        if (payload.containsKey("tiempoEstimadoMin")) {
-            existente.setTiempoEstimadoMin((Integer) payload.get("tiempoEstimadoMin"));
-        }
-        if (payload.containsKey("orden")) {
-            existente.setOrden((Integer) payload.get("orden"));
         }
         return toResponseDTO(rutaRepository.save(existente));
     }
@@ -105,7 +103,6 @@ public class RutaService {
         if (!rutaRepository.existsById(id)) {
             throw new BusinessException("Ruta no encontrada con id: " + id, HttpStatus.NOT_FOUND);
         }
-        // Guardar integridad referencial: clientes y pedidos a domicilio referencian la ruta
         if (rutaRepository.existsClientesConRuta(id)) {
             throw new BusinessException(
                     "No se puede eliminar la ruta porque está asignada a clientes existentes",
@@ -120,36 +117,16 @@ public class RutaService {
     }
 
     @Transactional
-    public List<RutaResponseDTO> reordenar(List<RutaOrdenItemDTO> items) {
-        Set<Integer> ordenes = new HashSet<>();
-        for (RutaOrdenItemDTO item : items) {
-            if (!ordenes.add(item.getOrden())) {
-                throw new BusinessException(
-                        "El orden " + item.getOrden() + " está duplicado en la solicitud",
-                        HttpStatus.BAD_REQUEST);
-            }
-        }
-
-        // Fase 1: valores temporales negativos para liberar el unique constraint antes del reorden.
-        // MySQL valida el unique por fila en cada UPDATE, por lo que asignar el orden final
-        // directamente provoca Duplicate entry cuando dos rutas intercambian posiciones.
-        List<Ruta> rutas = items.stream().map(item -> {
-            Ruta ruta = findEntityById(item.getIdRuta());
-            ruta.setOrden(-item.getIdRuta()); // -idRuta es único y nunca colisiona con órdenes reales
-            return ruta;
-        }).collect(Collectors.toList());
-        rutaRepository.saveAll(rutas);
-        rutaRepository.flush(); // fuerza los UPDATEs temporales antes de la fase 2
-
-        // Fase 2: asignar el orden real ya sin conflictos
-        for (int i = 0; i < rutas.size(); i++) {
-            rutas.get(i).setOrden(items.get(i).getOrden());
-        }
-
-        return rutaRepository.saveAll(rutas).stream()
-                .sorted((a, b) -> Integer.compare(a.getOrden(), b.getOrden()))
-                .map(this::toResponseDTO)
+    public OrdenRutaResponseDTO asignarRutas(AsignarRutasOrdenDTO dto) {
+        OrdenRuta orden = ordenRutaRepository.findById(dto.getIdOrdenRuta())
+                .orElseThrow(() -> new BusinessException(
+                        "OrdenRuta no encontrada con id: " + dto.getIdOrdenRuta(), HttpStatus.NOT_FOUND));
+        List<Ruta> rutas = dto.getRutaIds().stream()
+                .map(this::findEntityById)
                 .collect(Collectors.toList());
+        rutas.forEach(r -> r.setOrdenRuta(orden));
+        rutaRepository.saveAll(rutas);
+        return new OrdenRutaResponseDTO(orden.getIdOrdenRuta(), orden.getTiempoEstimadoMin());
     }
 
     public Ruta findEntityById(int id) {
@@ -171,14 +148,14 @@ public class RutaService {
     }
 
     private RutaSimpleResponseDTO toSimpleResponseDTO(Ruta ruta) {
+        Integer idOrdenRuta = ruta.getOrdenRuta() != null ? ruta.getOrdenRuta().getIdOrdenRuta() : null;
         return new RutaSimpleResponseDTO(
                 ruta.getIdRuta(),
                 ruta.getUuidRuta(),
                 ruta.getNombre(),
                 ruta.isActive(),
                 ruta.getTarifaEnvio(),
-                ruta.getTiempoEstimadoMin(),
-                ruta.getOrden()
+                idOrdenRuta
         );
     }
 
@@ -189,6 +166,7 @@ public class RutaService {
                 .limit(coords.length - 1)
                 .map(c -> new RutaResponseDTO.CoordinateDTO(c.y, c.x))
                 .collect(Collectors.toList());
+        Integer idOrdenRuta = ruta.getOrdenRuta() != null ? ruta.getOrdenRuta().getIdOrdenRuta() : null;
         return new RutaResponseDTO(
                 ruta.getIdRuta(),
                 ruta.getUuidRuta(),
@@ -196,8 +174,7 @@ public class RutaService {
                 coordinates,
                 ruta.isActive(),
                 ruta.getTarifaEnvio(),
-                ruta.getTiempoEstimadoMin(),
-                ruta.getOrden()
+                idOrdenRuta
         );
     }
 }

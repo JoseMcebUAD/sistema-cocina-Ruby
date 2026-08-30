@@ -1,11 +1,13 @@
 package com.cocinarubi.presentation.controller;
 
-import com.cocinarubi.presentation.dto.request.RutaOrdenItemDTO;
+import com.cocinarubi.presentation.dto.request.AsignarRutasOrdenDTO;
 import com.cocinarubi.presentation.dto.request.RutaRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
+import com.cocinarubi.presentation.dto.response.OrdenRutaResponseDTO;
 import com.cocinarubi.presentation.dto.response.RutaResponseDTO;
 import com.cocinarubi.presentation.dto.response.RutaSimpleResponseDTO;
 import com.cocinarubi.exception.BusinessException;
+import com.cocinarubi.domain.service.OrdenRutaService;
 import com.cocinarubi.domain.service.RutaService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -21,9 +23,11 @@ import java.util.Map;
 public class RutaController {
 
     private final RutaService rutaService;
+    private final OrdenRutaService ordenRutaService;
 
-    public RutaController(RutaService rutaService) {
+    public RutaController(RutaService rutaService, OrdenRutaService ordenRutaService) {
         this.rutaService = rutaService;
+        this.ordenRutaService = ordenRutaService;
     }
 
     @GetMapping
@@ -74,10 +78,23 @@ public class RutaController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/orden/{id}")
+    public ResponseEntity<ApiResponse<List<RutaSimpleResponseDTO>>> findByOrden(@PathVariable int id) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Rutas de la orden obtenidas correctamente",
+                rutaService.findByOrden(id)));
+    }
+
     @PatchMapping("/orden")
-    public ResponseEntity<ApiResponse<List<RutaResponseDTO>>> reordenar(
-            @Valid @RequestBody List<RutaOrdenItemDTO> items) {
-        return ResponseEntity.ok(ApiResponse.exito(200, "Orden de rutas actualizado correctamente",
-                rutaService.reordenar(items)));
+    public ResponseEntity<ApiResponse<OrdenRutaResponseDTO>> asignarRutas(
+            @Valid @RequestBody AsignarRutasOrdenDTO dto) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Rutas asignadas correctamente",
+                rutaService.asignarRutas(dto)));
+    }
+
+    @PatchMapping("/orden/{id}")
+    public ResponseEntity<ApiResponse<OrdenRutaResponseDTO>> actualizarTiempoEstimado(
+            @PathVariable int id, @RequestBody Map<String, Integer> body) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Tiempo estimado actualizado",
+                ordenRutaService.actualizarTiempoEstimado(id, body.get("tiempoEstimadoMin"))));
     }
 }
