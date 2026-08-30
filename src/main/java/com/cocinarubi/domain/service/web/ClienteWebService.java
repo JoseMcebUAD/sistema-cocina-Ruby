@@ -77,6 +77,7 @@ public class ClienteWebService implements IClienteWebService {
         return rutaRepository.findAll().stream()
                 .filter(r -> r.isActive())
                 .map(r -> RutaWebResponseDTO.builder()
+                        .idRuta(r.getIdRuta())
                         .uuidRuta(r.getUuidRuta())
                         .nombre(r.getNombre())
                         .active(r.isActive())

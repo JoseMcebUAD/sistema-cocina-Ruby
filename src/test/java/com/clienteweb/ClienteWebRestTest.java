@@ -143,7 +143,7 @@ public class ClienteWebRestTest {
 
     @Test
     @Order(3)
-    @DisplayName("GET /web/rutas - Debe retornar solo rutas activas sin idRuta")
+    @DisplayName("GET /web/rutas - Debe retornar solo rutas activas con idRuta y uuidRuta")
     public void rutas_publicas() throws Exception {
         ResponseEntity<String> response = restTemplate.exchange(
                 "/web/rutas", HttpMethod.GET, new HttpEntity<>(emptyHeaders), String.class
@@ -153,7 +153,7 @@ public class ClienteWebRestTest {
         JsonNode data = mapper.readTree(response.getBody()).get("data");
         assertTrue(data.isArray());
         for (JsonNode ruta : data) {
-            assertFalse(ruta.has("idRuta"), "No debe exponer idRuta");
+            assertTrue(ruta.has("idRuta"), "Debe exponer idRuta para usarlo en pedidos");
             assertTrue(ruta.has("uuidRuta"));
             assertTrue(ruta.get("active").asBoolean(), "Solo deben aparecer rutas activas");
         }

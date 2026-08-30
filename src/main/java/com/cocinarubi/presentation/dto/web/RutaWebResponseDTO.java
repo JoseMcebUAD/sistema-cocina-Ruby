@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 @Builder
 public class RutaWebResponseDTO {
 
+    private int idRuta;
     private String uuidRuta;
     private String nombre;
     private boolean active;
