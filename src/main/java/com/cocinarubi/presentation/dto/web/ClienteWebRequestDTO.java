@@ -1,6 +1,5 @@
 package com.cocinarubi.presentation.dto.web;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -11,7 +10,6 @@ import lombok.*;
 @Builder
 public class ClienteWebRequestDTO {
 
-    @NotBlank
     @Size(max = 45)
     private String uuidCliente;
 

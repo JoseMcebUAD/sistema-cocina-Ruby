@@ -4,14 +4,65 @@ Guía de referencia para el equipo de frontend. Todos los endpoints de `/web/**`
 
 ---
 
-## Flujo de inicio obligatorio
+## Breaking Changes (v2.0)
 
-Cuando el usuario abre la aplicación por primera vez (o si el token expiró), debes llamar a `POST /web/sesion` antes de cualquier otra petición protegida.
+### El `uuidCliente` ya no lo maneja el frontend
+
+El servidor ahora genera y persiste el `uuidCliente` en una cookie HttpOnly llamada
+`uuid_cliente` (1 año de vida). El frontend **ya no debe** generarlo ni guardarlo
+en localStorage.
+
+**Qué debes hacer:**
+
+1. Agregar `credentials: 'include'` a **todos** los requests hacia `/web/**` y `/menu-web`.
+2. Eliminar el código que generaba `uuidCliente` con `crypto.randomUUID()` y lo guardaba en localStorage.
+3. El campo `uuidCliente` en el body de `POST /web/sesion` es ahora **opcional** (se acepta por retrocompatibilidad durante la migración).
+
+---
+
+## Cookie `uuid_cliente`
+
+| Atributo | Valor | Motivo |
+|----------|-------|--------|
+| `HttpOnly` | `true` | JS no puede leer ni modificar el UUID |
+| `Secure` | `true` | Solo viaja por HTTPS |
+| `SameSite` | `None` | Requerido para requests cross-origin (`carrito.cocinarubi.com` → `api.cocinarubi.com`) |
+| `Max-Age` | `31536000` (1 año) | Persiste aunque el usuario cierre el navegador |
+| `Path` | `/` | Aplica a todos los endpoints |
+
+El browser envía y recibe esta cookie **automáticamente** en cada request siempre que
+uses `credentials: 'include'`. No necesitas leerla ni escribirla desde JS.
+
+---
+
+## `credentials: 'include'` — obligatorio en todos los requests
+
+### Con `fetch`
+```javascript
+const res = await fetch('https://api.cocinarubi.com/web/sesion', {
+  method: 'POST',
+  credentials: 'include',           // <-- requerido
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(payload)
+});
+```
+
+### Con axios
+```javascript
+// Una vez al inicializar
+axios.defaults.withCredentials = true;
+```
+
+---
+
+## Flujo de inicio obligatorio
 
 ```
 1. App abre → ¿localStorage tiene sessionToken vigente?
    ├── Sí → usa ese token directamente
-   └── No → llama POST /web/sesion → guarda token recibido
+   └── No → llama POST /web/sesion (credentials: 'include')
+             → el servidor lee/crea la cookie uuid_cliente automáticamente
+             → guarda sessionToken recibido en localStorage
 ```
 
 ---
@@ -23,7 +74,6 @@ Cuando el usuario abre la aplicación por primera vez (o si el token expiró), d
 ### Request
 ```json
 {
-  "uuidCliente": "550e8400-e29b-41d4-a716-446655440000",
   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) ...",
   "screenWidth": 1920,
   "screenHeight": 1080,
@@ -36,7 +86,7 @@ Cuando el usuario abre la aplicación por primera vez (o si el token expiró), d
 
 | Campo | Tipo | Obligatorio | Descripción |
 |-------|------|-------------|-------------|
-| `uuidCliente` | `string` | ✅ | UUID generado en localStorage. Max 45 chars. |
+| `uuidCliente` | `string` | No | Deprecated — el servidor lo gestiona por cookie. Max 45 chars. |
 | `userAgent` | `string` | No | `navigator.userAgent` |
 | `screenWidth` | `integer` | No | `screen.width` |
 | `screenHeight` | `integer` | No | `screen.height` |
@@ -48,14 +98,14 @@ Cuando el usuario abre la aplicación por primera vez (o si el token expiró), d
 ### Response `200 OK`
 ```json
 {
-  "timestamp": "2026-08-24T10:00:00",
+  "timestamp": "2026-08-30T10:00:00",
   "status": 200,
   "message": "Sesión iniciada correctamente",
   "data": {
     "idCliente": 42,
     "uuidCliente": "550e8400-e29b-41d4-a716-446655440000",
     "sessionToken": "a3f9b2c1-7d4e-4f2a-b8c3-1234567890ab",
-    "tokenExpiracion": "2026-08-31T10:00:00",
+    "tokenExpiracion": "2026-09-06T10:00:00",
     "huella": "e3b0c44298fc1c149afb...",
     "codigoCliente": null,
     "userAgent": "Mozilla/5.0 ...",
@@ -70,50 +120,45 @@ Cuando el usuario abre la aplicación por primera vez (o si el token expiró), d
 }
 ```
 
-### Cómo guardar y usar el token
-```javascript
-// Al recibir la respuesta de /web/sesion
-localStorage.setItem('sessionToken', data.sessionToken);
-localStorage.setItem('tokenExpiracion', data.tokenExpiracion);
-localStorage.setItem('uuidCliente', data.uuidCliente);
-
-// Función helper para verificar si el token expiró
-function tokenEsValido() {
-  const expiracion = localStorage.getItem('tokenExpiracion');
-  if (!expiracion) return false;
-  return new Date(expiracion) > new Date();
-}
-
-// Header a incluir en peticiones protegidas
-const headers = {
-  'Authorization': `Bearer ${localStorage.getItem('sessionToken')}`,
-  'Content-Type': 'application/json'
-};
+La respuesta HTTP incluye también:
 ```
-
-### Cómo generar `uuidCliente`
-```javascript
-// Generar UUID solo si no existe
-function obtenerUuidCliente() {
-  let uuid = localStorage.getItem('uuidCliente');
-  if (!uuid) {
-    uuid = crypto.randomUUID(); // o usar una librería uuid
-    localStorage.setItem('uuidCliente', uuid);
-  }
-  return uuid;
-}
+Set-Cookie: uuid_cliente=550e8400-...; Max-Age=31536000; Path=/; Secure; HttpOnly; SameSite=None
 ```
 
 ### Comportamiento del servidor
-- **Cliente nuevo**: crea registro, genera token con 7 días de vida.
-- **Cliente existente + token vigente**: devuelve el mismo token (no renueva).
-- **Cliente existente + token expirado**: genera nuevo token, resetea expiración a 7 días.
+- **Primera visita / sin cookie:** genera UUID nuevo, crea cliente, emite cookie.
+- **Visita con cookie:** recupera el cliente por el UUID del cookie, renueva el token si expiró.
+- **Body con `uuidCliente` y sin cookie:** usa el UUID del body (retrocompatibilidad durante migración).
+
+### Cómo guardar y usar el token
+```javascript
+async function iniciarSesion() {
+  const res = await fetch('https://api.cocinarubi.com/web/sesion', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userAgent: navigator.userAgent,
+      screenWidth: screen.width,
+      screenHeight: screen.height,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      language: navigator.language,
+      colorDepth: screen.colorDepth
+    })
+  });
+  const { data } = await res.json();
+  localStorage.setItem('sessionToken', data.sessionToken);
+  localStorage.setItem('tokenExpiracion', data.tokenExpiracion);
+  // Guardar uuidCliente solo si lo necesitas para GET /web/pedidos/{uuid}
+  localStorage.setItem('uuidCliente', data.uuidCliente);
+}
+```
 
 ---
 
 ## 2. Obtener el menú completo
 
-**`GET /menu-web`** — ⚠️ Requiere token
+**`GET /menu-web`** — Requiere token
 
 ### Request
 ```
@@ -136,18 +181,12 @@ Authorization: Bearer <sessionToken>
 
 ### Error sin token `401`
 ```json
-{
-  "status": 401,
-  "message": "Token de sesión requerido"
-}
+{ "status": 401, "message": "Token de sesión requerido" }
 ```
 
 ### Error token expirado `401`
 ```json
-{
-  "status": 401,
-  "message": "Token de sesión inválido o expirado"
-}
+{ "status": 401, "message": "Token de sesión inválido o expirado" }
 ```
 
 ---
@@ -166,6 +205,7 @@ GET /web/rutas
 {
   "data": [
     {
+      "idRuta": 3,
       "uuidRuta": "ruta-uuid-1",
       "nombre": "Centro",
       "active": true,
@@ -177,13 +217,13 @@ GET /web/rutas
 }
 ```
 
-**Nota:** Solo se retornan rutas activas (`active: true`). No se expone el `idRuta` interno.
+**Nota:** Solo se retornan rutas activas (`active: true`). Usa `idRuta` al crear un pedido a domicilio.
 
 ---
 
 ## 4. Historial de pedidos del cliente
 
-**`GET /web/pedidos/{uuidCliente}`** — ⚠️ Requiere token
+**`GET /web/pedidos/{uuidCliente}`** — Requiere token
 
 ### Request
 ```
@@ -215,7 +255,7 @@ Retorna máximo los **últimos 5 pedidos** ordenados por fecha descendente.
 
 ## 5. Crear un pedido
 
-**`POST /web/pedidos`** — ⚠️ Requiere token
+**`POST /web/pedidos`** — Requiere token
 
 ### Request
 ```
@@ -245,7 +285,7 @@ Content-Type: application/json
   "productosCocina": [],
   "paquetes": [],
   "domicilio": {
-    "idRuta": 2,
+    "uuidRuta": "ruta-uuid-1",
     "direccion": "Calle 60 No. 123 x 45 y 47",
     "latitud": 20.9674,
     "longitud": -89.5926
@@ -267,11 +307,21 @@ Content-Type: application/json
 }
 ```
 
+### Errores posibles
+
+| HTTP | Cuándo |
+|------|--------|
+| `400` | Falta un campo obligatorio o no pasa validación (`uuidRuta` vacío, `direccion` vacía, etc.) |
+| `400` | Producto, complemento, básico o ruta no existe en base de datos |
+| `401` | Header `Authorization` ausente o token inválido / expirado |
+| `409` | Comida, complemento, desayuno, básico o producto de cocina con estatus `NO_DISPONIBLE` |
+| `409` | Pedido con desayunos enviado después de las 11:00 h |
+
 ---
 
 ## 6. Actualizar un pedido
 
-**`PUT /web/pedidos/{id}`** — ⚠️ Requiere token
+**`PUT /web/pedidos/{id}`** — Requiere token
 
 ### Request
 ```
@@ -295,12 +345,19 @@ Body: misma estructura que `POST /web/pedidos`.
 ## Manejo de expiración (flujo recomendado)
 
 ```javascript
+function tokenEsValido() {
+  const expiracion = localStorage.getItem('tokenExpiracion');
+  if (!expiracion) return false;
+  return new Date(expiracion) > new Date();
+}
+
 async function peticionProtegida(url, opciones = {}) {
   if (!tokenEsValido()) {
-    await renovarSesion(); // llama POST /web/sesion
+    await iniciarSesion();
   }
   const res = await fetch(url, {
     ...opciones,
+    credentials: 'include',
     headers: {
       'Authorization': `Bearer ${localStorage.getItem('sessionToken')}`,
       'Content-Type': 'application/json',
@@ -308,31 +365,10 @@ async function peticionProtegida(url, opciones = {}) {
     }
   });
   if (res.status === 401) {
-    await renovarSesion();
-    // reintentar una vez
-    return fetch(url, opciones);
+    await iniciarSesion();
+    return fetch(url, { ...opciones, credentials: 'include' });
   }
   return res;
-}
-
-async function renovarSesion() {
-  const body = {
-    uuidCliente: obtenerUuidCliente(),
-    userAgent: navigator.userAgent,
-    screenWidth: screen.width,
-    screenHeight: screen.height,
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    language: navigator.language,
-    colorDepth: screen.colorDepth
-  };
-  const res = await fetch('/web/sesion', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  const { data } = await res.json();
-  localStorage.setItem('sessionToken', data.sessionToken);
-  localStorage.setItem('tokenExpiracion', data.tokenExpiracion);
 }
 ```
 
@@ -348,3 +384,6 @@ async function renovarSesion() {
 | `GET` | `/web/pedidos/{uuid}` | ✅ | Últimos 5 pedidos del cliente |
 | `POST` | `/web/pedidos` | ✅ | Crear pedido |
 | `PUT` | `/web/pedidos/{id}` | ✅ | Actualizar pedido |
+
+> Todos los requests requieren `credentials: 'include'` para que el browser gestione
+> automáticamente la cookie `uuid_cliente`.
