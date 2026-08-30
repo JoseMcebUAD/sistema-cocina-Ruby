@@ -20,6 +20,7 @@ import com.cocinarubi.domain.entity.PedidoDomicilio;
 import com.cocinarubi.domain.entity.PedidoDomicilioCocina;
 import com.cocinarubi.domain.entity.ProductoCocina;
 import com.cocinarubi.domain.entity.ProductoCocinaPedido;
+import com.cocinarubi.domain.entity.OrdenRuta;
 import com.cocinarubi.domain.entity.Ruta;
 
 import java.math.BigDecimal;
@@ -170,14 +171,29 @@ public class PedidoMocks {
                 Estatus.DISPONIBLE, false, List.of());
     }
 
+    public static OrdenRuta ordenRuta() {
+        return OrdenRuta.builder()
+                .idOrdenRuta(1)
+                .tiempoEstimadoMin(30)
+                .build();
+    }
+
     public static Ruta ruta() {
         return Ruta.builder()
                 .idRuta(10)
                 .nombre("Ruta Centro")
                 .isActive(true)
                 .tarifaEnvio(BigDecimal.valueOf(40))
-                .tiempoEstimadoMin(20)
-                .orden(1)
+                .build();
+    }
+
+    public static Ruta rutaConOrden() {
+        return Ruta.builder()
+                .idRuta(10)
+                .nombre("Ruta Centro")
+                .isActive(true)
+                .tarifaEnvio(BigDecimal.valueOf(40))
+                .ordenRuta(ordenRuta())
                 .build();
     }
 

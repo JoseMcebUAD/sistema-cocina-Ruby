@@ -1,11 +1,16 @@
 package com.ruta;
 
+import com.cocinarubi.dao.OrdenRutaRepository;
 import com.cocinarubi.dao.RutaRepository;
+import com.cocinarubi.domain.entity.OrdenRuta;
 import com.cocinarubi.domain.entity.Ruta;
 import com.cocinarubi.domain.service.RutaService;
 import com.cocinarubi.exception.BusinessException;
+import com.cocinarubi.presentation.dto.request.AsignarRutasOrdenDTO;
 import com.cocinarubi.presentation.dto.request.RutaRequestDTO;
+import com.cocinarubi.presentation.dto.response.OrdenRutaResponseDTO;
 import com.cocinarubi.presentation.dto.response.RutaResponseDTO;
+import com.cocinarubi.presentation.dto.response.RutaSimpleResponseDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +36,9 @@ public class RutaServiceTest {
     @Mock
     private RutaRepository rutaRepository;
 
+    @Mock
+    private OrdenRutaRepository ordenRutaRepository;
+
     @InjectMocks
     private RutaService rutaService;
 
@@ -42,14 +50,13 @@ public class RutaServiceTest {
             .boundary(geom)
             .isActive(true)
             .tarifaEnvio(BigDecimal.valueOf(30))
-            .tiempoEstimadoMin(20)
             .build();
 
     public RutaRequestDTO RUTA_DTO = new RutaRequestDTO(
-            "Zona Norte", WKT_POLYGON, true, BigDecimal.valueOf(30), 20,1);
+            "Zona Norte", WKT_POLYGON, true, BigDecimal.valueOf(30));
 
     public RutaRequestDTO RUTA_DTO_MODIFIED = new RutaRequestDTO(
-            "Zona Sur", WKT_POLYGON, false, BigDecimal.valueOf(50), 35,2);
+            "Zona Sur", WKT_POLYGON, false, BigDecimal.valueOf(50));
 
     private static Geometry parseGeom(String wkt) {
         try {
@@ -70,6 +77,19 @@ public class RutaServiceTest {
         assertEquals("Zona Norte", result.get(0).getNombre());
         assertTrue(result.get(0).isActive());
         System.out.println("[OK] findAll retornó " + result.size() + " ruta(s): " + result.get(0).getNombre());
+    }
+
+    @Test
+    @DisplayName("findAllSimple - Debe retornar la lista simplificada de rutas")
+    public void findAllSimple() {
+        when(rutaRepository.findAll()).thenReturn(List.of(RUTA_PREPARED));
+
+        List<RutaSimpleResponseDTO> result = rutaService.findAllSimple();
+
+        assertEquals(1, result.size());
+        assertEquals("Zona Norte", result.get(0).getNombre());
+        assertNull(result.get(0).getIdOrdenRuta());
+        System.out.println("[OK] findAllSimple retornó " + result.size() + " ruta(s): " + result.get(0).getNombre());
     }
 
     @Test
@@ -112,7 +132,7 @@ public class RutaServiceTest {
     public void updateRuta() {
         when(rutaRepository.findById(10)).thenReturn(Optional.of(RUTA_PREPARED));
         Ruta rutaActualizada = Ruta.builder().idRuta(10).nombre("Zona Sur")
-                .boundary(geom).isActive(false).tarifaEnvio(BigDecimal.valueOf(50)).tiempoEstimadoMin(35).build();
+                .boundary(geom).isActive(false).tarifaEnvio(BigDecimal.valueOf(50)).build();
         when(rutaRepository.save(any(Ruta.class))).thenReturn(rutaActualizada);
 
         RutaResponseDTO result = rutaService.update(10, RUTA_DTO_MODIFIED);
@@ -127,8 +147,8 @@ public class RutaServiceTest {
     @DisplayName("delete - Debe eliminar la ruta cuando el ID existe y no tiene referencias")
     public void deleteRuta() {
         when(rutaRepository.existsById(10)).thenReturn(true);
-        when(rutaRepository.existsById(10)).thenReturn(false);
-        when(rutaRepository.existsById(10)).thenReturn(false);
+        when(rutaRepository.existsClientesConRuta(10)).thenReturn(false);
+        when(rutaRepository.existsPedidosDomicilioConRuta(10)).thenReturn(false);
 
         assertDoesNotThrow(() -> rutaService.delete(10));
         verify(rutaRepository).deleteById(10);
@@ -149,7 +169,7 @@ public class RutaServiceTest {
     @DisplayName("delete - Debe lanzar excepción cuando la ruta está asignada a clientes")
     public void deleteRuta_conClientes() {
         when(rutaRepository.existsById(10)).thenReturn(true);
-        when(rutaRepository.existsById(10)).thenReturn(false);
+        when(rutaRepository.existsClientesConRuta(10)).thenReturn(true);
 
         assertThrows(BusinessException.class, () -> rutaService.delete(10));
         verify(rutaRepository, never()).deleteById(anyInt());
@@ -160,11 +180,44 @@ public class RutaServiceTest {
     @DisplayName("delete - Debe lanzar excepción cuando la ruta está referenciada en pedidos a domicilio")
     public void deleteRuta_conPedidos() {
         when(rutaRepository.existsById(10)).thenReturn(true);
-        when(rutaRepository.existsById(10)).thenReturn(false);
-        when(rutaRepository.existsById(10)).thenReturn(true);
+        when(rutaRepository.existsClientesConRuta(10)).thenReturn(false);
+        when(rutaRepository.existsPedidosDomicilioConRuta(10)).thenReturn(true);
 
         assertThrows(BusinessException.class, () -> rutaService.delete(10));
         verify(rutaRepository, never()).deleteById(anyInt());
         System.out.println("[OK] delete lanzó CONFLICT por ruta en pedidos domicilio");
+    }
+
+    @Test
+    @DisplayName("asignarRutas - Debe asignar rutas a una OrdenRuta existente")
+    public void asignarRutas() {
+        OrdenRuta orden = OrdenRuta.builder().idOrdenRuta(1).tiempoEstimadoMin(null).build();
+        Ruta ruta1 = Ruta.builder().idRuta(1).nombre("Zona A").boundary(geom)
+                .isActive(true).tarifaEnvio(BigDecimal.valueOf(20)).build();
+        Ruta ruta2 = Ruta.builder().idRuta(2).nombre("Zona B").boundary(geom)
+                .isActive(true).tarifaEnvio(BigDecimal.valueOf(25)).build();
+
+        when(ordenRutaRepository.findById(1)).thenReturn(Optional.of(orden));
+        when(rutaRepository.findById(1)).thenReturn(Optional.of(ruta1));
+        when(rutaRepository.findById(2)).thenReturn(Optional.of(ruta2));
+        when(rutaRepository.saveAll(anyList())).thenReturn(List.of(ruta1, ruta2));
+
+        AsignarRutasOrdenDTO dto = new AsignarRutasOrdenDTO(1, List.of(1, 2));
+        OrdenRutaResponseDTO result = rutaService.asignarRutas(dto);
+
+        assertNotNull(result);
+        assertEquals(1, result.getIdOrdenRuta());
+        verify(rutaRepository).saveAll(anyList());
+        System.out.println("[OK] asignarRutas asignó rutas a OrdenRuta id=" + result.getIdOrdenRuta());
+    }
+
+    @Test
+    @DisplayName("asignarRutas - Debe lanzar excepción cuando la OrdenRuta no existe")
+    public void asignarRutas_ordenNoEncontrada() {
+        when(ordenRutaRepository.findById(99)).thenReturn(Optional.empty());
+
+        AsignarRutasOrdenDTO dto = new AsignarRutasOrdenDTO(99, List.of(1));
+        assertThrows(BusinessException.class, () -> rutaService.asignarRutas(dto));
+        System.out.println("[OK] asignarRutas lanzó BusinessException para OrdenRuta id=99");
     }
 }
