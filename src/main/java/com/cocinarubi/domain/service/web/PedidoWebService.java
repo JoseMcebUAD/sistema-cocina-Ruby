@@ -5,6 +5,7 @@ import com.cocinarubi.dao.ClienteRepository;
 import com.cocinarubi.dao.PedidoRepository;
 import com.cocinarubi.dao.TarifaEspecialRepository;
 import com.cocinarubi.domain.entity.Cliente;
+import com.cocinarubi.domain.entity.Pedido;
 import com.cocinarubi.domain.mapper.PedidoMapper;
 import com.cocinarubi.domain.service.CatalogoPedidoService;
 import com.cocinarubi.domain.service.PedidoService;
@@ -25,6 +26,7 @@ import java.util.Optional;
 @Service
 public class PedidoWebService extends PedidoService {
 
+    private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
     private final HttpServletRequest httpRequest;
 
@@ -39,6 +41,7 @@ public class PedidoWebService extends PedidoService {
                             HttpServletRequest httpRequest) {
         super(pedidoRepository, pedidoValidation, pedidoConfirmation, pedidoMapper,
                 catalogoPedido, eventPublisher, tarifaEspecialRepository);
+        this.pedidoRepository = pedidoRepository;
         this.clienteRepository = clienteRepository;
         this.httpRequest = httpRequest;
     }
@@ -54,7 +57,18 @@ public class PedidoWebService extends PedidoService {
     @Transactional
     public PedidoResponseDTO update(int id, PedidoRequestDTO dto) {
         verificarTokenWeb(dto);
+        verificarVentanaEdicion(id);
         return super.update(id, dto);
+    }
+
+    private void verificarVentanaEdicion(int id) {
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Pedido no encontrado", HttpStatus.NOT_FOUND));
+        if (pedido.getFechaExpedicionPedido().isBefore(LocalDateTime.now().minusMinutes(5))) {
+            throw new BusinessException(
+                    "No es posible modificar el pedido despues de 5 minutos de su creacion",
+                    HttpStatus.UNPROCESSABLE_ENTITY);
+        }
     }
 
     private void verificarTokenWeb(PedidoRequestDTO dto) {
