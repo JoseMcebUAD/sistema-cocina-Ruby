@@ -16,6 +16,8 @@ public interface BasicoRepository extends JpaRepository<Basico, Integer> {
     @Query("SELECT DISTINCT b FROM Basico b JOIN FETCH b.comida c LEFT JOIN FETCH b.complementos bc LEFT JOIN FETCH bc.complemento ORDER BY c.nombreComida ASC")
     List<Basico> findAll();
 
+    Optional<Basico> findByUuidBasico(String uuidBasico);
+
     @Query("SELECT b FROM Basico b JOIN FETCH b.comida LEFT JOIN FETCH b.complementos bc LEFT JOIN FETCH bc.complemento WHERE b.idBasico = :id")
     Optional<Basico> findByIdWithComplementos(@Param("id") int id);
 

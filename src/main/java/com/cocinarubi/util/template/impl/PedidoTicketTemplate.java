@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import com.cocinarubi.Constants;
-import com.cocinarubi.DBConstants.TipoPedido;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.DesayunoPedidoResponseDTO;
@@ -31,17 +30,11 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
     protected void renderSpecificDetails(EscPos escpos) throws IOException {
         PedidoTicketData data = getData();
 
-
         // Encabezado: fecha, tipo y nombre de cliente (COCINA PICK_UP / MOSTRADOR / DOMICILIO)
         if (data.getFechaExpedicionPedido() != null) {
             escpos.writeLF(FORMATO_FECHA.format(data.getFechaExpedicionPedido()));
         }
-
-        //solo si es mostrador se pone comedor
-        String labelTipo = data.getTipoPedido() == 
-            TipoPedido.MOSTRADOR ? "COMEDOR" : data.getTipoPedido().name();
-        escpos.writeLF("Tipo: " + labelTipo);
-
+        escpos.writeLF("Tipo: " + data.getTipoPedido());
         if (data.getNombreCliente() != null && !data.getNombreCliente().isBlank()) {
             escpos.writeLF("Cliente: " + data.getNombreCliente());
         }

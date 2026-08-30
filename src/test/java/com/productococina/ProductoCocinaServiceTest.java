@@ -186,6 +186,7 @@ public class ProductoCocinaServiceTest {
     @DisplayName("delete - Debe eliminar el producto cuando el ID existe y no tiene pedidos")
     public void delete_exitoso() {
         when(productoCocinaRepository.existsById(10)).thenReturn(true);
+        when(productoCocinaRepository.existsById(10)).thenReturn(false);
 
         assertDoesNotThrow(() -> productoCocinaService.delete(10,false));
         verify(productoCocinaRepository).deleteById(10);

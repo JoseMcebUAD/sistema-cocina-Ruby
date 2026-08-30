@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 public class RutaSimpleResponseDTO {
 
     private int idRuta;
+    private String uuidRuta;
     private String nombre;
     private boolean active;
     private BigDecimal tarifaEnvio;
@@ -13,9 +14,10 @@ public class RutaSimpleResponseDTO {
 
     public RutaSimpleResponseDTO() {}
 
-    public RutaSimpleResponseDTO(int idRuta, String nombre, boolean active,
+    public RutaSimpleResponseDTO(int idRuta, String uuidRuta, String nombre, boolean active,
                                  BigDecimal tarifaEnvio, Integer tiempoEstimadoMin, Integer orden) {
         this.idRuta = idRuta;
+        this.uuidRuta = uuidRuta;
         this.nombre = nombre;
         this.active = active;
         this.tarifaEnvio = tarifaEnvio;
@@ -25,6 +27,9 @@ public class RutaSimpleResponseDTO {
 
     public int getIdRuta() { return idRuta; }
     public void setIdRuta(int idRuta) { this.idRuta = idRuta; }
+
+    public String getUuidRuta() { return uuidRuta; }
+    public void setUuidRuta(String uuidRuta) { this.uuidRuta = uuidRuta; }
 
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }

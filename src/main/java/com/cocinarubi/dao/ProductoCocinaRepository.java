@@ -51,4 +51,11 @@ public interface ProductoCocinaRepository extends JpaRepository<ProductoCocina, 
            "LEFT JOIN FETCH pc.subcategorias " +
            "WHERE pc.idProductoCocina = :id")
     Optional<ProductoCocina> findByIdConSubcategorias(@Param("id") Integer id);
+
+    // JOIN FETCH de categoria evita N+1 cuando se agrupan productos por categoría (menu-web).
+    @Query("SELECT DISTINCT pc FROM ProductoCocina pc " +
+           "JOIN FETCH pc.categoria " +
+           "WHERE pc.estatus = :estatus " +
+           "ORDER BY pc.categoria.nombre ASC, pc.destacado DESC, pc.nombreProducto ASC")
+    List<ProductoCocina> findDisponiblesOrdenadosConCategoria(@Param("estatus") DBConstants.Estatus estatus);
 }
