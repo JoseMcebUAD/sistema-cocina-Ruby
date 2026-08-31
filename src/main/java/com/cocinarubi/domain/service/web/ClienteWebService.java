@@ -6,6 +6,7 @@ import com.cocinarubi.dao.RutaRepository;
 import com.cocinarubi.domain.entity.Cliente;
 import com.cocinarubi.domain.interfaces.web.IClienteWebService;
 import com.cocinarubi.domain.mapper.PedidoMapper;
+import com.cocinarubi.domain.service.RutaService;
 import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
 import com.cocinarubi.presentation.dto.web.ClienteWebRequestDTO;
 import com.cocinarubi.presentation.dto.web.ClienteWebResponseDTO;
@@ -26,15 +27,18 @@ public class ClienteWebService implements IClienteWebService {
 
     private final ClienteRepository clienteRepository;
     private final RutaRepository rutaRepository;
+    private final RutaService rutaService;
     private final PedidoRepository pedidoRepository;
     private final PedidoMapper pedidoMapper;
 
     public ClienteWebService(ClienteRepository clienteRepository,
                              RutaRepository rutaRepository,
+                             RutaService rutaService,
                              PedidoRepository pedidoRepository,
                              PedidoMapper pedidoMapper) {
         this.clienteRepository = clienteRepository;
         this.rutaRepository = rutaRepository;
+        this.rutaService = rutaService;
         this.pedidoRepository = pedidoRepository;
         this.pedidoMapper = pedidoMapper;
     }
@@ -76,6 +80,22 @@ public class ClienteWebService implements IClienteWebService {
     public List<RutaWebResponseDTO> rutas() {
         return rutaRepository.findAll().stream()
                 .filter(r -> r.isActive())
+                .map(r -> RutaWebResponseDTO.builder()
+                        .idRuta(r.getIdRuta())
+                        .uuidRuta(r.getUuidRuta())
+                        .nombre(r.getNombre())
+                        .active(r.isActive())
+                        .tarifaEnvio(r.getTarifaEnvio())
+                        .tiempoEstimadoMin(r.getTiempoEstimadoMin())
+                        .orden(r.getOrden())
+                        .build())
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RutaWebResponseDTO> rutasPorUbicacion(double lat, double lng) {
+        return rutaService.buscarPorUbicacion(lat, lng).stream()
                 .map(r -> RutaWebResponseDTO.builder()
                         .idRuta(r.getIdRuta())
                         .uuidRuta(r.getUuidRuta())

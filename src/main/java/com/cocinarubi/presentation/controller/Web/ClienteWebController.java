@@ -2,6 +2,7 @@ package com.cocinarubi.presentation.controller.Web;
 
 import com.cocinarubi.domain.interfaces.web.IClienteWebService;
 import com.cocinarubi.domain.service.web.PedidoWebService;
+import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
@@ -78,6 +79,22 @@ public class ClienteWebController {
     public ResponseEntity<ApiResponse<List<RutaWebResponseDTO>>> rutas() {
         return ResponseEntity.ok(ApiResponse.exito(200, "Rutas obtenidas correctamente",
                 clienteWebService.rutas()));
+    }
+
+    // Detecta las rutas cuyo polígono contiene la ubicación dada; devuelve lista para que el cliente elija si hay solapamiento
+    @GetMapping("/rutas/por-ubicacion")
+    public ResponseEntity<ApiResponse<List<RutaWebResponseDTO>>> rutasPorUbicacion(
+            @RequestParam double lat,
+            @RequestParam double lng) {
+        List<RutaWebResponseDTO> rutas = clienteWebService.rutasPorUbicacion(lat, lng);
+        if (rutas.isEmpty()) {
+            throw new BusinessException(
+                    "La ubicación no pertenece a ninguna zona de reparto", HttpStatus.NOT_FOUND);
+        }
+        String mensaje = rutas.size() == 1
+                ? "Ruta encontrada"
+                : "La ubicación pertenece a " + rutas.size() + " zonas, el cliente debe elegir";
+        return ResponseEntity.ok(ApiResponse.exito(200, mensaje, rutas));
     }
 
     // Retorna los últimos pedidos asociados al UUID del cliente

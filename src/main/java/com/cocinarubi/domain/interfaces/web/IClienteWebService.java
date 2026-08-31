@@ -13,5 +13,7 @@ public interface IClienteWebService {
 
     List<RutaWebResponseDTO> rutas();
 
+    List<RutaWebResponseDTO> rutasPorUbicacion(double lat, double lng);
+
     List<PedidoResponseDTO> ultimosPedidos(String uuidCliente);
 }

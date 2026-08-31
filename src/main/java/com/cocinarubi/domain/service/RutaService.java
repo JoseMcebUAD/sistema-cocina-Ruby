@@ -9,6 +9,8 @@ import com.cocinarubi.domain.entity.Ruta;
 import com.cocinarubi.exception.BusinessException;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 import org.springframework.http.HttpStatus;
@@ -156,6 +158,20 @@ public class RutaService {
         return rutaRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(
                         "Ruta no encontrada con id: " + id, HttpStatus.NOT_FOUND));
+    }
+
+    /**
+     * Devuelve todas las rutas activas cuyo boundary cubre el punto dado.
+     * Usa JTS en memoria — el conjunto de rutas es fijo y pequeño (RF011).
+     * Usa covers() en lugar de contains() para incluir puntos sobre el borde del polígono.
+     */
+    public List<Ruta> buscarPorUbicacion(double lat, double lng) {
+        // JTS: X = longitud, Y = latitud (mismo orden que los polígonos almacenados)
+        Point punto = new GeometryFactory().createPoint(new Coordinate(lng, lat));
+        return rutaRepository.findAll().stream()
+                .filter(Ruta::isActive)
+                .filter(r -> r.getBoundary().covers(punto))
+                .collect(Collectors.toList());
     }
 
     /**
