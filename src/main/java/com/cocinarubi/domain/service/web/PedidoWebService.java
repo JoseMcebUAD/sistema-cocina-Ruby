@@ -11,11 +11,17 @@ import com.cocinarubi.dao.TarifaEspecialRepository;
 import com.cocinarubi.domain.entity.Cliente;
 import com.cocinarubi.domain.entity.HorarioAtencion;
 import com.cocinarubi.domain.entity.Pedido;
+import com.cocinarubi.domain.entity.Ruta;
 import com.cocinarubi.domain.mapper.PedidoMapper;
 import com.cocinarubi.domain.service.CatalogoPedidoService;
 import com.cocinarubi.domain.service.PedidoService;
+import com.cocinarubi.domain.service.RutaService;
 import com.cocinarubi.exception.BusinessException;
+import com.cocinarubi.presentation.dto.request.PedidoDomicilioDTO;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
 import com.cocinarubi.presentation.strategy.strategyImplementation.PedidoConfirmationImp;
 import com.cocinarubi.presentation.strategy.strategyImplementation.PedidoValidationImp;
@@ -53,6 +59,7 @@ public class PedidoWebService extends PedidoService {
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
     private final HorarioAtencionRepository horarioRepo;
+    private final RutaService rutaService;
     private final HttpServletRequest httpRequest;
 
     public PedidoWebService(PedidoRepository pedidoRepository,
@@ -64,12 +71,14 @@ public class PedidoWebService extends PedidoService {
                             TarifaEspecialRepository tarifaEspecialRepository,
                             ClienteRepository clienteRepository,
                             HorarioAtencionRepository horarioRepo,
+                            RutaService rutaService,
                             HttpServletRequest httpRequest) {
         super(pedidoRepository, pedidoValidation, pedidoConfirmation, pedidoMapper,
                 catalogoPedido, eventPublisher, tarifaEspecialRepository);
         this.pedidoRepository = pedidoRepository;
         this.clienteRepository = clienteRepository;
         this.horarioRepo = horarioRepo;
+        this.rutaService = rutaService;
         this.httpRequest = httpRequest;
     }
 
@@ -78,6 +87,7 @@ public class PedidoWebService extends PedidoService {
     public PedidoResponseDTO save(PedidoRequestDTO dto) {
         verificarTokenWeb(dto);
         verificarHorarioModalidad(dto.getTipoPedido());
+        verificarUbicacionDomicilio(dto);
         return super.save(dto);
     }
 
@@ -87,6 +97,7 @@ public class PedidoWebService extends PedidoService {
         verificarTokenWeb(dto);
         verificarVentanaEdicion(id);
         verificarHorarioModalidad(dto.getTipoPedido());
+        verificarUbicacionDomicilio(dto);
         return super.update(id, dto);
     }
 
@@ -121,6 +132,28 @@ public class PedidoWebService extends PedidoService {
                     "La modalidad " + tipoPedido.name().toLowerCase()
                             + " no está disponible fuera del horario de atención ("
                             + inicio + " – " + cierre + ")",
+                    HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+    }
+
+    /**
+     * Si el pedido es DOMICILIO y el DTO incluye coordenadas, verifica que el punto
+     * esté dentro del polígono de la ruta declarada. Evita que el cliente envíe una
+     * idRuta que no corresponde a su ubicación real.
+     */
+    private void verificarUbicacionDomicilio(PedidoRequestDTO dto) {
+        if (!TipoPedido.DOMICILIO.equals(dto.getTipoPedido())) return;
+        PedidoDomicilioDTO dom = dto.getDomicilio();
+        if (dom == null || dom.getLatitud() == null || dom.getLongitud() == null) return;
+
+        Ruta ruta = rutaService.findEntityById(dom.getIdRuta());
+        // JTS: X = longitud, Y = latitud
+        Point punto = new GeometryFactory().createPoint(
+                new Coordinate(dom.getLongitud().doubleValue(), dom.getLatitud().doubleValue()));
+
+        if (!ruta.getBoundary().covers(punto)) {
+            throw new BusinessException(
+                    "La ubicación indicada no se encuentra dentro de la zona de reparto seleccionada",
                     HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }
