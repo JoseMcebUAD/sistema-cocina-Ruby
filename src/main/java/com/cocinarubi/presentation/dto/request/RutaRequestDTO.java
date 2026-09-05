@@ -21,6 +21,10 @@ public class RutaRequestDTO {
     @JsonProperty("isActive")
     private boolean active;
 
+    /** Nullable: null deja la ruta sin grupo; un id numérico la asigna al OrdenRuta indicado. */
+    @JsonProperty("idOrdenRuta")
+    private Integer idOrdenRuta;
+
     @NotNull(message = "La tarifa de envío no puede ser nula")
     @Positive(message = "La tarifa de envío debe ser mayor a cero")
     @JsonProperty("tarifaEnvio")
@@ -28,11 +32,13 @@ public class RutaRequestDTO {
 
     public RutaRequestDTO() {}
 
-    public RutaRequestDTO(String nombre, String boundaryWkt, boolean active, BigDecimal tarifaEnvio) {
+    public RutaRequestDTO(String nombre, String boundaryWkt, boolean active,
+                          BigDecimal tarifaEnvio, Integer idOrdenRuta) {
         this.nombre = nombre;
         this.boundaryWkt = boundaryWkt;
         this.active = active;
         this.tarifaEnvio = tarifaEnvio;
+        this.idOrdenRuta = idOrdenRuta;
     }
 
     public String getNombre() { return nombre; }
@@ -43,6 +49,9 @@ public class RutaRequestDTO {
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+
+    public Integer getIdOrdenRuta() { return idOrdenRuta; }
+    public void setIdOrdenRuta(Integer idOrdenRuta) { this.idOrdenRuta = idOrdenRuta; }
 
     public BigDecimal getTarifaEnvio() { return tarifaEnvio; }
     public void setTarifaEnvio(BigDecimal tarifaEnvio) { this.tarifaEnvio = tarifaEnvio; }

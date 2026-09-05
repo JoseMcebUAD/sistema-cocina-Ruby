@@ -17,10 +17,8 @@ import org.locationtech.jts.io.WKTReader;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -73,29 +71,17 @@ public class RutaService {
         return toResponseDTO(rutaRepository.save(ruta));
     }
 
+    /**
+     * Reemplaza todos los datos de una ruta. Si idOrdenRuta es null la desasigna de su grupo;
+     * si viene un id válido la reasigna al OrdenRuta correspondiente.
+     */
     public RutaResponseDTO update(int id, RutaRequestDTO dto) {
         Ruta existente = findEntityById(id);
         existente.setNombre(dto.getNombre());
         existente.setBoundary(parseBoundary(dto.getBoundaryWkt()));
         existente.setActive(dto.isActive());
         existente.setTarifaEnvio(dto.getTarifaEnvio());
-        return toResponseDTO(rutaRepository.save(existente));
-    }
-
-    public RutaResponseDTO patch(int id, Map<String, Object> payload) {
-        Ruta existente = findEntityById(id);
-        if (payload.containsKey("nombre")) {
-            existente.setNombre((String) payload.get("nombre"));
-        }
-        if (payload.containsKey("boundaryWkt")) {
-            existente.setBoundary(parseBoundary((String) payload.get("boundaryWkt")));
-        }
-        if (payload.containsKey("isActive")) {
-            existente.setActive((Boolean) payload.get("isActive"));
-        }
-        if (payload.containsKey("tarifaEnvio")) {
-            existente.setTarifaEnvio(new BigDecimal(payload.get("tarifaEnvio").toString()));
-        }
+        existente.setOrdenRuta(resolverOrdenRuta(dto.getIdOrdenRuta()));
         return toResponseDTO(rutaRepository.save(existente));
     }
 
@@ -116,6 +102,31 @@ public class RutaService {
         rutaRepository.deleteById(id);
     }
 
+    /**
+     * Desasigna una ruta de su grupo actual, dejándola en estado "Sin Asignar" (ordenRuta = null).
+     */
+    @Transactional
+    public void desasignarRuta(int idRuta) {
+        Ruta ruta = findEntityById(idRuta);
+        ruta.setOrdenRuta(null);
+        rutaRepository.save(ruta);
+    }
+
+    /**
+     * Desvincula todas las rutas de un grupo (OrdenRuta), dejándolas en estado "Sin Asignar".
+     * Si el grupo no existe lanza 404 para evitar operaciones silenciosas sobre ids inválidos.
+     */
+    @Transactional
+    public void vaciarGrupo(int idOrdenRuta) {
+        if (!ordenRutaRepository.existsById(idOrdenRuta)) {
+            throw new BusinessException(
+                    "OrdenRuta no encontrada con id: " + idOrdenRuta, HttpStatus.NOT_FOUND);
+        }
+        List<Ruta> rutas = rutaRepository.findByOrdenRutaId(idOrdenRuta);
+        rutas.forEach(r -> r.setOrdenRuta(null));
+        rutaRepository.saveAll(rutas);
+    }
+
     @Transactional
     public OrdenRutaResponseDTO asignarRutas(AsignarRutasOrdenDTO dto) {
         OrdenRuta orden = ordenRutaRepository.findById(dto.getIdOrdenRuta())
@@ -133,6 +144,17 @@ public class RutaService {
         return rutaRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(
                         "Ruta no encontrada con id: " + id, HttpStatus.NOT_FOUND));
+    }
+
+    /**
+     * Resuelve el OrdenRuta a partir de un id nullable.
+     * null → sin grupo; id válido → entidad OrdenRuta; id inexistente → 404.
+     */
+    private OrdenRuta resolverOrdenRuta(Integer idOrdenRuta) {
+        if (idOrdenRuta == null) return null;
+        return ordenRutaRepository.findById(idOrdenRuta)
+                .orElseThrow(() -> new BusinessException(
+                        "OrdenRuta no encontrada con id: " + idOrdenRuta, HttpStatus.NOT_FOUND));
     }
 
     /**
