@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,10 +54,10 @@ public class RutaServiceTest {
             .build();
 
     public RutaRequestDTO RUTA_DTO = new RutaRequestDTO(
-            "Zona Norte", WKT_POLYGON, true, BigDecimal.valueOf(30));
+            "Zona Norte", WKT_POLYGON, true, BigDecimal.valueOf(30), null);
 
     public RutaRequestDTO RUTA_DTO_MODIFIED = new RutaRequestDTO(
-            "Zona Sur", WKT_POLYGON, false, BigDecimal.valueOf(50));
+            "Zona Sur", WKT_POLYGON, false, BigDecimal.valueOf(50), null);
 
     private static Geometry parseGeom(String wkt) {
         try {
@@ -189,9 +190,16 @@ public class RutaServiceTest {
     }
 
     @Test
-    @DisplayName("asignarRutas - Debe asignar rutas a una OrdenRuta existente")
+    @DisplayName("asignarRutas - Debe asignar rutas a una OrdenRuta existente y retornar el horario de llegada")
     public void asignarRutas() {
-        OrdenRuta orden = OrdenRuta.builder().idOrdenRuta(1).tiempoEstimadoMin(null).build();
+        LocalTime desde = LocalTime.of(9, 0);
+        LocalTime hasta = LocalTime.of(12, 0);
+        OrdenRuta orden = OrdenRuta.builder()
+                .idOrdenRuta(1)
+                .tiempoEstimadoMin(30)
+                .horaLlegadaDesde(desde)
+                .horaLlegadaHasta(hasta)
+                .build();
         Ruta ruta1 = Ruta.builder().idRuta(1).nombre("Zona A").boundary(geom)
                 .isActive(true).tarifaEnvio(BigDecimal.valueOf(20)).build();
         Ruta ruta2 = Ruta.builder().idRuta(2).nombre("Zona B").boundary(geom)
@@ -207,8 +215,12 @@ public class RutaServiceTest {
 
         assertNotNull(result);
         assertEquals(1, result.getIdOrdenRuta());
+        assertEquals(30, result.getTiempoEstimadoMin());
+        assertEquals(desde, result.getHoraLlegadaDesde());
+        assertEquals(hasta, result.getHoraLlegadaHasta());
         verify(rutaRepository).saveAll(anyList());
-        System.out.println("[OK] asignarRutas asignó rutas a OrdenRuta id=" + result.getIdOrdenRuta());
+        System.out.println("[OK] asignarRutas asignó rutas a OrdenRuta id=" + result.getIdOrdenRuta()
+                + " horario=" + result.getHoraLlegadaDesde() + "-" + result.getHoraLlegadaHasta());
     }
 
     @Test
