@@ -1,26 +1,18 @@
-package com.cocinarubi.presentation.dto.response;
+package com.cocinarubi.presentation.dto.request;
 
 import java.time.LocalTime;
 
-public class OrdenRutaResponseDTO {
+/**
+ * DTO para actualizar los campos editables de un grupo de rutas (OrdenRuta).
+ * Todos los campos son opcionales: solo se aplica el valor si no es null.
+ */
+public class OrdenRutaRequestDTO {
 
-    private Integer idOrdenRuta;
     private Integer tiempoEstimadoMin;
     private LocalTime horaLlegadaDesde;
     private LocalTime horaLlegadaHasta;
 
-    public OrdenRutaResponseDTO() {}
-
-    public OrdenRutaResponseDTO(Integer idOrdenRuta, Integer tiempoEstimadoMin,
-                                LocalTime horaLlegadaDesde, LocalTime horaLlegadaHasta) {
-        this.idOrdenRuta = idOrdenRuta;
-        this.tiempoEstimadoMin = tiempoEstimadoMin;
-        this.horaLlegadaDesde = horaLlegadaDesde;
-        this.horaLlegadaHasta = horaLlegadaHasta;
-    }
-
-    public Integer getIdOrdenRuta() { return idOrdenRuta; }
-    public void setIdOrdenRuta(Integer idOrdenRuta) { this.idOrdenRuta = idOrdenRuta; }
+    public OrdenRutaRequestDTO() {}
 
     public Integer getTiempoEstimadoMin() { return tiempoEstimadoMin; }
     public void setTiempoEstimadoMin(Integer tiempoEstimadoMin) { this.tiempoEstimadoMin = tiempoEstimadoMin; }

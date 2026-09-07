@@ -137,7 +137,8 @@ public class RutaService {
                 .collect(Collectors.toList());
         rutas.forEach(r -> r.setOrdenRuta(orden));
         rutaRepository.saveAll(rutas);
-        return new OrdenRutaResponseDTO(orden.getIdOrdenRuta(), orden.getTiempoEstimadoMin());
+        return new OrdenRutaResponseDTO(orden.getIdOrdenRuta(), orden.getTiempoEstimadoMin(),
+                orden.getHoraLlegadaDesde(), orden.getHoraLlegadaHasta());
     }
 
     public Ruta findEntityById(int id) {
