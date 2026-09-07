@@ -1,6 +1,7 @@
 package com.cocinarubi.presentation.controller;
 
 import com.cocinarubi.presentation.dto.request.AsignarRutasOrdenDTO;
+import com.cocinarubi.presentation.dto.request.OrdenRutaRequestDTO;
 import com.cocinarubi.presentation.dto.request.RutaRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.presentation.dto.response.OrdenRutaResponseDTO;
@@ -14,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -93,12 +93,12 @@ public class RutaController {
                 rutaService.asignarRutas(dto)));
     }
 
-    /** Actualiza el tiempo estimado de entrega (en minutos) de un grupo de rutas. */
-    @PatchMapping("/orden/{id}")
-    public ResponseEntity<ApiResponse<OrdenRutaResponseDTO>> actualizarTiempoEstimado(
-            @PathVariable int id, @RequestBody Map<String, Integer> body) {
-        return ResponseEntity.ok(ApiResponse.exito(200, "Tiempo estimado actualizado",
-                ordenRutaService.actualizarTiempoEstimado(id, body.get("tiempoEstimadoMin"))));
+    /** Actualiza el tiempo estimado y/o el rango de horario de llegada de un grupo de rutas. Solo se aplican los campos no nulos. */
+    @PutMapping("/orden/{id}")
+    public ResponseEntity<ApiResponse<OrdenRutaResponseDTO>> actualizarOrdenRuta(
+            @PathVariable int id, @RequestBody OrdenRutaRequestDTO dto) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Grupo de rutas actualizado",
+                ordenRutaService.actualizarOrdenRuta(id, dto)));
     }
 
     /**
