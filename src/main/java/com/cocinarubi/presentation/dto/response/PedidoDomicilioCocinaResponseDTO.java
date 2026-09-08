@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 public class PedidoDomicilioCocinaResponseDTO {
 
     private int idPedido;
-    private int idRegistroCliente;
+    private Integer idRegistroCliente;
     private String nombreCliente;
     private String telefono;
     private int idRuta;
@@ -16,7 +16,7 @@ public class PedidoDomicilioCocinaResponseDTO {
 
     public PedidoDomicilioCocinaResponseDTO() {}
 
-    public PedidoDomicilioCocinaResponseDTO(int idPedido, int idRegistroCliente, String nombreCliente,
+    public PedidoDomicilioCocinaResponseDTO(int idPedido, Integer idRegistroCliente, String nombreCliente,
                                             String telefono, int idRuta, String nombreRuta,
                                             String domicilio, BigDecimal precioTarifa) {
         this.idPedido = idPedido;
@@ -32,8 +32,8 @@ public class PedidoDomicilioCocinaResponseDTO {
     public int getIdPedido() { return idPedido; }
     public void setIdPedido(int idPedido) { this.idPedido = idPedido; }
 
-    public int getIdRegistroCliente() { return idRegistroCliente; }
-    public void setIdRegistroCliente(int idRegistroCliente) { this.idRegistroCliente = idRegistroCliente; }
+    public Integer getIdRegistroCliente() { return idRegistroCliente; }
+    public void setIdRegistroCliente(Integer idRegistroCliente) { this.idRegistroCliente = idRegistroCliente; }
 
     public String getNombreCliente() { return nombreCliente; }
     public void setNombreCliente(String nombreCliente) { this.nombreCliente = nombreCliente; }
