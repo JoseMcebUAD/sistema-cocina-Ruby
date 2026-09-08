@@ -96,10 +96,16 @@ public class CatalogoPedidoService {
     public void handleTipoPedido(Pedido pedido, PedidoRequestDTO dto) {
         if (dto.getPedidoCreadoDesde() == PedidoCreadoDesde.COCINA) {
             switch (dto.getTipoPedido()) {
-                case DOMICILIO -> agregarDomicilioCocina(pedido, dto.getPedidoDomicilioCocina());
+                case DOMICILIO -> {
+                    // Si venía de PICK_UP/MOSTRADOR, limpiar PedidoCocina antes de asignar domicilio
+                    pedido.setPedidoCocina(null);
+                    agregarDomicilioCocina(pedido, dto.getPedidoDomicilioCocina());
+                }
                 case PICK_UP, MOSTRADOR -> agregarPedidoCocina(pedido, dto.getNombreCliente());
             }
         } else {
+            // Canal WEB nunca usa PedidoCocina
+            pedido.setPedidoCocina(null);
             switch (dto.getTipoPedido()) {
                 case DOMICILIO -> agregarDomicilio(pedido, dto.getDomicilio());
                 case PICK_UP, MOSTRADOR -> { }
@@ -319,6 +325,13 @@ public class CatalogoPedidoService {
     }
 
     private void agregarPedidoCocina(Pedido pedido, String nombreCliente) {
+        if (pedido.getPedidoCocina() != null) {
+            // Actualizar en lugar de recrear: evita DuplicateKeyException de Hibernate porque
+            // PedidoCocina usa @MapsId y comparte PK con Pedido — crear un nuevo objeto con
+            // la misma PK dentro de la misma sesión provoca conflicto en el first-level cache.
+            pedido.getPedidoCocina().setNombreCliente(nombreCliente);
+            return;
+        }
         pedido.setPedidoCocina(PedidoCocina.builder()
                 .pedido(pedido)
                 .nombreCliente(nombreCliente)
