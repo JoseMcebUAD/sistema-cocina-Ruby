@@ -116,7 +116,8 @@ public class PedidoService {
         existente.getPaquetesPedido().clear();
         existente.setPedidoDomicilio(null);
         existente.setPedidoDomicilioCocina(null);
-        existente.setPedidoCocina(null);
+        // pedidoCocina NO se nulifica aquí: handleTipoPedido lo gestiona para evitar
+        // DuplicateKeyException de Hibernate cuando @MapsId reutiliza la misma PK.
 
         List<String> mensajesTarifas = poblarLineasYPrecio(existente, dto);
         PedidoResponseDTO response = pedidoMapper.toResponseDTO(pedidoRepository.save(existente));
