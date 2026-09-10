@@ -101,14 +101,23 @@ public class CatalogoPedidoService {
                     pedido.setPedidoCocina(null);
                     agregarDomicilioCocina(pedido, dto.getPedidoDomicilioCocina());
                 }
-                case PICK_UP, MOSTRADOR -> agregarPedidoCocina(pedido, dto.getNombreCliente());
+                case PICK_UP, MOSTRADOR -> {
+                    // Si venía de DOMICILIO, nullificar aquí (no en update()) para evitar
+                    // "deleted object would be re-saved" — el null sin recreación es seguro.
+                    pedido.setPedidoDomicilioCocina(null);
+                    agregarPedidoCocina(pedido, dto.getNombreCliente());
+                }
             }
         } else {
             // Canal WEB nunca usa PedidoCocina
             pedido.setPedidoCocina(null);
             switch (dto.getTipoPedido()) {
                 case DOMICILIO -> agregarDomicilio(pedido, dto.getDomicilio());
-                case PICK_UP, MOSTRADOR -> { }
+                case PICK_UP, MOSTRADOR -> {
+                    // Si venía de DOMICILIO, nullificar aquí para disparar el orphanRemoval
+                    // sin el riesgo de re-save que existe cuando se crea un nuevo @MapsId en la misma sesión.
+                    pedido.setPedidoDomicilio(null);
+                }
             }
         }
     }
@@ -298,14 +307,22 @@ public class CatalogoPedidoService {
 
     private void agregarDomicilio(Pedido pedido, PedidoDomicilioDTO domicilioDto) {
         Ruta ruta = rutaService.findEntityById(domicilioDto.getIdRuta());
-        PedidoDomicilio domicilio = PedidoDomicilio.builder()
+        if (pedido.getPedidoDomicilio() != null) {
+            // Actualizar en lugar de recrear: PedidoDomicilio también usa @MapsId.
+            PedidoDomicilio existente = pedido.getPedidoDomicilio();
+            existente.setRuta(ruta);
+            existente.setDireccion(domicilioDto.getDireccion());
+            existente.setCodigo(domicilioDto.getCodigo());
+            existente.setTarifa(ruta.getTarifaEnvio());
+            return;
+        }
+        pedido.setPedidoDomicilio(PedidoDomicilio.builder()
                 .pedido(pedido)
                 .ruta(ruta)
                 .direccion(domicilioDto.getDireccion())
                 .codigo(domicilioDto.getCodigo())
                 .tarifa(ruta.getTarifaEnvio())
-                .build();
-        pedido.setPedidoDomicilio(domicilio);
+                .build());
     }
 
     private void agregarDomicilioCocina(Pedido pedido, PedidoDomicilioCocinaDTO dto) {
@@ -314,14 +331,24 @@ public class CatalogoPedidoService {
                         "Registro de cliente no encontrado con id: " + dto.getIdRegistroCliente(),
                         HttpStatus.BAD_REQUEST));
         Ruta ruta = rutaService.findEntityById(dto.getIdRuta());
-        PedidoDomicilioCocina domicilio = PedidoDomicilioCocina.builder()
+        if (pedido.getPedidoDomicilioCocina() != null) {
+            // Actualizar en lugar de recrear: mismo patrón que PedidoCocina.
+            // PedidoDomicilioCocina usa @MapsId — crear un nuevo objeto con la misma PK
+            // dentro de la sesión provoca "deleted object would be re-saved by cascade".
+            PedidoDomicilioCocina existente = pedido.getPedidoDomicilioCocina();
+            existente.setRegistroCliente(cliente);
+            existente.setRuta(ruta);
+            existente.setDomicilio(dto.getDomicilio());
+            existente.setPrecioTarifa(dto.getTarifa());
+            return;
+        }
+        pedido.setPedidoDomicilioCocina(PedidoDomicilioCocina.builder()
                 .pedido(pedido)
                 .registroCliente(cliente)
                 .ruta(ruta)
                 .domicilio(dto.getDomicilio())
                 .precioTarifa(dto.getTarifa())
-                .build();
-        pedido.setPedidoDomicilioCocina(domicilio);
+                .build());
     }
 
     private void agregarPedidoCocina(Pedido pedido, String nombreCliente) {

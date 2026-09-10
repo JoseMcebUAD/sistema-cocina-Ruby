@@ -114,10 +114,10 @@ public class PedidoService {
         existente.getBasicosPedido().clear();
         existente.getProductosCocina().clear();
         existente.getPaquetesPedido().clear();
-        existente.setPedidoDomicilio(null);
-        existente.setPedidoDomicilioCocina(null);
-        // pedidoCocina NO se nulifica aquí: handleTipoPedido lo gestiona para evitar
-        // DuplicateKeyException de Hibernate cuando @MapsId reutiliza la misma PK.
+        // pedidoCocina, pedidoDomicilio y pedidoDomicilioCocina NO se nulifican aquí:
+        // los tres usan @MapsId y comparten PK con Pedido. Nulificar + recrear dentro
+        // de la misma sesión produce "deleted object would be re-saved by cascade".
+        // handleTipoPedido gestiona sus nulls y actualizaciones en lugar de reemplazarlos.
 
         List<String> mensajesTarifas = poblarLineasYPrecio(existente, dto);
         PedidoResponseDTO response = pedidoMapper.toResponseDTO(pedidoRepository.save(existente));
