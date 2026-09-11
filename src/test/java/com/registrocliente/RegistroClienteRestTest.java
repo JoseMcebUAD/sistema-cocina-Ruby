@@ -57,7 +57,7 @@ public class RegistroClienteRestTest {
                 {
                   "nombre": "María Test REST",
                   "telefono": "5551112222",
-                  "direccion": "Calle Prueba 77"
+                  "direccion": "{\\"calle\\": \\"Prueba\\", \\"numero\\": \\"77\\"}"
                 }
                 """;
 
