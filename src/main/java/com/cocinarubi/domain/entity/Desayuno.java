@@ -39,7 +39,7 @@ public class Desayuno {
     @Column(name = "nombre_desayuno", nullable = false, length = 255)
     private String nombreDesayuno;
 
-    @Column(name = "descripcion", length = 255)
+    @Column(name = "descripcion", length = 400)
     private String descripcion;
 
     @Column(name = "precio_media", nullable = false, precision = 10, scale = 2)
