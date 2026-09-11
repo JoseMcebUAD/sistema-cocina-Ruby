@@ -48,9 +48,10 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         
         if (data.getMetodoPagoSecundario() != null) {
             printDobleMetodoPago(escpos, data);
-        } else {
+        } else if (data.getMetodoPagoPrincipal() != null) {
             escpos.writeLF("Método de pago: " + data.getMetodoPagoPrincipal().name());
-            
+        } else {
+            escpos.writeLF("Método de pago: Sin definir");
         }
         // Método de pago y totales
         escpos.writeLF(subtitleStyle, formatter.formatearLineaTotal("TOTAL", FORMATO_PRECIO.format(data.getPrecioFinalOrden())));
