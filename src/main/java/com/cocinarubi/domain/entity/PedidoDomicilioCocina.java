@@ -43,7 +43,7 @@ public class PedidoDomicilioCocina {
     private Pedido pedido;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_registro_cliente", nullable = false)
+    @JoinColumn(name = "id_registro_cliente", nullable = true)
     private RegistroCliente registroCliente;
 
     @ManyToOne(fetch = FetchType.LAZY)

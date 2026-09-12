@@ -3,6 +3,7 @@ package com.cocinarubi.presentation.dto.request;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 public class RegistroClienteRequestDTO {
 
@@ -11,6 +12,7 @@ public class RegistroClienteRequestDTO {
     private String nombre;
 
     @NotBlank(message = "El teléfono no puede estar vacío")
+    @Size (max = 12,min = 10, message = "El número telefónico debe de tener 10 dígitos en el (máximo 12 si tiene extensión de otro país)")
     @JsonProperty("telefono")
     private String telefono;
 

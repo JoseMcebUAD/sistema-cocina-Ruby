@@ -114,9 +114,10 @@ public class PedidoService {
         existente.getBasicosPedido().clear();
         existente.getProductosCocina().clear();
         existente.getPaquetesPedido().clear();
-        existente.setPedidoDomicilio(null);
-        existente.setPedidoDomicilioCocina(null);
-        existente.setPedidoCocina(null);
+        // pedidoCocina, pedidoDomicilio y pedidoDomicilioCocina NO se nulifican aquí:
+        // los tres usan @MapsId y comparten PK con Pedido. Nulificar + recrear dentro
+        // de la misma sesión produce "deleted object would be re-saved by cascade".
+        // handleTipoPedido gestiona sus nulls y actualizaciones en lugar de reemplazarlos.
 
         List<String> mensajesTarifas = poblarLineasYPrecio(existente, dto);
         PedidoResponseDTO response = pedidoMapper.toResponseDTO(pedidoRepository.save(existente));

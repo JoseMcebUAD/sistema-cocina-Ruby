@@ -64,11 +64,12 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         // Nota libre del operador (comentario del pedido)
         renderComentario(escpos, data.getComentario());
 
-        escpos.feed(5).cut(EscPos.CutMode.FULL);
+        escpos.feed(5);
     }
 
     @Override
     protected void renderFooter(EscPos escpos) throws IOException {
+        escpos.cut(EscPos.CutMode.FULL);
     }
 
     private void renderComidas(EscPos escpos, List<ComidaPedidoResponseDTO> comidas) throws IOException {

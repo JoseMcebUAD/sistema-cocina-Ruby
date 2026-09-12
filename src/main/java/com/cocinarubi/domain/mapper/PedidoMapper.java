@@ -12,6 +12,7 @@ import com.cocinarubi.domain.entity.Pedido;
 import com.cocinarubi.domain.entity.PedidoCocina;
 import com.cocinarubi.domain.entity.PedidoDomicilio;
 import com.cocinarubi.domain.entity.PedidoDomicilioCocina;
+import com.cocinarubi.domain.entity.RegistroCliente;
 import com.cocinarubi.domain.entity.ProductoCocinaPedido;
 import com.cocinarubi.domain.service.PaqueteService;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoExtraResponseDTO;
@@ -247,11 +248,12 @@ public class PedidoMapper {
     }
 
     public PedidoDomicilioCocinaResponseDTO toDomicilioCocinaDTO(PedidoDomicilioCocina pdc) {
+        RegistroCliente rc = pdc.getRegistroCliente();
         PedidoDomicilioCocinaResponseDTO dto = new PedidoDomicilioCocinaResponseDTO(
                 pdc.getIdPedido(),
-                pdc.getRegistroCliente().getIdRegistroCliente(),
-                pdc.getRegistroCliente().getNombre(),
-                pdc.getRegistroCliente().getTelefono(),
+                rc != null ? rc.getIdRegistroCliente() : null,
+                rc != null ? rc.getNombre() : null,
+                rc != null ? rc.getTelefono() : null,
                 pdc.getRuta().getIdRuta(),
                 pdc.getRuta().getNombre(),
                 pdc.getDomicilio(),
