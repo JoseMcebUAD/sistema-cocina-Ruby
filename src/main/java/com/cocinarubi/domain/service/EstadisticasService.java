@@ -151,7 +151,7 @@ public class EstadisticasService {
         }
 
         return mapa.values().stream()
-                .sorted(Comparator.comparing(EstadisticaRutaItemDTO::getOrden, Comparator.nullsLast(Comparator.naturalOrder())))
+                .sorted(Comparator.comparing(EstadisticaRutaItemDTO::getIdOrdenRuta, Comparator.nullsLast(Comparator.naturalOrder())))
                 .collect(Collectors.toList());
     }
 

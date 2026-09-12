@@ -10,7 +10,7 @@ import java.util.Optional;
 public interface RutaRepository extends JpaRepository<Ruta, Integer> {
 
     @Override
-    @Query("SELECT r FROM Ruta r ORDER BY r.orden ASC")
+    @Query("SELECT r FROM Ruta r LEFT JOIN r.ordenRuta o ORDER BY o.idOrdenRuta ASC NULLS LAST, r.idRuta ASC")
     List<Ruta> findAll();
 
     Optional<Ruta> findByUuidRuta(String uuidRuta);
@@ -22,4 +22,7 @@ public interface RutaRepository extends JpaRepository<Ruta, Integer> {
 
     @Query("SELECT CASE WHEN COUNT(pd) > 0 THEN true ELSE false END FROM PedidoDomicilio pd WHERE pd.ruta.idRuta = :id")
     boolean existsPedidosDomicilioConRuta(@Param("id") int id);
+
+    @Query("SELECT r FROM Ruta r WHERE r.ordenRuta.idOrdenRuta = :idOrden ORDER BY r.idRuta ASC")
+    List<Ruta> findByOrdenRutaId(@Param("idOrden") int idOrden);
 }

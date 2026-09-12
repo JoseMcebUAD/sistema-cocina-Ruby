@@ -16,6 +16,5 @@ public class RutaWebResponseDTO {
     private String nombre;
     private boolean active;
     private BigDecimal tarifaEnvio;
-    private Integer tiempoEstimadoMin;
-    private Integer orden;
+    private Integer idOrdenRuta;
 }
