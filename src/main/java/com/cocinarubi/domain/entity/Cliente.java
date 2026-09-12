@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
  * Visitante anónimo del menú web de Cocina rubi.
@@ -70,4 +71,10 @@ public class Cliente {
 
     @Column(name = "telefono", length = 16)
     private String telefono;
+
+    @Column(name = "token_expiracion")
+    private LocalDateTime tokenExpiracion;
+
+    @Column(name = "huella")
+    private String huella;
 }

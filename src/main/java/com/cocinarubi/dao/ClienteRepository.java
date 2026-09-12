@@ -17,4 +17,6 @@ public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
     boolean existsByUuidCliente(String uuidCliente);
 
     Optional<Cliente> findBySessionToken(String sessionToken);
+
+    Optional<Cliente> findByUuidCliente(String uuidCliente);
 }

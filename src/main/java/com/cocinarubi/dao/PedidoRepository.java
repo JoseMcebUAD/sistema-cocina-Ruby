@@ -39,6 +39,8 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
      * Página de pedidos filtrada por rango de fechas, tipo y origen.
      * Usada por VistaResumenPedidoService para construir el detalle completo en /metricas.
      */
+    List<Pedido> findTop5ByUuidClienteOrderByFechaExpedicionPedidoDesc(String uuidCliente);
+
     @Query("""
             SELECT p FROM Pedido p
             WHERE (:desde IS NULL OR p.fechaExpedicionPedido >= :desde)
