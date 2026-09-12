@@ -120,6 +120,7 @@ public class PaqueteService {
         existente.setDescripcion(dto.getDescripcion());
         existente.setEstatus(dto.getEstatus());
         existente.getProductos().clear();
+        paqueteRepository.saveAndFlush(existente); // DELETE huérfanos antes del INSERT
         existente.setDestacado(dto.getDestacado());
         dto.getProductos().forEach(l -> existente.addProducto(PaqueteProducto.builder()
                 .tipoProducto(l.getTipoProducto())
@@ -129,6 +130,26 @@ public class PaqueteService {
         Paquete actualizado = paqueteRepository.save(existente);
         Map<TipoLineaPaquete, Map<Integer, String>> nombres = resolverNombres(List.of(actualizado));
         return paqueteMapper.toResponse(actualizado, nombres);
+    }
+
+    @Transactional
+    public PaqueteResponseDTO toggleDestacado(int id) {
+        Paquete paquete = paqueteRepository.findByIdWithProductos(id)
+                .orElseThrow(() -> new BusinessException(
+                        "Paquete no encontrado con id: " + id, HttpStatus.NOT_FOUND));
+        paquete.setDestacado(!paquete.isDestacado());
+        Paquete actualizado = paqueteRepository.save(paquete);
+        return paqueteMapper.toResponse(actualizado, resolverNombres(List.of(actualizado)));
+    }
+
+    @Transactional
+    public PaqueteResponseDTO updateEstatus(int id, Estatus estatus) {
+        Paquete paquete = paqueteRepository.findByIdWithProductos(id)
+                .orElseThrow(() -> new BusinessException(
+                        "Paquete no encontrado con id: " + id, HttpStatus.NOT_FOUND));
+        paquete.setEstatus(estatus);
+        Paquete actualizado = paqueteRepository.save(paquete);
+        return paqueteMapper.toResponse(actualizado, resolverNombres(List.of(actualizado)));
     }
 
     @Transactional

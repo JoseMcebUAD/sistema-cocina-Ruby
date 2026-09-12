@@ -73,6 +73,20 @@ public class PaqueteController {
                 paqueteService.update(id, dto)));
     }
 
+    @PutMapping("/destacado/{id}")
+    public ResponseEntity<ApiResponse<PaqueteResponseDTO>> toggleDestacado(@PathVariable int id) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Destacado actualizado",
+                paqueteService.toggleDestacado(id)));
+    }
+
+    @PutMapping("/estatus/{id}")
+    public ResponseEntity<ApiResponse<PaqueteResponseDTO>> updateEstatus(
+            @PathVariable int id,
+            @RequestParam Estatus estatus) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Estatus actualizado",
+                paqueteService.updateEstatus(id, estatus)));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> delete(
             @PathVariable int id,
