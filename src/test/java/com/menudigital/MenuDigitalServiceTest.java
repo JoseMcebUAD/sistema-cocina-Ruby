@@ -60,7 +60,7 @@ public class MenuDigitalServiceTest {
         when(comidaRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE)).thenReturn(List.of());
         when(basicoRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE)).thenReturn(List.of());
         when(complementoRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE)).thenReturn(List.of());
-        when(productoCocinaRepository.findDisponiblesOrdenadosConSubcategoria(Estatus.DISPONIBLE)).thenReturn(List.of(
+        when(productoCocinaRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE)).thenReturn(List.of(
                 producto(10, "Refresco", BEBIDA, BigDecimal.valueOf(20)),
                 producto(11, "Papas", SNACK, BigDecimal.valueOf(25))
         ));
@@ -83,7 +83,7 @@ public class MenuDigitalServiceTest {
         when(comidaRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE)).thenReturn(List.of());
         when(basicoRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE)).thenReturn(List.of());
         when(complementoRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE)).thenReturn(List.of());
-        when(productoCocinaRepository.findDisponiblesOrdenadosConSubcategoria(Estatus.DISPONIBLE)).thenReturn(List.of(
+        when(productoCocinaRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE)).thenReturn(List.of(
                 producto(20, "Cono chocolate", HELADO, BigDecimal.valueOf(30))
         ));
         when(categoriaRepository.findAll(any(Sort.class))).thenReturn(List.of(HELADO));

@@ -19,10 +19,14 @@ import java.util.List;
  *
  * <p>El {@code uuid_producto_cocina} es el identificador público para el menú web.</p>
  *
+<<<<<<< HEAD
+ * <p>Relaciones salientes: ninguna. Referenciado por {@link ProductoCocinaPedido}
+=======
  * <p>Relaciones salientes: {@code @ManyToOne} LAZY a {@link Categoria} (clasificación
  * principal), {@code @ManyToMany} LAZY a {@link Subcategoria} vía tabla puente
  * {@code producto_cocina_subcategoria} (desglose fino, 0..N). Todas las subcategorías
  * asignadas deben pertenecer a la misma categoría — validado en el service.</p>
+>>>>>>> feat/categorias
  */
 @Entity
 @Table(name = "producto_cocina")
@@ -46,7 +50,7 @@ public class ProductoCocina {
     @Column(name = "nombre_producto", nullable = false, length = 100)
     private String nombreProducto;
 
-    @Column(name = "descripcion", length = 255)
+    @Column(name = "descripcion", length = 400)
     private String descripcion;
 
     @Column(name = "precio_domicilio", nullable = false, precision = 5, scale = 2)

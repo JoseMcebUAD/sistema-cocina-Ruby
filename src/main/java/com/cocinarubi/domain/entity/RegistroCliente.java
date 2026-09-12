@@ -43,6 +43,6 @@ public class RegistroCliente {
     @JoinColumn(name = "id_ruta")
     private Ruta ruta;
 
-    @Column(name = "direccion", length = 255)
+    @Column(name = "direccion", columnDefinition = "JSON")
     private String direccion;
 }

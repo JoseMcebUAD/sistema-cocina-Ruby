@@ -7,6 +7,7 @@ import com.cocinarubi.domain.entity.Categoria;
 import com.cocinarubi.domain.entity.Subcategoria;
 import com.cocinarubi.domain.service.files.ArchivoModuloService;
 import com.cocinarubi.exception.BusinessException;
+import org.springframework.cache.annotation.CacheEvict;
 import com.cocinarubi.presentation.dto.request.CategoriaRequestDTO;
 import com.cocinarubi.presentation.dto.response.CategoriaResponseDTO;
 import com.cocinarubi.presentation.dto.response.SubcategoriaResponseDTO;
@@ -75,6 +76,7 @@ public class CategoriaService {
     }
 
     @Transactional
+    @CacheEvict(value = "menu-web", allEntries = true)
     public CategoriaResponseDTO save(CategoriaRequestDTO dto) {
         String nombre = normalizar(dto.getNombre());
         validarNombreDisponible(nombre, null);
@@ -87,6 +89,7 @@ public class CategoriaService {
     }
 
     @Transactional
+    @CacheEvict(value = "menu-web", allEntries = true)
     public CategoriaResponseDTO update(int id, CategoriaRequestDTO dto) {
         Categoria existente = findEntityById(id);
         String nombre = normalizar(dto.getNombre());
@@ -102,6 +105,7 @@ public class CategoriaService {
     }
 
     @Transactional
+    @CacheEvict(value = "menu-web", allEntries = true)
     public void delete(int id) {
         if (!categoriaRepository.existsById(id)) {
             throw new BusinessException(

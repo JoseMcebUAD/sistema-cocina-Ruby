@@ -1,8 +1,11 @@
 package com.cocinarubi.presentation.security;
 
+import com.cocinarubi.dao.ClienteRepository;
+import com.cocinarubi.presentation.filter.ClienteSessionFilter;
 import com.cocinarubi.presentation.filter.CorrelationFilter;
 import com.cocinarubi.presentation.filter.GlobalRateLimitFilter;
 import com.cocinarubi.presentation.filter.LoginRateLimitFilter;
+import com.cocinarubi.presentation.filter.PedidoWebRateLimitFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +21,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
@@ -75,6 +79,16 @@ public class SecurityConfig {
     }
 
     @Bean
+    public PedidoWebRateLimitFilter pedidoWebRateLimitFilter() {
+        return new PedidoWebRateLimitFilter(objectMapper);
+    }
+
+    @Bean
+    public ClienteSessionFilter clienteSessionFilter(ClienteRepository clienteRepository) {
+        return new ClienteSessionFilter(clienteRepository, objectMapper);
+    }
+
+    @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(usuarioDetailsService);
@@ -90,7 +104,8 @@ public class SecurityConfig {
     // ── Cadena de seguridad ──────────────────────────────────────────────────
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   ClienteSessionFilter clienteSessionFilter) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
@@ -109,6 +124,8 @@ public class SecurityConfig {
                     .requestMatchers(
                             "/auth/**",
                             "/todos/**",
+                            "/web/**",
+                            "/menu-web/**",
                             "/v3/api-docs/**",
                             "/swagger-ui/**",
                             "/swagger-ui.html",
@@ -118,6 +135,9 @@ public class SecurityConfig {
                     ).permitAll()
 
                     .requestMatchers("/actuator/**").authenticated()
+
+                    // ── GET de archivos y horarios: público (cliente web) ──────
+                    .requestMatchers(HttpMethod.GET, "/files/**", "/horario-atencion/**").permitAll()
 
                     // ── Solo JEFA_COCINA ──────────────────────────────────
                     .requestMatchers(
@@ -159,11 +179,13 @@ public class SecurityConfig {
                     .anyRequest().denyAll()
             )
 
-            // ── Orden: GlobalRateLimit → LoginRateLimit → Correlation → JWT → Spring ──
+            // ── Orden: GlobalRateLimit → PedidoWebRateLimit → LoginRateLimit → Correlation → ClienteSession → JWT → Spring ──
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(correlationFilter(), JwtAuthenticationFilter.class)
+            .addFilterBefore(clienteSessionFilter, JwtAuthenticationFilter.class)
+            .addFilterBefore(correlationFilter(), ClienteSessionFilter.class)
             .addFilterBefore(loginRateLimitFilter(), CorrelationFilter.class)
-            .addFilterBefore(globalRateLimitFilter(), LoginRateLimitFilter.class)
+            .addFilterBefore(pedidoWebRateLimitFilter(), LoginRateLimitFilter.class)
+            .addFilterBefore(globalRateLimitFilter(), PedidoWebRateLimitFilter.class)
 
             .exceptionHandling(ex -> ex
                     .authenticationEntryPoint(entryPointNoAutorizado)
@@ -191,7 +213,7 @@ public class SecurityConfig {
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-API-Key",
-                "X-Correlation-ID"));
+                "X-Correlation-ID", "X-Fingerprint"));
         config.setExposedHeaders(List.of("Authorization", "X-Correlation-ID",
                 "X-RateLimit-Remaining", "Retry-After"));
         config.setAllowCredentials(true);
