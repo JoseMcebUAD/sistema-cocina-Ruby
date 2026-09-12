@@ -50,7 +50,7 @@ public class ProductoCocina {
     @Column(name = "nombre_producto", nullable = false, length = 100)
     private String nombreProducto;
 
-    @Column(name = "descripcion", length = 255)
+    @Column(name = "descripcion", length = 400)
     private String descripcion;
 
     @Column(name = "precio_domicilio", nullable = false, precision = 5, scale = 2)

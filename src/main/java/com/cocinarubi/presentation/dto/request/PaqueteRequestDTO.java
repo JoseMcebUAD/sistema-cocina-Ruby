@@ -19,7 +19,7 @@ public class PaqueteRequestDTO {
     @JsonProperty("precio")
     private BigDecimal precio;
 
-    @Size(max = 90, message = "La descripción no puede exceder 90 caracteres")
+    @Size(max = 400, message = "La descripción no puede exceder 400 caracteres")
     @JsonProperty("descripcion")
     private String descripcion;
 

@@ -31,6 +31,7 @@ public class PedidoRestTest {
     private int testRutaId;
     private int createdCocinaPickUpId;
     private int createdCocinaDomicilioId;
+    private int createdSinMetodoPagoId;
 
     @BeforeAll
     void setUp() throws Exception {
@@ -59,7 +60,7 @@ public class PedidoRestTest {
                   "nombre": "Cliente Test Pedido",
                   "telefono": "5550009999",
                   "idRuta": %d,
-                  "direccion": "Calle Principal 42 Int 3"
+                  "direccion": "{\\"calle\\": \\"Principal 42\\", \\"interior\\": \\"Int 3\\"}"
                 }
                 """, testRutaId);
         ResponseEntity<String> clienteResp = restTemplate.exchange(
@@ -97,6 +98,9 @@ public class PedidoRestTest {
         }
         if (createdCocinaDomicilioId > 0) {
             restTemplate.exchange("/pedido/" + createdCocinaDomicilioId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
+        }
+        if (createdSinMetodoPagoId > 0) {
+            restTemplate.exchange("/pedido/" + createdSinMetodoPagoId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
         }
         if (testProductoId > 0) {
             restTemplate.exchange("/producto-cocina/" + testProductoId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
@@ -352,6 +356,38 @@ public class PedidoRestTest {
 
     @Test
     @Order(10)
+    @DisplayName("POST /pedido - Sin metodoPagoPrincipal debe crear el pedido y retornar 201")
+    public void save_sinMetodoPago() throws Exception {
+        String json = String.format("""
+                {
+                  "tipoPedido": "MOSTRADOR",
+                  "pedidoCreadoDesde": "COCINA",
+                  "pagoCliente": 50.00,
+                  "nombreCliente": "Test Sin Metodo Pago",
+                  "comidas": [],
+                  "desayunos": [],
+                  "basicos": [],
+                  "productosCocina": [
+                    {"idProductoCocina": %d, "precioUnitario": 10.00, "cantidad": 1}
+                  ],
+                  "saltarConfirmacion": true
+                }
+                """, testProductoId);
+
+        ResponseEntity<String> response = this.restTemplate.exchange(
+                "/pedido", HttpMethod.POST, new HttpEntity<>(json, authHeaders), String.class
+        );
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        JsonNode data = mapper.readTree(response.getBody()).get("datos");
+        createdSinMetodoPagoId = data.get("idPedido").asInt();
+        assertTrue(createdSinMetodoPagoId > 0);
+        assertTrue(data.get("metodoPagoPrincipal").isNull());
+        System.out.println("[OK] save sin metodoPagoPrincipal → 201 | id=" + createdSinMetodoPagoId);
+    }
+
+    @Test
+    @Order(11)
     @DisplayName("POST /pedido - WEB DOMICILIO sin campo domicilio debe retornar 400")
     public void save_webDomicilio_sinDomicilio_retorna400() throws Exception {
         String json = String.format("""

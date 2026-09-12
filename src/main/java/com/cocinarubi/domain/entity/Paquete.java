@@ -38,7 +38,7 @@ public class Paquete {
     @Column(name = "precio")
     private BigDecimal precio;
 
-    @Column(name = "descripcion")
+    @Column(name = "descripcion", length = 400)
     private String descripcion;
 
     @Column(name = "destacada")

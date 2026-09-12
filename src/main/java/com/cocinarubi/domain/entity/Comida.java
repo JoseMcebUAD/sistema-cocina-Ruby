@@ -43,7 +43,7 @@ public class Comida {
     @Column(name = "nombre_comida")
     private String nombreComida;
 
-    @Column(name = "descripcion")
+    @Column(name = "descripcion", length = 400)
     private String descripcion;
 
     @Column(name = "precio_media")

@@ -46,7 +46,7 @@ public class Basico {
     @JoinColumn(name = "id_comida")
     private Comida comida;
 
-    @Column(name = "descripcion")
+    @Column(name = "descripcion", length = 400)
     private String descripcion;
 
     @Column(name = "destacado")

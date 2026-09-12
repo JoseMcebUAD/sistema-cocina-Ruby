@@ -337,6 +337,31 @@ public class PedidoServiceTest {
     }
 
     @Test
+    @DisplayName("save - Debe guardar un pedido con metodoPagoPrincipal null")
+    public void save_metodoPagoNull() {
+        Pedido pedidoSinMetodoPago = Pedido.builder()
+                .idPedido(10)
+                .metodoPagoPrincipal(null)
+                .tipoPedido(TipoPedido.MOSTRADOR)
+                .pedidoCreadoDesde(PedidoCreadoDesde.COCINA)
+                .precioFinalOrden(BigDecimal.ZERO)
+                .impreso(false)
+                .build();
+        when(catalogoPedido.calcularTotal(any(Pedido.class))).thenReturn(BigDecimal.ZERO);
+        when(pedidoRepository.save(any(Pedido.class))).thenReturn(pedidoSinMetodoPago);
+
+        PedidoRequestDTO dto = crearDtoMostrador();
+        dto.setMetodoPagoPrincipal(null);
+
+        PedidoResponseDTO result = pedidoService.save(dto);
+
+        assertNotNull(result);
+        assertNull(result.getMetodoPagoPrincipal());
+        verify(pedidoRepository).save(any(Pedido.class));
+        System.out.println("[OK] save guardó pedido con metodoPagoPrincipal=null");
+    }
+
+    @Test
     @DisplayName("delete - Debe lanzar excepción cuando el ID no existe")
     public void delete_noEncontrado() {
         when(pedidoRepository.findById(99)).thenReturn(Optional.empty());

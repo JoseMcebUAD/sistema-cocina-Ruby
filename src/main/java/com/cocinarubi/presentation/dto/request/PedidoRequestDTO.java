@@ -14,7 +14,6 @@ import java.util.List;
 
 public class PedidoRequestDTO {
 
-    @NotNull(message = "El método de pago principal no puede ser nulo")
     @JsonProperty("metodoPagoPrincipal")
     private MetodoPago metodoPagoPrincipal;
 
