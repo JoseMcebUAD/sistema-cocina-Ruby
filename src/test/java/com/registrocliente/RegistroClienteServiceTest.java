@@ -43,7 +43,7 @@ public class RegistroClienteServiceTest {
             .nombre("Juan Pérez")
             .telefono("5551234567")
             .ruta(null)
-            .direccion(null)
+            .direcciones(null)
             .build();
 
     public final RegistroCliente CLIENTE_CON_RUTA = RegistroCliente.builder()
@@ -51,7 +51,7 @@ public class RegistroClienteServiceTest {
             .nombre("María López")
             .telefono("5559876543")
             .ruta(Ruta.builder().idRuta(1).nombre("Zona Centro").tarifaEnvio(BigDecimal.valueOf(30)).build())
-            .direccion("{\"calle\": \"Principal\", \"numero\": \"42\"}")
+            .direcciones(List.of("Calle Principal 42", "Av. Reforma 100"))
             .build();
 
     @Test
@@ -109,7 +109,7 @@ public class RegistroClienteServiceTest {
     @Test
     @DisplayName("save - Debe guardar un registro con ruta y retornar nombre de ruta")
     public void save_conRuta() {
-        RegistroClienteRequestDTO dto = new RegistroClienteRequestDTO("María López", "5559876543", 1, "{\"calle\": \"Principal\", \"numero\": \"42\"}");
+        RegistroClienteRequestDTO dto = new RegistroClienteRequestDTO("María López", "5559876543", 1, List.of("Calle Principal 42", "Av. Reforma 100"));
         when(rutaRepository.findById(1)).thenReturn(Optional.of(RUTA_PREPARED));
         when(registroClienteRepository.save(any(RegistroCliente.class))).thenReturn(CLIENTE_CON_RUTA);
 
@@ -155,12 +155,12 @@ public class RegistroClienteServiceTest {
                 .nombre("Juan Pérez Actualizado")
                 .telefono("5550000000")
                 .ruta(null)
-                .direccion("{\"calle\": \"Nueva\", \"numero\": \"123\"}")
+                .direcciones(List.of("Calle Nueva 123"))
                 .build();
         when(registroClienteRepository.findById(5)).thenReturn(Optional.of(CLIENTE_PREPARADO));
         when(registroClienteRepository.save(any(RegistroCliente.class))).thenReturn(clienteActualizado);
 
-        RegistroClienteRequestDTO dto = new RegistroClienteRequestDTO("Juan Pérez Actualizado", "5550000000", null, "{\"calle\": \"Nueva\", \"numero\": \"123\"}");
+        RegistroClienteRequestDTO dto = new RegistroClienteRequestDTO("Juan Pérez Actualizado", "5550000000", null, List.of("Calle Nueva 123"));
         RegistroClienteResponseDTO result = registroClienteService.update(5, dto);
 
         assertNotNull(result);
