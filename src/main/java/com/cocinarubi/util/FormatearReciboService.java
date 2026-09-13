@@ -101,6 +101,45 @@ public class FormatearReciboService {
         return lineas;
     }
 
+    /**
+     * Formatea texto con precio pegado al final de la última línea usando " :" como separador.
+     * No rellena con espacios — el precio queda inmediatamente después del texto.
+     */
+    public List<String> formatearItemConPrecio(String especificaciones, String precio, int anchoEfectivo) {
+        List<String> lineas = new ArrayList<>();
+        String sufijo = " :" + precio;
+        int anchoUltima = anchoEfectivo - sufijo.length();
+
+        if (anchoUltima <= 0 || especificaciones.length() <= anchoUltima) {
+            lineas.add(especificaciones + sufijo);
+            return lineas;
+        }
+
+        String[] palabras = especificaciones.split(" ");
+        StringBuilder lineaActual = new StringBuilder();
+
+        for (String palabra : palabras) {
+            int conPalabra = lineaActual.length() + (lineaActual.length() > 0 ? 1 : 0) + palabra.length();
+            if (conPalabra > anchoEfectivo) {
+                lineas.add(lineaActual.toString());
+                lineaActual = new StringBuilder(palabra);
+            } else {
+                if (lineaActual.length() > 0) lineaActual.append(' ');
+                lineaActual.append(palabra);
+            }
+        }
+
+        String ultima = lineaActual.toString();
+        if (ultima.length() <= anchoUltima) {
+            lineas.add(ultima + sufijo);
+        } else {
+            lineas.add(ultima);
+            lineas.add(":" + precio);
+        }
+
+        return lineas;
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     protected String construirLineaConPrecio(String texto, String precio, int anchoEfectivo) {

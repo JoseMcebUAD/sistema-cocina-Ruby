@@ -76,11 +76,14 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
     private void renderComidas(EscPos escpos, List<ComidaPedidoResponseDTO> comidas) throws IOException {
         if (comidas == null || comidas.isEmpty()) return;
 
-        for (ComidaPedidoResponseDTO c : comidas) {
-            String precio = FORMATO_PRECIO.format(c.getPrecioUnitario());
-            for (String linea : formatter.formatProductBlock(c, precio, anchoEfectivo)) {
+        for (int i = 0; i < comidas.size(); i++) {
+            String precio = FORMATO_PRECIO.format(comidas.get(i).getPrecioUnitario());
+            for (String linea : formatter.formatProductBlock(comidas.get(i), precio, anchoEfectivo)) {
                 if (linea.isEmpty()) escpos.feed(1);
-                else escpos.writeLF(subtitleStyle,linea);
+                else escpos.writeLF(subtitleStyle, linea);
+            }
+            if (i < comidas.size() - 1) {
+                escpos.writeLF("--");
             }
         }
         escpos.writeLF(Constants.SEPARADOR_TICKET).feed(1);

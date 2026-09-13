@@ -23,14 +23,18 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
         boolean hayComplementos = complementos != null && !complementos.isEmpty();
         boolean hayPredeterminados = predeterminados != null && !predeterminados.isEmpty();
 
-        lineas.addAll(formatearDetalleOrden(lineaComida, precio, anchoEfectivo));
+        lineas.addAll(formatearItemConPrecio(lineaComida, precio, anchoEfectivo));
+
+        if (hayComplementos || hayPredeterminados) {
+            lineas.add("");
+        }
 
         if (hayComplementos) {
             for (ComplementoResponseDTO compl : complementos) {
                 String nombreCompl = compl.getNombreComplemento();
                 BigDecimal precioComp = compl.getPrecioExtra();
                 if (precioComp != null && precioComp.compareTo(BigDecimal.ZERO) != 0) {
-                    lineas.addAll(formatearDetalleOrden(nombreCompl, FORMATO_PRECIO.format(precioComp), anchoEfectivo));
+                    lineas.addAll(formatearItemConPrecio(nombreCompl, FORMATO_PRECIO.format(precioComp), anchoEfectivo));
                 } else {
                     lineas.add(nombreCompl);
                 }
@@ -64,7 +68,11 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
         boolean hayComplementos = complementos != null && !complementos.isEmpty();
         boolean hayExtras = extras != null && !extras.isEmpty();
 
-        lineas.addAll(formatearDetalleOrden(basico.getBasico().getNombreComida(), precio, anchoEfectivo));
+        lineas.addAll(formatearItemConPrecio(basico.getBasico().getNombreComida(), precio, anchoEfectivo));
+
+        if (hayComplementos || hayExtras) {
+            lineas.add("");
+        }
 
         if (hayComplementos) {
             for (ComplementoResponseDTO compl : complementos) {
@@ -77,7 +85,7 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
                 String descripcion = extra.getCantidad() + "x " + extra.getNombreComplemento();
                 BigDecimal precioExtra = extra.getPrecio();
                 if (precioExtra != null && precioExtra.compareTo(BigDecimal.ZERO) != 0) {
-                    lineas.addAll(formatearDetalleOrden(descripcion, FORMATO_PRECIO.format(precioExtra), anchoEfectivo));
+                    lineas.addAll(formatearItemConPrecio(descripcion, FORMATO_PRECIO.format(precioExtra), anchoEfectivo));
                 } else {
                     lineas.add(descripcion);
                 }
@@ -101,7 +109,7 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
         List<String> nombres = paquete.getNombresProductos();
         boolean hayProductos = nombres != null && !nombres.isEmpty();
 
-        lineas.addAll(formatearDetalleOrden(encabezado, precio, anchoEfectivo));
+        lineas.addAll(formatearItemConPrecio(encabezado, precio, anchoEfectivo));
 
         if (hayProductos) {
             for (String nombre : nombres) {
