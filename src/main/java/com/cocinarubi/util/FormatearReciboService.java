@@ -107,7 +107,7 @@ public class FormatearReciboService {
      */
     public List<String> formatearItemConPrecio(String especificaciones, String precio, int anchoEfectivo) {
         List<String> lineas = new ArrayList<>();
-        String sufijo = " :" + precio;
+        String sufijo = " : " + precio;
         int anchoUltima = anchoEfectivo - sufijo.length();
 
         if (anchoUltima <= 0 || especificaciones.length() <= anchoUltima) {

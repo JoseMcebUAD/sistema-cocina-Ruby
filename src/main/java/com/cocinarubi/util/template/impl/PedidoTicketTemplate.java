@@ -83,7 +83,7 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
                 else escpos.writeLF(subtitleStyle, linea);
             }
             if (i < comidas.size() - 1) {
-                escpos.writeLF("--");
+                escpos.writeLF("----");
             }
         }
         escpos.writeLF(Constants.SEPARADOR_TICKET).feed(1);
