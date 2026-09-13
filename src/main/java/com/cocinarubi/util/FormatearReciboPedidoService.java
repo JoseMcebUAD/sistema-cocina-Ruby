@@ -23,13 +23,7 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
         boolean hayComplementos = complementos != null && !complementos.isEmpty();
         boolean hayPredeterminados = predeterminados != null && !predeterminados.isEmpty();
 
-        if (!hayComplementos && !hayPredeterminados) {
-            lineas.add(construirLineaConPrecio(lineaComida, precio, anchoEfectivo));
-            return lineas;
-        }
-
-        lineas.add(lineaComida);
-        lineas.add("");
+        lineas.addAll(formatearDetalleOrden(lineaComida, precio, anchoEfectivo));
 
         if (hayComplementos) {
             for (ComplementoResponseDTO compl : complementos) {
@@ -52,8 +46,6 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
             }
         }
 
-        lineas.add(alinearDerechaCompleto(precio, anchoEfectivo));
-
         return lineas;
     }
 
@@ -72,17 +64,10 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
         boolean hayComplementos = complementos != null && !complementos.isEmpty();
         boolean hayExtras = extras != null && !extras.isEmpty();
 
-        if (!hayComplementos && !hayExtras) {
-            lineas.add(construirLineaConPrecio(basico.getBasico().getNombreComida(), precio, anchoEfectivo));
-            return lineas;
-        }
-
-        lineas.add(basico.getBasico().getNombreComida());
-        lineas.add("");
+        lineas.addAll(formatearDetalleOrden(basico.getBasico().getNombreComida(), precio, anchoEfectivo));
 
         if (hayComplementos) {
             for (ComplementoResponseDTO compl : complementos) {
-                // Complementos del paquete sin precio: ya incluidos en el total
                 lineas.add(compl.getNombreComplemento());
             }
         }
@@ -92,27 +77,23 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
                 String descripcion = extra.getCantidad() + "x " + extra.getNombreComplemento();
                 BigDecimal precioExtra = extra.getPrecio();
                 if (precioExtra != null && precioExtra.compareTo(BigDecimal.ZERO) != 0) {
-                    lineas.add(construirLineaConPrecio(descripcion, FORMATO_PRECIO.format(precioExtra), anchoEfectivo));
+                    lineas.addAll(formatearDetalleOrden(descripcion, FORMATO_PRECIO.format(precioExtra), anchoEfectivo));
                 } else {
                     lineas.add(descripcion);
                 }
             }
         }
 
-        lineas.add(alinearDerechaCompleto(precio, anchoEfectivo));
         return lineas;
     }
 
     /**
      * Formato del bloque Paquete para el ticket:
      * <pre>
-     * PAQUETE nombrePaquete
+     * PAQUETE nombrePaquete   $precio
      *   - producto1
      *   - producto2
-     *                                 $precio
      * </pre>
-     * Si no hay productos (paquete recién creado sin líneas), se imprime en una sola línea
-     * con el precio a la derecha, igual que un ComidaPedido sin complementos.
      */
     public List<String> formatPaqueteBlock(PaquetePedidoResponseDTO paquete, String precio, int anchoEfectivo) {
         List<String> lineas = new ArrayList<>();
@@ -120,16 +101,14 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
         List<String> nombres = paquete.getNombresProductos();
         boolean hayProductos = nombres != null && !nombres.isEmpty();
 
-        if (!hayProductos) {
-            lineas.add(construirLineaConPrecio(encabezado, precio, anchoEfectivo));
-            return lineas;
+        lineas.addAll(formatearDetalleOrden(encabezado, precio, anchoEfectivo));
+
+        if (hayProductos) {
+            for (String nombre : nombres) {
+                lineas.add("  - " + nombre);
+            }
         }
 
-        lineas.add(encabezado);
-        for (String nombre : nombres) {
-            lineas.add("  - " + nombre);
-        }
-        lineas.add(alinearDerechaCompleto(precio, anchoEfectivo));
         return lineas;
     }
 }
