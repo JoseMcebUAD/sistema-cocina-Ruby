@@ -35,9 +35,10 @@ public class BasicoRestTest {
         authHeaders.setBearerAuth(jwtService.generarToken(jefa));
         authHeaders.setContentType(MediaType.APPLICATION_JSON);
 
+        String testUuid = "test-basico-" + java.util.UUID.randomUUID().toString().substring(0, 8);
         String comidaJson = """
                 {
-                  "uuidComida": "test-uuid-basico-rest-001",
+                  "uuidComida": "%s",
                   "nombreComida": "Arroz Test Basico",
                   "descripcion": "Comida de prueba para BasicoRestTest",
                   "precioMedia": 45.00,
@@ -45,10 +46,12 @@ public class BasicoRestTest {
                   "estatus": "DISPONIBLE",
                   "destacado": false
                 }
-                """;
+                """.formatted(testUuid);
         ResponseEntity<String> res = restTemplate.exchange(
                 "/comida", HttpMethod.POST, new HttpEntity<>(comidaJson, authHeaders), String.class);
-        comidaId = mapper.readTree(res.getBody()).get("data").get("idComida").asInt();
+        JsonNode dataNode = mapper.readTree(res.getBody()).get("data");
+        assertNotNull(dataNode, "POST /comida falló. Respuesta: " + res.getBody());
+        comidaId = dataNode.get("idComida").asInt();
     }
 
     @AfterAll
@@ -67,9 +70,11 @@ public class BasicoRestTest {
                 "/basico/todos", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode(),
+                "GET /basico/todos falló. Body: " + response.getBody());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
-        assertTrue(data.isArray());
+        assertNotNull(data, "El campo 'data' no está en la respuesta: " + response.getBody());
+        assertTrue(data.isArray(), "Se esperaba un array en 'data', tipo recibido: " + data.getNodeType());
         System.out.println("[OK] " + response.getStatusCode() + " | basicos=" + data.size());
     }
 
@@ -93,10 +98,12 @@ public class BasicoRestTest {
                 "/basico", HttpMethod.POST, new HttpEntity<>(json, authHeaders), String.class
         );
 
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode(),
+                "POST /basico falló. Body: " + response.getBody());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
+        assertNotNull(data, "El campo 'data' no está en la respuesta: " + response.getBody());
         createdId = data.get("idBasico").asInt();
-        assertTrue(createdId > 0);
+        assertTrue(createdId > 0, "idBasico inválido tras crear básico. Body: " + response.getBody());
         System.out.println("[OK] " + response.getStatusCode() + " | id=" + createdId + " comida=" + data.get("nombreComida").asText());
     }
 
@@ -108,9 +115,12 @@ public class BasicoRestTest {
                 "/basico/" + createdId, HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode(),
+                "GET /basico/" + createdId + " falló. Body: " + response.getBody());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
-        assertEquals(createdId, data.get("idBasico").asInt());
+        assertNotNull(data, "El campo 'data' no está en la respuesta: " + response.getBody());
+        assertEquals(createdId, data.get("idBasico").asInt(),
+                "El idBasico retornado no coincide con el solicitado. Body: " + response.getBody());
         System.out.println("[OK] " + response.getStatusCode() + " | id=" + data.get("idBasico").asInt());
     }
 
@@ -134,9 +144,12 @@ public class BasicoRestTest {
                 "/basico/" + createdId, HttpMethod.PUT, new HttpEntity<>(json, authHeaders), String.class
         );
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode(),
+                "PUT /basico/" + createdId + " falló. Body: " + response.getBody());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
-        assertEquals("70.0", data.get("precioBasico").asText());
+        assertNotNull(data, "El campo 'data' no está en la respuesta: " + response.getBody());
+        assertEquals("70.0", data.get("precioBasico").asText(),
+                "El precioBasico no fue actualizado correctamente. Body: " + response.getBody());
         System.out.println("[OK] " + response.getStatusCode() + " | precioBasico=" + data.get("precioBasico").asText());
     }
 
@@ -147,13 +160,18 @@ public class BasicoRestTest {
         ResponseEntity<String> deleteResponse = this.restTemplate.exchange(
                 "/basico/" + createdId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class
         );
-        assertEquals(HttpStatus.NO_CONTENT, deleteResponse.getStatusCode());
+        assertEquals(HttpStatus.OK, deleteResponse.getStatusCode(),
+                "DELETE /basico/" + createdId + " falló. Body: " + deleteResponse.getBody());
+        JsonNode deleteData = mapper.readTree(deleteResponse.getBody());
+        assertEquals(200, deleteData.get("status").asInt(),
+                "Se esperaba status=200 en body de DELETE. Body: " + deleteResponse.getBody());
 
         ResponseEntity<String> getResponse = this.restTemplate.exchange(
                 "/basico/" + createdId, HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
-        assertEquals(HttpStatus.NOT_FOUND, getResponse.getStatusCode());
-        System.out.println("[OK] DELETE 204 → GET 404 para basico id=" + createdId);
+        assertEquals(HttpStatus.NOT_FOUND, getResponse.getStatusCode(),
+                "Se esperaba 404 tras eliminar básico id=" + createdId + ". Body: " + getResponse.getBody());
+        System.out.println("[OK] DELETE 200 → GET 404 para basico id=" + createdId);
     }
 
     @Test
@@ -163,7 +181,8 @@ public class BasicoRestTest {
         ResponseEntity<String> response = this.restTemplate.exchange(
                 "/basico", HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), String.class
         );
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode(),
+                "Se esperaba 401 sin token en GET /basico. Body: " + response.getBody());
         System.out.println("[OK] sin token → 401");
     }
 }

@@ -100,11 +100,15 @@ public class ClienteWebRestTest {
                 "/web/sesion", HttpMethod.POST, new HttpEntity<>(json, emptyHeaders), String.class
         );
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode(),
+                "POST /web/sesion (cliente nuevo) falló. Body: " + response.getBody());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
-        assertNotNull(data.get("sessionToken").asText());
-        assertNotNull(data.get("tokenExpiracion").asText());
-        assertEquals(uuidCliente, data.get("uuidCliente").asText());
+        assertNotNull(data, "El campo 'data' no está en la respuesta: " + response.getBody());
+        assertNotNull(data.get("sessionToken"), "Falta el campo 'sessionToken' en la respuesta: " + response.getBody());
+        assertFalse(data.get("sessionToken").asText().isBlank(), "El 'sessionToken' no debe estar vacío. Body: " + response.getBody());
+        assertNotNull(data.get("tokenExpiracion"), "Falta el campo 'tokenExpiracion' en la respuesta: " + response.getBody());
+        assertEquals(uuidCliente, data.get("uuidCliente").asText(),
+                "El uuidCliente retornado no coincide. Body: " + response.getBody());
 
         sessionToken = data.get("sessionToken").asText();
         webHeaders = new HttpHeaders();
@@ -135,9 +139,12 @@ public class ClienteWebRestTest {
                 "/web/sesion", HttpMethod.POST, new HttpEntity<>(json, emptyHeaders), String.class
         );
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode(),
+                "POST /web/sesion (cliente existente) falló. Body: " + response.getBody());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
-        assertEquals(sessionToken, data.get("sessionToken").asText());
+        assertNotNull(data, "El campo 'data' no está en la respuesta: " + response.getBody());
+        assertEquals(sessionToken, data.get("sessionToken").asText(),
+                "Se esperaba el mismo sessionToken para UUID existente. Body: " + response.getBody());
         System.out.println("[OK] sesion existente | mismo token conservado");
     }
 
@@ -149,13 +156,15 @@ public class ClienteWebRestTest {
                 "/web/rutas", HttpMethod.GET, new HttpEntity<>(emptyHeaders), String.class
         );
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode(),
+                "GET /web/rutas falló. Body: " + response.getBody());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
-        assertTrue(data.isArray());
+        assertNotNull(data, "El campo 'data' no está en la respuesta: " + response.getBody());
+        assertTrue(data.isArray(), "Se esperaba un array en 'data', tipo recibido: " + data.getNodeType());
         for (JsonNode ruta : data) {
-            assertTrue(ruta.has("idRuta"), "Debe exponer idRuta para usarlo en pedidos");
-            assertTrue(ruta.has("uuidRuta"));
-            assertTrue(ruta.get("active").asBoolean(), "Solo deben aparecer rutas activas");
+            assertTrue(ruta.has("idRuta"), "Debe exponer idRuta para usarlo en pedidos. Ruta: " + ruta);
+            assertTrue(ruta.has("uuidRuta"), "Falta el campo 'uuidRuta' en la ruta: " + ruta);
+            assertTrue(ruta.get("active").asBoolean(), "Solo deben aparecer rutas activas. Ruta: " + ruta);
         }
         System.out.println("[OK] rutas | count=" + data.size());
     }
@@ -168,9 +177,10 @@ public class ClienteWebRestTest {
                 "/menu-web", HttpMethod.GET, new HttpEntity<>(webHeaders), String.class
         );
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode(),
+                "GET /menu-web con token válido falló. Body: " + response.getBody());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
-        assertNotNull(data);
+        assertNotNull(data, "El campo 'data' no está en la respuesta: " + response.getBody());
         System.out.println("[OK] menu-web con token | status=" + response.getStatusCode());
     }
 
@@ -181,7 +191,8 @@ public class ClienteWebRestTest {
         ResponseEntity<String> response = restTemplate.exchange(
                 "/menu-web", HttpMethod.GET, new HttpEntity<>(emptyHeaders), String.class
         );
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode(),
+                "Se esperaba 401 sin token en GET /menu-web. Body: " + response.getBody());
         System.out.println("[OK] menu-web sin token → 401");
     }
 
@@ -193,9 +204,11 @@ public class ClienteWebRestTest {
                 "/web/pedidos/" + uuidCliente, HttpMethod.GET, new HttpEntity<>(webHeaders), String.class
         );
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode(),
+                "GET /web/pedidos/" + uuidCliente + " falló. Body: " + response.getBody());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
-        assertTrue(data.isArray());
+        assertNotNull(data, "El campo 'data' no está en la respuesta: " + response.getBody());
+        assertTrue(data.isArray(), "Se esperaba un array en 'data', tipo recibido: " + data.getNodeType());
         System.out.println("[OK] ultimos pedidos | count=" + data.size());
     }
 
@@ -206,7 +219,8 @@ public class ClienteWebRestTest {
         ResponseEntity<String> response = restTemplate.exchange(
                 "/web/pedidos/" + uuidCliente, HttpMethod.GET, new HttpEntity<>(emptyHeaders), String.class
         );
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode(),
+                "Se esperaba 401 sin token en GET /web/pedidos. Body: " + response.getBody());
         System.out.println("[OK] ultimos pedidos sin token → 401");
     }
 
@@ -237,11 +251,14 @@ public class ClienteWebRestTest {
                 "/web/pedidos", HttpMethod.POST, new HttpEntity<>(json, webHeaders), String.class
         );
 
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode(),
+                "POST /web/pedidos falló. Body: " + response.getBody());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
+        assertNotNull(data, "El campo 'data' no está en la respuesta: " + response.getBody());
         createdPedidoId = data.get("idPedido").asInt();
-        assertTrue(createdPedidoId > 0);
-        assertEquals("WEB", data.get("pedidoCreadoDesde").asText());
+        assertTrue(createdPedidoId > 0, "idPedido inválido tras crear pedido web. Body: " + response.getBody());
+        assertEquals("WEB", data.get("pedidoCreadoDesde").asText(),
+                "El campo 'pedidoCreadoDesde' no es 'WEB'. Body: " + response.getBody());
         System.out.println("[OK] pedido creado | id=" + createdPedidoId);
     }
 
@@ -273,7 +290,8 @@ public class ClienteWebRestTest {
                 new HttpEntity<>(json, webHeaders), String.class
         );
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode(),
+                "PUT /web/pedidos/" + createdPedidoId + " falló. Body: " + response.getBody());
         System.out.println("[OK] pedido actualizado | id=" + createdPedidoId);
     }
 
@@ -285,10 +303,12 @@ public class ClienteWebRestTest {
                 "/web/pedidos/" + uuidCliente, HttpMethod.GET, new HttpEntity<>(webHeaders), String.class
         );
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode(),
+                "GET /web/pedidos/" + uuidCliente + " (máximo 5) falló. Body: " + response.getBody());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
-        assertTrue(data.isArray());
-        assertTrue(data.size() <= 5, "No debe retornar más de 5 pedidos");
+        assertNotNull(data, "El campo 'data' no está en la respuesta: " + response.getBody());
+        assertTrue(data.isArray(), "Se esperaba un array en 'data', tipo recibido: " + data.getNodeType());
+        assertTrue(data.size() <= 5, "No debe retornar más de 5 pedidos, recibidos: " + data.size());
         System.out.println("[OK] maximo 5 pedidos | count=" + data.size());
     }
 }

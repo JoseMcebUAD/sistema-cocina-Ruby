@@ -46,7 +46,7 @@ public class HorarioAtencionRestTest {
     @DisplayName("GET /horario-atencion - Debe retornar lista de horarios con status 200")
     public void findAll() throws Exception {
         ResponseEntity<String> response = this.restTemplate.exchange(
-                "/horario-atencion/todos", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
+                "/horario-atencion", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());

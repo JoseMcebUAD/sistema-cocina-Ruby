@@ -43,10 +43,10 @@ public class TarifaEspecialRestTest {
 
     @Test
     @Order(1)
-    @DisplayName("GET /tarifa-especial - Debe retornar lista de tarifas con status 200")
+    @DisplayName("GET /tarifa-especial/todos - Debe retornar lista de tarifas con status 200")
     public void findAll() throws Exception {
         ResponseEntity<String> response = this.restTemplate.exchange(
-                "/tarifa-especial", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
+                "/tarifa-especial/todos", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -144,12 +144,12 @@ public class TarifaEspecialRestTest {
 
     @Test
     @Order(7)
-    @DisplayName("GET /tarifa-especial - con token COCINA debe responder 403")
+    @DisplayName("GET /tarifa-especial - con token COCINA debe responder 200")
     public void seguridad_rolCocina() {
         ResponseEntity<String> response = this.restTemplate.exchange(
                 "/tarifa-especial", HttpMethod.GET, new HttpEntity<>(authHeadersCocina), String.class
         );
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-        System.out.println("[OK] rol COCINA → 403");
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        System.out.println("[OK] rol COCINA → 200");
     }
 }

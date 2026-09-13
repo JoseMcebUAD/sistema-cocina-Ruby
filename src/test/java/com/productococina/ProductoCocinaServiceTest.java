@@ -8,6 +8,7 @@ import com.cocinarubi.domain.entity.ProductoCocina;
 import com.cocinarubi.domain.entity.Subcategoria;
 import com.cocinarubi.domain.service.CategoriaService;
 import com.cocinarubi.domain.service.ProductoCocinaService;
+import com.cocinarubi.exception.AdvertenciaEliminacionException;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.ProductoCocinaRequestDTO;
 import com.cocinarubi.presentation.dto.response.ProductoCocinaResponseDTO;
@@ -186,7 +187,6 @@ public class ProductoCocinaServiceTest {
     @DisplayName("delete - Debe eliminar el producto cuando el ID existe y no tiene pedidos")
     public void delete_exitoso() {
         when(productoCocinaRepository.existsById(10)).thenReturn(true);
-        when(productoCocinaRepository.existsById(10)).thenReturn(false);
 
         assertDoesNotThrow(() -> productoCocinaService.delete(10,false));
         verify(productoCocinaRepository).deleteById(10);
@@ -197,7 +197,8 @@ public class ProductoCocinaServiceTest {
     @DisplayName("delete - Debe lanzar excepción cuando el producto tiene pedidos asociados (RF-014/017)")
     public void delete_conPedidosAsociados() {
         when(productoCocinaRepository.existsById(10)).thenReturn(true);
-        when(productoCocinaRepository.existsById(10)).thenReturn(false);
+        doThrow(new AdvertenciaEliminacionException("Este producto tiene pedidos relacionados. ¿Desea continuar con la eliminación?"))
+                .when(productoCocinaConfirmation).validarEliminacion(10);
 
         assertThrows(BusinessException.class, () -> productoCocinaService.delete(10,false));
         verify(productoCocinaRepository, never()).deleteById(anyInt());

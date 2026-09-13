@@ -139,7 +139,14 @@ public class PaqueteServiceTest {
         when(paqueteRepository.findByIdWithProductos(5)).thenReturn(Optional.of(existente));
         when(comidaRepository.findAllById(any())).thenReturn(List.of(
                 Comida.builder().idComida(1).nombreComida("Bistec").build()));
-        when(paqueteRepository.save(any(Paquete.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(paqueteRepository.save(any(Paquete.class))).thenAnswer(inv -> {
+            Paquete p = inv.getArgument(0);
+            int[] counter = {200};
+            p.getProductos().stream()
+                .filter(pp -> pp.getIdPaqueteProducto() == null)
+                .forEach(pp -> pp.setIdPaqueteProducto(counter[0]++));
+            return p;
+        });
 
         PaqueteRequestDTO dto = buildRequest(new ArrayList<>(List.of(
                 linea(TipoLineaPaquete.COMIDA, 1, 3)

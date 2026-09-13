@@ -53,7 +53,7 @@ public class PedidoRestTest {
         ResponseEntity<String> rutaResp = restTemplate.exchange(
                 "/ruta", HttpMethod.POST, new HttpEntity<>(rutaJson, authHeaders), String.class
         );
-        testRutaId = mapper.readTree(rutaResp.getBody()).get("datos").get("idRuta").asInt();
+        testRutaId = mapper.readTree(rutaResp.getBody()).get("data").get("idRuta").asInt();
 
         String clienteJson = String.format("""
                 {
@@ -66,7 +66,7 @@ public class PedidoRestTest {
         ResponseEntity<String> clienteResp = restTemplate.exchange(
                 "/registroCliente", HttpMethod.POST, new HttpEntity<>(clienteJson, authHeaders), String.class
         );
-        testRegistroClienteId = mapper.readTree(clienteResp.getBody()).get("datos").get("idRegistroCliente").asInt();
+        testRegistroClienteId = mapper.readTree(clienteResp.getBody()).get("data").get("idRegistroCliente").asInt();
 
         // idCategoria=1 → BEBIDA en el seeder de V23
         String productoJson = """
@@ -84,7 +84,7 @@ public class PedidoRestTest {
         ResponseEntity<String> productoResp = restTemplate.exchange(
                 "/producto-cocina", HttpMethod.POST, new HttpEntity<>(productoJson, authHeaders), String.class
         );
-        testProductoId = mapper.readTree(productoResp.getBody()).get("datos").get("idProductoCocina").asInt();
+        testProductoId = mapper.readTree(productoResp.getBody()).get("data").get("idProductoCocina").asInt();
 
         System.out.println("[SETUP] productoId=" + testProductoId
                 + " clienteId=" + testRegistroClienteId
@@ -123,7 +123,7 @@ public class PedidoRestTest {
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        JsonNode data = mapper.readTree(response.getBody()).get("datos");
+        JsonNode data = mapper.readTree(response.getBody()).get("data");
         assertTrue(data.isArray());
         System.out.println("[OK] " + response.getStatusCode() + " | pedidos=" + data.size());
     }
@@ -154,7 +154,7 @@ public class PedidoRestTest {
         );
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        JsonNode data = mapper.readTree(response.getBody()).get("datos");
+        JsonNode data = mapper.readTree(response.getBody()).get("data");
         createdId = data.get("idPedido").asInt();
         assertTrue(createdId > 0);
         assertEquals("MOSTRADOR", data.get("tipoPedido").asText());
@@ -172,7 +172,7 @@ public class PedidoRestTest {
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        JsonNode data = mapper.readTree(response.getBody()).get("datos");
+        JsonNode data = mapper.readTree(response.getBody()).get("data");
         assertEquals(createdId, data.get("idPedido").asInt());
         assertEquals("MOSTRADOR", data.get("tipoPedido").asText());
         System.out.println("[OK] " + response.getStatusCode() + " | id=" + data.get("idPedido").asInt());
@@ -203,7 +203,7 @@ public class PedidoRestTest {
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        JsonNode data = mapper.readTree(response.getBody()).get("datos");
+        JsonNode data = mapper.readTree(response.getBody()).get("data");
         assertEquals("TARJETA", data.get("metodoPagoPrincipal").asText());
         System.out.println("[OK] " + response.getStatusCode() + " | metodoPagoPrincipal=" + data.get("metodoPagoPrincipal").asText());
     }
@@ -261,7 +261,7 @@ public class PedidoRestTest {
         );
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        JsonNode data = mapper.readTree(response.getBody()).get("datos");
+        JsonNode data = mapper.readTree(response.getBody()).get("data");
         createdCocinaPickUpId = data.get("idPedido").asInt();
         assertTrue(createdCocinaPickUpId > 0);
         assertEquals("PICK_UP", data.get("tipoPedido").asText());
@@ -303,7 +303,7 @@ public class PedidoRestTest {
         );
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        JsonNode data = mapper.readTree(response.getBody()).get("datos");
+        JsonNode data = mapper.readTree(response.getBody()).get("data");
         createdCocinaDomicilioId = data.get("idPedido").asInt();
         assertTrue(createdCocinaDomicilioId > 0);
         assertEquals("DOMICILIO", data.get("tipoPedido").asText());
@@ -379,7 +379,7 @@ public class PedidoRestTest {
         );
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        JsonNode data = mapper.readTree(response.getBody()).get("datos");
+        JsonNode data = mapper.readTree(response.getBody()).get("data");
         createdSinMetodoPagoId = data.get("idPedido").asInt();
         assertTrue(createdSinMetodoPagoId > 0);
         assertTrue(data.get("metodoPagoPrincipal").isNull());

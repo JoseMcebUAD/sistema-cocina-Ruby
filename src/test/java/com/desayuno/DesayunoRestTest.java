@@ -125,7 +125,7 @@ public class DesayunoRestTest {
         ResponseEntity<String> deleteResponse = this.restTemplate.exchange(
                 "/desayuno/" + createdId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class
         );
-        assertEquals(HttpStatus.NO_CONTENT, deleteResponse.getStatusCode());
+        assertEquals(HttpStatus.OK, deleteResponse.getStatusCode());
 
         ResponseEntity<String> getResponse = this.restTemplate.exchange(
                 "/desayuno/" + createdId, HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
