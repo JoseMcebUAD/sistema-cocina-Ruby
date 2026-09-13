@@ -5,8 +5,10 @@ import com.cocinarubi.domain.service.AuditoriaService;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.aop.mixin.ClienteAuditMixin;
 import com.cocinarubi.aop.mixin.PedidoAuditMixin;
+import com.cocinarubi.aop.mixin.RutaAuditMixin;
 import com.cocinarubi.domain.entity.Cliente;
 import com.cocinarubi.domain.entity.Pedido;
+import com.cocinarubi.domain.entity.Ruta;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module;
 import jakarta.persistence.EntityManager;
@@ -69,7 +71,8 @@ public class AuditAspect {
         this.auditObjectMapper = objectMapper.copy()
                 .registerModule(hm)
                 .addMixIn(Cliente.class, ClienteAuditMixin.class)
-                .addMixIn(Pedido.class, PedidoAuditMixin.class);
+                .addMixIn(Pedido.class, PedidoAuditMixin.class)
+                .addMixIn(Ruta.class, RutaAuditMixin.class);
     }
 
     @Around("within(com.cocinarubi.presentation.controller..*) && " +
