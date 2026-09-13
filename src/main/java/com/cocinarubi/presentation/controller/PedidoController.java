@@ -2,6 +2,7 @@ package com.cocinarubi.presentation.controller;
 
 import com.cocinarubi.aop.SkipAudit;
 import com.cocinarubi.domain.service.PedidoService;
+import com.cocinarubi.presentation.dto.request.PedidoMetodoPagoDTO;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.presentation.dto.response.MarcarImpresoResponseDTO;
@@ -54,7 +55,7 @@ public class PedidoController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<PedidoResponseDTO>> update(@PathVariable int id,
-                                                                @Valid @RequestBody PedidoRequestDTO dto) {
+            @Valid @RequestBody PedidoRequestDTO dto) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Pedido actualizado correctamente",
                 pedidoService.update(id, dto)));
     }
@@ -72,6 +73,14 @@ public class PedidoController {
     public ResponseEntity<Void> marcarPagado(@PathVariable int id) {
         pedidoService.marcarPagado(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/metodo-pago")
+    public ResponseEntity<ApiResponse<PedidoResponseDTO>> actualizarMetodoPago(
+            @PathVariable int id,
+            @Valid @RequestBody PedidoMetodoPagoDTO dto) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Método de pago actualizado correctamente",
+                pedidoService.actualizarMetodoPago(id, dto)));
     }
 
     @DeleteMapping("/{id}")

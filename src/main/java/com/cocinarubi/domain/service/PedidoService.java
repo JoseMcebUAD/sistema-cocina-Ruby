@@ -9,6 +9,7 @@ import com.cocinarubi.domain.entity.TarifaEspecial;
 import com.cocinarubi.domain.mapper.PedidoMapper;
 import com.cocinarubi.event.ws.PedidoWebActualizadoEvent;
 import com.cocinarubi.exception.BusinessException;
+import com.cocinarubi.presentation.dto.request.PedidoMetodoPagoDTO;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
 import com.cocinarubi.presentation.strategy.strategyImplementation.PedidoConfirmationImp;
@@ -25,13 +26,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Gestiona el ciclo de vida transaccional del {@link Pedido}: creación, consulta,
+ * Gestiona el ciclo de vida transaccional del {@link Pedido}: creación,
+ * consulta,
  * actualización, marcado de impresión y eliminación.
  *
- * <p>Delega en {@link CatalogoPedidoService} la resolución de referencias de catálogo
- * y en {@link com.cocinarubi.presentation.strategy.strategyImplementation.PedidoValidationImp}
- * la validación estructural. La confirmación de negocio puede omitirse mediante el flag
- * {@code saltarConfirmacion} para pedidos originados en canales internos de confianza (cocina).
+ * <p>
+ * Delega en {@link CatalogoPedidoService} la resolución de referencias de
+ * catálogo
+ * y en
+ * {@link com.cocinarubi.presentation.strategy.strategyImplementation.PedidoValidationImp}
+ * la validación estructural. La confirmación de negocio puede omitirse mediante
+ * el flag
+ * {@code saltarConfirmacion} para pedidos originados en canales internos de
+ * confianza (cocina).
  */
 @Service
 public class PedidoService {
@@ -45,12 +52,12 @@ public class PedidoService {
     private final TarifaEspecialRepository tarifaEspecialRepository;
 
     public PedidoService(PedidoRepository pedidoRepository,
-                         PedidoValidationImp pedidoValidation,
-                         PedidoConfirmationImp pedidoConfirmation,
-                         PedidoMapper pedidoMapper,
-                         CatalogoPedidoService catalogoPedido,
-                         ApplicationEventPublisher eventPublisher,
-                         TarifaEspecialRepository tarifaEspecialRepository) {
+            PedidoValidationImp pedidoValidation,
+            PedidoConfirmationImp pedidoConfirmation,
+            PedidoMapper pedidoMapper,
+            CatalogoPedidoService catalogoPedido,
+            ApplicationEventPublisher eventPublisher,
+            TarifaEspecialRepository tarifaEspecialRepository) {
         this.pedidoRepository = pedidoRepository;
         this.pedidoValidation = pedidoValidation;
         this.pedidoConfirmation = pedidoConfirmation;
@@ -117,7 +124,8 @@ public class PedidoService {
         // pedidoCocina, pedidoDomicilio y pedidoDomicilioCocina NO se nulifican aquí:
         // los tres usan @MapsId y comparten PK con Pedido. Nulificar + recrear dentro
         // de la misma sesión produce "deleted object would be re-saved by cascade".
-        // handleTipoPedido gestiona sus nulls y actualizaciones en lugar de reemplazarlos.
+        // handleTipoPedido gestiona sus nulls y actualizaciones en lugar de
+        // reemplazarlos.
 
         List<String> mensajesTarifas = poblarLineasYPrecio(existente, dto);
         PedidoResponseDTO response = pedidoMapper.toResponseDTO(pedidoRepository.save(existente));
@@ -130,12 +138,14 @@ public class PedidoService {
     /**
      * Intenta marcar el pedido como impreso de forma atómica (0→1).
      * Si dos solicitudes concurrentes llegan al mismo tiempo, solo una obtendrá
-     * rowsAffected=1; la otra verá rowsAffected=0 porque el WHERE impreso=false ya no se cumple.
+     * rowsAffected=1; la otra verá rowsAffected=0 porque el WHERE impreso=false ya
+     * no se cumple.
      * Retorna true si se otorgó el cambio, false si ya estaba impreso.
      */
     @Transactional
     public boolean marcarImpreso(int id) {
-        // Verificamos que el pedido existe antes del UPDATE para poder lanzar 404 si no existe
+        // Verificamos que el pedido existe antes del UPDATE para poder lanzar 404 si no
+        // existe
         Pedido pedido = findEntityById(id);
         int filasAfectadas = pedidoRepository.marcarImpresoSiNoImpreso(id);
         boolean otorgado = filasAfectadas > 0;
@@ -153,6 +163,28 @@ public class PedidoService {
     }
 
     @Transactional
+    public PedidoResponseDTO actualizarMetodoPago(int id, PedidoMetodoPagoDTO dto) {
+        Pedido pedido = findEntityById(id);
+        pedido.setMetodoPagoPrincipal(dto.getMetodoPagoPrincipal());
+        if (dto.getMetodoPagoSecundario() != null) {
+            pedido.setMetodoPagoSecundario(dto.getMetodoPagoSecundario());
+        }
+        if (dto.getPagoCliente() != null) {
+            pedido.setPagoCliente(dto.getPagoCliente());
+        }
+        if (dto.getPagado() != null) {
+            pedido.setPagado(dto.getPagado());
+        } else {
+            pedido.setPagado(true);
+        }
+        Pedido guardado = pedidoRepository.save(pedido);
+        if (PedidoCreadoDesde.WEB.equals(guardado.getPedidoCreadoDesde())) {
+            eventPublisher.publishEvent(new PedidoWebActualizadoEvent(this));
+        }
+        return pedidoMapper.toResponseDTO(guardado);
+    }
+
+    @Transactional
     public void delete(int id) {
         Pedido pedido = findEntityById(id);
         boolean eraWebSinImprimir = PedidoCreadoDesde.WEB.equals(pedido.getPedidoCreadoDesde())
@@ -163,7 +195,7 @@ public class PedidoService {
         }
     }
 
-    //Encontrar los pedidos web sin imprimir para la lista del frontEnd
+    // Encontrar los pedidos web sin imprimir para la lista del frontEnd
     @Transactional(readOnly = true)
     public List<PedidoResponseDTO> findWebSinImprimir() {
         return pedidoRepository.findByPedidoCreadoDesdeAndImpresoFalse(PedidoCreadoDesde.WEB)
@@ -172,7 +204,7 @@ public class PedidoService {
                 .toList();
     }
 
-    //contar pedidos web sin imprimir del día actual para el contador del frontEnd
+    // contar pedidos web sin imprimir del día actual para el contador del frontEnd
 
     @Transactional(readOnly = true)
     public long contarWebSinImprimir() {
@@ -214,18 +246,24 @@ public class PedidoService {
     }
 
     /**
-     * Suma al {@code precioFinalOrden} las tarifas especiales activas, pero solo cuando el
-     * pedido es de tipo DOMICILIO (tiene {@code pedidoDomicilio} o {@code pedidoDomicilioCocina}).
-     * El total se persiste en la entidad de domicilio correspondiente para trazabilidad.
-     * Devuelve los mensajes descriptivos de cada tarifa aplicada; vacío si no aplica ninguna.
+     * Suma al {@code precioFinalOrden} las tarifas especiales activas, pero solo
+     * cuando el
+     * pedido es de tipo DOMICILIO (tiene {@code pedidoDomicilio} o
+     * {@code pedidoDomicilioCocina}).
+     * El total se persiste en la entidad de domicilio correspondiente para
+     * trazabilidad.
+     * Devuelve los mensajes descriptivos de cada tarifa aplicada; vacío si no
+     * aplica ninguna.
      */
     private List<String> aplicarTarifasActivas(Pedido pedido) {
         boolean esDomicilio = pedido.getPedidoDomicilio() != null
                 || pedido.getPedidoDomicilioCocina() != null;
-        if (!esDomicilio) return List.of();
+        if (!esDomicilio)
+            return List.of();
 
         List<TarifaEspecial> activas = tarifaEspecialRepository.findByIsActiveTrue();
-        if (activas.isEmpty()) return List.of();
+        if (activas.isEmpty())
+            return List.of();
 
         BigDecimal totalTarifas = BigDecimal.ZERO;
         List<String> mensajes = new java.util.ArrayList<>();
