@@ -12,7 +12,7 @@ public class Constants {
     // Configuración de formato de factura térmica
     public static final int ANCHO_TICKET = 35; // Ancho en caracteres del ticket térmico
     public static final String SEPARADOR_TICKET = "----------------------------------------"; // 40 caracteres
-    public static final String NUMERO_COCINA = "+52 9993-43-36-52"; // Número de celular de la cocina
+    public static final String NUMERO_COCINA = "+52 9995-42-80-65"; // Número de celular de la cocina
 
 
     /**

@@ -47,16 +47,9 @@ public class ComplementoService {
         if (!complementoRepository.existsById(id)) {
             throw new BusinessException("Complemento no encontrado con id: " + id, HttpStatus.NOT_FOUND);
         }
-        if(!saltarConfirmacion){
-            if (complementoRepository.existsEnBasicos(id)) {
-                throw new AdvertenciaEliminacionException(
-                        "Este complemento forma parte de uno o más paquetes básicos. Al eliminarlo, los básicos asociados también serán eliminados. ¿Desea continuar?");
-            }
-            if (complementoRepository.existsEnPedidos(id)) {
-                throw new AdvertenciaEliminacionException(
-                        "Este complemento tiene pedidos relacionados. ¿Desea continuar con la eliminación?");
-            }
-
+        if (!saltarConfirmacion && complementoRepository.existsEnPedidos(id)) {
+            throw new AdvertenciaEliminacionException(
+                    "Este complemento tiene pedidos relacionados. ¿Desea continuar con la eliminación?");
         }
         complementoRepository.deleteById(id);
     }

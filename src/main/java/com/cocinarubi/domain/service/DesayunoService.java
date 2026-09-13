@@ -5,6 +5,7 @@ import com.cocinarubi.dao.DesayunoRepository;
 import com.cocinarubi.domain.entity.Desayuno;
 import com.cocinarubi.exception.AdvertenciaEliminacionException;
 import com.cocinarubi.exception.BusinessException;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -43,10 +44,12 @@ public class DesayunoService {
                         "Desayuno no encontrado con id: " + id, HttpStatus.NOT_FOUND));
     }
 
+    @CacheEvict(value = "menu-web", allEntries = true)
     public Desayuno save(Desayuno desayuno) {
         return desayunoRepository.save(desayuno);
     }
 
+    @CacheEvict(value = "menu-web", allEntries = true)
     public void delete(int id, boolean saltarConfirmacion) {
         if (!desayunoRepository.existsById(id)) {
             throw new BusinessException("Desayuno no encontrado con id: " + id, HttpStatus.NOT_FOUND);
@@ -58,6 +61,7 @@ public class DesayunoService {
         desayunoRepository.deleteById(id);
     }
 
+    @CacheEvict(value = "menu-web", allEntries = true)
     public Desayuno toggleDestacado(int id) {
         Desayuno desayuno = findById(id);
         desayuno.setDestacado(!desayuno.isDestacado());
