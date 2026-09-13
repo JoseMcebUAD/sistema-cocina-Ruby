@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
+import java.util.List;
+
 public class RegistroClienteRequestDTO {
 
     @NotBlank(message = "El nombre no puede estar vacío")
@@ -20,16 +22,16 @@ public class RegistroClienteRequestDTO {
     @JsonProperty("idRuta")
     private Integer idRuta;
 
-    @JsonProperty("direccion")
-    private String direccion;
+    @JsonProperty("direcciones")
+    private List<String> direcciones;
 
     public RegistroClienteRequestDTO() {}
 
-    public RegistroClienteRequestDTO(String nombre, String telefono, Integer idRuta, String direccion) {
+    public RegistroClienteRequestDTO(String nombre, String telefono, Integer idRuta, List<String> direcciones) {
         this.nombre = nombre;
         this.telefono = telefono;
         this.idRuta = idRuta;
-        this.direccion = direccion;
+        this.direcciones = direcciones;
     }
 
     public String getNombre() { return nombre; }
@@ -41,6 +43,6 @@ public class RegistroClienteRequestDTO {
     public Integer getIdRuta() { return idRuta; }
     public void setIdRuta(Integer idRuta) { this.idRuta = idRuta; }
 
-    public String getDireccion() { return direccion; }
-    public void setDireccion(String direccion) { this.direccion = direccion; }
+    public List<String> getDirecciones() { return direcciones; }
+    public void setDirecciones(List<String> direcciones) { this.direcciones = direcciones; }
 }

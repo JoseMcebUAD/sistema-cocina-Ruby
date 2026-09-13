@@ -1,8 +1,11 @@
 package com.cocinarubi.domain.entity;
 
+import com.cocinarubi.util.StringListConverter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 /**
  * Directorio reutilizable de clientes para pedidos creados desde COCINA.
@@ -12,8 +15,9 @@ import lombok.*;
  * Puede asociarse a múltiples pedidos y permite autocompletar datos de entrega
  * buscando por número de teléfono.</p>
  *
- * <p>El campo {@code id_ruta} y {@code direccion} son la dirección habitual del
- * cliente. Pueden diferir de los datos reales de cada entrega, que quedan
+ * <p>El campo {@code id_ruta} es la ruta habitual del cliente. {@code direcciones}
+ * es la lista de direcciones guardadas; cada elemento es un string libre.
+ * Pueden diferir de los datos reales de cada entrega, que quedan
  * registrados en {@link PedidoDomicilioCocina}.</p>
  */
 @Entity
@@ -43,6 +47,7 @@ public class RegistroCliente {
     @JoinColumn(name = "id_ruta")
     private Ruta ruta;
 
+    @Convert(converter = StringListConverter.class)
     @Column(name = "direccion", columnDefinition = "JSON")
-    private String direccion;
+    private List<String> direcciones;
 }
