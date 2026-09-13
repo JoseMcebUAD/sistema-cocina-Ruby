@@ -71,13 +71,6 @@ public class RutaController {
                 rutaService.update(id, dto)));
     }
 
-    /** Elimina una ruta permanentemente. Falla con 409 si tiene clientes o pedidos asociados. */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable int id) {
-        rutaService.delete(id);
-        return ResponseEntity.noContent().build();
-    }
-
     /** Devuelve las rutas asignadas a un grupo (OrdenRuta) específico. */
     @GetMapping("/orden/{id}")
     public ResponseEntity<ApiResponse<List<RutaSimpleResponseDTO>>> findByOrden(@PathVariable int id) {
