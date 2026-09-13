@@ -180,7 +180,8 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
     }
 
     private void printDobleMetodoPago(EscPos escpos, PedidoTicketData data) throws IOException {
-        BigDecimal pagoSecundario = data.getPrecioFinalOrden().subtract(data.getPagoCliente());
+        BigDecimal pagoSecundario = data.getPrecioFinalOrden()
+                .subtract(data.getPagoCliente() != null ? data.getPagoCliente() : BigDecimal.ZERO);
         escpos.write("Pago en " + data.getMetodoPagoPrincipal().name() + ": ")
               .writeLF(subtitleStyle, FORMATO_PRECIO.format(data.getPagoCliente()));
         escpos.write("Pago en " + data.getMetodoPagoSecundario().name() + ": ")

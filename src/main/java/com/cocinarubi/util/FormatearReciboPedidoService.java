@@ -36,7 +36,7 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
                 String nombreCompl = compl.getNombreComplemento();
                 BigDecimal precioComp = compl.getPrecioExtra();
                 if (precioComp != null && precioComp.compareTo(BigDecimal.ZERO) != 0) {
-                    lineas.add(construirLineaConPrecio(nombreCompl, FORMATO_PRECIO.format(precioComp), anchoEfectivo));
+                    lineas.addAll(formatearDetalleOrden(nombreCompl, FORMATO_PRECIO.format(precioComp), anchoEfectivo));
                 } else {
                     lineas.add(nombreCompl);
                 }
