@@ -33,6 +33,10 @@ public class ComplementoService {
         return complementoRepository.findDisponiblesOrdenados(DBConstants.Estatus.DISPONIBLE);
     }
 
+    public List<Complemento> findAllByIds(List<Integer> ids) {
+        return complementoRepository.findAllById(ids);
+    }
+
     public Complemento findById(int id) {
         return complementoRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(
@@ -46,6 +50,10 @@ public class ComplementoService {
     public void delete(int id, boolean saltarConfirmacion) {
         if (!complementoRepository.existsById(id)) {
             throw new BusinessException("Complemento no encontrado con id: " + id, HttpStatus.NOT_FOUND);
+        }
+        if (complementoRepository.existsEnBasicos(id)) {
+            throw new BusinessException(
+                    "Este complemento está asignado a paquetes básicos y no puede eliminarse. elimina el básico o elimina el complemento de el básico", HttpStatus.CONFLICT);
         }
         if (!saltarConfirmacion && complementoRepository.existsEnPedidos(id)) {
             throw new AdvertenciaEliminacionException(
