@@ -9,6 +9,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.util.stream.Collectors;
 
@@ -33,6 +34,12 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(400, "JSON inválido o tipo de dato incorrecto en la solicitud"));
     }
 
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse<Void>> manejarTipoArgumento(MethodArgumentTypeMismatchException ex) {
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.error(400, "Parámetro inválido: '" + ex.getName() + "' no es del tipo esperado"));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> manejarValidacion(MethodArgumentNotValidException ex) {
         String errores = ex.getBindingResult().getFieldErrors().stream()
@@ -44,6 +51,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> manejarNegocio(BusinessException ex) {
+        log.warn("[{}] {}", ex.getTipoErrorCode().name(), ex.getMessage());
         return ResponseEntity.status(ex.getHttpStatus())
                 .body(ApiResponse.error(ex.getHttpStatus().value(), ex.getMessage(), ex.getTipoErrorCode().name()));
     }
