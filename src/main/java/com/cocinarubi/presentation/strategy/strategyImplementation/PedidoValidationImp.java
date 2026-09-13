@@ -17,6 +17,7 @@ import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.domain.entity.Desayuno;
 import com.cocinarubi.domain.entity.Paquete;
 import com.cocinarubi.domain.entity.ProductoCocina;
+import com.cocinarubi.domain.entity.Ruta;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.exception.ErrorCode;
 import com.cocinarubi.presentation.dto.request.BasicoPedidoDTO;
@@ -194,7 +195,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
             if (comida.getEstatus() != Estatus.DISPONIBLE) {
                 throw new BusinessException(
-                        "La comida " + linea.getIdComida() + " no está disponible",
+                        "La comida " + comida.getNombreComida() + " no está disponible",
                         HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
             }
             for (ComplementoPedidoDTO comp : linea.getComplementos()) {
@@ -204,7 +205,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                                 HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
                 if (complemento.getEstatus() != Estatus.DISPONIBLE) {
                     throw new BusinessException(
-                            "El complemento " + comp.getIdComplemento() + " no está disponible",
+                            "El complemento " + complemento.getNombreComplemento() + " no está disponible",
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
                 }
             }
@@ -219,7 +220,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
             if (desayuno.getEstatus() != Estatus.DISPONIBLE) {
                 throw new BusinessException(
-                        "El desayuno " + linea.getIdDesayuno() + " no está disponible",
+                        "El desayuno " + desayuno.getNombreDesayuno() + " no está disponible",
                         HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
             }
         }
@@ -233,7 +234,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
             if (basico.getEstatus() != Estatus.DISPONIBLE) {
                 throw new BusinessException(
-                        "El básico " + linea.getIdBasico() + " no está disponible",
+                        "El básico " + basico.getDescripcion() + " no está disponible",
                         HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
             }
         }
@@ -247,7 +248,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
             if (producto.getEstatus() != Estatus.DISPONIBLE) {
                 throw new BusinessException(
-                        "El producto de cocina " + linea.getIdProductoCocina() + " no está disponible",
+                        "El producto de cocina " + producto.getNombreProducto() + " no está disponible",
                         HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
             }
         }
@@ -255,18 +256,28 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
 
     private void validarDomicilioWeb(PedidoRequestDTO dto) {
         if (dto.getDomicilio() == null) return;
-        if (!rutaRepository.existsById(dto.getDomicilio().getIdRuta())) {
+        Integer idRuta = dto.getDomicilio().getIdRuta();
+        Ruta ruta = rutaRepository.findById(idRuta)
+                .orElseThrow(() -> new BusinessException(
+                        "La ruta " + idRuta + " no existe",
+                        HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
+        if (!ruta.isActive()) {
             throw new BusinessException(
-                    "La ruta " + dto.getDomicilio().getIdRuta() + " no existe",
+                    "La ruta " + ruta.getNombre() + " no está disponible",
                     HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
         }
     }
 
     private void validarRutaDomicilioCocina(PedidoRequestDTO dto) {
         if (dto.getPedidoDomicilioCocina() == null) return;
-        if (!rutaRepository.existsById(dto.getPedidoDomicilioCocina().getIdRuta())) {
+        Integer idRuta = dto.getPedidoDomicilioCocina().getIdRuta();
+        Ruta ruta = rutaRepository.findById(idRuta)
+                .orElseThrow(() -> new BusinessException(
+                        "La ruta " + idRuta + " no existe",
+                        HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
+        if (!ruta.isActive()) {
             throw new BusinessException(
-                    "La ruta " + dto.getPedidoDomicilioCocina().getIdRuta() + " no existe",
+                    "La ruta " + ruta.getNombre() + " no está disponible",
                     HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
         }
     }
@@ -298,7 +309,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
             if (paquete.getEstatus() != Estatus.DISPONIBLE) {
                 throw new BusinessException(
-                        "El paquete " + linea.getIdPaquete() + " no está disponible",
+                        "El paquete " + paquete.getDescripcion() + " no está disponible",
                         HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
             }
         }
