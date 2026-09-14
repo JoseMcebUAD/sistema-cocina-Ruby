@@ -76,7 +76,7 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
 
         if (hayComplementos) {
             for (ComplementoResponseDTO compl : complementos) {
-                lineas.add(compl.getNombreComplemento());
+                lineas.addAll(dividirTexto(compl.getNombreComplemento(), anchoEfectivo));
             }
         }
 
@@ -87,7 +87,7 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
                 if (precioExtra != null && precioExtra.compareTo(BigDecimal.ZERO) != 0) {
                     lineas.addAll(formatearItemConPrecio(descripcion, FORMATO_PRECIO.format(precioExtra), anchoEfectivo));
                 } else {
-                    lineas.add(descripcion);
+                    lineas.addAll(dividirTexto(descripcion, anchoEfectivo));
                 }
             }
         }
@@ -113,7 +113,7 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
 
         if (hayProductos) {
             for (String nombre : nombres) {
-                lineas.add("  - " + nombre);
+                lineas.addAll(dividirTexto("  - " + nombre, anchoEfectivo));
             }
         }
 
