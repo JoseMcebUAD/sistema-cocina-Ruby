@@ -47,7 +47,7 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
             escpos.writeLF("Método de pago: Sin definir");
         }
         // Método de pago y totales
-        escpos.writeLF(subtitleStyle, formatter.formatearLineaTotal("TOTAL", FORMATO_PRECIO.format(data.getPrecioFinalOrden())));
+        escpos.writeLF(subtitleStyle, formatter.formatearLineaTotal("TOTAL", FORMATO_PRECIO.format(data.getPrecioFinalOrden()), anchoEfectivo));
 
         // Sección de entrega a domicilio (WEB usa PedidoDomicilioResponseDTO,
         // COCINA usa PedidoDomicilioCocinaResponseDTO)
