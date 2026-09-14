@@ -62,6 +62,15 @@ public class FormatearReciboService {
     }
 
     /**
+     * Igual que {@link #formatearLineaTotal(String, String)} pero con ancho explícito.
+     * Usar cuando la línea se imprime en doble ancho (FontSize._2 → ANCHO_TICKET/2)
+     * para evitar desbordar el buffer físico de la impresora.
+     */
+    public String formatearLineaTotal(String texto, String precio, int anchoEfectivo) {
+        return construirLineaConPrecio(texto, precio, anchoEfectivo);
+    }
+
+    /**
      * Formatea el texto de guarniciones con el precio al final, garantizando que el
      * precio quede completo en una sola línea sin desbordarse.
      *
