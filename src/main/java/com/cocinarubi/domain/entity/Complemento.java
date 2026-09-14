@@ -41,7 +41,7 @@ public class Complemento {
     @Column(name = "nombre_complemento")
     private String nombreComplemento;
 
-    @Column(name = "descripcion")
+    @Column(name = "descripcion", length = 400)
     private String descripcion;
 
     @Column(name = "precio_extra")

@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS favorito_cliente CASCADE;

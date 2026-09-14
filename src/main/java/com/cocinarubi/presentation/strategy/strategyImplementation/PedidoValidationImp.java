@@ -17,6 +17,7 @@ import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.domain.entity.Desayuno;
 import com.cocinarubi.domain.entity.Paquete;
 import com.cocinarubi.domain.entity.ProductoCocina;
+import com.cocinarubi.domain.entity.Ruta;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.exception.ErrorCode;
 import com.cocinarubi.presentation.dto.request.BasicoPedidoDTO;
@@ -101,7 +102,8 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                 CompletableFuture.runAsync(() -> validarRutaDomicilioCocina(dto),     EXECUTOR_VALIDACION),
                 CompletableFuture.runAsync(() -> validarRegistroCliente(dto),         EXECUTOR_VALIDACION),
                 CompletableFuture.runAsync(() -> validarMetodosPagoNoDuplicados(dto), EXECUTOR_VALIDACION),
-                CompletableFuture.runAsync(() -> validarPagoClienteNoExcedaTotal(dto),EXECUTOR_VALIDACION)
+                CompletableFuture.runAsync(() -> validarPagoClienteNoExcedaTotal(dto),EXECUTOR_VALIDACION),
+                CompletableFuture.runAsync(() -> validarSubtotalMinimoWeb(dto),       EXECUTOR_VALIDACION)
         );
         try {
             CompletableFuture.allOf(tareas.toArray(new CompletableFuture[0])).join();
@@ -121,7 +123,8 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
         boolean tieneProductos = !dto.getComidas().isEmpty()
                 || !dto.getDesayunos().isEmpty()
                 || !dto.getBasicos().isEmpty()
-                || !dto.getProductosCocina().isEmpty();
+                || !dto.getProductosCocina().isEmpty()
+                || !dto.getPaquetes().isEmpty();
         if (!tieneProductos) {
             throw new BusinessException(
                     "El pedido debe incluir al menos un producto",
@@ -192,7 +195,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
             if (comida.getEstatus() != Estatus.DISPONIBLE) {
                 throw new BusinessException(
-                        "La comida " + linea.getIdComida() + " no está disponible",
+                        "La comida " + comida.getNombreComida() + " no está disponible",
                         HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
             }
             for (ComplementoPedidoDTO comp : linea.getComplementos()) {
@@ -202,7 +205,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                                 HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
                 if (complemento.getEstatus() != Estatus.DISPONIBLE) {
                     throw new BusinessException(
-                            "El complemento " + comp.getIdComplemento() + " no está disponible",
+                            "El complemento " + complemento.getNombreComplemento() + " no está disponible",
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
                 }
             }
@@ -217,7 +220,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
             if (desayuno.getEstatus() != Estatus.DISPONIBLE) {
                 throw new BusinessException(
-                        "El desayuno " + linea.getIdDesayuno() + " no está disponible",
+                        "El desayuno " + desayuno.getNombreDesayuno() + " no está disponible",
                         HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
             }
         }
@@ -231,7 +234,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
             if (basico.getEstatus() != Estatus.DISPONIBLE) {
                 throw new BusinessException(
-                        "El básico " + linea.getIdBasico() + " no está disponible",
+                        "El básico " + basico.getDescripcion() + " no está disponible",
                         HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
             }
         }
@@ -245,7 +248,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
             if (producto.getEstatus() != Estatus.DISPONIBLE) {
                 throw new BusinessException(
-                        "El producto de cocina " + linea.getIdProductoCocina() + " no está disponible",
+                        "El producto de cocina " + producto.getNombreProducto() + " no está disponible",
                         HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
             }
         }
@@ -253,18 +256,28 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
 
     private void validarDomicilioWeb(PedidoRequestDTO dto) {
         if (dto.getDomicilio() == null) return;
-        if (!rutaRepository.existsById(dto.getDomicilio().getIdRuta())) {
+        Integer idRuta = dto.getDomicilio().getIdRuta();
+        Ruta ruta = rutaRepository.findById(idRuta)
+                .orElseThrow(() -> new BusinessException(
+                        "La ruta " + idRuta + " no existe",
+                        HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
+        if (!ruta.isActive()) {
             throw new BusinessException(
-                    "La ruta " + dto.getDomicilio().getIdRuta() + " no existe",
+                    "La ruta " + ruta.getNombre() + " no está disponible",
                     HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
         }
     }
 
     private void validarRutaDomicilioCocina(PedidoRequestDTO dto) {
         if (dto.getPedidoDomicilioCocina() == null) return;
-        if (!rutaRepository.existsById(dto.getPedidoDomicilioCocina().getIdRuta())) {
+        Integer idRuta = dto.getPedidoDomicilioCocina().getIdRuta();
+        Ruta ruta = rutaRepository.findById(idRuta)
+                .orElseThrow(() -> new BusinessException(
+                        "La ruta " + idRuta + " no existe",
+                        HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
+        if (!ruta.isActive()) {
             throw new BusinessException(
-                    "La ruta " + dto.getPedidoDomicilioCocina().getIdRuta() + " no existe",
+                    "La ruta " + ruta.getNombre() + " no está disponible",
                     HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
         }
     }
@@ -296,7 +309,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
             if (paquete.getEstatus() != Estatus.DISPONIBLE) {
                 throw new BusinessException(
-                        "El paquete " + linea.getIdPaquete() + " no está disponible",
+                        "El paquete " + paquete.getDescripcion() + " no está disponible",
                         HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
             }
         }
@@ -355,5 +368,45 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
             total = total.add(dto.getPedidoDomicilioCocina().getTarifa());
         }
         return total;
+    }
+
+    /** Solo WEB: el subtotal de productos debe ser mayor a $80.00. */
+    private void validarSubtotalMinimoWeb(PedidoRequestDTO dto) {
+        if (dto.getPedidoCreadoDesde() == PedidoCreadoDesde.COCINA) return;
+
+        BigDecimal subtotal = BigDecimal.ZERO;
+
+        for (ComidaPedidoDTO comida : dto.getComidas()) {
+            if (comida.getPrecioUnitario() != null)
+                subtotal = subtotal.add(comida.getPrecioUnitario());
+            for (ComplementoPedidoDTO comp : comida.getComplementos()) {
+                if (comp.getPrecioUnitario() != null)
+                    subtotal = subtotal.add(comp.getPrecioUnitario());
+            }
+        }
+        for (DesayunoPedidoDTO desayuno : dto.getDesayunos()) {
+            if (desayuno.getPrecio() != null)
+                subtotal = subtotal.add(desayuno.getPrecio());
+        }
+        for (BasicoPedidoDTO basico : dto.getBasicos()) {
+            if (basico.getPrecioUnitario() != null)
+                subtotal = subtotal.add(basico.getPrecioUnitario());
+        }
+        for (ProductoCocinaPedidoDTO producto : dto.getProductosCocina()) {
+            if (producto.getPrecioUnitario() != null && producto.getCantidad() != null)
+                subtotal = subtotal.add(producto.getPrecioUnitario()
+                        .multiply(BigDecimal.valueOf(producto.getCantidad())));
+        }
+        for (PaquetePedidoDTO paquete : dto.getPaquetes()) {
+            if (paquete.getPrecioUnitario() != null && paquete.getCantidad() != null)
+                subtotal = subtotal.add(paquete.getPrecioUnitario()
+                        .multiply(BigDecimal.valueOf(paquete.getCantidad())));
+        }
+
+        if (subtotal.compareTo(new BigDecimal("80")) <= 0) {
+            throw new BusinessException(
+                    "El subtotal de los productos ($" + subtotal + ") debe ser mayor a $80.00 para realizar un pedido web",
+                    HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
+        }
     }
 }

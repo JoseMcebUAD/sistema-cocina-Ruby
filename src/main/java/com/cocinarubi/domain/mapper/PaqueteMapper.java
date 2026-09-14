@@ -56,7 +56,7 @@ public class PaqueteMapper {
                     .getOrDefault(pp.getTipoProducto(), Map.of())
                     .getOrDefault(pp.getIdProducto(), "(eliminado)");
             lineas.add(new PaqueteLineaResponseDTO(
-                    pp.getIdPaqueteProducto() != null ? pp.getIdPaqueteProducto() : 0,
+                    pp.getIdPaqueteProducto(),
                     pp.getTipoProducto(),
                     pp.getIdProducto(),
                     nombre,

@@ -1,5 +1,7 @@
 package com.cocinarubi.presentation.dto.response;
 
+import java.util.List;
+
 public class RegistroClienteResponseDTO {
 
     private int idRegistroCliente;
@@ -7,18 +9,18 @@ public class RegistroClienteResponseDTO {
     private String telefono;
     private Integer idRuta;
     private String nombreRuta;
-    private String direccion;
+    private List<String> direcciones;
 
     public RegistroClienteResponseDTO() {}
 
     public RegistroClienteResponseDTO(int idRegistroCliente, String nombre, String telefono,
-                                      Integer idRuta, String nombreRuta, String direccion) {
+                                      Integer idRuta, String nombreRuta, List<String> direcciones) {
         this.idRegistroCliente = idRegistroCliente;
         this.nombre = nombre;
         this.telefono = telefono;
         this.idRuta = idRuta;
         this.nombreRuta = nombreRuta;
-        this.direccion = direccion;
+        this.direcciones = direcciones;
     }
 
     public int getIdRegistroCliente() { return idRegistroCliente; }
@@ -36,6 +38,6 @@ public class RegistroClienteResponseDTO {
     public String getNombreRuta() { return nombreRuta; }
     public void setNombreRuta(String nombreRuta) { this.nombreRuta = nombreRuta; }
 
-    public String getDireccion() { return direccion; }
-    public void setDireccion(String direccion) { this.direccion = direccion; }
+    public List<String> getDirecciones() { return direcciones; }
+    public void setDirecciones(List<String> direcciones) { this.direcciones = direcciones; }
 }

@@ -68,7 +68,7 @@ public class PedidoConfirmationImp implements ConfirmationStrategy<PedidoRequest
     /** RF-026: los desayunos solo se pueden ordenar antes de las 11:00 h. */
     private void validarHorarioDesayuno(PedidoRequestDTO dto) {
         if (dto.getDesayunos().isEmpty()) return;
-        if (LocalTime.now().isAfter(LIMITE_DESAYUNO)) {
+        if (LocalTime.now(com.cocinarubi.Constants.ZONA_MERIDA).isAfter(LIMITE_DESAYUNO)) {
             throw new BusinessException(
                     "Los desayunos solo se pueden ordenar antes de las 11:00 h",
                     HttpStatus.CONFLICT, ErrorCode.VALIDACION);

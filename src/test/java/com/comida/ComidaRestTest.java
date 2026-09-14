@@ -133,13 +133,17 @@ public class ComidaRestTest {
         ResponseEntity<String> deleteResponse = this.restTemplate.exchange(
                 "/comida/" + createdId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class
         );
-        assertEquals(HttpStatus.NO_CONTENT, deleteResponse.getStatusCode());
+        assertEquals(HttpStatus.OK, deleteResponse.getStatusCode(),
+                "DELETE /comida/" + createdId + " falló. Body: " + deleteResponse.getBody());
+        JsonNode deleteData = mapper.readTree(deleteResponse.getBody());
+        assertEquals(200, deleteData.get("status").asInt(),
+                "Se esperaba status=200 en body de DELETE. Body: " + deleteResponse.getBody());
 
         ResponseEntity<String> getResponse = this.restTemplate.exchange(
                 "/comida/" + createdId, HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
         assertEquals(HttpStatus.NOT_FOUND, getResponse.getStatusCode());
-        System.out.println("[OK] DELETE 204 → GET 404 para comida id=" + createdId);
+        System.out.println("[OK] DELETE 200 → GET 404 para comida id=" + createdId);
     }
 
     @Test

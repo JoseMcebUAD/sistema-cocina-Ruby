@@ -19,12 +19,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class GlobalRateLimitFilter extends OncePerRequestFilter {
 
-    private static final int MAX_POR_IP = 200;
+    private static final int MAX_POR_IP = 20;
     private static final int MAX_LOGIN_GLOBAL = 50;
-    private static final Duration VENTANA = Duration.ofMinutes(1);
+    private static final Duration VENTANA = Duration.ofSeconds(10);
     private static final String LOGIN_PATH = "/auth/login";
+    private static final String FINGERPRINT_HEADER = "X-Fingerprint";
 
     private final ConcurrentHashMap<String, Bucket> bucketsPorIp = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Bucket> bucketsPorHuella = new ConcurrentHashMap<>();
     private final Bucket bucketGlobalLogin = crearBucket(MAX_LOGIN_GLOBAL);
     private final ObjectMapper objectMapper;
 
@@ -48,6 +50,17 @@ public class GlobalRateLimitFilter extends OncePerRequestFilter {
             if (!loginProbe.isConsumed()) {
                 responder429(response, loginProbe.getNanosToWaitForRefill(),
                         "Límite global de login alcanzado. Intente más tarde.");
+                return;
+            }
+        }
+
+        String huella = request.getHeader(FINGERPRINT_HEADER);
+        if (huella != null && !huella.isBlank()) {
+            Bucket bucketHuella = bucketsPorHuella.computeIfAbsent(huella, k -> crearBucket(MAX_POR_IP));
+            ConsumptionProbe huellaProbe = bucketHuella.tryConsumeAndReturnRemaining(1);
+            if (!huellaProbe.isConsumed()) {
+                responder429(response, huellaProbe.getNanosToWaitForRefill(),
+                        "Demasiadas solicitudes. Intente de nuevo en un momento.");
                 return;
             }
         }

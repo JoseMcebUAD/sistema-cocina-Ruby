@@ -139,7 +139,14 @@ public class PaqueteServiceTest {
         when(paqueteRepository.findByIdWithProductos(5)).thenReturn(Optional.of(existente));
         when(comidaRepository.findAllById(any())).thenReturn(List.of(
                 Comida.builder().idComida(1).nombreComida("Bistec").build()));
-        when(paqueteRepository.save(any(Paquete.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(paqueteRepository.save(any(Paquete.class))).thenAnswer(inv -> {
+            Paquete p = inv.getArgument(0);
+            int[] counter = {200};
+            p.getProductos().stream()
+                .filter(pp -> pp.getIdPaqueteProducto() == null)
+                .forEach(pp -> pp.setIdPaqueteProducto(counter[0]++));
+            return p;
+        });
 
         PaqueteRequestDTO dto = buildRequest(new ArrayList<>(List.of(
                 linea(TipoLineaPaquete.COMIDA, 1, 3)
@@ -176,5 +183,41 @@ public class PaqueteServiceTest {
         BusinessException ex = assertThrows(BusinessException.class, () -> service.delete(99,false));
         assertEquals(404, ex.getHttpStatus().value());
         System.out.println("[OK] delete lanzó 404 para id=99");
+    }
+
+    @Test
+    @DisplayName("toggleDestacado - invierte el campo destacado y persiste")
+    public void toggleDestacado_inverteCampoYPersiste() {
+        PaqueteService service = rebuildService();
+        Paquete paquete = Paquete.builder()
+                .idPaquete(1).precio(new BigDecimal("100.00")).descripcion("Promo")
+                .destacado(false).estatus(Estatus.DISPONIBLE).productos(new ArrayList<>()).build();
+
+        when(paqueteRepository.findByIdWithProductos(1)).thenReturn(Optional.of(paquete));
+        when(paqueteRepository.save(any(Paquete.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        PaqueteResponseDTO res = service.toggleDestacado(1);
+
+        assertTrue(res.getDestacado());
+        verify(paqueteRepository).save(any(Paquete.class));
+        System.out.println("[OK] toggleDestacado invirtió destacado a true");
+    }
+
+    @Test
+    @DisplayName("updateEstatus - cambia el estatus del paquete y persiste")
+    public void updateEstatus_cambiaEstatusYPersiste() {
+        PaqueteService service = rebuildService();
+        Paquete paquete = Paquete.builder()
+                .idPaquete(2).precio(new BigDecimal("80.00")).descripcion("Promo B")
+                .destacado(false).estatus(Estatus.DISPONIBLE).productos(new ArrayList<>()).build();
+
+        when(paqueteRepository.findByIdWithProductos(2)).thenReturn(Optional.of(paquete));
+        when(paqueteRepository.save(any(Paquete.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        PaqueteResponseDTO res = service.updateEstatus(2, Estatus.NO_DISPONIBLE);
+
+        assertEquals(Estatus.NO_DISPONIBLE, res.getEstatus());
+        verify(paqueteRepository).save(any(Paquete.class));
+        System.out.println("[OK] updateEstatus cambió estatus a NO_DISPONIBLE");
     }
 }

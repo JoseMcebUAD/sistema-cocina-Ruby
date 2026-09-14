@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import com.cocinarubi.Constants;
-import com.cocinarubi.DBConstants.TipoPedido;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.DesayunoPedidoResponseDTO;
@@ -31,26 +30,21 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
     protected void renderSpecificDetails(EscPos escpos) throws IOException {
         PedidoTicketData data = getData();
 
-
         // Encabezado: fecha, tipo y nombre de cliente (COCINA PICK_UP / MOSTRADOR / DOMICILIO)
         if (data.getFechaExpedicionPedido() != null) {
             escpos.writeLF(FORMATO_FECHA.format(data.getFechaExpedicionPedido()));
         }
-
-        //solo si es mostrador se pone comedor
-        String labelTipo = data.getTipoPedido() == 
-            TipoPedido.MOSTRADOR ? "COMEDOR" : data.getTipoPedido().name();
-        escpos.writeLF("Tipo: " + labelTipo);
-
+        escpos.writeLF("Tipo: " + data.getTipoPedido());
         if (data.getNombreCliente() != null && !data.getNombreCliente().isBlank()) {
             escpos.writeLF("Cliente: " + data.getNombreCliente());
         }
         
         if (data.getMetodoPagoSecundario() != null) {
             printDobleMetodoPago(escpos, data);
-        } else {
+        } else if (data.getMetodoPagoPrincipal() != null) {
             escpos.writeLF("Método de pago: " + data.getMetodoPagoPrincipal().name());
-            
+        } else {
+            escpos.writeLF("Método de pago: Sin definir");
         }
         // Método de pago y totales
         escpos.writeLF(subtitleStyle, formatter.formatearLineaTotal("TOTAL", FORMATO_PRECIO.format(data.getPrecioFinalOrden())));
@@ -82,11 +76,14 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
     private void renderComidas(EscPos escpos, List<ComidaPedidoResponseDTO> comidas) throws IOException {
         if (comidas == null || comidas.isEmpty()) return;
 
-        for (ComidaPedidoResponseDTO c : comidas) {
-            String precio = FORMATO_PRECIO.format(c.getPrecioUnitario());
-            for (String linea : formatter.formatProductBlock(c, precio, anchoEfectivo)) {
+        for (int i = 0; i < comidas.size(); i++) {
+            String precio = FORMATO_PRECIO.format(comidas.get(i).getPrecioUnitario());
+            for (String linea : formatter.formatProductBlock(comidas.get(i), precio, anchoEfectivo)) {
                 if (linea.isEmpty()) escpos.feed(1);
-                else escpos.writeLF(subtitleStyle,linea);
+                else escpos.writeLF(subtitleStyle, linea);
+            }
+            if (i < comidas.size() - 1) {
+                escpos.writeLF("----");
             }
         }
         escpos.writeLF(Constants.SEPARADOR_TICKET).feed(1);
@@ -186,7 +183,8 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
     }
 
     private void printDobleMetodoPago(EscPos escpos, PedidoTicketData data) throws IOException {
-        BigDecimal pagoSecundario = data.getPrecioFinalOrden().subtract(data.getPagoCliente());
+        BigDecimal pagoSecundario = data.getPrecioFinalOrden()
+                .subtract(data.getPagoCliente() != null ? data.getPagoCliente() : BigDecimal.ZERO);
         escpos.write("Pago en " + data.getMetodoPagoPrincipal().name() + ": ")
               .writeLF(subtitleStyle, FORMATO_PRECIO.format(data.getPagoCliente()));
         escpos.write("Pago en " + data.getMetodoPagoSecundario().name() + ": ")

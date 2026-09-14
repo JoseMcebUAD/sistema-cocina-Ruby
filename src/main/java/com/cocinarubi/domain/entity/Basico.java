@@ -39,11 +39,14 @@ public class Basico {
     @Column(name = "id_basico")
     private Integer idBasico;
 
+    @Column(name = "uuid_basico")
+    private String uuidBasico;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_comida")
     private Comida comida;
 
-    @Column(name = "descripcion")
+    @Column(name = "descripcion", length = 400)
     private String descripcion;
 
     @Column(name = "destacado")

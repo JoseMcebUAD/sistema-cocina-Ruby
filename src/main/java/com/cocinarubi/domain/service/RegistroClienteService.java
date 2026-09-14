@@ -57,7 +57,7 @@ public class RegistroClienteService {
                 .nombre(dto.getNombre())
                 .telefono(dto.getTelefono())
                 .ruta(resolverRuta(dto.getIdRuta()))
-                .direccion(dto.getDireccion())
+                .direcciones(dto.getDirecciones())
                 .build();
         return toResponseDTO(registroClienteRepository.save(entidad));
     }
@@ -73,7 +73,7 @@ public class RegistroClienteService {
         existente.setNombre(dto.getNombre());
         existente.setTelefono(dto.getTelefono());
         existente.setRuta(resolverRuta(dto.getIdRuta()));
-        existente.setDireccion(dto.getDireccion());
+        existente.setDirecciones(dto.getDirecciones());
         return toResponseDTO(registroClienteRepository.save(existente));
     }
 
@@ -105,7 +105,7 @@ public class RegistroClienteService {
                 entidad.getTelefono(),
                 entidad.getRuta() != null ? entidad.getRuta().getIdRuta() : null,
                 entidad.getRuta() != null ? entidad.getRuta().getNombre() : null,
-                entidad.getDireccion()
+                entidad.getDirecciones()
         );
     }
 }

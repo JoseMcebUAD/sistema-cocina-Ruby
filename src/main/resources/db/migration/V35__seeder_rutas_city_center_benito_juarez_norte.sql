@@ -2,7 +2,7 @@ SET NAMES utf8mb4;
 
 -- Nuevas rutas: City Center y Benito Juárez Norte
 -- Polígonos aproximados; reemplazar con boundaries reales cuando estén disponibles.
-INSERT INTO ruta (nombre, boundary, is_active, tarifa_envio, tiempo_estimado_min, orden)
+INSERT INTO ruta (nombre, boundary, is_active, tarifa_envio, id_orden_ruta, uuid_ruta)
 VALUES
 (
     'City Center',
@@ -13,7 +13,7 @@ VALUES
         -89.623500 21.150000,
         -89.623500 21.161500
     ))'),
-    1, 10.00, 0, 18
+    1, 10.00, null, UUID()
 ),
 (
     'Benito Juárez Norte',
@@ -24,5 +24,5 @@ VALUES
         -89.638000 21.162000,
         -89.638000 21.175000
     ))'),
-    1, 20.00, 0, 19
+    1, 20.00, null, UUID()
 );

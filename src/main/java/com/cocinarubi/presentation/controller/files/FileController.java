@@ -50,6 +50,11 @@ public class FileController {
         this.validator = validator;
     }
 
+    /**
+     * Sube uno o más archivos a Cloudinary junto con su metadata (entidad destino,
+     * módulo, tipo). La metadata llega como JSON en el part "meta" y los binarios
+     * en el part "files". Devuelve la lista de archivos creados con sus URLs y orden.
+     */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<List<ArchivoResponseDTO>>> upload(
             @RequestPart("meta") String metaJson,
@@ -63,6 +68,11 @@ public class FileController {
                 .body(ApiResponse.exito(201, "Archivos subidos correctamente", archivos));
     }
 
+    /**
+     * Devuelve todos los archivos de una entidad concreta ({@code idEntidad}).
+     * El módulo se discrimina con {@code entityType} (módulo estático) o
+     * {@code idCategoria} (módulo dinámico); exactamente uno de los dos debe venir.
+     */
     @GetMapping
     public ResponseEntity<ApiResponse<List<ArchivoResponseDTO>>> getAll(
             @RequestParam(value = "entityType", required = false) TipoCatalogoProducto entityType,
@@ -74,6 +84,11 @@ public class FileController {
         return ResponseEntity.ok(ApiResponse.exito(200, "Archivos obtenidos correctamente", archivos));
     }
 
+    /**
+     * Devuelve todos los archivos de múltiples entidades en una sola llamada.
+     * El resultado es un mapa {@code idEntidad → lista de archivos}, útil para
+     * poblar galerías de listados sin hacer N peticiones individuales.
+     */
     @GetMapping("/batch")
     public ResponseEntity<ApiResponse<Map<Integer, List<ArchivoResponseDTO>>>> getBatch(
             @RequestParam(value = "entityType", required = false) TipoCatalogoProducto entityType,
@@ -85,6 +100,11 @@ public class FileController {
         return ResponseEntity.ok(ApiResponse.exito(200, "Archivos obtenidos correctamente", archivos));
     }
 
+    /**
+     * Devuelve la imagen de portada (orden más bajo) de cada entidad en {@code ids}.
+     * El resultado es un mapa {@code idEntidad → archivo portada}, pensado para
+     * tarjetas o miniaturas donde solo se necesita una imagen representativa.
+     */
     @GetMapping("/portada")
     public ResponseEntity<ApiResponse<Map<Integer, ArchivoResponseDTO>>> getPortada(
             @RequestParam(value = "entityType", required = false) TipoCatalogoProducto entityType,
@@ -96,12 +116,17 @@ public class FileController {
         return ResponseEntity.ok(ApiResponse.exito(200, "Portadas obtenidas correctamente", portadas));
     }
 
+    /** Devuelve los datos de un archivo específico por su ID. */
     @GetMapping("/{idArchivo}")
     public ResponseEntity<ApiResponse<ArchivoResponseDTO>> getOne(@PathVariable Integer idArchivo) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Archivo encontrado",
                 archivoService.getOne(idArchivo)));
     }
 
+    /**
+     * Cambia el número de orden de un archivo dentro de su módulo, lo que controla
+     * la posición en que se muestra en galerías (el orden 1 es la portada).
+     */
     @PatchMapping("/orden")
     public ResponseEntity<ApiResponse<ArchivoResponseDTO>> actualizarOrden(
             @Valid @RequestBody CambiarOrdenRequestDTO dto) {
@@ -111,6 +136,7 @@ public class FileController {
         return ResponseEntity.ok(ApiResponse.exito(200, "Orden actualizado correctamente", actualizado));
     }
 
+    /** Elimina un archivo de Cloudinary y su registro en base de datos. */
     @DeleteMapping("/{idArchivo}")
     public ResponseEntity<Void> delete(@PathVariable Integer idArchivo) {
         archivoService.delete(idArchivo);
