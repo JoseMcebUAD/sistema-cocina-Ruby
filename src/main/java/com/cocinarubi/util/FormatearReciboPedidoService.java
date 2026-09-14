@@ -36,7 +36,7 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
                 if (precioComp != null && precioComp.compareTo(BigDecimal.ZERO) != 0) {
                     lineas.addAll(formatearItemConPrecio(nombreCompl, FORMATO_PRECIO.format(precioComp), anchoEfectivo));
                 } else {
-                    lineas.add(nombreCompl);
+                    lineas.addAll(dividirTexto(nombreCompl, anchoEfectivo));
                 }
             }
         }

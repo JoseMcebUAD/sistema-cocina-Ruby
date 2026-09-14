@@ -93,8 +93,8 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         if (desayunos == null || desayunos.isEmpty()) return;
         for (DesayunoPedidoResponseDTO d : desayunos) {
             String precio = FORMATO_PRECIO.format(d.getPrecio());
-            for (String linea : formatter.formatearDetalleOrden(d.getNombreDesayuno(), precio)) {
-                escpos.writeLF(subtitleStyle,linea);
+            for (String linea : formatter.formatearDetalleOrden(d.getNombreDesayuno(), precio, anchoEfectivo)) {
+                escpos.writeLF(subtitleStyle, linea);
             }
         }
     }
@@ -116,7 +116,7 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
             String descripcion = p.getCantidad() + "x " + p.getNombreProducto();
             String precio = FORMATO_PRECIO.format(
                     p.getPrecioUnitario().multiply(java.math.BigDecimal.valueOf(p.getCantidad())));
-            for (String linea : formatter.formatearDetalleOrden(descripcion, precio)) {
+            for (String linea : formatter.formatearDetalleOrden(descripcion, precio, anchoEfectivo)) {
                 escpos.writeLF(subtitleStyle, linea);
             }
         }
