@@ -161,9 +161,15 @@ public class PedidoWebService extends PedidoService {
     private void verificarVentanaEdicion(int id) {
         Pedido pedido = pedidoRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Pedido no encontrado", HttpStatus.NOT_FOUND));
-        if (pedido.getFechaExpedicionPedido().isBefore(LocalDateTime.now().minusMinutes(5))) {
+
+        LocalDateTime ahora = LocalDateTime.now(Constants.ZONA_MERIDA);
+        LocalDateTime creacion = pedido.getFechaExpedicionPedido();
+        long minutosTranscurridos = java.time.Duration.between(creacion, ahora).toMinutes();
+
+        if (minutosTranscurridos >= 5) {
             throw new BusinessException(
-                    "No es posible modificar el pedido despues de 5 minutos de su creacion",
+                    "No es posible modificar el pedido: han pasado " + minutosTranscurridos
+                            + " minutos desde su creación (límite: 5 minutos)",
                     HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }

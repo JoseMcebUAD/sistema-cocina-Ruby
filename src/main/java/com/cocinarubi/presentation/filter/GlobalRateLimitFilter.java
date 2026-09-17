@@ -19,13 +19,19 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class GlobalRateLimitFilter extends OncePerRequestFilter {
 
-    private static final int MAX_POR_IP = 20;
+    // Endpoints administrativos y otros: 12 req / 10s por IP
+    private static final int MAX_POR_IP = 12;
+    // Endpoints publicos web (carrito, menu): 30 req / 10s por IP.
+    // Se levanta porque el frontend hace muchas peticiones paralelas al cargar (rutas, menu, imagenes).
+    private static final int MAX_POR_IP_WEB = 30;
     private static final int MAX_LOGIN_GLOBAL = 50;
     private static final Duration VENTANA = Duration.ofSeconds(10);
     private static final String LOGIN_PATH = "/auth/login";
     private static final String FINGERPRINT_HEADER = "X-Fingerprint";
 
+    // Presupuestos independientes: consumir la app web no gasta el presupuesto general y viceversa
     private final ConcurrentHashMap<String, Bucket> bucketsPorIp = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Bucket> bucketsPorIpWeb = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Bucket> bucketsPorHuella = new ConcurrentHashMap<>();
     private final Bucket bucketGlobalLogin = crearBucket(MAX_LOGIN_GLOBAL);
     private final ObjectMapper objectMapper;
@@ -66,7 +72,11 @@ public class GlobalRateLimitFilter extends OncePerRequestFilter {
         }
 
         String ip = IpUtils.obtenerIp(request);
-        Bucket bucketIp = bucketsPorIp.computeIfAbsent(ip, k -> crearBucket(MAX_POR_IP));
+        boolean esRutaPublicaWeb = esRutaPublicaWeb(request.getRequestURI());
+        int capacidad = esRutaPublicaWeb ? MAX_POR_IP_WEB : MAX_POR_IP;
+        ConcurrentHashMap<String, Bucket> mapa = esRutaPublicaWeb ? bucketsPorIpWeb : bucketsPorIp;
+
+        Bucket bucketIp = mapa.computeIfAbsent(ip, k -> crearBucket(capacidad));
         ConsumptionProbe ipProbe = bucketIp.tryConsumeAndReturnRemaining(1);
 
         if (!ipProbe.isConsumed()) {
@@ -77,6 +87,10 @@ public class GlobalRateLimitFilter extends OncePerRequestFilter {
 
         response.setHeader("X-RateLimit-Remaining", String.valueOf(ipProbe.getRemainingTokens()));
         filterChain.doFilter(request, response);
+    }
+
+    private boolean esRutaPublicaWeb(String uri) {
+        return uri != null && (uri.startsWith("/web/") || uri.startsWith("/menu-web/"));
     }
 
     private void responder429(HttpServletResponse response, long nanosToWait, String mensaje)
