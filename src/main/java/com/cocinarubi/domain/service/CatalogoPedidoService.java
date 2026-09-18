@@ -140,8 +140,8 @@ public class CatalogoPedidoService {
      *
      * <p>Sin límite (null): usa el precio del catálogo para cada complemento, comportamiento original.
      * Con límite: el frontend envía los precios calculados respetando la regla de slots gratuitos
-     * (cobrar_siempre consume slots y siempre tiene precio; los no-cobrar en exceso deben tener precio).
-     * El servidor valida coherencia antes de persistir.
+     * (cobrar_siempre NO consume slots y siempre tiene precio; solo los no-cobrar consumen slots,
+     * y los no-cobrar en exceso del límite deben tener precio). El servidor valida coherencia antes de persistir.
      */
     private void agregarComplementosConLimite(ComidaPedido item,
                                                List<ComplementoPedidoDTO> dtos,
@@ -161,11 +161,10 @@ public class CatalogoPedidoService {
             complementos.add(complementoService.findById(dto.getIdComplemento()));
         }
 
-        // Calcular cuántos no-cobrar pueden ser gratuitos y cuántos deben tener precio
+        // Solo los complementos no-cobrar consumen slots; los cobrar_siempre son independientes del límite
         long countSiempre = complementos.stream().filter(Complemento::isCobrarSiempre).count();
-        long slotsLibres = Math.max(0L, limite - countSiempre);
         long countNoCobrar = complementos.size() - countSiempre;
-        long exceso = Math.max(0L, countNoCobrar - slotsLibres);
+        long exceso = Math.max(0L, countNoCobrar - (long) limite);
 
         if (exceso > 0) {
             long noCobrarConPrecio = 0;

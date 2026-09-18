@@ -144,11 +144,11 @@ public class CatalogoPedidoServiceTest {
     }
 
     @Test
-    @DisplayName("agregarComidas - Escenario del plan: límite=3, 2 cobrar_siempre + 2 no_cobrar, 1 con precio → ok")
-    public void agregarComidas_conLimite_escenario_del_plan_validacionOk() {
-        // 2 cobrar_siempre consumen 2 de los 3 slots → slotsLibres=1
-        // 2 no_cobrar → exceso=1 → se necesita al menos 1 con precio
-        // comp3 lleva precio (el de exceso), comp4 no lleva (el gratuito) → ok
+    @DisplayName("agregarComidas - límite=3, 2 cobrar_siempre + 2 no_cobrar: cobrar_siempre NO consume slots → los 2 no_cobrar caben en el límite sin precio")
+    public void agregarComidas_conLimite_cobrarSiempreNoConsumeSlots_ok() {
+        // Los cobrar_siempre no cuentan contra el límite; solo los no_cobrar consumen slots.
+        // límite=3 y solo hay 2 no_cobrar → exceso=0 → ambos pueden ir gratuitos.
+        // Los cobrar_siempre siempre deben llevar su precio.
         when(comidaService.findById(1)).thenReturn(comida(3));
         when(complementoService.findById(1)).thenReturn(complemento(1, true,  BigDecimal.valueOf(5)));
         when(complementoService.findById(2)).thenReturn(complemento(2, true,  BigDecimal.valueOf(5)));
@@ -159,20 +159,21 @@ public class CatalogoPedidoServiceTest {
         assertDoesNotThrow(() ->
                 catalogoPedidoService.agregarComidas(pedido,
                         List.of(lineaCon(List.of(
-                                compDto(1, BigDecimal.valueOf(5)),  // cobrar_siempre, con precio
-                                compDto(2, BigDecimal.valueOf(5)),  // cobrar_siempre, con precio
-                                compDto(3, BigDecimal.valueOf(3)),  // no_cobrar, con precio (el que excede)
-                                compDto(4, null))))));              // no_cobrar, sin precio (el gratuito)
-        System.out.println("[OK] límite=3, 2 cobrar_siempre + 2 no_cobrar (1 con precio) pasa validación");
+                                compDto(1, BigDecimal.valueOf(5)),  // cobrar_siempre, con precio (obligatorio)
+                                compDto(2, BigDecimal.valueOf(5)),  // cobrar_siempre, con precio (obligatorio)
+                                compDto(3, null),                    // no_cobrar, gratuito (dentro del límite)
+                                compDto(4, null))))));              // no_cobrar, gratuito (dentro del límite)
+        System.out.println("[OK] límite=3, 2 cobrar_siempre + 2 no_cobrar gratuitos pasa validación");
     }
 
     @Test
-    @DisplayName("agregarComidas - Exceso con insuficientes precios lanza BusinessException con mensaje 'Al menos N'")
+    @DisplayName("agregarComidas - Exceso de no_cobrar sobre el límite sin precios suficientes lanza BusinessException con mensaje 'Al menos N'")
     public void agregarComidas_conLimite_exceso_sinPrecioSuficiente_lanzaError() {
-        // Misma config que el escenario del plan pero ningún no-cobrar lleva precio
-        when(comidaService.findById(1)).thenReturn(comida(3));
+        // límite=2 y 3 no_cobrar → exceso=1: al menos 1 no_cobrar debe llevar precio.
+        // Los cobrar_siempre no consumen slots pero siguen incluidos para probar que no afectan el cálculo del exceso.
+        when(comidaService.findById(1)).thenReturn(comida(2));
         when(complementoService.findById(1)).thenReturn(complemento(1, true,  BigDecimal.valueOf(5)));
-        when(complementoService.findById(2)).thenReturn(complemento(2, true,  BigDecimal.valueOf(5)));
+        when(complementoService.findById(2)).thenReturn(complemento(2, false, BigDecimal.valueOf(3)));
         when(complementoService.findById(3)).thenReturn(complemento(3, false, BigDecimal.valueOf(3)));
         when(complementoService.findById(4)).thenReturn(complemento(4, false, BigDecimal.valueOf(3)));
 
@@ -180,10 +181,10 @@ public class CatalogoPedidoServiceTest {
         BusinessException ex = assertThrows(BusinessException.class, () ->
                 catalogoPedidoService.agregarComidas(pedido,
                         List.of(lineaCon(List.of(
-                                compDto(1, BigDecimal.valueOf(5)),
-                                compDto(2, BigDecimal.valueOf(5)),
-                                compDto(3, null),
-                                compDto(4, null))))));
+                                compDto(1, BigDecimal.valueOf(5)),  // cobrar_siempre (no consume slot)
+                                compDto(2, null),                    // no_cobrar sin precio
+                                compDto(3, null),                    // no_cobrar sin precio
+                                compDto(4, null))))));              // no_cobrar sin precio → exceso=1 sin precios suficientes
         assertTrue(ex.getMessage().contains("Al menos 1"));
         System.out.println("[OK] exceso sin precios suficientes lanza: " + ex.getMessage());
     }
