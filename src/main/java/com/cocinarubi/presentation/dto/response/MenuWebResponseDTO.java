@@ -14,6 +14,7 @@ public class MenuWebResponseDTO {
     private List<DesayunoMenuItemDTO> desayunos;
     private List<PaqueteResponseDTO> paquetes;
     private List<CategoriaMenuDTO> categorias;
+    private List<ComplementoResponseDTO> complementos;
 
     public MenuWebResponseDTO() {}
 
@@ -21,12 +22,14 @@ public class MenuWebResponseDTO {
                                List<BasicoResponseDTO> basicos,
                                List<DesayunoMenuItemDTO> desayunos,
                                List<PaqueteResponseDTO> paquetes,
-                               List<CategoriaMenuDTO> categorias) {
+                               List<CategoriaMenuDTO> categorias,
+                               List<ComplementoResponseDTO> complementos) {
         this.comidas = comidas;
         this.basicos = basicos;
         this.desayunos = desayunos;
         this.paquetes = paquetes;
         this.categorias = categorias;
+        this.complementos = complementos;
     }
 
     public List<ComidaMenuItemDTO> getComidas() { return comidas; }
@@ -43,4 +46,7 @@ public class MenuWebResponseDTO {
 
     public List<CategoriaMenuDTO> getCategorias() { return categorias; }
     public void setCategorias(List<CategoriaMenuDTO> categorias) { this.categorias = categorias; }
+
+    public List<ComplementoResponseDTO> getComplementos() { return complementos; }
+    public void setComplementos(List<ComplementoResponseDTO> complementos) { this.complementos = complementos; }
 }

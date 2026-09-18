@@ -3,11 +3,13 @@ package com.cocinarubi.domain.service.web;
 import com.cocinarubi.DBConstants.Estatus;
 import com.cocinarubi.dao.BasicoRepository;
 import com.cocinarubi.dao.ComidaRepository;
+import com.cocinarubi.dao.ComplementoRepository;
 import com.cocinarubi.dao.DesayunoRepository;
 import com.cocinarubi.dao.ProductoCocinaRepository;
 import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.Categoria;
 import com.cocinarubi.domain.entity.Comida;
+import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.domain.entity.Desayuno;
 import com.cocinarubi.domain.entity.ProductoCocina;
 import com.cocinarubi.domain.interfaces.IMenuWebService;
@@ -50,17 +52,20 @@ public class MenuWebService implements IMenuWebService {
     private final DesayunoRepository desayunoRepository;
     private final PaqueteService paqueteService;
     private final ProductoCocinaRepository productoCocinaRepository;
+    private final ComplementoRepository complementoRepository;
 
     public MenuWebService(ComidaRepository comidaRepository,
                           BasicoRepository basicoRepository,
                           DesayunoRepository desayunoRepository,
                           PaqueteService paqueteService,
-                          ProductoCocinaRepository productoCocinaRepository) {
+                          ProductoCocinaRepository productoCocinaRepository,
+                          ComplementoRepository complementoRepository) {
         this.comidaRepository = comidaRepository;
         this.basicoRepository = basicoRepository;
         this.desayunoRepository = desayunoRepository;
         this.paqueteService = paqueteService;
         this.productoCocinaRepository = productoCocinaRepository;
+        this.complementoRepository = complementoRepository;
     }
 
     @Override
@@ -84,7 +89,20 @@ public class MenuWebService implements IMenuWebService {
 
         List<CategoriaMenuDTO> categorias = buildCategorias();
 
-        return new MenuWebResponseDTO(comidas, basicos, desayunos, paquetes, categorias);
+        // ComplementoRepository: lista todos los complementos DISPONIBLE ordenados alfabéticamente
+        List<ComplementoResponseDTO> complementos = complementoRepository
+                .findDisponiblesOrdenados(Estatus.DISPONIBLE)
+                .stream().map(this::toComplementoDTO).collect(Collectors.toList());
+
+        return new MenuWebResponseDTO(comidas, basicos, desayunos, paquetes, categorias, complementos);
+    }
+
+    private ComplementoResponseDTO toComplementoDTO(Complemento c) {
+        return new ComplementoResponseDTO(
+                c.getIdComplemento(),
+                c.getNombreComplemento(),
+                c.getPrecioExtra(),
+                c.isCobrarSiempre());
     }
 
     /**
@@ -121,7 +139,8 @@ public class MenuWebService implements IMenuWebService {
                 .map(bc -> new ComplementoResponseDTO(
                         bc.getComplemento().getIdComplemento(),
                         bc.getComplemento().getNombreComplemento(),
-                        bc.getComplemento().getPrecioExtra()))
+                        bc.getComplemento().getPrecioExtra(),
+                        bc.getComplemento().isCobrarSiempre()))
                 .collect(Collectors.toList());
         return new BasicoResponseDTO(
                 b.getIdBasico(),
