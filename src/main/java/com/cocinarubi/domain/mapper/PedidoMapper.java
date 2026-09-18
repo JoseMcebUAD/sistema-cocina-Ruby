@@ -141,7 +141,8 @@ public class PedidoMapper {
                     return new ComplementoResponseDTO(
                             comp != null ? comp.getIdComplemento() : null,
                             comp != null ? comp.getNombreComplemento() : "(eliminado)",
-                            ccp.getPrecioUnitario());
+                            ccp.getPrecioUnitario(),
+                            comp != null && comp.isCobrarSiempre());
                 })
                 .collect(Collectors.toList());
         // id_comida puede ser NULL (SET NULL) si la comida fue eliminada
@@ -191,7 +192,8 @@ public class PedidoMapper {
                     .map(bc -> new ComplementoResponseDTO(
                             bc.getComplemento().getIdComplemento(),
                             bc.getComplemento().getNombreComplemento(),
-                            bc.getComplemento().getPrecioExtra()))
+                            bc.getComplemento().getPrecioExtra(),
+                            bc.getComplemento().isCobrarSiempre()))
                     .collect(Collectors.toList());
             // id_comida puede ser NULL (SET NULL) si la comida fue eliminada del catálogo
             var comida = b.getComida();

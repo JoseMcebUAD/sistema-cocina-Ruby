@@ -153,7 +153,8 @@ public class BasicoService {
                 .map(bc -> new ComplementoResponseDTO(
                         bc.getComplemento().getIdComplemento(),
                         bc.getComplemento().getNombreComplemento(),
-                        bc.getComplemento().getPrecioExtra()))
+                        bc.getComplemento().getPrecioExtra(),
+                        bc.getComplemento().isCobrarSiempre()))
                 .collect(Collectors.toList());
         return new BasicoResponseDTO(
                 basico.getIdBasico(),
