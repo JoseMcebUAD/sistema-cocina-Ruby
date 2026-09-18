@@ -11,6 +11,10 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -29,9 +33,19 @@ public class PedidoRestTest {
     private int testProductoId;
     private int testRegistroClienteId;
     private int testRutaId;
+    private int testComidaLimiteId;
+    private final List<Integer> testComplementosSinCobrarIds = new ArrayList<>();
+    private final List<Integer> testComplementosConCobrarIds = new ArrayList<>();
     private int createdCocinaPickUpId;
     private int createdCocinaDomicilioId;
     private int createdSinMetodoPagoId;
+    private int createdComidaLimiteId;
+
+    private static final int LIMITE_COMPLEMENTO = 2;
+    private static final int COMPLEMENTOS_CON_COBRAR = 2;
+    private static final double PRECIO_SIN_COBRAR = 8.00;
+    private static final double PRECIO_CON_COBRAR = 12.00;
+    private static final double PRECIO_COMIDA_ENTERA = 90.00;
 
     @BeforeAll
     void setUp() throws Exception {
@@ -86,9 +100,72 @@ public class PedidoRestTest {
         );
         testProductoId = mapper.readTree(productoResp.getBody()).get("data").get("idProductoCocina").asInt();
 
+        // Comida con límite de complementos para probar la regla de cobrar_siempre + no_cobrar
+        String comidaJson = String.format(Locale.US, """
+                {
+                  "uuidComida": "test-uuid-comida-limite",
+                  "nombreComida": "Comida Test Limite",
+                  "descripcion": "Comida para probar límite de complementos con cobrar_siempre",
+                  "precioMedia": 55.00,
+                  "precioEntera": %.2f,
+                  "estatus": "DISPONIBLE",
+                  "destacado": false,
+                  "limiteComplemento": %d
+                }
+                """, PRECIO_COMIDA_ENTERA, LIMITE_COMPLEMENTO);
+        ResponseEntity<String> comidaResp = restTemplate.exchange(
+                "/comida", HttpMethod.POST, new HttpEntity<>(comidaJson, authHeaders), String.class
+        );
+        testComidaLimiteId = mapper.readTree(comidaResp.getBody()).get("data").get("idComida").asInt();
+
+        // LIMITE_COMPLEMENTO complementos sin cobrar (llenan todos los slots gratuitos)
+        for (int i = 0; i < LIMITE_COMPLEMENTO; i++) {
+            String compJson = String.format(Locale.US, """
+                    {
+                      "uuidComplemento": "test-uuid-sin-cobrar-%d",
+                      "nombreComplemento": "SinCobrar %d",
+                      "descripcion": "Complemento sin cobrar",
+                      "precioExtra": %.2f,
+                      "estatus": "DISPONIBLE",
+                      "destacado": false,
+                      "cobrarSiempre": false
+                    }
+                    """, i, i, PRECIO_SIN_COBRAR);
+            ResponseEntity<String> compResp = restTemplate.exchange(
+                    "/complemento", HttpMethod.POST, new HttpEntity<>(compJson, authHeaders), String.class
+            );
+            testComplementosSinCobrarIds.add(
+                    mapper.readTree(compResp.getBody()).get("data").get("idComplemento").asInt()
+            );
+        }
+
+        // COMPLEMENTOS_CON_COBRAR complementos cobrar_siempre (no consumen slots)
+        for (int i = 0; i < COMPLEMENTOS_CON_COBRAR; i++) {
+            String compJson = String.format(Locale.US, """
+                    {
+                      "uuidComplemento": "test-uuid-con-cobrar-%d",
+                      "nombreComplemento": "ConCobrar %d",
+                      "descripcion": "Complemento cobrar_siempre",
+                      "precioExtra": %.2f,
+                      "estatus": "DISPONIBLE",
+                      "destacado": true,
+                      "cobrarSiempre": true
+                    }
+                    """, i, i, PRECIO_CON_COBRAR);
+            ResponseEntity<String> compResp = restTemplate.exchange(
+                    "/complemento", HttpMethod.POST, new HttpEntity<>(compJson, authHeaders), String.class
+            );
+            testComplementosConCobrarIds.add(
+                    mapper.readTree(compResp.getBody()).get("data").get("idComplemento").asInt()
+            );
+        }
+
         System.out.println("[SETUP] productoId=" + testProductoId
                 + " clienteId=" + testRegistroClienteId
-                + " rutaId=" + testRutaId);
+                + " rutaId=" + testRutaId
+                + " comidaLimiteId=" + testComidaLimiteId
+                + " sinCobrar=" + testComplementosSinCobrarIds
+                + " conCobrar=" + testComplementosConCobrarIds);
     }
 
     @AfterAll
@@ -101,6 +178,18 @@ public class PedidoRestTest {
         }
         if (createdSinMetodoPagoId > 0) {
             restTemplate.exchange("/pedido/" + createdSinMetodoPagoId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
+        }
+        if (createdComidaLimiteId > 0) {
+            restTemplate.exchange("/pedido/" + createdComidaLimiteId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
+        }
+        for (Integer idComplemento : testComplementosSinCobrarIds) {
+            restTemplate.exchange("/complemento/" + idComplemento, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
+        }
+        for (Integer idComplemento : testComplementosConCobrarIds) {
+            restTemplate.exchange("/complemento/" + idComplemento, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
+        }
+        if (testComidaLimiteId > 0) {
+            restTemplate.exchange("/comida/" + testComidaLimiteId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
         }
         if (testProductoId > 0) {
             restTemplate.exchange("/producto-cocina/" + testProductoId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
@@ -413,5 +502,72 @@ public class PedidoRestTest {
         JsonNode body = mapper.readTree(response.getBody());
         assertTrue(body.get("message").asText().contains("domicilio"));
         System.out.println("[OK] WEB+DOMICILIO sin domicilio → 400: " + body.get("message").asText());
+    }
+
+    @Test
+    @Order(12)
+    @DisplayName("POST /pedido - Comida con límite=X: X sin_cobrar + 2 cobrar_siempre no debe rebasar el límite (cobrar_siempre no consume slots)")
+    public void save_comidaLimite_conCobrarSiempreNoConsumeSlots() throws Exception {
+        StringBuilder complementosJson = new StringBuilder();
+        // X sin_cobrar dentro del límite → precio 0 (gratuitos)
+        for (int i = 0; i < testComplementosSinCobrarIds.size(); i++) {
+            if (complementosJson.length() > 0) complementosJson.append(",");
+            complementosJson.append(String.format(
+                    "{\"idComplemento\": %d, \"precio_unitario\": 0.00}",
+                    testComplementosSinCobrarIds.get(i)
+            ));
+        }
+        // 2 cobrar_siempre → NO consumen slots, deben llevar el precio del catálogo
+        for (Integer idComp : testComplementosConCobrarIds) {
+            if (complementosJson.length() > 0) complementosJson.append(",");
+            complementosJson.append(String.format(Locale.US,
+                    "{\"idComplemento\": %d, \"precio_unitario\": %.2f}",
+                    idComp, PRECIO_CON_COBRAR
+            ));
+        }
+
+        String json = String.format(Locale.US, """
+                {
+                  "metodoPagoPrincipal": "EFECTIVO",
+                  "tipoPedido": "MOSTRADOR",
+                  "pedidoCreadoDesde": "COCINA",
+                  "pagoCliente": 200.00,
+                  "nombreCliente": "Test Limite Complementos",
+                  "comidas": [
+                    {
+                      "idComida": %d,
+                      "precioUnitario": %.2f,
+                      "tamanoPorcion": "ENTERA",
+                      "complementos": [%s]
+                    }
+                  ],
+                  "desayunos": [],
+                  "basicos": [],
+                  "productosCocina": [],
+                  "saltarConfirmacion": true
+                }
+                """, testComidaLimiteId, PRECIO_COMIDA_ENTERA, complementosJson);
+
+        ResponseEntity<String> response = this.restTemplate.exchange(
+                "/pedido", HttpMethod.POST, new HttpEntity<>(json, authHeaders), String.class
+        );
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode(),
+                "Se esperaba 201 pero fue " + response.getStatusCode() + " body=" + response.getBody());
+        JsonNode data = mapper.readTree(response.getBody()).get("data");
+        createdComidaLimiteId = data.get("idPedido").asInt();
+        assertTrue(createdComidaLimiteId > 0);
+
+        // precio esperado = comida + Σ complementos cobrar_siempre (los sin_cobrar van a 0)
+        double precioEsperado = PRECIO_COMIDA_ENTERA + (COMPLEMENTOS_CON_COBRAR * PRECIO_CON_COBRAR);
+        assertEquals(precioEsperado, data.get("precioFinalOrden").asDouble(),
+                "Total incorrecto: cobrar_siempre debe sumar aunque no consuma slots");
+
+        JsonNode complementosResp = data.get("comidas").get(0).get("complementos");
+        assertEquals(LIMITE_COMPLEMENTO + COMPLEMENTOS_CON_COBRAR, complementosResp.size());
+        System.out.println("[OK] limite=" + LIMITE_COMPLEMENTO
+                + " + " + LIMITE_COMPLEMENTO + " sin_cobrar + " + COMPLEMENTOS_CON_COBRAR
+                + " cobrar_siempre → 201 id=" + createdComidaLimiteId
+                + " total=" + data.get("precioFinalOrden").asDouble());
     }
 }
