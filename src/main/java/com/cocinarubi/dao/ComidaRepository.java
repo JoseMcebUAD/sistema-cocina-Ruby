@@ -23,7 +23,10 @@ public interface ComidaRepository extends JpaRepository<Comida, Integer> {
     @Query("SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END FROM Basico b WHERE b.comida.idComida = :id")
     boolean existsEnBasicos(@Param("id") int id);
 
-    @Query("SELECT c FROM Comida c WHERE c.estatus = :estatus ORDER BY c.nombreComida ASC")
+    @Query("SELECT DISTINCT c FROM Comida c " +
+           "LEFT JOIN FETCH c.complementosPredeterminados cp " +
+           "LEFT JOIN FETCH cp.complemento " +
+           "WHERE c.estatus = :estatus ORDER BY c.nombreComida ASC")
     List<Comida> findDisponiblesOrdenados(@Param("estatus") DBConstants.Estatus estatus);
 
     @Query(value = "SELECT c FROM Comida c WHERE c.estatus = :estatus ORDER BY c.destacado DESC, c.nombreComida ASC",
