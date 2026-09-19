@@ -16,6 +16,7 @@ public class DesayunoMenuItemDTO {
     private BigDecimal precioMedia;
     private BigDecimal precioEntera;
     private boolean destacado;
+    private String urlImagen;
 
     public DesayunoMenuItemDTO() {}
 
@@ -50,4 +51,7 @@ public class DesayunoMenuItemDTO {
 
     public boolean isDestacado() { return destacado; }
     public void setDestacado(boolean destacado) { this.destacado = destacado; }
+
+    public String getUrlImagen() { return urlImagen; }
+    public void setUrlImagen(String urlImagen) { this.urlImagen = urlImagen; }
 }

@@ -17,6 +17,7 @@ public class BasicoResponseDTO {
     private Estatus estatus;
     private List<ComplementoResponseDTO> complementos;
     private int totalComplementos;
+    private String urlImagen;
 
     public BasicoResponseDTO() {}
 
@@ -68,4 +69,7 @@ public class BasicoResponseDTO {
 
     public int getTotalComplementos() { return totalComplementos; }
     public void setTotalComplementos(int totalComplementos) { this.totalComplementos = totalComplementos; }
+
+    public String getUrlImagen() { return urlImagen; }
+    public void setUrlImagen(String urlImagen) { this.urlImagen = urlImagen; }
 }

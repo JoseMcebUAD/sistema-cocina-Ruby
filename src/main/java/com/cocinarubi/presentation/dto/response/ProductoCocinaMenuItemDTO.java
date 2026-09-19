@@ -16,6 +16,7 @@ public class ProductoCocinaMenuItemDTO {
     private BigDecimal precioDomicilio;
     private BigDecimal precioNormal;
     private boolean destacado;
+    private String urlImagen;
 
     public ProductoCocinaMenuItemDTO() {}
 
@@ -51,4 +52,7 @@ public class ProductoCocinaMenuItemDTO {
 
     public boolean isDestacado() { return destacado; }
     public void setDestacado(boolean destacado) { this.destacado = destacado; }
+
+    public String getUrlImagen() { return urlImagen; }
+    public void setUrlImagen(String urlImagen) { this.urlImagen = urlImagen; }
 }
