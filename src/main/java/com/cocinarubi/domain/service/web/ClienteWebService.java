@@ -79,7 +79,7 @@ public class ClienteWebService implements IClienteWebService {
     @Transactional(readOnly = true)
     public List<RutaWebResponseDTO> rutas() {
         return rutaRepository.findAll().stream()
-                .filter(r -> r.isActive())
+                .filter(r -> r.isActive() && !"General".equalsIgnoreCase(r.getNombre()))
                 .map(r -> RutaWebResponseDTO.builder()
                         .idRuta(r.getIdRuta())
                         .uuidRuta(r.getUuidRuta())
