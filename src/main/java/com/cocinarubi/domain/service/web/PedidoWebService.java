@@ -86,7 +86,7 @@ public class PedidoWebService extends PedidoService {
     @Transactional
     public PedidoResponseDTO save(PedidoRequestDTO dto) {
         verificarTokenWeb(dto);
-        verificarHorarioModalidad(dto.getTipoPedido());
+        verificarHorarioModalidad(dto);
         verificarUbicacionDomicilio(dto);
         return super.save(dto);
     }
@@ -96,24 +96,43 @@ public class PedidoWebService extends PedidoService {
     public PedidoResponseDTO update(int id, PedidoRequestDTO dto) {
         verificarTokenWeb(dto);
         verificarVentanaEdicion(id);
-        verificarHorarioModalidad(dto.getTipoPedido());
+        verificarHorarioModalidad(dto);
         verificarUbicacionDomicilio(dto);
         return super.update(id, dto);
     }
 
     /**
-     * Valida que la modalidad solicitada (domicilio o pick-up) esté dentro del horario COMIDAS
-     * configurado en {@code HorarioAtencion} para el día actual en la zona horaria de Mérida.
-     * Lanza {@link BusinessException} si el servicio está cerrado, sin horario registrado o
-     * la hora actual cae fuera de la ventana configurada.
+     * Valida el horario de atención según los tipos de ítem que contiene el pedido.
+     * Si el pedido lleva desayunos verifica el turno DESAYUNO; si lleva comidas verifica
+     * COMIDAS; si lleva ambos verifica los dos turnos. Ítems neutros (básicos, productos
+     * cocina, paquetes) sin desayunos ni comidas se validan contra COMIDAS por defecto.
      */
-    private void verificarHorarioModalidad(TipoPedido tipoPedido) {
+    private void verificarHorarioModalidad(PedidoRequestDTO dto) {
         ZonedDateTime ahora = ZonedDateTime.now(Constants.ZONA_MERIDA);
         String diaSemana = DIA_SEMANA.get(ahora.getDayOfWeek());
         LocalTime horaActual = ahora.toLocalTime();
 
+        boolean tieneDesayunos = !dto.getDesayunos().isEmpty();
+        boolean tieneComidas = !dto.getComidas().isEmpty();
+
+        if (tieneDesayunos) {
+            verificarTurno(TipoHorario.DESAYUNO, diaSemana, horaActual, dto.getTipoPedido());
+        }
+        if (tieneComidas || !tieneDesayunos) {
+            verificarTurno(TipoHorario.COMIDAS, diaSemana, horaActual, dto.getTipoPedido());
+        }
+    }
+
+    /**
+     * Consulta el registro {@code HorarioAtencion} para el tipo y día dados y lanza
+     * {@link BusinessException} si el turno no existe, está cerrado o la hora actual
+     * cae fuera de la ventana configurada.
+     */
+    private void verificarTurno(TipoHorario tipoHorario, String diaSemana,
+                                 LocalTime horaActual, TipoPedido tipoPedido) {
+        // HorarioAtencionRepository: busca el turno del día para el tipo de horario indicado
         HorarioAtencion horario = horarioRepo
-                .findByTipoHorarioAndDiaSemana(TipoHorario.COMIDAS, diaSemana)
+                .findByTipoHorarioAndDiaSemana(tipoHorario, diaSemana)
                 .orElseThrow(() -> new BusinessException(
                         "No hay servicio de " + tipoPedido.name().toLowerCase() + " disponible hoy",
                         HttpStatus.UNPROCESSABLE_ENTITY));
