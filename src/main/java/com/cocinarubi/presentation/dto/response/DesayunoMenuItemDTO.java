@@ -9,6 +9,7 @@ import java.math.BigDecimal;
  */
 public class DesayunoMenuItemDTO {
 
+    private Integer idDesayuno;
     private String uuidDesayuno;
     private String nombreDesayuno;
     private String descripcion;
@@ -18,8 +19,9 @@ public class DesayunoMenuItemDTO {
 
     public DesayunoMenuItemDTO() {}
 
-    public DesayunoMenuItemDTO(String uuidDesayuno, String nombreDesayuno, String descripcion,
+    public DesayunoMenuItemDTO(Integer idDesayuno, String uuidDesayuno, String nombreDesayuno, String descripcion,
                                 BigDecimal precioMedia, BigDecimal precioEntera, boolean destacado) {
+        this.idDesayuno = idDesayuno;
         this.uuidDesayuno = uuidDesayuno;
         this.nombreDesayuno = nombreDesayuno;
         this.descripcion = descripcion;
@@ -27,6 +29,9 @@ public class DesayunoMenuItemDTO {
         this.precioEntera = precioEntera;
         this.destacado = destacado;
     }
+
+    public Integer getIdDesayuno() { return idDesayuno; }
+    public void setIdDesayuno(Integer idDesayuno) { this.idDesayuno = idDesayuno; }
 
     public String getUuidDesayuno() { return uuidDesayuno; }
     public void setUuidDesayuno(String uuidDesayuno) { this.uuidDesayuno = uuidDesayuno; }

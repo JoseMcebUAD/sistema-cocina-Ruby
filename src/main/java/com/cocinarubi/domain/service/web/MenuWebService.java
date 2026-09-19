@@ -125,6 +125,7 @@ public class MenuWebService implements IMenuWebService {
 
     private ComidaMenuItemDTO toComidaDTO(Comida c) {
         return new ComidaMenuItemDTO(
+                c.getIdComida(),
                 c.getUuidComida(),
                 c.getNombreComida(),
                 c.getDescripcion(),
@@ -156,6 +157,7 @@ public class MenuWebService implements IMenuWebService {
 
     private DesayunoMenuItemDTO toDesayunoDTO(Desayuno d) {
         return new DesayunoMenuItemDTO(
+                d.getIdDesayuno(),
                 d.getUuidDesayuno(),
                 d.getNombreDesayuno(),
                 d.getDescripcion(),
@@ -166,6 +168,7 @@ public class MenuWebService implements IMenuWebService {
 
     private ProductoCocinaMenuItemDTO toProductoCocinaDTO(ProductoCocina pc) {
         return new ProductoCocinaMenuItemDTO(
+                pc.getIdProductoCocina(),
                 pc.getUuidProductoCocina(),
                 pc.getNombreProducto(),
                 pc.getDescripcion(),

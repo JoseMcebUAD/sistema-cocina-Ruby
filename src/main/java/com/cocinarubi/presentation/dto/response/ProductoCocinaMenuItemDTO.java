@@ -9,6 +9,7 @@ import java.math.BigDecimal;
  */
 public class ProductoCocinaMenuItemDTO {
 
+    private Integer idProductoCocina;
     private String uuidProductoCocina;
     private String nombreProducto;
     private String descripcion;
@@ -18,9 +19,10 @@ public class ProductoCocinaMenuItemDTO {
 
     public ProductoCocinaMenuItemDTO() {}
 
-    public ProductoCocinaMenuItemDTO(String uuidProductoCocina, String nombreProducto,
+    public ProductoCocinaMenuItemDTO(Integer idProductoCocina, String uuidProductoCocina, String nombreProducto,
                                       String descripcion, BigDecimal precioDomicilio,
                                       BigDecimal precioNormal, boolean destacado) {
+        this.idProductoCocina = idProductoCocina;
         this.uuidProductoCocina = uuidProductoCocina;
         this.nombreProducto = nombreProducto;
         this.descripcion = descripcion;
@@ -28,6 +30,9 @@ public class ProductoCocinaMenuItemDTO {
         this.precioNormal = precioNormal;
         this.destacado = destacado;
     }
+
+    public Integer getIdProductoCocina() { return idProductoCocina; }
+    public void setIdProductoCocina(Integer idProductoCocina) { this.idProductoCocina = idProductoCocina; }
 
     public String getUuidProductoCocina() { return uuidProductoCocina; }
     public void setUuidProductoCocina(String uuidProductoCocina) { this.uuidProductoCocina = uuidProductoCocina; }
