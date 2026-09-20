@@ -87,6 +87,9 @@ public class ClienteWebService implements IClienteWebService {
                         .active(r.isActive())
                         .tarifaEnvio(r.getTarifaEnvio())
                         .idOrdenRuta(r.getOrdenRuta() != null ? r.getOrdenRuta().getIdOrdenRuta() : null)
+                        // OrdenRuta: ventana horaria de reparto del grupo
+                        .horaLlegadaDesde(r.getOrdenRuta() != null ? r.getOrdenRuta().getHoraLlegadaDesde() : null)
+                        .horaLlegadaHasta(r.getOrdenRuta() != null ? r.getOrdenRuta().getHoraLlegadaHasta() : null)
                         .build())
                 .toList();
     }
@@ -102,6 +105,9 @@ public class ClienteWebService implements IClienteWebService {
                         .active(r.isActive())
                         .tarifaEnvio(r.getTarifaEnvio())
                         .idOrdenRuta(r.getOrdenRuta() != null ? r.getOrdenRuta().getIdOrdenRuta() : null)
+                        // OrdenRuta: ventana horaria de reparto del grupo
+                        .horaLlegadaDesde(r.getOrdenRuta() != null ? r.getOrdenRuta().getHoraLlegadaDesde() : null)
+                        .horaLlegadaHasta(r.getOrdenRuta() != null ? r.getOrdenRuta().getHoraLlegadaHasta() : null)
                         .build())
                 .toList();
     }
