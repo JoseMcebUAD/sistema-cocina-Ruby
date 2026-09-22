@@ -1,11 +1,14 @@
 package com.cocinarubi.presentation.security;
 
 import com.cocinarubi.dao.ClienteRepository;
+import com.cocinarubi.domain.service.JwtDenylistService;
 import com.cocinarubi.presentation.filter.ClienteSessionFilter;
 import com.cocinarubi.presentation.filter.CorrelationFilter;
 import com.cocinarubi.presentation.filter.GlobalRateLimitFilter;
 import com.cocinarubi.presentation.filter.LoginRateLimitFilter;
 import com.cocinarubi.presentation.filter.PedidoWebRateLimitFilter;
+import com.cocinarubi.presentation.filter.WebCsrfFilter;
+import com.cocinarubi.util.IpUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,17 +44,23 @@ public class SecurityConfig {
     private final EntryPointNoAutorizado entryPointNoAutorizado;
     private final ManejadorAccesoDenegado manejadorAccesoDenegado;
     private final ObjectMapper objectMapper;
+    private final IpUtils ipUtils;
+    private final JwtDenylistService jwtDenylistService;
 
     public SecurityConfig(JwtService jwtService,
                           UsuarioDetailsService usuarioDetailsService,
                           EntryPointNoAutorizado entryPointNoAutorizado,
                           ManejadorAccesoDenegado manejadorAccesoDenegado,
-                          ObjectMapper objectMapper) {
+                          ObjectMapper objectMapper,
+                          IpUtils ipUtils,
+                          JwtDenylistService jwtDenylistService) {
         this.jwtService = jwtService;
         this.usuarioDetailsService = usuarioDetailsService;
         this.entryPointNoAutorizado = entryPointNoAutorizado;
         this.manejadorAccesoDenegado = manejadorAccesoDenegado;
         this.objectMapper = objectMapper;
+        this.ipUtils = ipUtils;
+        this.jwtDenylistService = jwtDenylistService;
     }
 
     // ── Filtros registrados como @Bean (NO como @Component) ─────────────────
@@ -60,7 +69,7 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtService, usuarioDetailsService);
+        return new JwtAuthenticationFilter(jwtService, usuarioDetailsService, jwtDenylistService);
     }
 
     @Bean
@@ -70,22 +79,27 @@ public class SecurityConfig {
 
     @Bean
     public LoginRateLimitFilter loginRateLimitFilter() {
-        return new LoginRateLimitFilter(objectMapper);
+        return new LoginRateLimitFilter(objectMapper, ipUtils);
     }
 
     @Bean
     public GlobalRateLimitFilter globalRateLimitFilter() {
-        return new GlobalRateLimitFilter(objectMapper);
+        return new GlobalRateLimitFilter(objectMapper, ipUtils);
     }
 
     @Bean
     public PedidoWebRateLimitFilter pedidoWebRateLimitFilter() {
-        return new PedidoWebRateLimitFilter(objectMapper);
+        return new PedidoWebRateLimitFilter(objectMapper, ipUtils);
     }
 
     @Bean
     public ClienteSessionFilter clienteSessionFilter(ClienteRepository clienteRepository) {
         return new ClienteSessionFilter(clienteRepository, objectMapper);
+    }
+
+    @Bean
+    public WebCsrfFilter webCsrfFilter() {
+        return new WebCsrfFilter(objectMapper);
     }
 
     @Bean
@@ -105,7 +119,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   ClienteSessionFilter clienteSessionFilter) throws Exception {
+                                                   ClienteSessionFilter clienteSessionFilter,
+                                                   WebCsrfFilter webCsrfFilter) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
@@ -116,6 +131,11 @@ public class SecurityConfig {
                     .contentTypeOptions(Customizer.withDefaults())
                     .referrerPolicy(referrer ->
                             referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
+                    // HSTS: fuerza HTTPS por 1 año, incluye subdominios y habilita preload
+                    .httpStrictTransportSecurity(hsts -> hsts
+                            .includeSubDomains(true)
+                            .maxAgeInSeconds(31536000)
+                            .preload(true))
             )
             .authenticationProvider(authenticationProvider())
             .authorizeHttpRequests(auth -> auth
@@ -179,10 +199,11 @@ public class SecurityConfig {
                     .anyRequest().denyAll()
             )
 
-            // ── Orden: GlobalRateLimit → PedidoWebRateLimit → LoginRateLimit → Correlation → ClienteSession → JWT → Spring ──
+            // ── Orden: GlobalRateLimit → PedidoWebRateLimit → LoginRateLimit → Correlation → WebCsrf → ClienteSession → JWT → Spring ──
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(clienteSessionFilter, JwtAuthenticationFilter.class)
-            .addFilterBefore(correlationFilter(), ClienteSessionFilter.class)
+            .addFilterBefore(webCsrfFilter, ClienteSessionFilter.class)
+            .addFilterBefore(correlationFilter(), WebCsrfFilter.class)
             .addFilterBefore(loginRateLimitFilter(), CorrelationFilter.class)
             .addFilterBefore(pedidoWebRateLimitFilter(), LoginRateLimitFilter.class)
             .addFilterBefore(globalRateLimitFilter(), PedidoWebRateLimitFilter.class)
