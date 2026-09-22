@@ -1,5 +1,8 @@
 package com.cocinarubi.presentation.security;
 
+import com.cocinarubi.domain.service.JwtDenylistService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,10 +20,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UsuarioDetailsService usuarioDetailsService;
+    private final JwtDenylistService jwtDenylistService;
 
-    public JwtAuthenticationFilter(JwtService jwtService, UsuarioDetailsService usuarioDetailsService) {
+    public JwtAuthenticationFilter(JwtService jwtService,
+                                   UsuarioDetailsService usuarioDetailsService,
+                                   JwtDenylistService jwtDenylistService) {
         this.jwtService = jwtService;
         this.usuarioDetailsService = usuarioDetailsService;
+        this.jwtDenylistService = jwtDenylistService;
     }
 
     @Override
@@ -51,20 +58,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (jwtService.esTokenValido(token, userDetails)) {
-            autenticar(userDetails, request);
-            response.setHeader("Authorization", "Bearer " + jwtService.renovarToken(token));
-
-        } else if (jwtService.estaEnVentanaDeRenovacion(token)) {
-            autenticar(userDetails, request);
-            response.setHeader("Authorization", "Bearer " + jwtService.renovarToken(token));
-
-        } else {
+        // Rechaza tokens revocados por logout (persisten en Redis hasta su expiracion natural)
+        String jti = extraerJti(token);
+        if (jti != null && jwtDenylistService.estaRevocado(jti)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
+        // esTokenValido cubre firma, expiracion, subject y tokenVersion del usuario
+        if (!jwtService.esTokenValido(token, userDetails)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        autenticar(userDetails, request);
+        // Renueva el token solo si esta valido; si expiro habra 401 y el frontend fuerza re-login
+        response.setHeader("Authorization", "Bearer " + jwtService.renovarToken(token));
+
         filterChain.doFilter(request, response);
+    }
+
+    /** Extrae el {@code jti} incluso si el token esta expirado; devuelve null si la firma es invalida. */
+    private String extraerJti(String token) {
+        try {
+            Claims claims = jwtService.extraerClaimsAunqueExpirado(token);
+            return claims != null ? claims.getId() : null;
+        } catch (JwtException e) {
+            return null;
+        }
     }
 
     private void autenticar(UserDetails userDetails, HttpServletRequest request) {

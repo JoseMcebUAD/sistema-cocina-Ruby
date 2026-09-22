@@ -87,12 +87,12 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
             throw new BadCredentialsException("Token JWT inválido");
         }
 
-        if (!jwtService.estaEnVentanaDeRenovacion(token)) {
-            log.warn("STOMP CONNECT rechazado: token expirado definitivamente. session={} username={}", sessionId, username);
-            throw new BadCredentialsException("Token JWT expirado");
-        }
-
         UserDetails userDetails = usuarioDetailsService.loadUserByUsername(username);
+        // esTokenValido rechaza tokens expirados, firma invalida y tokens con version obsoleta
+        if (!jwtService.esTokenValido(token, userDetails)) {
+            log.warn("STOMP CONNECT rechazado: token invalido/expirado. session={} username={}", sessionId, username);
+            throw new BadCredentialsException("Token JWT invalido o expirado");
+        }
         if (!userDetails.isEnabled() || !userDetails.isAccountNonLocked()) {
             log.warn("STOMP CONNECT rechazado: cuenta deshabilitada. session={} username={}", sessionId, username);
             throw new BadCredentialsException("Usuario deshabilitado");
