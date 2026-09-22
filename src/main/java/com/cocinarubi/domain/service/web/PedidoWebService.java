@@ -143,7 +143,7 @@ public class PedidoWebService extends PedidoService {
         HorarioAtencion horario = horarioRepo
                 .findByTipoHorarioAndDiaSemana(tipoHorario, diaSemana)
                 .orElseThrow(() -> new BusinessException(
-                        "No hay servicio de " + tipoPedido.name().toLowerCase() + " disponible hoy",
+                        "No hay servicio de " + nombreLegible(tipoPedido) + " disponible hoy",
                         HttpStatus.UNPROCESSABLE_ENTITY));
 
         if (!horario.isAtendiendo()) {
@@ -157,7 +157,7 @@ public class PedidoWebService extends PedidoService {
 
         if (horaActual.isBefore(inicio) || !horaActual.isBefore(cierre)) {
             throw new BusinessException(
-                    "La modalidad " + tipoPedido.name().toLowerCase()
+                    "La modalidad para " + nombreLegible(tipoPedido)
                             + " no está disponible fuera del horario de atención ("
                             + inicio + " – " + cierre + ")",
                     HttpStatus.UNPROCESSABLE_ENTITY);
@@ -200,6 +200,13 @@ public class PedidoWebService extends PedidoService {
                             + " minutos desde su creación (límite: 5 minutos)",
                     HttpStatus.UNPROCESSABLE_ENTITY);
         }
+    }
+
+    private String nombreLegible(TipoPedido tipo) {
+        return switch (tipo) {
+            case PICK_UP -> "recoger";
+            default -> tipo.name().toLowerCase();
+        };
     }
 
     private void verificarTokenWeb(PedidoRequestDTO dto) {
