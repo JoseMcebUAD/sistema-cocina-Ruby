@@ -5,12 +5,14 @@ import com.cocinarubi.dao.PedidoRepository;
 import com.cocinarubi.dao.RutaRepository;
 import com.cocinarubi.domain.entity.Cliente;
 import com.cocinarubi.domain.interfaces.web.IClienteWebService;
+import com.cocinarubi.domain.interfaces.web.SesionWebResult;
 import com.cocinarubi.domain.mapper.PedidoMapper;
 import com.cocinarubi.domain.service.RutaService;
 import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
 import com.cocinarubi.presentation.dto.web.ClienteWebRequestDTO;
 import com.cocinarubi.presentation.dto.web.ClienteWebResponseDTO;
 import com.cocinarubi.presentation.dto.web.RutaWebResponseDTO;
+import com.cocinarubi.util.HashUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,17 +47,20 @@ public class ClienteWebService implements IClienteWebService {
 
     @Override
     @Transactional
-    public ClienteWebResponseDTO sesion(ClienteWebRequestDTO dto) {
+    public SesionWebResult sesion(ClienteWebRequestDTO dto) {
         String huella = computarHuella(dto);
         Optional<Cliente> existing = clienteRepository.findByUuidCliente(dto.getUuidCliente());
 
         Cliente cliente;
         LocalDateTime now = LocalDateTime.now();
+        // tokenPlano: se emite al cliente solo por cookie HttpOnly; en BD se guarda su hash.
+        String tokenPlano;
 
         if (existing.isEmpty()) {
+            tokenPlano = UUID.randomUUID().toString();
             cliente = Cliente.builder()
                     .uuidCliente(dto.getUuidCliente())
-                    .sessionToken(UUID.randomUUID().toString())
+                    .sessionTokenHash(HashUtils.sha256Hex(tokenPlano))
                     .tokenExpiracion(now.plusDays(7))
                     .huella(huella)
                     .userAgent(dto.getUserAgent())
@@ -63,16 +68,24 @@ public class ClienteWebService implements IClienteWebService {
                     .build();
         } else {
             cliente = existing.get();
-            if (cliente.getTokenExpiracion() == null || cliente.getTokenExpiracion().isBefore(now)) {
-                cliente.setSessionToken(UUID.randomUUID().toString());
+            boolean expirado = cliente.getTokenExpiracion() == null
+                    || cliente.getTokenExpiracion().isBefore(now);
+            if (expirado) {
+                tokenPlano = UUID.randomUUID().toString();
+                cliente.setSessionTokenHash(HashUtils.sha256Hex(tokenPlano));
                 cliente.setTokenExpiracion(now.plusDays(7));
+            } else {
+                // Token vigente: la sesion se prolonga, pero el cliente ya lo tiene en su cookie.
+                // No podemos devolverselo (no lo tenemos en claro); enviamos null para que el
+                // controller no sobrescriba la cookie existente.
+                tokenPlano = null;
             }
             cliente.setHuella(huella);
             cliente.setUserAgent(dto.getUserAgent());
             cliente.setIpAddress(dto.getIpAddress());
         }
 
-        return toResponseDTO(clienteRepository.save(cliente));
+        return new SesionWebResult(toResponseDTO(clienteRepository.save(cliente)), tokenPlano);
     }
 
     @Override
@@ -126,12 +139,8 @@ public class ClienteWebService implements IClienteWebService {
         return ClienteWebResponseDTO.builder()
                 .idCliente(c.getIdCliente())
                 .uuidCliente(c.getUuidCliente())
-                .sessionToken(c.getSessionToken())
                 .tokenExpiracion(c.getTokenExpiracion())
-                .huella(c.getHuella())
                 .codigoCliente(c.getCodigoCliente())
-                .userAgent(c.getUserAgent())
-                .ipAddress(c.getIpAddress())
                 .ubicacionLatitud(c.getUbicacionLatitud())
                 .ubicacionLongitud(c.getUbicacionLongitud())
                 .nombre(c.getNombre())

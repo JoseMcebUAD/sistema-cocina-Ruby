@@ -5,6 +5,13 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * Vista pública del cliente para el flujo web.
+ *
+ * <p>NO incluye {@code sessionToken}, {@code huella}, {@code userAgent} ni
+ * {@code ipAddress}: el token viaja solo por cookie HttpOnly y los otros
+ * son fingerprinting interno que no debe salir al frontend.</p>
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -14,12 +21,8 @@ public class ClienteWebResponseDTO {
 
     private Integer idCliente;
     private String uuidCliente;
-    private String sessionToken;
     private LocalDateTime tokenExpiracion;
-    private String huella;
     private String codigoCliente;
-    private String userAgent;
-    private String ipAddress;
     private BigDecimal ubicacionLatitud;
     private BigDecimal ubicacionLongitud;
     private String nombre;

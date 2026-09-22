@@ -12,11 +12,11 @@ public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
     @Query("SELECT c FROM Cliente c ORDER BY c.idCliente ASC")
     List<Cliente> findAll();
 
-    boolean existsBySessionToken(String sessionToken);
+    boolean existsBySessionTokenHash(String sessionTokenHash);
 
     boolean existsByUuidCliente(String uuidCliente);
 
-    Optional<Cliente> findBySessionToken(String sessionToken);
+    Optional<Cliente> findBySessionTokenHash(String sessionTokenHash);
 
     Optional<Cliente> findByUuidCliente(String uuidCliente);
 }

@@ -45,8 +45,9 @@ public class Cliente {
     @Column(name = "uuid_cliente", nullable = false, length = 45)
     private String uuidCliente;
 
-    @Column(name = "session_token", nullable = false, unique = true, length = 255)
-    private String sessionToken;
+    /** Hash SHA-256 (hex, 64 chars) del token de sesion; el token plano nunca se persiste. */
+    @Column(name = "session_token_hash", nullable = false, unique = true, length = 64)
+    private String sessionTokenHash;
 
     @Column(name = "codigo_cliente", length = 255)
     private String codigoCliente;

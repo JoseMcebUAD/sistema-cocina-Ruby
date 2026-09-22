@@ -72,7 +72,9 @@ public class UsuarioService {
         }
         existente.setRolUsuario(findRol(dto.getIdRol()));
         existente.setNombreUsuario(dto.getNombreUsuario());
+        // Cambiar credenciales invalida todos los JWT vivos del usuario (via claim "ver")
         existente.setContrasena(passwordEncoder.encode(dto.getContrasena()));
+        existente.setTokenVersion(existente.getTokenVersion() + 1);
         return toResponseDTO(usuarioRepository.save(existente));
     }
 
@@ -90,6 +92,7 @@ public class UsuarioService {
         }
         if (payload.containsKey("contrasena")) {
             existente.setContrasena(passwordEncoder.encode((String) payload.get("contrasena")));
+            existente.setTokenVersion(existente.getTokenVersion() + 1);
         }
         if (payload.containsKey("idRol")) {
             // Jackson deserializa números de JSON como Integer o Long; se normaliza con Number
