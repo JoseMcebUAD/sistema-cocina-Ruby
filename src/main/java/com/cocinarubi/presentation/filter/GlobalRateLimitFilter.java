@@ -3,6 +3,8 @@ package com.cocinarubi.presentation.filter;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.util.IpUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
@@ -15,24 +17,34 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public class GlobalRateLimitFilter extends OncePerRequestFilter {
 
     // Endpoints administrativos y otros: 12 req / 10s por IP
     private static final int MAX_POR_IP = 12;
-    // Endpoints publicos web (carrito, menu): 30 req / 10s por IP.
-    // Se levanta porque el frontend hace muchas peticiones paralelas al cargar (rutas, menu, imagenes).
-    private static final int MAX_POR_IP_WEB = 30;
+    // Endpoints publicos web (carrito, menu): 50 req / 10s por IP.
+    // Se levanta porque el frontend hace muchas peticiones paralelas al cargar (rutas, menu, imagenes)
+    // y redes compartidas (familias, oficinas) pueden sumar ~30 req simultáneos en la carga inicial.
+    private static final int MAX_POR_IP_WEB = 50;
     private static final int MAX_LOGIN_GLOBAL = 50;
     private static final Duration VENTANA = Duration.ofSeconds(10);
     private static final String LOGIN_PATH = "/auth/login";
     private static final String FINGERPRINT_HEADER = "X-Fingerprint";
 
-    // Presupuestos independientes: consumir la app web no gasta el presupuesto general y viceversa
-    private final ConcurrentHashMap<String, Bucket> bucketsPorIp = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Bucket> bucketsPorIpWeb = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Bucket> bucketsPorHuella = new ConcurrentHashMap<>();
+    // Presupuestos independientes con TTL y tamaño máximo para prevenir OOM bajo carga masiva
+    private final Cache<String, Bucket> bucketsPorIp = Caffeine.newBuilder()
+            .expireAfterAccess(30, TimeUnit.SECONDS)
+            .maximumSize(50_000)
+            .build();
+    private final Cache<String, Bucket> bucketsPorIpWeb = Caffeine.newBuilder()
+            .expireAfterAccess(30, TimeUnit.SECONDS)
+            .maximumSize(50_000)
+            .build();
+    private final Cache<String, Bucket> bucketsPorHuella = Caffeine.newBuilder()
+            .expireAfterAccess(30, TimeUnit.SECONDS)
+            .maximumSize(100_000)
+            .build();
     private final Bucket bucketGlobalLogin = crearBucket(MAX_LOGIN_GLOBAL);
     private final ObjectMapper objectMapper;
 
@@ -62,7 +74,7 @@ public class GlobalRateLimitFilter extends OncePerRequestFilter {
 
         String huella = request.getHeader(FINGERPRINT_HEADER);
         if (huella != null && !huella.isBlank()) {
-            Bucket bucketHuella = bucketsPorHuella.computeIfAbsent(huella, k -> crearBucket(MAX_POR_IP));
+            Bucket bucketHuella = bucketsPorHuella.get(huella, k -> crearBucket(MAX_POR_IP));
             ConsumptionProbe huellaProbe = bucketHuella.tryConsumeAndReturnRemaining(1);
             if (!huellaProbe.isConsumed()) {
                 responder429(response, huellaProbe.getNanosToWaitForRefill(),
@@ -74,9 +86,9 @@ public class GlobalRateLimitFilter extends OncePerRequestFilter {
         String ip = IpUtils.obtenerIp(request);
         boolean esRutaPublicaWeb = esRutaPublicaWeb(request.getRequestURI());
         int capacidad = esRutaPublicaWeb ? MAX_POR_IP_WEB : MAX_POR_IP;
-        ConcurrentHashMap<String, Bucket> mapa = esRutaPublicaWeb ? bucketsPorIpWeb : bucketsPorIp;
+        Cache<String, Bucket> mapa = esRutaPublicaWeb ? bucketsPorIpWeb : bucketsPorIp;
 
-        Bucket bucketIp = mapa.computeIfAbsent(ip, k -> crearBucket(capacidad));
+        Bucket bucketIp = mapa.get(ip, k -> crearBucket(capacidad));
         ConsumptionProbe ipProbe = bucketIp.tryConsumeAndReturnRemaining(1);
 
         if (!ipProbe.isConsumed()) {

@@ -1,7 +1,10 @@
 package com.cocinarubi.presentation.filter;
 
 import com.cocinarubi.presentation.dto.response.ApiResponse;
+import com.cocinarubi.util.IpUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
@@ -14,7 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public class LoginRateLimitFilter extends OncePerRequestFilter {
 
@@ -22,7 +25,10 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
     private static final int MAX_INTENTOS = 5;
     private static final Duration VENTANA = Duration.ofMinutes(5);
 
-    private final ConcurrentHashMap<String, Bucket> buckets = new ConcurrentHashMap<>();
+    private final Cache<String, Bucket> buckets = Caffeine.newBuilder()
+            .expireAfterAccess(10, TimeUnit.MINUTES)
+            .maximumSize(100_000)
+            .build();
     private final ObjectMapper objectMapper;
 
     public LoginRateLimitFilter(ObjectMapper objectMapper) {
@@ -41,8 +47,8 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        String ip = obtenerIp(request);
-        Bucket bucket = buckets.computeIfAbsent(ip, k -> crearBucket());
+        String ip = IpUtils.obtenerIp(request);
+        Bucket bucket = buckets.get(ip, k -> crearBucket());
         ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
 
         if (probe.isConsumed()) {
@@ -68,11 +74,4 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
                 .build();
     }
 
-    private String obtenerIp(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
-            return xForwardedFor.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
-    }
 }

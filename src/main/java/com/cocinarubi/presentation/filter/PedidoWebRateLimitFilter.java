@@ -3,6 +3,8 @@ package com.cocinarubi.presentation.filter;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.util.IpUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
@@ -18,7 +20,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class PedidoWebRateLimitFilter extends OncePerRequestFilter {
@@ -36,9 +38,19 @@ public class PedidoWebRateLimitFilter extends OncePerRequestFilter {
     private static final int MAX_PEDIDOS_DIA = 3;
     private static final Duration VENTANA_DIA = Duration.ofHours(24);
 
-    private final ConcurrentHashMap<String, Bucket> buckets = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Bucket> bucketsDiarios = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Instant> bloqueados = new ConcurrentHashMap<>();
+    private final Cache<String, Bucket> buckets = Caffeine.newBuilder()
+            .expireAfterAccess(2, TimeUnit.MINUTES)
+            .maximumSize(50_000)
+            .build();
+    private final Cache<String, Bucket> bucketsDiarios = Caffeine.newBuilder()
+            .expireAfterAccess(25, TimeUnit.HOURS)
+            .maximumSize(50_000)
+            .build();
+    // TTL igual a BLOQUEO: la entrada se autoeliminará cuando el bloqueo expire
+    private final Cache<String, Instant> bloqueados = Caffeine.newBuilder()
+            .expireAfterWrite(15, TimeUnit.MINUTES)
+            .maximumSize(10_000)
+            .build();
     private final ObjectMapper objectMapper;
 
     public PedidoWebRateLimitFilter(ObjectMapper objectMapper) {
@@ -62,7 +74,7 @@ public class PedidoWebRateLimitFilter extends OncePerRequestFilter {
         String id = obtenerIdentificador(request);
 
         // Si el cliente esta en el mapa de penalizacion, se rechaza hasta que expire el bloqueo
-        Instant bloqueadoHasta = bloqueados.get(id);
+        Instant bloqueadoHasta = bloqueados.getIfPresent(id);
         if (bloqueadoHasta != null) {
             if (Instant.now().isBefore(bloqueadoHasta)) {
                 long segundosRestantes = Duration.between(Instant.now(), bloqueadoHasta).getSeconds() + 1;
@@ -70,10 +82,10 @@ public class PedidoWebRateLimitFilter extends OncePerRequestFilter {
                         "Has superado el limite de pedidos. Intenta de nuevo en " + segundosRestantes + " segundos.");
                 return;
             }
-            bloqueados.remove(id);
+            bloqueados.invalidate(id);
         }
 
-        Bucket bucket = buckets.computeIfAbsent(id, k -> crearBucketRapido());
+        Bucket bucket = buckets.get(id, k -> crearBucketRapido());
         if (!bucket.tryConsume(1)) {
             // Tokens agotados: se aplica el bloqueo extendido de 15 minutos
             bloqueados.put(id, Instant.now().plus(BLOQUEO));
@@ -85,7 +97,7 @@ public class PedidoWebRateLimitFilter extends OncePerRequestFilter {
         // Bucket diario solo para POST y solo si hay cookie uuid_cliente
         // (evita castigar IPs compartidas en hogares/oficinas con NAT)
         if ("POST".equalsIgnoreCase(request.getMethod()) && id.startsWith("uuid:")) {
-            Bucket bucketDia = bucketsDiarios.computeIfAbsent(id, k -> crearBucketDiario());
+            Bucket bucketDia = bucketsDiarios.get(id, k -> crearBucketDiario());
             ConsumptionProbe probeDia = bucketDia.tryConsumeAndReturnRemaining(1);
             if (!probeDia.isConsumed()) {
                 long segundos = probeDia.getNanosToWaitForRefill() / 1_000_000_000 + 1;
