@@ -45,6 +45,8 @@ public class ClienteWebRestTest {
 
         emptyHeaders = new HttpHeaders();
         emptyHeaders.setContentType(MediaType.APPLICATION_JSON);
+        // WebCsrfFilter: mutaciones a /web/** requieren el header custom para forzar preflight CORS
+        emptyHeaders.add("X-Fingerprint", "test-fp-" + UUID.randomUUID());
 
         // Crear producto de prueba con JWT admin para usarlo en pedidos web
         String productoJson = """
@@ -81,7 +83,7 @@ public class ClienteWebRestTest {
 
     @Test
     @Order(1)
-    @DisplayName("POST /web/sesion - Cliente nuevo debe recibir sessionToken y expiracion a 7 dias")
+    @DisplayName("POST /web/sesion - Cliente nuevo debe recibir session_token por cookie HttpOnly")
     public void sesion_clienteNuevo() throws Exception {
         String json = """
                 {
@@ -104,23 +106,40 @@ public class ClienteWebRestTest {
                 "POST /web/sesion (cliente nuevo) falló. Body: " + response.getBody());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
         assertNotNull(data, "El campo 'data' no está en la respuesta: " + response.getBody());
-        assertNotNull(data.get("sessionToken"), "Falta el campo 'sessionToken' en la respuesta: " + response.getBody());
-        assertFalse(data.get("sessionToken").asText().isBlank(), "El 'sessionToken' no debe estar vacío. Body: " + response.getBody());
+        // El sessionToken ya no viaja en el body por seguridad; se envia por cookie HttpOnly
+        assertNull(data.get("sessionToken"),
+                "sessionToken no debe aparecer en el body — solo por cookie. Body: " + response.getBody());
         assertNotNull(data.get("tokenExpiracion"), "Falta el campo 'tokenExpiracion' en la respuesta: " + response.getBody());
         assertEquals(uuidCliente, data.get("uuidCliente").asText(),
                 "El uuidCliente retornado no coincide. Body: " + response.getBody());
 
-        sessionToken = data.get("sessionToken").asText();
+        sessionToken = extraerSessionTokenDeCookie(response);
+        assertNotNull(sessionToken, "Se esperaba cookie session_token en Set-Cookie. Headers: " + response.getHeaders());
+        assertFalse(sessionToken.isBlank(), "session_token en cookie no debe estar vacío");
+
         webHeaders = new HttpHeaders();
         webHeaders.setBearerAuth(sessionToken);
         webHeaders.setContentType(MediaType.APPLICATION_JSON);
+        webHeaders.add("X-Fingerprint", "test-fp-" + UUID.randomUUID());
 
         System.out.println("[OK] sesion nueva | token=" + sessionToken.substring(0, 8) + "...");
     }
 
+    private String extraerSessionTokenDeCookie(ResponseEntity<String> response) {
+        java.util.List<String> setCookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
+        if (setCookies == null) return null;
+        for (String c : setCookies) {
+            if (c.startsWith("session_token=")) {
+                int end = c.indexOf(';');
+                return end > 0 ? c.substring("session_token=".length(), end) : c.substring("session_token=".length());
+            }
+        }
+        return null;
+    }
+
     @Test
     @Order(2)
-    @DisplayName("POST /web/sesion - Misma UUID debe devolver el mismo sessionToken (token vigente)")
+    @DisplayName("POST /web/sesion - Misma UUID no reemite cookie session_token si el actual sigue vigente")
     public void sesion_clienteExistente_mismToken() throws Exception {
         String json = """
                 {
@@ -143,9 +162,12 @@ public class ClienteWebRestTest {
                 "POST /web/sesion (cliente existente) falló. Body: " + response.getBody());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
         assertNotNull(data, "El campo 'data' no está en la respuesta: " + response.getBody());
-        assertEquals(sessionToken, data.get("sessionToken").asText(),
-                "Se esperaba el mismo sessionToken para UUID existente. Body: " + response.getBody());
-        System.out.println("[OK] sesion existente | mismo token conservado");
+        assertNull(data.get("sessionToken"),
+                "sessionToken no debe aparecer en el body — solo por cookie. Body: " + response.getBody());
+        // Con token vigente el service NO reemite cookie session_token para no rotar innecesariamente
+        assertNull(extraerSessionTokenDeCookie(response),
+                "No se debe reemitir cookie session_token cuando el token vigente aun sirve");
+        System.out.println("[OK] sesion existente | cookie no reemitida");
     }
 
     @Test
@@ -198,14 +220,14 @@ public class ClienteWebRestTest {
 
     @Test
     @Order(6)
-    @DisplayName("GET /web/pedidos/{uuid} - Con token válido debe retornar lista (puede estar vacía)")
+    @DisplayName("GET /web/pedidos - Con token válido debe retornar lista (puede estar vacía)")
     public void ultimosPedidos_conToken() throws Exception {
         ResponseEntity<String> response = restTemplate.exchange(
-                "/web/pedidos/" + uuidCliente, HttpMethod.GET, new HttpEntity<>(webHeaders), String.class
+                "/web/pedidos", HttpMethod.GET, new HttpEntity<>(webHeaders), String.class
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode(),
-                "GET /web/pedidos/" + uuidCliente + " falló. Body: " + response.getBody());
+                "GET /web/pedidos falló. Body: " + response.getBody());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
         assertNotNull(data, "El campo 'data' no está en la respuesta: " + response.getBody());
         assertTrue(data.isArray(), "Se esperaba un array en 'data', tipo recibido: " + data.getNodeType());
@@ -214,10 +236,10 @@ public class ClienteWebRestTest {
 
     @Test
     @Order(7)
-    @DisplayName("GET /web/pedidos/{uuid} - Sin token debe responder 401")
+    @DisplayName("GET /web/pedidos - Sin token debe responder 401")
     public void ultimosPedidos_sinToken() {
         ResponseEntity<String> response = restTemplate.exchange(
-                "/web/pedidos/" + uuidCliente, HttpMethod.GET, new HttpEntity<>(emptyHeaders), String.class
+                "/web/pedidos", HttpMethod.GET, new HttpEntity<>(emptyHeaders), String.class
         );
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode(),
                 "Se esperaba 401 sin token en GET /web/pedidos. Body: " + response.getBody());
@@ -297,14 +319,14 @@ public class ClienteWebRestTest {
 
     @Test
     @Order(10)
-    @DisplayName("GET /web/pedidos/{uuid} - Debe retornar máximo 5 pedidos del cliente")
+    @DisplayName("GET /web/pedidos - Debe retornar máximo 5 pedidos del cliente")
     public void ultimosPedidos_maximo5() throws Exception {
         ResponseEntity<String> response = restTemplate.exchange(
-                "/web/pedidos/" + uuidCliente, HttpMethod.GET, new HttpEntity<>(webHeaders), String.class
+                "/web/pedidos", HttpMethod.GET, new HttpEntity<>(webHeaders), String.class
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode(),
-                "GET /web/pedidos/" + uuidCliente + " (máximo 5) falló. Body: " + response.getBody());
+                "GET /web/pedidos (máximo 5) falló. Body: " + response.getBody());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
         assertNotNull(data, "El campo 'data' no está en la respuesta: " + response.getBody());
         assertTrue(data.isArray(), "Se esperaba un array en 'data', tipo recibido: " + data.getNodeType());
