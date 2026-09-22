@@ -6,6 +6,7 @@ import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.presentation.dto.response.PagoRepartidorPorFechaResponseDTO;
 import com.cocinarubi.presentation.dto.response.PagoRepartidorResponseDTO;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -59,7 +60,7 @@ public class PagoRepartidorController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<PagoRepartidorResponseDTO>> save(
-            @RequestBody PagoRepartidorRequestDTO pagoRepartidor) {
+            @Valid @RequestBody PagoRepartidorRequestDTO pagoRepartidor) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.exito(201, "Pago creado correctamente",
                         pagoRepartidorService.save(pagoRepartidor)));
@@ -67,7 +68,7 @@ public class PagoRepartidorController {
 
     @PutMapping
     public ResponseEntity<ApiResponse<PagoRepartidorResponseDTO>> update(
-            @RequestBody PagoRepartidorRequestDTO pagoRepartidor) {
+            @Valid @RequestBody PagoRepartidorRequestDTO pagoRepartidor) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Pago actualizado correctamente",
                 pagoRepartidorService.update(pagoRepartidor)));
     }
