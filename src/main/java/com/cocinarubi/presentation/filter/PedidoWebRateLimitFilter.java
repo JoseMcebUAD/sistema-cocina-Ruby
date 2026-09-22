@@ -52,9 +52,11 @@ public class PedidoWebRateLimitFilter extends OncePerRequestFilter {
             .maximumSize(10_000)
             .build();
     private final ObjectMapper objectMapper;
+    private final IpUtils ipUtils;
 
-    public PedidoWebRateLimitFilter(ObjectMapper objectMapper) {
+    public PedidoWebRateLimitFilter(ObjectMapper objectMapper, IpUtils ipUtils) {
         this.objectMapper = objectMapper;
+        this.ipUtils = ipUtils;
     }
 
     // Aplica a POST /web/pedidos y PUT /web/pedidos/{id}; el resto pasa sin revision
@@ -124,7 +126,7 @@ public class PedidoWebRateLimitFilter extends OncePerRequestFilter {
                     .orElse(null);
             if (uuid != null) return "uuid:" + uuid;
         }
-        return "ip:" + IpUtils.obtenerIp(request);
+        return "ip:" + ipUtils.obtenerIp(request);
     }
 
     private String formatearEspera(long segundos) {

@@ -30,9 +30,11 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
             .maximumSize(100_000)
             .build();
     private final ObjectMapper objectMapper;
+    private final IpUtils ipUtils;
 
-    public LoginRateLimitFilter(ObjectMapper objectMapper) {
+    public LoginRateLimitFilter(ObjectMapper objectMapper, IpUtils ipUtils) {
         this.objectMapper = objectMapper;
+        this.ipUtils = ipUtils;
     }
 
     @Override
@@ -47,7 +49,7 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        String ip = IpUtils.obtenerIp(request);
+        String ip = ipUtils.obtenerIp(request);
         Bucket bucket = buckets.get(ip, k -> crearBucket());
         ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
 

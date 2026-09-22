@@ -47,9 +47,11 @@ public class GlobalRateLimitFilter extends OncePerRequestFilter {
             .build();
     private final Bucket bucketGlobalLogin = crearBucket(MAX_LOGIN_GLOBAL);
     private final ObjectMapper objectMapper;
+    private final IpUtils ipUtils;
 
-    public GlobalRateLimitFilter(ObjectMapper objectMapper) {
+    public GlobalRateLimitFilter(ObjectMapper objectMapper, IpUtils ipUtils) {
         this.objectMapper = objectMapper;
+        this.ipUtils = ipUtils;
     }
 
     @Override
@@ -83,7 +85,7 @@ public class GlobalRateLimitFilter extends OncePerRequestFilter {
             }
         }
 
-        String ip = IpUtils.obtenerIp(request);
+        String ip = ipUtils.obtenerIp(request);
         boolean esRutaPublicaWeb = esRutaPublicaWeb(request.getRequestURI());
         int capacidad = esRutaPublicaWeb ? MAX_POR_IP_WEB : MAX_POR_IP;
         Cache<String, Bucket> mapa = esRutaPublicaWeb ? bucketsPorIpWeb : bucketsPorIp;
