@@ -23,8 +23,11 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
+import com.cocinarubi.presentation.filter.ClienteSessionFilter;
 import com.cocinarubi.presentation.strategy.strategyImplementation.PedidoConfirmationImp;
 import com.cocinarubi.presentation.strategy.strategyImplementation.PedidoValidationImp;
+import com.cocinarubi.util.HashUtils;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
@@ -85,7 +88,9 @@ public class PedidoWebService extends PedidoService {
     @Override
     @Transactional
     public PedidoResponseDTO save(PedidoRequestDTO dto) {
-        verificarTokenWeb(dto);
+        String uuidAutenticado = verificarTokenWeb(dto);
+        // Evita que el cliente cree pedidos a nombre de otro cliente enviando uuidCliente en el body
+        dto.setUuidCliente(uuidAutenticado);
         sincronizarNombreCliente(dto);
         verificarHorarioModalidad(dto);
         verificarUbicacionDomicilio(dto);
@@ -219,13 +224,21 @@ public class PedidoWebService extends PedidoService {
                     "Este endpoint solo acepta pedidos de origen WEB", HttpStatus.BAD_REQUEST);
         }
 
-        String header = httpRequest.getHeader("Authorization");
-        if (header == null || !header.startsWith("Bearer ")) {
-            throw new BusinessException("Token de sesión requerido", HttpStatus.UNAUTHORIZED);
+        // ClienteSessionFilter ya autentico y expuso el Cliente en el request attribute.
+        // Si esta presente lo usamos directamente y evitamos un lookup adicional.
+        Object attr = httpRequest.getAttribute(ClienteSessionFilter.CLIENTE_ATTR);
+        if (attr instanceof Cliente c && c.getTokenExpiracion() != null
+                && !c.getTokenExpiracion().isBefore(LocalDateTime.now())) {
+            return c.getUuidCliente();
         }
 
-        String token = header.substring(7);
-        Optional<Cliente> clienteOpt = clienteRepository.findBySessionToken(token);
+        // Fallback: si el filtro no corrio (paths cambian, tests), autenticamos aqui.
+        String tokenPlano = extraerTokenPlano();
+        if (tokenPlano == null) {
+            throw new BusinessException("Token de sesión requerido", HttpStatus.UNAUTHORIZED);
+        }
+        // HashUtils: el token en el request es plano; en BD solo vive su hash SHA-256
+        Optional<Cliente> clienteOpt = clienteRepository.findBySessionTokenHash(HashUtils.sha256Hex(tokenPlano));
 
         if (clienteOpt.isEmpty()
                 || clienteOpt.get().getTokenExpiracion() == null
@@ -234,6 +247,24 @@ public class PedidoWebService extends PedidoService {
         }
 
         return clienteOpt.get().getUuidCliente();
+    }
+
+    /** Extrae el token plano desde la cookie {@code session_token} o el header {@code Authorization}. */
+    private String extraerTokenPlano() {
+        if (httpRequest.getCookies() != null) {
+            for (Cookie c : httpRequest.getCookies()) {
+                if (ClienteSessionFilter.SESSION_COOKIE.equals(c.getName())
+                        && c.getValue() != null && !c.getValue().isBlank()) {
+                    return c.getValue();
+                }
+            }
+        }
+        String header = httpRequest.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            String bearer = header.substring(7).trim();
+            if (!bearer.isEmpty()) return bearer;
+        }
+        return null;
     }
 
     /** Verifica que el pedido pertenezca al cliente autenticado antes de permitir la modificación. */

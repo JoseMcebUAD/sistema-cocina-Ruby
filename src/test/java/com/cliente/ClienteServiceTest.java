@@ -6,6 +6,7 @@ import com.cocinarubi.domain.entity.Cliente;
 import com.cocinarubi.domain.service.ClienteService;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.ClienteRequestDTO;
+import com.cocinarubi.util.HashUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,7 +35,7 @@ public class ClienteServiceTest {
     public Cliente CLIENTE_PREPARED = Cliente.builder()
             .idCliente(10)
             .uuidCliente("uuid-cli-10")
-            .sessionToken("token-unico-abc123")
+            .sessionTokenHash(HashUtils.sha256Hex("token-unico-abc123"))
             .codigoCliente("CLI-001")
             .nombre("Juan Pérez")
             .direccionCliente("Calle 52 #216")
@@ -93,7 +94,8 @@ public class ClienteServiceTest {
     @Test
     @DisplayName("save - Debe guardar y retornar el cliente correctamente")
     public void saveCliente() {
-        when(clienteRepository.existsBySessionToken("token-unico-abc123")).thenReturn(false);
+        String hashEsperado = HashUtils.sha256Hex("token-unico-abc123");
+        when(clienteRepository.existsBySessionTokenHash(hashEsperado)).thenReturn(false);
         when(clienteRepository.save(any(Cliente.class))).thenReturn(CLIENTE_PREPARED);
 
         Cliente result = clienteService.save(CLIENTE_DTO);
@@ -107,7 +109,8 @@ public class ClienteServiceTest {
     @Test
     @DisplayName("save - Debe lanzar excepción cuando el sessionToken ya existe")
     public void saveCliente_tokenDuplicado() {
-        when(clienteRepository.existsBySessionToken("token-unico-abc123")).thenReturn(true);
+        String hashEsperado = HashUtils.sha256Hex("token-unico-abc123");
+        when(clienteRepository.existsBySessionTokenHash(hashEsperado)).thenReturn(true);
 
         assertThrows(BusinessException.class, () -> clienteService.save(CLIENTE_DTO));
         verify(clienteRepository, never()).save(any(Cliente.class));
@@ -117,17 +120,18 @@ public class ClienteServiceTest {
     @Test
     @DisplayName("update - Debe actualizar y retornar el cliente correctamente")
     public void updateCliente() {
+        String hashNuevo = HashUtils.sha256Hex("token-modificado-xyz999");
         when(clienteRepository.findById(10)).thenReturn(Optional.of(CLIENTE_PREPARED));
-        when(clienteRepository.existsBySessionToken("token-modificado-xyz999")).thenReturn(false);
+        when(clienteRepository.existsBySessionTokenHash(hashNuevo)).thenReturn(false);
         Cliente actualizado = Cliente.builder().idCliente(10).uuidCliente("uuid-cli-10")
-                .sessionToken("token-modificado-xyz999").nombre("Juan Pérez").build();
+                .sessionTokenHash(hashNuevo).nombre("Juan Pérez").build();
         when(clienteRepository.save(any(Cliente.class))).thenReturn(actualizado);
 
         Cliente result = clienteService.update(10, CLIENTE_DTO_MODIFIED);
 
         assertNotNull(result);
-        assertEquals("token-modificado-xyz999", result.getSessionToken());
-        System.out.println("[OK] update actualizó cliente: sessionToken=" + result.getSessionToken());
+        assertEquals(hashNuevo, result.getSessionTokenHash());
+        System.out.println("[OK] update actualizó cliente: sessionTokenHash=" + result.getSessionTokenHash());
     }
 
     @Test
