@@ -95,7 +95,10 @@ public class PedidoWebService extends PedidoService {
     @Override
     @Transactional
     public PedidoResponseDTO update(int id, PedidoRequestDTO dto) {
-        verificarTokenWeb(dto);
+        String uuidAutenticado = verificarTokenWeb(dto);
+        verificarOwnership(id, uuidAutenticado);
+        // Evita que el cliente cambie el uuidCliente del pedido desde el body
+        dto.setUuidCliente(uuidAutenticado);
         sincronizarNombreCliente(dto);
         verificarVentanaEdicion(id);
         verificarHorarioModalidad(dto);
@@ -209,7 +212,8 @@ public class PedidoWebService extends PedidoService {
         };
     }
 
-    private void verificarTokenWeb(PedidoRequestDTO dto) {
+    /** Valida que el token sea de origen WEB y no esté expirado. Devuelve el UUID del cliente autenticado. */
+    private String verificarTokenWeb(PedidoRequestDTO dto) {
         if (!PedidoCreadoDesde.WEB.equals(dto.getPedidoCreadoDesde())) {
             throw new BusinessException(
                     "Este endpoint solo acepta pedidos de origen WEB", HttpStatus.BAD_REQUEST);
@@ -227,6 +231,17 @@ public class PedidoWebService extends PedidoService {
                 || clienteOpt.get().getTokenExpiracion() == null
                 || clienteOpt.get().getTokenExpiracion().isBefore(LocalDateTime.now())) {
             throw new BusinessException("Token de sesión inválido o expirado", HttpStatus.UNAUTHORIZED);
+        }
+
+        return clienteOpt.get().getUuidCliente();
+    }
+
+    /** Verifica que el pedido pertenezca al cliente autenticado antes de permitir la modificación. */
+    private void verificarOwnership(int id, String uuidAutenticado) {
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Pedido no encontrado", HttpStatus.NOT_FOUND));
+        if (!uuidAutenticado.equals(pedido.getUuidCliente())) {
+            throw new BusinessException("No tienes permiso para modificar este pedido", HttpStatus.FORBIDDEN);
         }
     }
 }

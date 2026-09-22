@@ -7,11 +7,9 @@ public final class IpUtils {
     private IpUtils() {}
 
     public static String obtenerIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip != null && !ip.isBlank()) {
-            return ip.split(",")[0].trim();
-        }
-        ip = request.getHeader("X-Real-IP");
+        // X-Real-IP lo establece nginx con $remote_addr (no manipulable por el cliente).
+        // X-Forwarded-For se descarta: el cliente puede inyectar valores arbitrarios en posición [0].
+        String ip = request.getHeader("X-Real-IP");
         if (ip != null && !ip.isBlank()) {
             return ip.trim();
         }
