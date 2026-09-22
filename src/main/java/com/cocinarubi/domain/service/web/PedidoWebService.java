@@ -86,6 +86,7 @@ public class PedidoWebService extends PedidoService {
     @Transactional
     public PedidoResponseDTO save(PedidoRequestDTO dto) {
         verificarTokenWeb(dto);
+        sincronizarNombreCliente(dto);
         verificarHorarioModalidad(dto);
         verificarUbicacionDomicilio(dto);
         return super.save(dto);
@@ -95,10 +96,18 @@ public class PedidoWebService extends PedidoService {
     @Transactional
     public PedidoResponseDTO update(int id, PedidoRequestDTO dto) {
         verificarTokenWeb(dto);
+        sincronizarNombreCliente(dto);
         verificarVentanaEdicion(id);
         verificarHorarioModalidad(dto);
         verificarUbicacionDomicilio(dto);
         return super.update(id, dto);
+    }
+
+    private void sincronizarNombreCliente(PedidoRequestDTO dto) {
+        String nombre = dto.getNombreCliente();
+        if (nombre == null || nombre.isBlank()) return;
+        clienteRepository.findByUuidCliente(dto.getUuidCliente())
+                .ifPresent(c -> c.setNombre(nombre));
     }
 
     /**
