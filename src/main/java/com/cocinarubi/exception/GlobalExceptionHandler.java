@@ -20,12 +20,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ApiResponse<Void>> manejarRutaNoEncontrada(NoResourceFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(
-                    ApiResponse.error(
-                        404, 
-                        "La ruta solicitada no existe: " + 
-                        ex.getResourcePath())
-                );
+                .body(ApiResponse.error(404, "La ruta solicitada no existe."));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
