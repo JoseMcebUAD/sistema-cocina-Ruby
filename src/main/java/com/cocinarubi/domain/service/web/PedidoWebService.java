@@ -1,14 +1,17 @@
 package com.cocinarubi.domain.service.web;
 
 import com.cocinarubi.Constants;
+import com.cocinarubi.DBConstants.Estatus;
 import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.DBConstants.TipoHorario;
 import com.cocinarubi.DBConstants.TipoPedido;
 import com.cocinarubi.dao.ClienteRepository;
+import com.cocinarubi.dao.CodigoClienteRepository;
 import com.cocinarubi.dao.HorarioAtencionRepository;
 import com.cocinarubi.dao.PedidoRepository;
 import com.cocinarubi.dao.TarifaEspecialRepository;
 import com.cocinarubi.domain.entity.Cliente;
+import com.cocinarubi.domain.entity.CodigoCliente;
 import com.cocinarubi.domain.entity.HorarioAtencion;
 import com.cocinarubi.domain.entity.Pedido;
 import com.cocinarubi.domain.entity.Ruta;
@@ -64,6 +67,7 @@ public class PedidoWebService extends PedidoService {
     private final HorarioAtencionRepository horarioRepo;
     private final RutaService rutaService;
     private final HttpServletRequest httpRequest;
+    private final CodigoClienteRepository codigoClienteRepository;
 
     public PedidoWebService(PedidoRepository pedidoRepository,
                             PedidoValidationImp pedidoValidation,
@@ -75,7 +79,8 @@ public class PedidoWebService extends PedidoService {
                             ClienteRepository clienteRepository,
                             HorarioAtencionRepository horarioRepo,
                             RutaService rutaService,
-                            HttpServletRequest httpRequest) {
+                            HttpServletRequest httpRequest,
+                            CodigoClienteRepository codigoClienteRepository) {
         super(pedidoRepository, pedidoValidation, pedidoConfirmation, pedidoMapper,
                 catalogoPedido, eventPublisher, tarifaEspecialRepository);
         this.pedidoRepository = pedidoRepository;
@@ -83,6 +88,7 @@ public class PedidoWebService extends PedidoService {
         this.horarioRepo = horarioRepo;
         this.rutaService = rutaService;
         this.httpRequest = httpRequest;
+        this.codigoClienteRepository = codigoClienteRepository;
     }
 
     @Override
@@ -94,6 +100,7 @@ public class PedidoWebService extends PedidoService {
         sincronizarNombreCliente(dto);
         verificarHorarioModalidad(dto);
         verificarUbicacionDomicilio(dto);
+        aplicarTarifaCodigoCliente(dto);
         return super.save(dto);
     }
 
@@ -108,6 +115,7 @@ public class PedidoWebService extends PedidoService {
         verificarVentanaEdicion(id);
         verificarHorarioModalidad(dto);
         verificarUbicacionDomicilio(dto);
+        aplicarTarifaCodigoCliente(dto);
         return super.update(id, dto);
     }
 
@@ -192,6 +200,31 @@ public class PedidoWebService extends PedidoService {
                     "La ubicación indicada no se encuentra dentro de la zona de reparto seleccionada",
                     HttpStatus.UNPROCESSABLE_ENTITY);
         }
+    }
+
+    /**
+     * Si el pedido es DOMICILIO y el DTO incluye un código de cliente,
+     * verifica que exista y esté DISPONIBLE, luego sustituye la tarifa del domicilio
+     * por la tarifaEspecial registrada en el código.
+     */
+    private void aplicarTarifaCodigoCliente(PedidoRequestDTO dto) {
+        if (!TipoPedido.DOMICILIO.equals(dto.getTipoPedido())) return;
+        PedidoDomicilioDTO dom = dto.getDomicilio();
+        if (dom == null || dom.getCodigo() == null || dom.getCodigo().isBlank()) return;
+
+        CodigoCliente codigo = codigoClienteRepository.findByCodigoCliente(dom.getCodigo())
+                .orElseThrow(() -> new BusinessException(
+                        "El código de cliente '" + dom.getCodigo() + "' no existe",
+                        HttpStatus.NOT_FOUND));
+
+        if (!Estatus.DISPONIBLE.equals(codigo.getEstatus())) {
+            throw new BusinessException(
+                    "El código de cliente '" + dom.getCodigo() + "' no está disponible",
+                    HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+
+        // CodigoCliente: sustituye la tarifa enviada por el frontend con la tarifa especial del código
+        dom.setTarifa(codigo.getTarifaEspecial());
     }
 
     private void verificarVentanaEdicion(int id) {

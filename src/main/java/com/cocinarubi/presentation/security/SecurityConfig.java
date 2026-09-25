@@ -3,6 +3,7 @@ package com.cocinarubi.presentation.security;
 import com.cocinarubi.dao.ClienteRepository;
 import com.cocinarubi.domain.service.JwtDenylistService;
 import com.cocinarubi.presentation.filter.ClienteSessionFilter;
+import com.cocinarubi.presentation.filter.CodigoClienteWebRateLimitFilter;
 import com.cocinarubi.presentation.filter.CorrelationFilter;
 import com.cocinarubi.presentation.filter.GlobalRateLimitFilter;
 import com.cocinarubi.presentation.filter.LoginRateLimitFilter;
@@ -90,6 +91,11 @@ public class SecurityConfig {
     @Bean
     public PedidoWebRateLimitFilter pedidoWebRateLimitFilter() {
         return new PedidoWebRateLimitFilter(objectMapper, ipUtils);
+    }
+
+    @Bean
+    public CodigoClienteWebRateLimitFilter codigoClienteWebRateLimitFilter() {
+        return new CodigoClienteWebRateLimitFilter(objectMapper, ipUtils);
     }
 
     @Bean
@@ -199,13 +205,14 @@ public class SecurityConfig {
                     .anyRequest().denyAll()
             )
 
-            // ── Orden: GlobalRateLimit → PedidoWebRateLimit → LoginRateLimit → Correlation → WebCsrf → ClienteSession → JWT → Spring ──
+            // ── Orden: GlobalRateLimit → PedidoWebRateLimit → CodigoClienteWebRateLimit → LoginRateLimit → Correlation → WebCsrf → ClienteSession → JWT → Spring ──
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(clienteSessionFilter, JwtAuthenticationFilter.class)
             .addFilterBefore(webCsrfFilter, ClienteSessionFilter.class)
             .addFilterBefore(correlationFilter(), WebCsrfFilter.class)
             .addFilterBefore(loginRateLimitFilter(), CorrelationFilter.class)
-            .addFilterBefore(pedidoWebRateLimitFilter(), LoginRateLimitFilter.class)
+            .addFilterBefore(codigoClienteWebRateLimitFilter(), LoginRateLimitFilter.class)
+            .addFilterBefore(pedidoWebRateLimitFilter(), CodigoClienteWebRateLimitFilter.class)
             .addFilterBefore(globalRateLimitFilter(), PedidoWebRateLimitFilter.class)
 
             .exceptionHandling(ex -> ex

@@ -3,10 +3,12 @@ package com.cocinarubi.presentation.controller.Web;
 import com.cocinarubi.domain.entity.Cliente;
 import com.cocinarubi.domain.interfaces.web.IClienteWebService;
 import com.cocinarubi.domain.interfaces.web.SesionWebResult;
+import com.cocinarubi.domain.service.CodigoClienteService;
 import com.cocinarubi.domain.service.web.PedidoWebService;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
+import com.cocinarubi.presentation.dto.response.CodigoClienteResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
 import com.cocinarubi.presentation.dto.web.ClienteWebRequestDTO;
 import com.cocinarubi.presentation.dto.web.ClienteWebResponseDTO;
@@ -35,10 +37,14 @@ public class ClienteWebController {
 
     private final IClienteWebService clienteWebService;
     private final PedidoWebService pedidoWebService;
+    private final CodigoClienteService codigoClienteService;
 
-    public ClienteWebController(IClienteWebService clienteWebService, PedidoWebService pedidoWebService) {
+    public ClienteWebController(IClienteWebService clienteWebService,
+                                PedidoWebService pedidoWebService,
+                                CodigoClienteService codigoClienteService) {
         this.clienteWebService = clienteWebService;
         this.pedidoWebService = pedidoWebService;
+        this.codigoClienteService = codigoClienteService;
     }
 
     // Inicia o recupera la sesión del cliente; prioriza la cookie existente sobre el UUID del body y la genera si no hay ninguno
@@ -123,6 +129,14 @@ public class ClienteWebController {
         Cliente autenticado = (Cliente) request.getAttribute(ClienteSessionFilter.CLIENTE_ATTR);
         return ResponseEntity.ok(ApiResponse.exito(200, "Pedidos obtenidos correctamente",
                 clienteWebService.ultimosPedidos(autenticado.getUuidCliente())));
+    }
+
+    // Consulta el estatus y la tarifa de un código de cliente especial
+    @GetMapping("/codigo-cliente/{codigo}")
+    public ResponseEntity<ApiResponse<CodigoClienteResponseDTO>> consultarCodigoCliente(
+            @PathVariable String codigo) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Código de cliente encontrado",
+                codigoClienteService.findByCodigoCliente(codigo)));
     }
 
     // Registra un nuevo pedido y retorna 201 con el recurso creado
