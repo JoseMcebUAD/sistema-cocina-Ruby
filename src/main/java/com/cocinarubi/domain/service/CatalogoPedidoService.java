@@ -3,7 +3,9 @@ package com.cocinarubi.domain.service;
 import com.cocinarubi.DBConstants.Estatus;
 import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.dao.BasicoRepository;
+import com.cocinarubi.dao.CodigoClienteRepository;
 import com.cocinarubi.dao.RegistroClienteRepository;
+import com.cocinarubi.domain.entity.CodigoCliente;
 import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.BasicoPedido;
 import com.cocinarubi.domain.entity.Comida;
@@ -66,6 +68,7 @@ public class CatalogoPedidoService {
     private final RutaService rutaService;
     private final RegistroClienteRepository registroClienteRepository;
     private final PaqueteService paqueteService;
+    private final CodigoClienteRepository codigoClienteRepository;
 
     public CatalogoPedidoService(ComidaService comidaService,
                                   DesayunoService desayunoService,
@@ -74,7 +77,8 @@ public class CatalogoPedidoService {
                                   ComplementoService complementoService,
                                   RutaService rutaService,
                                   RegistroClienteRepository registroClienteRepository,
-                                  PaqueteService paqueteService) {
+                                  PaqueteService paqueteService,
+                                  CodigoClienteRepository codigoClienteRepository) {
         this.comidaService = comidaService;
         this.desayunoService = desayunoService;
         this.basicoRepository = basicoRepository;
@@ -83,6 +87,7 @@ public class CatalogoPedidoService {
         this.rutaService = rutaService;
         this.registroClienteRepository = registroClienteRepository;
         this.paqueteService = paqueteService;
+        this.codigoClienteRepository = codigoClienteRepository;
     }
 
     /**
@@ -295,8 +300,10 @@ public class CatalogoPedidoService {
         for (PaquetePedido pp : pedido.getPaquetesPedido()) {
             total = total.add(pp.getPrecioUnitario().multiply(BigDecimal.valueOf(pp.getCantidad())));
         }
-        if (pedido.getPedidoDomicilio() != null && pedido.getPedidoDomicilio().getRuta() != null) {
-            total = total.add(pedido.getPedidoDomicilio().getRuta().getTarifaEnvio());
+        if (pedido.getPedidoDomicilio() != null) {
+            // Usa el snapshot de tarifa guardado en PedidoDomicilio: refleja la tarifaEspecial
+            // del CodigoCliente (si aplica) o la tarifaEnvio de la ruta (flujo normal).
+            total = total.add(pedido.getPedidoDomicilio().getTarifa());
         }
         if (pedido.getPedidoDomicilioCocina() != null) {
             total = total.add(pedido.getPedidoDomicilioCocina().getPrecioTarifa());
@@ -306,13 +313,14 @@ public class CatalogoPedidoService {
 
     private void agregarDomicilio(Pedido pedido, PedidoDomicilioDTO domicilioDto) {
         Ruta ruta = rutaService.findEntityById(domicilioDto.getIdRuta());
+        BigDecimal tarifa = resolverTarifaDomicilio(domicilioDto.getCodigo(), ruta);
         if (pedido.getPedidoDomicilio() != null) {
             // Actualizar en lugar de recrear: PedidoDomicilio también usa @MapsId.
             PedidoDomicilio existente = pedido.getPedidoDomicilio();
             existente.setRuta(ruta);
             existente.setDireccion(domicilioDto.getDireccion());
             existente.setCodigo(domicilioDto.getCodigo());
-            existente.setTarifa(ruta.getTarifaEnvio());
+            existente.setTarifa(tarifa);
             return;
         }
         pedido.setPedidoDomicilio(PedidoDomicilio.builder()
@@ -320,8 +328,24 @@ public class CatalogoPedidoService {
                 .ruta(ruta)
                 .direccion(domicilioDto.getDireccion())
                 .codigo(domicilioDto.getCodigo())
-                .tarifa(ruta.getTarifaEnvio())
+                .tarifa(tarifa)
                 .build());
+    }
+
+    /**
+     * Devuelve la tarifa de envío según el origen del precio:
+     * si el pedido viene con un CodigoCliente, consulta su tarifaEspecial en la BD;
+     * de lo contrario usa la tarifaEnvio de la ruta geográfica.
+     */
+    private BigDecimal resolverTarifaDomicilio(String codigo, Ruta ruta) {
+        if (codigo != null && !codigo.isBlank()) {
+            // CodigoCliente: la tarifa viene del registro del código, no de la ruta General.
+            CodigoCliente codigoEnt = codigoClienteRepository.findByCodigoCliente(codigo)
+                    .orElseThrow(() -> new BusinessException(
+                            "Código de cliente no encontrado: " + codigo, HttpStatus.BAD_REQUEST));
+            return codigoEnt.getTarifaEspecial();
+        }
+        return ruta.getTarifaEnvio();
     }
 
     private void agregarDomicilioCocina(Pedido pedido, PedidoDomicilioCocinaDTO dto) {
