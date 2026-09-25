@@ -99,6 +99,7 @@ public class PedidoWebService extends PedidoService {
         dto.setUuidCliente(uuidAutenticado);
         sincronizarNombreCliente(dto);
         verificarHorarioModalidad(dto);
+        verificarRutaGeneral(dto);
         verificarUbicacionDomicilio(dto);
         aplicarTarifaCodigoCliente(dto);
         return super.save(dto);
@@ -114,6 +115,7 @@ public class PedidoWebService extends PedidoService {
         sincronizarNombreCliente(dto);
         verificarVentanaEdicion(id);
         verificarHorarioModalidad(dto);
+        verificarRutaGeneral(dto);
         verificarUbicacionDomicilio(dto);
         aplicarTarifaCodigoCliente(dto);
         return super.update(id, dto);
@@ -227,6 +229,24 @@ public class PedidoWebService extends PedidoService {
 
         // CodigoCliente: sustituye la tarifa enviada por el frontend con la tarifa especial del código
         dom.setTarifa(codigo.getTarifaEspecial());
+    }
+
+    /**
+     * La ruta "General" está reservada para clientes con código especial.
+     * Rechaza el pedido si se selecciona esa ruta sin haber provisto un código de cliente.
+     */
+    private void verificarRutaGeneral(PedidoRequestDTO dto) {
+        if (!TipoPedido.DOMICILIO.equals(dto.getTipoPedido())) return;
+        PedidoDomicilioDTO dom = dto.getDomicilio();
+        if (dom == null || dom.getIdRuta() == null) return;
+
+        Ruta ruta = rutaService.findEntityById(dom.getIdRuta());
+        if ("General".equalsIgnoreCase(ruta.getNombre())
+                && (dom.getCodigo() == null || dom.getCodigo().isBlank())) {
+            throw new BusinessException(
+                    "La ruta General solo está disponible para clientes con código especial",
+                    HttpStatus.UNPROCESSABLE_ENTITY);
+        }
     }
 
     private void verificarVentanaEdicion(int id) {
