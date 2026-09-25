@@ -189,6 +189,8 @@ public class PedidoWebService extends PedidoService {
         if (!TipoPedido.DOMICILIO.equals(dto.getTipoPedido())) return;
         PedidoDomicilioDTO dom = dto.getDomicilio();
         if (dom == null || dom.getLatitud() == null || dom.getLongitud() == null) return;
+        // Clientes con código especial no están sujetos a validación geográfica por polígono
+        if (dom.getCodigo() != null && !dom.getCodigo().isBlank()) return;
 
         Ruta ruta = rutaService.findEntityById(dom.getIdRuta());
         // JTS: X = longitud, Y = latitud
