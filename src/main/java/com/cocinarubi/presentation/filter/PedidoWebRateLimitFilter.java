@@ -28,15 +28,15 @@ public class PedidoWebRateLimitFilter extends OncePerRequestFilter {
     // POST /web/pedidos  o  PUT /web/pedidos/{id}
     private static final Pattern RUTA_PEDIDOS = Pattern.compile("^/web/pedidos(/\\d+)?$");
 
-    private static final int MAX_PEDIDOS = 3;
+    private static final int MAX_PEDIDOS = 8;
     private static final Duration VENTANA = Duration.ofMinutes(1);
     // Bloqueo extendido al agotar el bucket rapido: Bucket4j no soporta esto nativamente,
     // por eso se usa un mapa de penalizacion separado.
     private static final Duration BLOQUEO = Duration.ofMinutes(15);
 
     // Tope duro diario: 3 pedidos cada 24h con reset de golpe (no goteo)
-    private static final int MAX_PEDIDOS_DIA = 5;
-    private static final Duration VENTANA_DIA = Duration.ofHours(24);
+    private static final int MAX_PEDIDOS_DIA = 8;
+    private static final Duration VENTANA_DIA = Duration.ofHours(12);
 
     private final Cache<String, Bucket> buckets = Caffeine.newBuilder()
             .expireAfterAccess(2, TimeUnit.MINUTES)
