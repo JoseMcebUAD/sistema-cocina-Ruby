@@ -1,8 +1,10 @@
 package com.cocinarubi.domain.mapper;
 
+import com.cocinarubi.dao.ClienteRepository;
 import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.BasicoPedido;
 import com.cocinarubi.DBConstants.TipoLineaPaquete;
+import com.cocinarubi.domain.entity.Cliente;
 import com.cocinarubi.domain.entity.ComidaPedido;
 import com.cocinarubi.domain.entity.DesayunoPedido;
 import com.cocinarubi.domain.entity.Paquete;
@@ -32,8 +34,11 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -52,12 +57,68 @@ import java.util.stream.Collectors;
 public class PedidoMapper {
 
     private final PaqueteService paqueteService;
+    private final ClienteRepository clienteRepository;
 
-    public PedidoMapper(PaqueteService paqueteService) {
+    public PedidoMapper(PaqueteService paqueteService, ClienteRepository clienteRepository) {
         this.paqueteService = paqueteService;
+        this.clienteRepository = clienteRepository;
+    }
+
+    /**
+     * Resuelve el nombre del cliente con la misma precedencia que la vista {@code vista_resumen_pedido}:
+     * {@code COALESCE(pedido_cocina.nombre_cliente, registro_cliente.nombre, cliente.nombre)}.
+     *
+     * <p>Los dos primeros ya viven en las entidades del pedido; el tercero (cliente WEB) solo se
+     * alcanza por {@code uuidCliente}, porque {@link PedidoDomicilio} no modela una relación con
+     * {@code Cliente}. {@code nombresPorUuid} permite pasar esos nombres precargados en lote al
+     * mapear una página; si llega vacío se consulta el uuid suelto, que es el caso de un pedido solo.
+     */
+    private String resolverNombreCliente(Pedido pedido, Map<String, String> nombresPorUuid) {
+        if (pedido.getPedidoCocina() != null && pedido.getPedidoCocina().getNombreCliente() != null) {
+            return pedido.getPedidoCocina().getNombreCliente();
+        }
+        PedidoDomicilioCocina pdc = pedido.getPedidoDomicilioCocina();
+        if (pdc != null && pdc.getRegistroCliente() != null && pdc.getRegistroCliente().getNombre() != null) {
+            return pdc.getRegistroCliente().getNombre();
+        }
+        String uuid = pedido.getUuidCliente();
+        if (uuid == null) return null;
+        if (nombresPorUuid != null && nombresPorUuid.containsKey(uuid)) {
+            return nombresPorUuid.get(uuid);
+        }
+        return clienteRepository.findByUuidCliente(uuid).map(Cliente::getNombre).orElse(null);
+    }
+
+    /**
+     * Nombres de cliente de varios pedidos en una sola consulta, para mapear una página sin N+1.
+     *
+     * <p>Solo pide los uuid que van a necesitar la tabla {@code cliente}: los pedidos que ya traen
+     * el nombre en sus propias entidades (los de cocina) no tocan la consulta.
+     */
+    public Map<String, String> precargarNombresCliente(List<Pedido> pedidos) {
+        Set<String> uuids = pedidos.stream()
+                .filter(p -> p.getPedidoCocina() == null || p.getPedidoCocina().getNombreCliente() == null)
+                .map(Pedido::getUuidCliente)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (uuids.isEmpty()) return Map.of();
+        Map<String, String> nombres = new HashMap<>();
+        // El nombre puede ser NULL en BD, así que no se usa Collectors.toMap (lanza NPE con valor null).
+        for (Object[] fila : clienteRepository.findNombresPorUuids(uuids)) {
+            nombres.put((String) fila[0], (String) fila[1]);
+        }
+        return nombres;
     }
 
     public PedidoResponseDTO toResponseDTO(Pedido pedido) {
+        return toResponseDTO(pedido, null);
+    }
+
+    /**
+     * Variante para mapear en lote: {@code nombresPorUuid} viene de
+     * {@link #precargarNombresCliente(List)} y evita una consulta por pedido.
+     */
+    public PedidoResponseDTO toResponseDTO(Pedido pedido, Map<String, String> nombresPorUuid) {
         List<ComidaPedidoResponseDTO> comidas = pedido.getComidasPedido().stream()
                 .map(this::toComidaPedidoDTO).collect(Collectors.toList());
         List<DesayunoPedidoResponseDTO> desayunos = pedido.getDesayunosPedido().stream()
@@ -95,7 +156,7 @@ public class PedidoMapper {
             cambio = pedido.getPagoCliente().subtract(pedido.getPrecioFinalOrden());
         }
 
-        return new PedidoResponseDTO(
+        PedidoResponseDTO dto = new PedidoResponseDTO(
                 pedido.getIdPedido(),
                 pedido.getMetodoPagoPrincipal(),
                 pedido.getMetodoPagoSecundario(),
@@ -111,6 +172,10 @@ public class PedidoMapper {
                 pedido.getComentario(),
                 comidas, desayunos, basicos, productos, paquetes, domicilio, domicilioCocina, pedidoCocina
         );
+        // Por setter y no por constructor: sumarle un parámetro obligaría a tocar todos los
+        // llamadores y los tests, igual que ocurre con tarifasAplicadas.
+        dto.setNombreCliente(resolverNombreCliente(pedido, nombresPorUuid));
+        return dto;
     }
 
     public PaquetePedidoResponseDTO toPaquetePedidoDTO(PaquetePedido pp,

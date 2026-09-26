@@ -20,6 +20,18 @@ public class PedidoResponseDTO {
     private BigDecimal pagoCliente;
     private BigDecimal cambio;
     private String uuidCliente;
+    /**
+     * Nombre del cliente, ya resuelto sea cual sea el origen del pedido.
+     *
+     * <p>Antes el nombre solo viajaba dentro de {@code pedidoCocina} y {@code domicilioCocina}, que
+     * son null en los pedidos WEB: el frontend recibía únicamente {@code uuidCliente} y acababa
+     * pintando un placeholder ("Cliente f381215f") aunque la BD tuviera el nombre. La vista SQL
+     * {@code vista_resumen_pedido} sí lo resolvía con COALESCE, así que consulta y API no coincidían.
+     *
+     * <p>Se expone en la raíz —y no dentro de {@code domicilio}— porque el hueco no era exclusivo de
+     * los domicilios: WEB + PICK_UP tenía el mismo problema.
+     */
+    private String nombreCliente;
     private boolean pagado;
     private boolean impreso;
     private String comentario;
@@ -100,6 +112,9 @@ public class PedidoResponseDTO {
 
     public String getUuidCliente() { return uuidCliente; }
     public void setUuidCliente(String uuidCliente) { this.uuidCliente = uuidCliente; }
+
+    public String getNombreCliente() { return nombreCliente; }
+    public void setNombreCliente(String nombreCliente) { this.nombreCliente = nombreCliente; }
 
     public boolean isPagado() { return pagado; }
     public void setPagado(boolean pagado) { this.pagado = pagado; }

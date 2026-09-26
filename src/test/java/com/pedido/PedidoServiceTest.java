@@ -3,6 +3,7 @@ package com.pedido;
 import com.cocinarubi.DBConstants.MetodoPago;
 import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.DBConstants.TipoPedido;
+import com.cocinarubi.dao.ClienteRepository;
 import com.cocinarubi.dao.PedidoRepository;
 import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.BasicoComplemento;
@@ -53,13 +54,14 @@ public class PedidoServiceTest {
     @Mock private ApplicationEventPublisher eventPublisher;
     @Mock private TarifaEspecialRepository tarifaEspecialRepository;
     @Mock private PaqueteService paqueteService;
+    @Mock private ClienteRepository clienteRepository;
 
     private PedidoMapper pedidoMapper;
     private PedidoService pedidoService;
 
     @BeforeEach
     void setUp() {
-        pedidoMapper = spy(new PedidoMapper(paqueteService));
+        pedidoMapper = spy(new PedidoMapper(paqueteService, clienteRepository));
         pedidoService = new PedidoService(
                 pedidoRepository, pedidoValidation, pedidoConfirmation,
                 pedidoMapper, catalogoPedido, eventPublisher, tarifaEspecialRepository);

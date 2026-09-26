@@ -4,6 +4,7 @@ import com.cocinarubi.DBConstants;
 import com.cocinarubi.dao.PedidoRepository;
 import com.cocinarubi.dao.VistaResumenPedidoRepository;
 import com.cocinarubi.dao.VistaResumenPedidoRepository.VistaResumenMetricasProjection;
+import com.cocinarubi.domain.entity.Pedido;
 import com.cocinarubi.domain.mapper.PedidoMapper;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * Lógica de negocio para la vista consolidada de pedidos y sus métricas.
@@ -62,9 +64,12 @@ public class VistaResumenPedidoService {
         validarRango(desde, hasta);
 
         // PedidoRepository: pedidos completos con relaciones lazy resueltas dentro de la transacción
-        Page<PedidoResponseDTO> pedidos = pedidoRepository
-                .findByFiltros(desde, hasta, tipoPedido, creadoDesde, pagado, pageable)
-                .map(pedidoMapper::toResponseDTO);
+        Page<Pedido> pagina = pedidoRepository
+                .findByFiltros(desde, hasta, tipoPedido, creadoDesde, pagado, pageable);
+        // Los nombres de los clientes WEB se traen de una sola consulta: resolverlos dentro del
+        // mapper, pedido por pedido, sería un N+1 sobre toda la página.
+        Map<String, String> nombresCliente = pedidoMapper.precargarNombresCliente(pagina.getContent());
+        Page<PedidoResponseDTO> pedidos = pagina.map(p -> pedidoMapper.toResponseDTO(p, nombresCliente));
 
         VistaResumenMetricasProjection m = repository.findMetricasConFiltros(
                 desde, hasta, tipoPedido, creadoDesde, pagado);
