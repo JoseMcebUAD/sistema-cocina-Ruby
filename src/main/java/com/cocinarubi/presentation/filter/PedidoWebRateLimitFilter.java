@@ -35,7 +35,7 @@ public class PedidoWebRateLimitFilter extends OncePerRequestFilter {
     private static final Duration BLOQUEO = Duration.ofMinutes(15);
 
     // Tope duro diario: 3 pedidos cada 24h con reset de golpe (no goteo)
-    private static final int MAX_PEDIDOS_DIA = 3;
+    private static final int MAX_PEDIDOS_DIA = 5;
     private static final Duration VENTANA_DIA = Duration.ofHours(24);
 
     private final Cache<String, Bucket> buckets = Caffeine.newBuilder()
