@@ -1,5 +1,7 @@
 package com.cocinarubi.presentation.dto.response;
 
+import com.cocinarubi.DBConstants.TipoComida;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +21,7 @@ public class ComidaMenuItemDTO {
     private BigDecimal precioEntera;
     private boolean destacado;
     private Integer limiteComplemento;
+    private TipoComida tipoComida;
     private String urlImagen;
     private List<ComplementoPredeterminadoResponseDTO> complementosPredeterminados = new ArrayList<>();
 
@@ -60,6 +63,9 @@ public class ComidaMenuItemDTO {
 
     public Integer getLimiteComplemento() { return limiteComplemento; }
     public void setLimiteComplemento(Integer limiteComplemento) { this.limiteComplemento = limiteComplemento; }
+
+    public TipoComida getTipoComida() { return tipoComida; }
+    public void setTipoComida(TipoComida tipoComida) { this.tipoComida = tipoComida; }
 
     public String getUrlImagen() { return urlImagen; }
     public void setUrlImagen(String urlImagen) { this.urlImagen = urlImagen; }

@@ -62,7 +62,8 @@ public class ComidaRestTest {
                   "precioEntera": 90.00,
                   "estatus": "DISPONIBLE",
                   "destacado": false,
-                  "limiteComplemento": 3
+                  "limiteComplemento": 3,
+                  "tipoComida": "FIJA"
                 }
                 """;
 
@@ -74,6 +75,7 @@ public class ComidaRestTest {
         JsonNode data = mapper.readTree(response.getBody()).get("data");
         createdId = data.get("idComida").asInt();
         assertEquals("Enchiladas Test", data.get("nombreComida").asText());
+        assertEquals("FIJA", data.get("tipoComida").asText());
         assertTrue(data.get("complementosPredeterminados").isArray());
         assertEquals(0, data.get("complementosPredeterminados").size());
         System.out.println("[OK] " + response.getStatusCode() + " | id=" + createdId + " nombre=" + data.get("nombreComida").asText());
@@ -110,7 +112,8 @@ public class ComidaRestTest {
                   "precioEntera": 100.00,
                   "estatus": "DISPONIBLE",
                   "destacado": true,
-                  "limiteComplemento": 3
+                  "limiteComplemento": 3,
+                  "tipoComida": "ESPECIAL"
                 }
                 """.formatted(createdId);
 
@@ -121,6 +124,7 @@ public class ComidaRestTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
         assertEquals("Enchiladas Verdes Actualizadas", data.get("nombreComida").asText());
+        assertEquals("ESPECIAL", data.get("tipoComida").asText());
         assertTrue(data.get("complementosPredeterminados").isArray());
         assertEquals(0, data.get("complementosPredeterminados").size());
         System.out.println("[OK] " + response.getStatusCode() + " | nombre=" + data.get("nombreComida").asText());

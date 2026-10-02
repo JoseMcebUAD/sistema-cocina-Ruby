@@ -1,6 +1,7 @@
 package com.cocinarubi.domain.entity;
 
 import com.cocinarubi.DBConstants.Estatus;
+import com.cocinarubi.DBConstants.TipoComida;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -62,7 +63,11 @@ public class Comida {
     @Column(name = "limite_complemento")
     private Integer limiteComplemento;
 
-    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_comida")
+    private TipoComida tipoComida;
+
+
     @Builder.Default
     @OneToMany(mappedBy = "comida", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<ComplementoPredeterminadoComida> complementosPredeterminados = new java.util.ArrayList<>();

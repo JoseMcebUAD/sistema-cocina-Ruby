@@ -57,4 +57,7 @@ public class DBConstants {
     /** Tipo de operación HTTP registrada en la tabla auditoria. PATCH se mapea como PUT. */
     public enum TipoOperacion { POST, PUT, DELETE }
 
+    /** Clasifica si una comida pertenece al menú fijo del día o es un especial temporal. */
+    public enum TipoComida { FIJA, ESPECIAL }
+
 }
