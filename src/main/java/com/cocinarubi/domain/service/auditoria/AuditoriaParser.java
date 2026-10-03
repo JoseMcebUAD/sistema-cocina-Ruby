@@ -61,6 +61,8 @@ public class AuditoriaParser {
             case "categoria"          -> describirCategoria(accion, despues, antes, id, fecha);
             case "subcategoria"       -> describirSubcategoria(accion, despues, antes, id, fecha);
             case "paquete"            -> describirPaquete(accion, despues, antes, id, fecha);
+            case "producto"           -> describirProducto(accion, despues, antes, id, fecha);
+            case "producto_receta"    -> describirProductoReceta(accion, despues, antes, id, fecha);
             default                   -> accion + " en " + tabla + (id != null ? " #" + id : "");
         };
     }
@@ -78,6 +80,30 @@ public class AuditoriaParser {
                 yield "Se actualizó el paquete '" + desc + "'";
             }
             case DELETE -> "Se eliminó el paquete #" + id;
+        };
+    }
+
+    private String describirProducto(TipoOperacion accion, JsonNode despues, JsonNode antes, Integer id, LocalDateTime fecha) {
+        return switch (accion) {
+            case POST -> {
+                String nombre = textOrElse(despues, "nombre", "desconocido");
+                yield "Se creó el producto '" + nombre + "'";
+            }
+            case PUT -> {
+                String nombreDespues = textOrElse(despues, "nombre", null);
+                String nombreAntes = textOrElse(antes, "nombre", null);
+                String nombre = nombreDespues != null ? nombreDespues : (nombreAntes != null ? nombreAntes : "#" + id);
+                yield "Se actualizó el producto '" + nombre + "'";
+            }
+            case DELETE -> "Se eliminó el producto #" + id;
+        };
+    }
+
+    private String describirProductoReceta(TipoOperacion accion, JsonNode despues, JsonNode antes, Integer id, LocalDateTime fecha) {
+        return switch (accion) {
+            case POST   -> "Se agregó un ingrediente a la receta (#" + id + ")";
+            case PUT    -> "Se actualizó un ingrediente de la receta (#" + id + ")";
+            case DELETE -> "Se eliminó un ingrediente de la receta #" + id;
         };
     }
 

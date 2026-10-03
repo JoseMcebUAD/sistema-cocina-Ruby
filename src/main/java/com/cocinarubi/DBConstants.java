@@ -60,4 +60,8 @@ public class DBConstants {
     /** Clasifica si una comida pertenece al menú fijo del día o es un especial temporal. */
     public enum TipoComida { FIJA, ESPECIAL }
 
+    /** Clasifica cómo se mide un ingrediente: por peso exacto (gramos de sal)
+     *  o por pieza con peso variable (pechuga de pollo, estimada por peso promedio). */
+    public enum TipoMedida { PESO_EXACTO, PIEZA_VARIABLE }
+
 }

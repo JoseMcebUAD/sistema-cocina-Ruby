@@ -67,6 +67,12 @@ public class Comida {
     @Column(name = "tipo_comida")
     private TipoComida tipoComida;
 
+    @Column(name = "descripcion_receta", columnDefinition = "TEXT")
+    private String descripcionReceta;
+
+    @Column(name = "porciones_base")
+    private Integer porcionesBase;
+
 
     @Builder.Default
     @OneToMany(mappedBy = "comida", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
