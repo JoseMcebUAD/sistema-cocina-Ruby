@@ -20,6 +20,10 @@ import java.util.List;
  * <p>El cliente puede agregar {@link ComplementoComidaPedido}s específicos para
  * esta línea, independientemente de los complementos de otras líneas del mismo pedido.</p>
  *
+ * <p>El campo {@code descuento_aplicado} registra el monto descontado por línea cuando aplica
+ * el descuento de volumen (≥ 12 comidas MEDIA + FIJA en el mismo pedido). El precio neto
+ * efectivo de la línea es {@code precioUnitario - descuentoAplicado}.</p>
+ *
  * <p>Relaciones:
  * <ul>
  *   <li>{@code @ManyToOne} LAZY a {@link Pedido} — orden a la que pertenece.</li>
@@ -54,6 +58,10 @@ public class ComidaPedido {
 
     @Column(name = "precio_unitario", precision = 5, scale = 2)
     private BigDecimal precioUnitario;
+
+    @Builder.Default
+    @Column(name = "descuento_aplicado", precision = 7, scale = 2)
+    private BigDecimal descuentoAplicado = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tamano_porcion")

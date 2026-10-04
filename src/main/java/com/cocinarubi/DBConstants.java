@@ -60,4 +60,11 @@ public class DBConstants {
     /** Clasifica si una comida pertenece al menú fijo del día o es un especial temporal. */
     public enum TipoComida { FIJA, ESPECIAL }
 
+    /**
+     * Tipo de descuento automático aplicado a un pedido.
+     * {@code COMIDAS_DIEZ} se activa cuando el pedido contiene ≥ 12 comidas MEDIA + FIJA,
+     * descontando $10 en cada una de esas líneas.
+     */
+    public enum TipoDescuento { COMIDAS_DIEZ }
+
 }

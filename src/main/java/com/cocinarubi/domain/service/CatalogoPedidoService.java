@@ -2,6 +2,9 @@ package com.cocinarubi.domain.service;
 
 import com.cocinarubi.DBConstants.Estatus;
 import com.cocinarubi.DBConstants.PedidoCreadoDesde;
+import com.cocinarubi.DBConstants.TamanoPorcion;
+import com.cocinarubi.DBConstants.TipoComida;
+import com.cocinarubi.DBConstants.TipoDescuento;
 import com.cocinarubi.dao.BasicoRepository;
 import com.cocinarubi.dao.CodigoClienteRepository;
 import com.cocinarubi.dao.RegistroClienteRepository;
@@ -277,10 +280,40 @@ public class CatalogoPedidoService {
         }
     }
 
+    private static final BigDecimal DESCUENTO_COMIDAS_DIEZ = BigDecimal.TEN;
+    private static final int MINIMO_COMIDAS_DESCUENTO = 12;
+
+    /**
+     * Aplica el descuento de volumen al pedido si corresponde.
+     *
+     * <p>Regla: cuando el pedido contiene ≥ 12 líneas de comida con
+     * {@code tamanoPorcion == MEDIA} y {@code comida.tipoComida == FIJA},
+     * se descuentan $10 en cada una de esas líneas y se registra
+     * {@code COMIDAS_DIEZ} en {@link Pedido#getTipoDescuento()}.
+     * Debe invocarse después de {@link #agregarComidas} y antes de
+     * {@link #calcularTotal}.
+     */
+    public void aplicarDescuentoVolumen(Pedido pedido) {
+        // Resetea para re-evaluar correctamente en actualizaciones de pedido
+        pedido.setTipoDescuento(null);
+
+        List<ComidaPedido> calificadas = pedido.getComidasPedido().stream()
+                .filter(cp -> cp.getTamanoPorcion() == TamanoPorcion.MEDIA
+                        && cp.getComida() != null
+                        && cp.getComida().getTipoComida() == TipoComida.FIJA)
+                .toList();
+
+        if (calificadas.size() >= MINIMO_COMIDAS_DESCUENTO) {
+            calificadas.forEach(cp -> cp.setDescuentoAplicado(DESCUENTO_COMIDAS_DIEZ));
+            pedido.setTipoDescuento(TipoDescuento.COMIDAS_DIEZ);
+        }
+    }
+
     public BigDecimal calcularTotal(Pedido pedido) {
         BigDecimal total = BigDecimal.ZERO;
         for (ComidaPedido cp : pedido.getComidasPedido()) {
-            total = total.add(cp.getPrecioUnitario());
+            // descuentoAplicado es $10 por línea cuando aplica el descuento de volumen; cero en caso contrario
+            total = total.add(cp.getPrecioUnitario().subtract(cp.getDescuentoAplicado()));
             for (ComplementoComidaPedido ccp : cp.getComplementos()) {
                 total = total.add(ccp.getPrecioUnitario());
             }

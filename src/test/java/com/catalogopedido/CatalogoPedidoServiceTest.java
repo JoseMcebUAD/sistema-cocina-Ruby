@@ -2,9 +2,13 @@ package com.catalogopedido;
 
 import com.cocinarubi.DBConstants.Estatus;
 import com.cocinarubi.DBConstants.TamanoPorcion;
+import com.cocinarubi.DBConstants.TipoComida;
+import com.cocinarubi.DBConstants.TipoDescuento;
 import com.cocinarubi.dao.BasicoRepository;
+import com.cocinarubi.dao.CodigoClienteRepository;
 import com.cocinarubi.dao.RegistroClienteRepository;
 import com.cocinarubi.domain.entity.Comida;
+import com.cocinarubi.domain.entity.ComidaPedido;
 import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.domain.entity.Paquete;
 import com.cocinarubi.domain.entity.Pedido;
@@ -43,6 +47,7 @@ public class CatalogoPedidoServiceTest {
     @Mock private RutaService rutaService;
     @Mock private RegistroClienteRepository registroClienteRepository;
     @Mock private PaqueteService paqueteService;
+    @Mock private CodigoClienteRepository codigoClienteRepository;
 
     @InjectMocks
     private CatalogoPedidoService catalogoPedidoService;
@@ -261,5 +266,142 @@ public class CatalogoPedidoServiceTest {
         assertTrue(pedido.getPaquetesPedido().isEmpty());
         verifyNoInteractions(paqueteService);
         System.out.println("[OK] agregarPaquetes con lista vacía no interactúa con PaqueteService");
+    }
+
+    // ── Helpers de fixture para descuento de volumen ──────────────────────────
+
+    /** Crea un ComidaPedido listo para usar en pruebas de descuento de volumen. */
+    private ComidaPedido lineaComida(TamanoPorcion porcion, TipoComida tipo) {
+        Comida comida = new Comida();
+        comida.setIdComida(1);
+        comida.setTipoComida(tipo);
+        return ComidaPedido.builder()
+                .comida(comida)
+                .tamanoPorcion(porcion)
+                .precioUnitario(BigDecimal.valueOf(45))
+                .build();
+    }
+
+    /** Construye un Pedido con las líneas de ComidaPedido dadas ya asociadas. */
+    private Pedido pedidoCon(List<ComidaPedido> items) {
+        Pedido pedido = Pedido.builder().build();
+        items.forEach(pedido::addComidaPedido);
+        return pedido;
+    }
+
+    // ── Tests aplicarDescuentoVolumen ─────────────────────────────────────────
+
+    @Test
+    @DisplayName("aplicarDescuentoVolumen - exactamente 12 MEDIA FIJA activa el descuento en todas")
+    public void descuentoVolumen_12MediaFija_aplicaDescuento() {
+        List<ComidaPedido> items = java.util.Collections.nCopies(12,
+                lineaComida(TamanoPorcion.MEDIA, TipoComida.FIJA));
+        Pedido pedido = pedidoCon(new java.util.ArrayList<>(items));
+
+        catalogoPedidoService.aplicarDescuentoVolumen(pedido);
+
+        assertEquals(TipoDescuento.COMIDAS_DIEZ, pedido.getTipoDescuento());
+        pedido.getComidasPedido().forEach(cp ->
+                assertEquals(0, BigDecimal.TEN.compareTo(cp.getDescuentoAplicado()),
+                        "Cada línea debe tener descuentoAplicado=$10"));
+        System.out.println("[OK] 12 MEDIA FIJA → descuento aplicado a todas");
+    }
+
+    @Test
+    @DisplayName("aplicarDescuentoVolumen - 15 MEDIA FIJA aplica $10 en cada una ($150 total)")
+    public void descuentoVolumen_15MediaFija_aplicaDescuentoEnTodas() {
+        List<ComidaPedido> items = new java.util.ArrayList<>();
+        for (int i = 0; i < 15; i++) items.add(lineaComida(TamanoPorcion.MEDIA, TipoComida.FIJA));
+        Pedido pedido = pedidoCon(items);
+
+        catalogoPedidoService.aplicarDescuentoVolumen(pedido);
+
+        assertEquals(TipoDescuento.COMIDAS_DIEZ, pedido.getTipoDescuento());
+        long conDescuento = pedido.getComidasPedido().stream()
+                .filter(cp -> BigDecimal.TEN.compareTo(cp.getDescuentoAplicado()) == 0)
+                .count();
+        assertEquals(15, conDescuento);
+        System.out.println("[OK] 15 MEDIA FIJA → $10 en las 15 = $150 total descontado");
+    }
+
+    @Test
+    @DisplayName("aplicarDescuentoVolumen - 11 MEDIA FIJA + 1 ENTERA FIJA no alcanza el mínimo")
+    public void descuentoVolumen_11MediaFija_1EnteraFija_sinDescuento() {
+        List<ComidaPedido> items = new java.util.ArrayList<>();
+        for (int i = 0; i < 11; i++) items.add(lineaComida(TamanoPorcion.MEDIA,  TipoComida.FIJA));
+        items.add(lineaComida(TamanoPorcion.ENTERA, TipoComida.FIJA));
+        Pedido pedido = pedidoCon(items);
+
+        catalogoPedidoService.aplicarDescuentoVolumen(pedido);
+
+        assertNull(pedido.getTipoDescuento());
+        pedido.getComidasPedido().forEach(cp ->
+                assertEquals(0, BigDecimal.ZERO.compareTo(cp.getDescuentoAplicado()),
+                        "Sin descuento, descuentoAplicado debe ser $0"));
+        System.out.println("[OK] 11 MEDIA + 1 ENTERA → count(MEDIA+FIJA)=11 < 12 → sin descuento");
+    }
+
+    @Test
+    @DisplayName("aplicarDescuentoVolumen - 11 MEDIA FIJA + 1 MEDIA ESPECIAL: count(MEDIA+FIJA)=11 → sin descuento")
+    public void descuentoVolumen_11MediaFija_1MediaEspecial_sinDescuento() {
+        List<ComidaPedido> items = new java.util.ArrayList<>();
+        for (int i = 0; i < 11; i++) items.add(lineaComida(TamanoPorcion.MEDIA, TipoComida.FIJA));
+        items.add(lineaComida(TamanoPorcion.MEDIA, TipoComida.ESPECIAL));
+        Pedido pedido = pedidoCon(items);
+
+        catalogoPedidoService.aplicarDescuentoVolumen(pedido);
+
+        assertNull(pedido.getTipoDescuento());
+        System.out.println("[OK] 11 MEDIA FIJA + 1 MEDIA ESPECIAL → count=11 → sin descuento");
+    }
+
+    @Test
+    @DisplayName("aplicarDescuentoVolumen - 12 medias (11 FIJA + 1 ESPECIAL): count(MEDIA+FIJA)=11 → sin descuento")
+    public void descuentoVolumen_12MediaCon1Especial_sinDescuento() {
+        List<ComidaPedido> items = new java.util.ArrayList<>();
+        for (int i = 0; i < 11; i++) items.add(lineaComida(TamanoPorcion.MEDIA, TipoComida.FIJA));
+        items.add(lineaComida(TamanoPorcion.MEDIA, TipoComida.ESPECIAL));
+        Pedido pedido = pedidoCon(items);
+
+        catalogoPedidoService.aplicarDescuentoVolumen(pedido);
+
+        assertNull(pedido.getTipoDescuento());
+        System.out.println("[OK] 12 medias (11 FIJA + 1 ESPECIAL) → count(MEDIA+FIJA)=11 → sin descuento");
+    }
+
+    @Test
+    @DisplayName("aplicarDescuentoVolumen - 13 medias (12 FIJA + 1 ESPECIAL): descuento solo en las 12 FIJA")
+    public void descuentoVolumen_13MediaCon1Especial_descuentoSoloEnFija() {
+        List<ComidaPedido> items = new java.util.ArrayList<>();
+        for (int i = 0; i < 12; i++) items.add(lineaComida(TamanoPorcion.MEDIA, TipoComida.FIJA));
+        ComidaPedido especial = lineaComida(TamanoPorcion.MEDIA, TipoComida.ESPECIAL);
+        items.add(especial);
+        Pedido pedido = pedidoCon(items);
+
+        catalogoPedidoService.aplicarDescuentoVolumen(pedido);
+
+        assertEquals(TipoDescuento.COMIDAS_DIEZ, pedido.getTipoDescuento());
+        long conDescuento = pedido.getComidasPedido().stream()
+                .filter(cp -> BigDecimal.TEN.compareTo(cp.getDescuentoAplicado()) == 0)
+                .count();
+        assertEquals(12, conDescuento, "Solo las 12 FIJA deben tener descuento; la ESPECIAL no");
+        assertEquals(0, BigDecimal.ZERO.compareTo(especial.getDescuentoAplicado()),
+                "La comida ESPECIAL no debe tener descuento");
+        System.out.println("[OK] 13 medias (12 FIJA + 1 ESPECIAL) → descuento en las 12 FIJA, ESPECIAL intacta");
+    }
+
+    @Test
+    @DisplayName("aplicarDescuentoVolumen - re-evaluar en update resetea tipoDescuento si ya no aplica")
+    public void descuentoVolumen_updateSinDescuento_resetaTipoDescuento() {
+        // Simulación: pedido que antes tenía descuento, ahora solo tiene 5 comidas MEDIA FIJA
+        List<ComidaPedido> items = new java.util.ArrayList<>();
+        for (int i = 0; i < 5; i++) items.add(lineaComida(TamanoPorcion.MEDIA, TipoComida.FIJA));
+        Pedido pedido = pedidoCon(items);
+        pedido.setTipoDescuento(TipoDescuento.COMIDAS_DIEZ); // estado previo
+
+        catalogoPedidoService.aplicarDescuentoVolumen(pedido);
+
+        assertNull(pedido.getTipoDescuento(), "Después de re-evaluar, tipoDescuento debe ser null");
+        System.out.println("[OK] update con 5 comidas resetea tipoDescuento a null");
     }
 }

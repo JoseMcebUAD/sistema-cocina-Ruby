@@ -1,6 +1,7 @@
 package com.cocinarubi.util.template.data;
 
 import com.cocinarubi.DBConstants.MetodoPago;
+import com.cocinarubi.DBConstants.TipoDescuento;
 import com.cocinarubi.DBConstants.TipoPedido;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
@@ -38,6 +39,7 @@ public class PedidoTicketData {
     private PedidoDomicilioCocinaResponseDTO domicilioCocina;
     private String nombreCliente;
     private String comentario;
+    private TipoDescuento tipoDescuento;
 
     public PedidoTicketData() {}
 
@@ -91,4 +93,7 @@ public class PedidoTicketData {
 
     public String getComentario() { return comentario; }
     public void setComentario(String comentario) { this.comentario = comentario; }
+
+    public TipoDescuento getTipoDescuento() { return tipoDescuento; }
+    public void setTipoDescuento(TipoDescuento tipoDescuento) { this.tipoDescuento = tipoDescuento; }
 }

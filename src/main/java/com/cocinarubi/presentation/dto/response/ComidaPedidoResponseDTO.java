@@ -11,6 +11,7 @@ public class ComidaPedidoResponseDTO {
     private Integer idComida;
     private String nombreComida;
     private BigDecimal precioUnitario;
+    private BigDecimal descuentoAplicado;
     private TamanoPorcion tamanoPorcion;
     private List<ComplementoResponseDTO> complementos;
     private List<ComplementoPredeterminadoComidaResponseDTO> complementosPredeterminados;
@@ -18,13 +19,15 @@ public class ComidaPedidoResponseDTO {
     public ComidaPedidoResponseDTO() {}
 
     public ComidaPedidoResponseDTO(int idComidaPedido, Integer idComida, String nombreComida,
-                                   BigDecimal precioUnitario, TamanoPorcion tamanoPorcion,
+                                   BigDecimal precioUnitario, BigDecimal descuentoAplicado,
+                                   TamanoPorcion tamanoPorcion,
                                    List<ComplementoResponseDTO> complementos,
                                    List<ComplementoPredeterminadoComidaResponseDTO> complementosPredeterminados) {
         this.idComidaPedido = idComidaPedido;
         this.idComida = idComida;
         this.nombreComida = nombreComida;
         this.precioUnitario = precioUnitario;
+        this.descuentoAplicado = descuentoAplicado;
         this.tamanoPorcion = tamanoPorcion;
         this.complementos = complementos;
         this.complementosPredeterminados = complementosPredeterminados;
@@ -41,6 +44,9 @@ public class ComidaPedidoResponseDTO {
 
     public BigDecimal getPrecioUnitario() { return precioUnitario; }
     public void setPrecioUnitario(BigDecimal precioUnitario) { this.precioUnitario = precioUnitario; }
+
+    public BigDecimal getDescuentoAplicado() { return descuentoAplicado; }
+    public void setDescuentoAplicado(BigDecimal descuentoAplicado) { this.descuentoAplicado = descuentoAplicado; }
 
     public TamanoPorcion getTamanoPorcion() { return tamanoPorcion; }
     public void setTamanoPorcion(TamanoPorcion tamanoPorcion) { this.tamanoPorcion = tamanoPorcion; }

@@ -241,6 +241,8 @@ public class PedidoService {
         catalogoPedido.agregarProductosCocina(pedido, dto.getProductosCocina());
         catalogoPedido.agregarPaquetes(pedido, dto.getPaquetes());
         catalogoPedido.handleTipoPedido(pedido, dto);
+        // Aplica $10 por comida MEDIA+FIJA si el pedido alcanza las 12 líneas calificadas
+        catalogoPedido.aplicarDescuentoVolumen(pedido);
         pedido.setPrecioFinalOrden(catalogoPedido.calcularTotal(pedido));
         return aplicarTarifasActivas(pedido);
     }

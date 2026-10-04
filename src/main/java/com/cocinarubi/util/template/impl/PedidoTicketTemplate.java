@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import com.cocinarubi.Constants;
+import com.cocinarubi.DBConstants.TipoDescuento;
 import com.cocinarubi.DBConstants.TipoPedido;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
@@ -51,6 +52,10 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         }
         // Método de pago y totales
         escpos.writeLF(subtitleStyle, formatter.formatearLineaTotal("TOTAL", FORMATO_PRECIO.format(data.getPrecioFinalOrden()), anchoEfectivo));
+
+        if (data.getTipoDescuento() == TipoDescuento.COMIDAS_DIEZ) {
+            escpos.writeLF("* Se aplico descuento de $10 por las 12 comidas");
+        }
 
         // Sección de entrega a domicilio (WEB usa PedidoDomicilioResponseDTO,
         // COCINA usa PedidoDomicilioCocinaResponseDTO)

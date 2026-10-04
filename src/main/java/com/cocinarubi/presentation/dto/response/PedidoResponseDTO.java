@@ -3,6 +3,7 @@ package com.cocinarubi.presentation.dto.response;
 import com.cocinarubi.DBConstants.MetodoPago;
 import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.DBConstants.TipoPedido;
+import com.cocinarubi.DBConstants.TipoDescuento;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -32,6 +33,7 @@ public class PedidoResponseDTO {
      * los domicilios: WEB + PICK_UP tenía el mismo problema.
      */
     private String nombreCliente;
+    private TipoDescuento tipoDescuento;
     private boolean pagado;
     private boolean impreso;
     private String comentario;
@@ -115,6 +117,9 @@ public class PedidoResponseDTO {
 
     public String getNombreCliente() { return nombreCliente; }
     public void setNombreCliente(String nombreCliente) { this.nombreCliente = nombreCliente; }
+
+    public TipoDescuento getTipoDescuento() { return tipoDescuento; }
+    public void setTipoDescuento(TipoDescuento tipoDescuento) { this.tipoDescuento = tipoDescuento; }
 
     public boolean isPagado() { return pagado; }
     public void setPagado(boolean pagado) { this.pagado = pagado; }

@@ -175,6 +175,7 @@ public class PedidoMapper {
         // Por setter y no por constructor: sumarle un parámetro obligaría a tocar todos los
         // llamadores y los tests, igual que ocurre con tarifasAplicadas.
         dto.setNombreCliente(resolverNombreCliente(pedido, nombresPorUuid));
+        dto.setTipoDescuento(pedido.getTipoDescuento());
         return dto;
     }
 
@@ -228,6 +229,7 @@ public class PedidoMapper {
                 comida != null ? comida.getIdComida() : null,
                 comida != null ? comida.getNombreComida() : "(eliminado)",
                 cp.getPrecioUnitario(),
+                cp.getDescuentoAplicado(),
                 cp.getTamanoPorcion(),
                 complementos,
                 predeterminados
