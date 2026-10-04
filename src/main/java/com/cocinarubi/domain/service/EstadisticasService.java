@@ -288,8 +288,8 @@ public class EstadisticasService {
                 catalogoEstadisticasRepository.findResumenComplemento(desde, hasta, tipoPedido), categorias);
         totalProductosVendidos += agregarResumenCategoria("BASICO",
                 catalogoEstadisticasRepository.findResumenBasico(desde, hasta, tipoPedido), categorias);
-        totalProductosVendidos += agregarResumenCategoria("PAQUETE",
-                catalogoEstadisticasRepository.findResumenPaquete(desde, hasta, tipoPedido), categorias);
+        totalProductosVendidos += agregarResumenCategoria("COMBO",
+                catalogoEstadisticasRepository.findResumenCombo(desde, hasta, tipoPedido), categorias);
 
         // Categorías dinámicas de ProductoCocina (N categorías desde la tabla categoria)
         for (Object[] row : catalogoEstadisticasRepository.findResumenProductoCocina(desde, hasta, tipoPedido)) {
@@ -339,7 +339,7 @@ public class EstadisticasService {
             case DESAYUNO     -> catalogoEstadisticasRepository.findProductosDesayuno(desde, hasta, tipoPedido);
             case COMPLEMENTO  -> catalogoEstadisticasRepository.findProductosComplemento(desde, hasta, tipoPedido);
             case BASICO       -> catalogoEstadisticasRepository.findProductosBasico(desde, hasta, tipoPedido);
-            case PAQUETE      -> catalogoEstadisticasRepository.findProductosPaquete(desde, hasta, tipoPedido);
+            case COMBO        -> catalogoEstadisticasRepository.findProductosCombo(desde, hasta, tipoPedido);
             case PRODUCTO_COCINA -> catalogoEstadisticasRepository.findProductosProductoCocina(
                     desde, hasta, tipoPedido, idCategoria, idSubcategoria);
         };

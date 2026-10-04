@@ -6,7 +6,7 @@ import com.cocinarubi.DBConstants.TipoPedido;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.DesayunoPedidoResponseDTO;
-import com.cocinarubi.presentation.dto.response.PaquetePedidoResponseDTO;
+import com.cocinarubi.presentation.dto.response.ComboPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioCocinaResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioResponseDTO;
 import com.cocinarubi.presentation.dto.response.ProductoCocinaPedidoResponseDTO;
@@ -34,7 +34,7 @@ public class PedidoTicketData {
     private List<DesayunoPedidoResponseDTO> desayunos;
     private List<BasicoPedidoResponseDTO> basicos;
     private List<ProductoCocinaPedidoResponseDTO> productosCocina;
-    private List<PaquetePedidoResponseDTO> paquetes;
+    private List<ComboPedidoResponseDTO> combos;
     private PedidoDomicilioResponseDTO domicilio;
     private PedidoDomicilioCocinaResponseDTO domicilioCocina;
     private String nombreCliente;
@@ -79,8 +79,8 @@ public class PedidoTicketData {
     public List<ProductoCocinaPedidoResponseDTO> getProductosCocina() { return productosCocina; }
     public void setProductosCocina(List<ProductoCocinaPedidoResponseDTO> productosCocina) { this.productosCocina = productosCocina; }
 
-    public List<PaquetePedidoResponseDTO> getPaquetes() { return paquetes; }
-    public void setPaquetes(List<PaquetePedidoResponseDTO> paquetes) { this.paquetes = paquetes; }
+    public List<ComboPedidoResponseDTO> getCombos() { return combos; }
+    public void setCombos(List<ComboPedidoResponseDTO> combos) { this.combos = combos; }
 
     public PedidoDomicilioResponseDTO getDomicilio() { return domicilio; }
     public void setDomicilio(PedidoDomicilioResponseDTO domicilio) { this.domicilio = domicilio; }

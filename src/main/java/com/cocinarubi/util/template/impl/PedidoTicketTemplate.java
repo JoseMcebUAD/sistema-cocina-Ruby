@@ -10,7 +10,7 @@ import com.cocinarubi.DBConstants.TipoPedido;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.DesayunoPedidoResponseDTO;
-import com.cocinarubi.presentation.dto.response.PaquetePedidoResponseDTO;
+import com.cocinarubi.presentation.dto.response.ComboPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioCocinaResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioResponseDTO;
 import com.cocinarubi.presentation.dto.response.ProductoCocinaPedidoResponseDTO;
@@ -68,7 +68,7 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         renderDesayunos(escpos, data.getDesayunos());
         renderBasicos(escpos, data.getBasicos());
         renderProductosCocina(escpos, data.getProductosCocina());
-        renderPaquetes(escpos, data.getPaquetes());
+        renderCombos(escpos, data.getCombos());
 
         // Nota libre del operador (comentario del pedido)
         renderComentario(escpos, data.getComentario());
@@ -130,14 +130,14 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         }
     }
 
-    // Renderiza cada paquete como un bloque tipo comida: encabezado "PAQUETE <nombre>",
+    // Renderiza cada combo como un bloque tipo comida: encabezado "COMBO <descripcion>",
     // sublíneas "  - producto" por cada producto incluido, y precio (unitario × cantidad) alineado a la derecha.
-    private void renderPaquetes(EscPos escpos, List<PaquetePedidoResponseDTO> paquetes) throws IOException {
-        if (paquetes == null || paquetes.isEmpty()) return;
-        for (PaquetePedidoResponseDTO p : paquetes) {
+    private void renderCombos(EscPos escpos, List<ComboPedidoResponseDTO> combos) throws IOException {
+        if (combos == null || combos.isEmpty()) return;
+        for (ComboPedidoResponseDTO p : combos) {
             String precio = FORMATO_PRECIO.format(
                     p.getPrecioUnitario().multiply(java.math.BigDecimal.valueOf(p.getCantidad())));
-            for (String linea : formatter.formatPaqueteBlock(p, precio, anchoEfectivo)) {
+            for (String linea : formatter.formatComboBlock(p, precio, anchoEfectivo)) {
                 if (linea.isEmpty()) escpos.feed(1);
                 else escpos.writeLF(subtitleStyle, linea);
             }

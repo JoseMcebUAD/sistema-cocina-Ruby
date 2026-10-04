@@ -3,28 +3,28 @@ package com.cocinarubi.domain.mapper;
 import com.cocinarubi.dao.ClienteRepository;
 import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.BasicoPedido;
-import com.cocinarubi.DBConstants.TipoLineaPaquete;
+import com.cocinarubi.DBConstants.TipoLineaCombo;
+import com.cocinarubi.domain.entity.Combo;
+import com.cocinarubi.domain.entity.ComboPedido;
+import com.cocinarubi.domain.entity.ComboProducto;
 import com.cocinarubi.domain.entity.Cliente;
 import com.cocinarubi.domain.entity.ComidaPedido;
 import com.cocinarubi.domain.entity.DesayunoPedido;
-import com.cocinarubi.domain.entity.Paquete;
-import com.cocinarubi.domain.entity.PaquetePedido;
-import com.cocinarubi.domain.entity.PaqueteProducto;
 import com.cocinarubi.domain.entity.Pedido;
 import com.cocinarubi.domain.entity.PedidoCocina;
 import com.cocinarubi.domain.entity.PedidoDomicilio;
 import com.cocinarubi.domain.entity.PedidoDomicilioCocina;
 import com.cocinarubi.domain.entity.RegistroCliente;
 import com.cocinarubi.domain.entity.ProductoCocinaPedido;
-import com.cocinarubi.domain.service.PaqueteService;
+import com.cocinarubi.domain.service.ComboService;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoExtraResponseDTO;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.BasicoResponseDTO;
+import com.cocinarubi.presentation.dto.response.ComboPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComplementoPredeterminadoComidaResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComplementoResponseDTO;
 import com.cocinarubi.presentation.dto.response.DesayunoPedidoResponseDTO;
-import com.cocinarubi.presentation.dto.response.PaquetePedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoCocinaResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioCocinaResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioResponseDTO;
@@ -56,11 +56,11 @@ import java.util.stream.Collectors;
 @Component
 public class PedidoMapper {
 
-    private final PaqueteService paqueteService;
+    private final ComboService comboService;
     private final ClienteRepository clienteRepository;
 
-    public PedidoMapper(PaqueteService paqueteService, ClienteRepository clienteRepository) {
-        this.paqueteService = paqueteService;
+    public PedidoMapper(ComboService comboService, ClienteRepository clienteRepository) {
+        this.comboService = comboService;
         this.clienteRepository = clienteRepository;
     }
 
@@ -127,17 +127,17 @@ public class PedidoMapper {
                 .map(this::toBasicoPedidoDTO).collect(Collectors.toList());
         List<ProductoCocinaPedidoResponseDTO> productos = pedido.getProductosCocina().stream()
                 .map(this::toProductoCocinaPedidoDTO).collect(Collectors.toList());
-        // Pre-computa nombres de productos de todos los paquetes en batch para evitar N+1 al mapear;
-        // filtra nulls porque id_paquete puede ser NULL (SET NULL) si el paquete fue eliminado.
-        List<Paquete> paquetesEntidades = pedido.getPaquetesPedido().stream()
-                .map(PaquetePedido::getPaquete)
-                .filter(p -> p != null)
+        // Pre-computa nombres de productos de todos los combos en batch para evitar N+1 al mapear;
+        // filtra nulls porque id_combo puede ser NULL (SET NULL) si el combo fue eliminado.
+        List<Combo> combosEntidades = pedido.getCombosPedido().stream()
+                .map(ComboPedido::getCombo)
+                .filter(c -> c != null)
                 .collect(Collectors.toList());
-        Map<TipoLineaPaquete, Map<Integer, String>> nombresPaquete = paquetesEntidades.isEmpty()
+        Map<TipoLineaCombo, Map<Integer, String>> nombresCombo = combosEntidades.isEmpty()
                 ? Map.of()
-                : paqueteService.resolverNombresPara(paquetesEntidades);
-        List<PaquetePedidoResponseDTO> paquetes = pedido.getPaquetesPedido().stream()
-                .map(pp -> toPaquetePedidoDTO(pp, nombresPaquete))
+                : comboService.resolverNombresPara(combosEntidades);
+        List<ComboPedidoResponseDTO> combos = pedido.getCombosPedido().stream()
+                .map(cp -> toComboPedidoDTO(cp, nombresCombo))
                 .collect(Collectors.toList());
         PedidoDomicilioResponseDTO domicilio = pedido.getPedidoDomicilio() != null
                 ? toDomicilioDTO(pedido.getPedidoDomicilio())
@@ -170,7 +170,7 @@ public class PedidoMapper {
                 pedido.isPagado(),
                 pedido.isImpreso(),
                 pedido.getComentario(),
-                comidas, desayunos, basicos, productos, paquetes, domicilio, domicilioCocina, pedidoCocina
+                comidas, desayunos, basicos, productos, combos, domicilio, domicilioCocina, pedidoCocina
         );
         // Por setter y no por constructor: sumarle un parámetro obligaría a tocar todos los
         // llamadores y los tests, igual que ocurre con tarifasAplicadas.
@@ -179,22 +179,22 @@ public class PedidoMapper {
         return dto;
     }
 
-    public PaquetePedidoResponseDTO toPaquetePedidoDTO(PaquetePedido pp,
-                                                       Map<TipoLineaPaquete, Map<Integer, String>> nombres) {
-        Paquete paquete = pp.getPaquete();
-        // id_paquete puede ser NULL si el paquete fue eliminado (SET NULL migration V28)
-        List<String> nombresProductos = new ArrayList<>(paquete.getProductos().size());
-        for (PaqueteProducto linea : paquete.getProductos()) {
+    public ComboPedidoResponseDTO toComboPedidoDTO(ComboPedido cp,
+                                                    Map<TipoLineaCombo, Map<Integer, String>> nombres) {
+        Combo combo = cp.getCombo();
+        // id_combo puede ser NULL si el combo fue eliminado (SET NULL migration V28)
+        List<String> nombresProductos = new ArrayList<>(combo.getProductos().size());
+        for (ComboProducto linea : combo.getProductos()) {
             String nombre = nombres.getOrDefault(linea.getTipoProducto(), Map.of())
                     .getOrDefault(linea.getIdProducto(), "(eliminado)");
             nombresProductos.add(nombre);
         }
-        return new PaquetePedidoResponseDTO(
-                pp.getIdPaquetePedido(),
-                paquete.getIdPaquete(),
-                paquete.getDescripcion(),
-                pp.getPrecioUnitario(),
-                pp.getCantidad(),
+        return new ComboPedidoResponseDTO(
+                cp.getIdComboPedido(),
+                combo.getIdCombo(),
+                combo.getDescripcion(),
+                cp.getPrecioUnitario(),
+                cp.getCantidad(),
                 nombresProductos
         );
     }

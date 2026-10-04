@@ -120,7 +120,7 @@ public class PedidoService {
         existente.getDesayunosPedido().clear();
         existente.getBasicosPedido().clear();
         existente.getProductosCocina().clear();
-        existente.getPaquetesPedido().clear();
+        existente.getCombosPedido().clear();
         // pedidoCocina, pedidoDomicilio y pedidoDomicilioCocina NO se nulifican aquí:
         // los tres usan @MapsId y comparten PK con Pedido. Nulificar + recrear dentro
         // de la misma sesión produce "deleted object would be re-saved by cascade".
@@ -239,7 +239,7 @@ public class PedidoService {
         catalogoPedido.agregarDesayunos(pedido, dto.getDesayunos());
         catalogoPedido.agregarBasicos(pedido, dto.getBasicos());
         catalogoPedido.agregarProductosCocina(pedido, dto.getProductosCocina());
-        catalogoPedido.agregarPaquetes(pedido, dto.getPaquetes());
+        catalogoPedido.agregarCombos(pedido, dto.getCombos());
         catalogoPedido.handleTipoPedido(pedido, dto);
         // Aplica $10 por comida MEDIA+FIJA si el pedido alcanza las 12 líneas calificadas
         catalogoPedido.aplicarDescuentoVolumen(pedido);

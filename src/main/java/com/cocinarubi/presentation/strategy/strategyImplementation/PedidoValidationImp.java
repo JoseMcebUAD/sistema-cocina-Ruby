@@ -7,24 +7,24 @@ import com.cocinarubi.dao.BasicoRepository;
 import com.cocinarubi.dao.ComidaRepository;
 import com.cocinarubi.dao.ComplementoRepository;
 import com.cocinarubi.dao.DesayunoRepository;
-import com.cocinarubi.dao.PaqueteRepository;
+import com.cocinarubi.dao.ComboRepository;
 import com.cocinarubi.dao.ProductoCocinaRepository;
 import com.cocinarubi.dao.RegistroClienteRepository;
 import com.cocinarubi.dao.RutaRepository;
 import com.cocinarubi.domain.entity.Basico;
+import com.cocinarubi.domain.entity.Combo;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.domain.entity.Desayuno;
-import com.cocinarubi.domain.entity.Paquete;
 import com.cocinarubi.domain.entity.ProductoCocina;
 import com.cocinarubi.domain.entity.Ruta;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.exception.ErrorCode;
 import com.cocinarubi.presentation.dto.request.BasicoPedidoDTO;
+import com.cocinarubi.presentation.dto.request.ComboPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComidaPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComplementoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.DesayunoPedidoDTO;
-import com.cocinarubi.presentation.dto.request.PaquetePedidoDTO;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.request.ProductoCocinaPedidoDTO;
 import com.cocinarubi.presentation.strategy.ValidationStrategy;
@@ -65,7 +65,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
     private final ComplementoRepository complementoRepository;
     private final RutaRepository rutaRepository;
     private final RegistroClienteRepository registroClienteRepository;
-    private final PaqueteRepository paqueteRepository;
+    private final ComboRepository comboRepository;
 
     // Virtual threads (Java 21): un hilo virtual por tarea, sin pool fijo — ideal para I/O bloqueante.
     private static final Executor EXECUTOR_VALIDACION = Executors.newVirtualThreadPerTaskExecutor();
@@ -77,7 +77,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                                ComplementoRepository complementoRepository,
                                RutaRepository rutaRepository,
                                RegistroClienteRepository registroClienteRepository,
-                               PaqueteRepository paqueteRepository) {
+                               ComboRepository comboRepository) {
         this.comidaRepository = comidaRepository;
         this.desayunoRepository = desayunoRepository;
         this.basicoRepository = basicoRepository;
@@ -85,7 +85,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
         this.complementoRepository = complementoRepository;
         this.rutaRepository = rutaRepository;
         this.registroClienteRepository = registroClienteRepository;
-        this.paqueteRepository = paqueteRepository;
+        this.comboRepository = comboRepository;
     }
 
     @Override
@@ -97,7 +97,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                 CompletableFuture.runAsync(() -> validarLineasDesayuno(dto),          EXECUTOR_VALIDACION),
                 CompletableFuture.runAsync(() -> validarLineasBasico(dto),            EXECUTOR_VALIDACION),
                 CompletableFuture.runAsync(() -> validarLineasProductoCocina(dto),    EXECUTOR_VALIDACION),
-                CompletableFuture.runAsync(() -> validarPaquetesDisponibles(dto),     EXECUTOR_VALIDACION),
+                CompletableFuture.runAsync(() -> validarCombosDisponibles(dto),       EXECUTOR_VALIDACION),
                 CompletableFuture.runAsync(() -> validarDomicilioWeb(dto),            EXECUTOR_VALIDACION),
                 CompletableFuture.runAsync(() -> validarRutaDomicilioCocina(dto),     EXECUTOR_VALIDACION),
                 CompletableFuture.runAsync(() -> validarRegistroCliente(dto),         EXECUTOR_VALIDACION),
@@ -124,7 +124,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                 || !dto.getDesayunos().isEmpty()
                 || !dto.getBasicos().isEmpty()
                 || !dto.getProductosCocina().isEmpty()
-                || !dto.getPaquetes().isEmpty();
+                || !dto.getCombos().isEmpty();
         if (!tieneProductos) {
             throw new BusinessException(
                     "El pedido debe incluir al menos un producto",
@@ -301,15 +301,15 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
         }
     }
 
-    private void validarPaquetesDisponibles(PedidoRequestDTO dto) {
-        for (PaquetePedidoDTO linea : dto.getPaquetes()) {
-            Paquete paquete = paqueteRepository.findById(linea.getIdPaquete())
+    private void validarCombosDisponibles(PedidoRequestDTO dto) {
+        for (ComboPedidoDTO linea : dto.getCombos()) {
+            Combo combo = comboRepository.findById(linea.getIdCombo())
                     .orElseThrow(() -> new BusinessException(
-                            "El paquete " + linea.getIdPaquete() + " no existe",
+                            "El combo " + linea.getIdCombo() + " no existe",
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
-            if (paquete.getEstatus() != Estatus.DISPONIBLE) {
+            if (combo.getEstatus() != Estatus.DISPONIBLE) {
                 throw new BusinessException(
-                        "El paquete " + paquete.getDescripcion() + " no está disponible",
+                        "El combo " + combo.getDescripcion() + " no está disponible",
                         HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
             }
         }
@@ -397,10 +397,10 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                 subtotal = subtotal.add(producto.getPrecioUnitario()
                         .multiply(BigDecimal.valueOf(producto.getCantidad())));
         }
-        for (PaquetePedidoDTO paquete : dto.getPaquetes()) {
-            if (paquete.getPrecioUnitario() != null && paquete.getCantidad() != null)
-                subtotal = subtotal.add(paquete.getPrecioUnitario()
-                        .multiply(BigDecimal.valueOf(paquete.getCantidad())));
+        for (ComboPedidoDTO combo : dto.getCombos()) {
+            if (combo.getPrecioUnitario() != null && combo.getCantidad() != null)
+                subtotal = subtotal.add(combo.getPrecioUnitario()
+                        .multiply(BigDecimal.valueOf(combo.getCantidad())));
         }
 
         if (subtotal.compareTo(new BigDecimal("80")) <= 0) {

@@ -23,7 +23,7 @@ import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
 import com.cocinarubi.presentation.strategy.strategyImplementation.PedidoConfirmationImp;
 import com.cocinarubi.presentation.strategy.strategyImplementation.PedidoValidationImp;
-import com.cocinarubi.domain.service.PaqueteService;
+import com.cocinarubi.domain.service.ComboService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -53,7 +53,7 @@ public class PedidoServiceTest {
     @Mock private CatalogoPedidoService catalogoPedido;
     @Mock private ApplicationEventPublisher eventPublisher;
     @Mock private TarifaEspecialRepository tarifaEspecialRepository;
-    @Mock private PaqueteService paqueteService;
+    @Mock private ComboService comboService;
     @Mock private ClienteRepository clienteRepository;
 
     private PedidoMapper pedidoMapper;
@@ -61,7 +61,7 @@ public class PedidoServiceTest {
 
     @BeforeEach
     void setUp() {
-        pedidoMapper = spy(new PedidoMapper(paqueteService, clienteRepository));
+        pedidoMapper = spy(new PedidoMapper(comboService, clienteRepository));
         pedidoService = new PedidoService(
                 pedidoRepository, pedidoValidation, pedidoConfirmation,
                 pedidoMapper, catalogoPedido, eventPublisher, tarifaEspecialRepository);

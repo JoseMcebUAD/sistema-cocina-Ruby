@@ -23,10 +23,10 @@ public class DBConstants {
     }
 
     /**
-     * Discriminador polimórfico para {@code paquete_producto.tipo_producto}.
-     * Una línea de paquete referencia UNA de estas cuatro tablas maestras según el valor.
+     * Discriminador polimórfico para {@code combo_producto.tipo_producto}.
+     * Una línea de combo referencia UNA de estas cuatro tablas maestras según el valor.
      */
-    public enum TipoLineaPaquete { COMIDA, DESAYUNO, COMPLEMENTO, PRODUCTO_COCINA }
+    public enum TipoLineaCombo { COMIDA, DESAYUNO, COMPLEMENTO, PRODUCTO_COCINA }
 
 
     /** Estado de disponibilidad de platillos para el menú web. */

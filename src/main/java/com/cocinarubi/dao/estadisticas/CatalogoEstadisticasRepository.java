@@ -78,15 +78,15 @@ public interface CatalogoEstadisticasRepository extends JpaRepository<Pedido, In
             @Param("tipoPedido") DBConstants.TipoPedido tipoPedido
     );
 
-    /** Suma unidades de paquetes y cuenta paquetes distintos vendidos. */
+    /** Suma unidades de combos y cuenta combos distintos vendidos. */
     @Query("""
-            SELECT COALESCE(SUM(pp.cantidad), 0), COUNT(DISTINCT pp.paquete.idPaquete)
-            FROM PaquetePedido pp JOIN pp.pedido p
+            SELECT COALESCE(SUM(cp.cantidad), 0), COUNT(DISTINCT cp.combo.idCombo)
+            FROM ComboPedido cp JOIN cp.pedido p
             WHERE (:desde IS NULL OR p.fechaExpedicionPedido >= :desde)
               AND (:hasta IS NULL OR p.fechaExpedicionPedido <= :hasta)
               AND (:tipoPedido IS NULL OR p.tipoPedido = :tipoPedido)
             """)
-    List<Object[]> findResumenPaquete(
+    List<Object[]> findResumenCombo(
             @Param("desde") LocalDateTime desde,
             @Param("hasta") LocalDateTime hasta,
             @Param("tipoPedido") DBConstants.TipoPedido tipoPedido
@@ -197,21 +197,21 @@ public interface CatalogoEstadisticasRepository extends JpaRepository<Pedido, In
             @Param("tipoPedido") DBConstants.TipoPedido tipoPedido
     );
 
-    /** Ventas por paquete: precio_unitario * cantidad por línea. */
+    /** Ventas por combo: precio_unitario * cantidad por línea. */
     @Query("""
-            SELECT paq.descripcion,
-                   COALESCE(SUM(pp.cantidad), 0),
-                   COALESCE(SUM(pp.precioUnitario * pp.cantidad), 0),
-                   COALESCE(SUM(CASE WHEN p.metodoPagoPrincipal = com.cocinarubi.DBConstants.MetodoPago.EFECTIVO      THEN pp.precioUnitario * pp.cantidad ELSE 0 END), 0),
-                   COALESCE(SUM(CASE WHEN p.metodoPagoPrincipal = com.cocinarubi.DBConstants.MetodoPago.TRANSFERENCIA THEN pp.precioUnitario * pp.cantidad ELSE 0 END), 0),
-                   COALESCE(SUM(CASE WHEN p.metodoPagoPrincipal = com.cocinarubi.DBConstants.MetodoPago.TARJETA       THEN pp.precioUnitario * pp.cantidad ELSE 0 END), 0)
-            FROM PaquetePedido pp JOIN pp.pedido p JOIN pp.paquete paq
+            SELECT combo.descripcion,
+                   COALESCE(SUM(cp.cantidad), 0),
+                   COALESCE(SUM(cp.precioUnitario * cp.cantidad), 0),
+                   COALESCE(SUM(CASE WHEN p.metodoPagoPrincipal = com.cocinarubi.DBConstants.MetodoPago.EFECTIVO      THEN cp.precioUnitario * cp.cantidad ELSE 0 END), 0),
+                   COALESCE(SUM(CASE WHEN p.metodoPagoPrincipal = com.cocinarubi.DBConstants.MetodoPago.TRANSFERENCIA THEN cp.precioUnitario * cp.cantidad ELSE 0 END), 0),
+                   COALESCE(SUM(CASE WHEN p.metodoPagoPrincipal = com.cocinarubi.DBConstants.MetodoPago.TARJETA       THEN cp.precioUnitario * cp.cantidad ELSE 0 END), 0)
+            FROM ComboPedido cp JOIN cp.pedido p JOIN cp.combo combo
             WHERE (:desde IS NULL OR p.fechaExpedicionPedido >= :desde)
               AND (:hasta IS NULL OR p.fechaExpedicionPedido <= :hasta)
               AND (:tipoPedido IS NULL OR p.tipoPedido = :tipoPedido)
-            GROUP BY paq.idPaquete, paq.descripcion
+            GROUP BY combo.idCombo, combo.descripcion
             """)
-    List<Object[]> findProductosPaquete(
+    List<Object[]> findProductosCombo(
             @Param("desde") LocalDateTime desde,
             @Param("hasta") LocalDateTime hasta,
             @Param("tipoPedido") DBConstants.TipoPedido tipoPedido

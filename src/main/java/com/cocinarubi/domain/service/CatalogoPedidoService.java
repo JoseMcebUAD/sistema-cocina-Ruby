@@ -18,8 +18,8 @@ import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.domain.entity.ComplementoComidaPedido;
 import com.cocinarubi.domain.entity.Desayuno;
 import com.cocinarubi.domain.entity.DesayunoPedido;
-import com.cocinarubi.domain.entity.Paquete;
-import com.cocinarubi.domain.entity.PaquetePedido;
+import com.cocinarubi.domain.entity.Combo;
+import com.cocinarubi.domain.entity.ComboPedido;
 import com.cocinarubi.domain.entity.Pedido;
 import com.cocinarubi.domain.entity.PedidoCocina;
 import com.cocinarubi.domain.entity.PedidoDomicilio;
@@ -34,7 +34,7 @@ import com.cocinarubi.presentation.dto.request.BasicoPedidoExtraDTO;
 import com.cocinarubi.presentation.dto.request.ComidaPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComplementoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.DesayunoPedidoDTO;
-import com.cocinarubi.presentation.dto.request.PaquetePedidoDTO;
+import com.cocinarubi.presentation.dto.request.ComboPedidoDTO;
 import com.cocinarubi.presentation.dto.request.PedidoDomicilioCocinaDTO;
 import com.cocinarubi.presentation.dto.request.PedidoDomicilioDTO;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
@@ -70,7 +70,7 @@ public class CatalogoPedidoService {
     private final ComplementoService complementoService;
     private final RutaService rutaService;
     private final RegistroClienteRepository registroClienteRepository;
-    private final PaqueteService paqueteService;
+    private final ComboService comboService;
     private final CodigoClienteRepository codigoClienteRepository;
 
     public CatalogoPedidoService(ComidaService comidaService,
@@ -80,7 +80,7 @@ public class CatalogoPedidoService {
                                   ComplementoService complementoService,
                                   RutaService rutaService,
                                   RegistroClienteRepository registroClienteRepository,
-                                  PaqueteService paqueteService,
+                                  ComboService comboService,
                                   CodigoClienteRepository codigoClienteRepository) {
         this.comidaService = comidaService;
         this.desayunoService = desayunoService;
@@ -89,7 +89,7 @@ public class CatalogoPedidoService {
         this.complementoService = complementoService;
         this.rutaService = rutaService;
         this.registroClienteRepository = registroClienteRepository;
-        this.paqueteService = paqueteService;
+        this.comboService = comboService;
         this.codigoClienteRepository = codigoClienteRepository;
     }
 
@@ -261,19 +261,19 @@ public class CatalogoPedidoService {
     }
 
     /**
-     * Agrega líneas de Paquete (promoción) al pedido. Valida que cada paquete exista
-     * y esté DISPONIBLE — un paquete NO_DISPONIBLE/AGOTADO no puede venderse.
+     * Agrega líneas de Combo (promoción) al pedido. Valida que cada combo exista
+     * y esté DISPONIBLE — un combo NO_DISPONIBLE/AGOTADO no puede venderse.
      */
-    public void agregarPaquetes(Pedido pedido, List<PaquetePedidoDTO> lineas) {
-        for (PaquetePedidoDTO linea : lineas) {
-            Paquete paquete = paqueteService.findEntityById(linea.getIdPaquete());
-            if (paquete.getEstatus() != Estatus.DISPONIBLE) {
+    public void agregarCombos(Pedido pedido, List<ComboPedidoDTO> lineas) {
+        for (ComboPedidoDTO linea : lineas) {
+            Combo combo = comboService.findEntityById(linea.getIdCombo());
+            if (combo.getEstatus() != Estatus.DISPONIBLE) {
                 throw new BusinessException(
-                        "El paquete #" + paquete.getIdPaquete() + " no está disponible",
+                        "El combo #" + combo.getIdCombo() + " no está disponible",
                         HttpStatus.BAD_REQUEST);
             }
-            pedido.addPaquetePedido(PaquetePedido.builder()
-                    .paquete(paquete)
+            pedido.addComboPedido(ComboPedido.builder()
+                    .combo(combo)
                     .precioUnitario(linea.getPrecioUnitario())
                     .cantidad(linea.getCantidad())
                     .build());
@@ -330,8 +330,8 @@ public class CatalogoPedidoService {
         for (ProductoCocinaPedido pcp : pedido.getProductosCocina()) {
             total = total.add(pcp.getPrecioUnitario().multiply(BigDecimal.valueOf(pcp.getCantidad())));
         }
-        for (PaquetePedido pp : pedido.getPaquetesPedido()) {
-            total = total.add(pp.getPrecioUnitario().multiply(BigDecimal.valueOf(pp.getCantidad())));
+        for (ComboPedido cp : pedido.getCombosPedido()) {
+            total = total.add(cp.getPrecioUnitario().multiply(BigDecimal.valueOf(cp.getCantidad())));
         }
         if (pedido.getPedidoDomicilio() != null) {
             // Usa el snapshot de tarifa guardado en PedidoDomicilio: refleja la tarifaEspecial

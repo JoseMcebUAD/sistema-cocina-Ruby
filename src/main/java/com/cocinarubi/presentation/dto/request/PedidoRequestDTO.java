@@ -57,8 +57,8 @@ public class PedidoRequestDTO {
     private List<ProductoCocinaPedidoDTO> productosCocina = new ArrayList<>();
 
     @Valid
-    @JsonProperty("paquetes")
-    private List<PaquetePedidoDTO> paquetes = new ArrayList<>();
+    @JsonProperty("combos")
+    private List<ComboPedidoDTO> combos = new ArrayList<>();
 
     @Valid
     @JsonProperty("domicilio")
@@ -117,9 +117,9 @@ public class PedidoRequestDTO {
         this.productosCocina = productosCocina != null ? productosCocina : new ArrayList<>();
     }
 
-    public List<PaquetePedidoDTO> getPaquetes() { return paquetes; }
-    public void setPaquetes(List<PaquetePedidoDTO> paquetes) {
-        this.paquetes = paquetes != null ? paquetes : new ArrayList<>();
+    public List<ComboPedidoDTO> getCombos() { return combos; }
+    public void setCombos(List<ComboPedidoDTO> combos) {
+        this.combos = combos != null ? combos : new ArrayList<>();
     }
 
     public PedidoDomicilioDTO getDomicilio() { return domicilio; }

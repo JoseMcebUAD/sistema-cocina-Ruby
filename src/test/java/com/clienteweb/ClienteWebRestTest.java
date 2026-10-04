@@ -264,7 +264,7 @@ public class ClienteWebRestTest {
                   "productosCocina": [
                     {"idProductoCocina": %d, "precioUnitario": 10.00, "cantidad": 1}
                   ],
-                  "paquetes": [],
+                  "combos": [],
                   "saltarConfirmacion": true
                 }
                 """.formatted(uuidCliente, testProductoId);
@@ -302,7 +302,7 @@ public class ClienteWebRestTest {
                   "productosCocina": [
                     {"idProductoCocina": %d, "precioUnitario": 10.00, "cantidad": 2}
                   ],
-                  "paquetes": [],
+                  "combos": [],
                   "saltarConfirmacion": true
                 }
                 """.formatted(uuidCliente, testProductoId);

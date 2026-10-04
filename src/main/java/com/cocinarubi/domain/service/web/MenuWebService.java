@@ -16,15 +16,15 @@ import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.domain.entity.Desayuno;
 import com.cocinarubi.domain.entity.ProductoCocina;
 import com.cocinarubi.domain.interfaces.IMenuWebService;
-import com.cocinarubi.domain.service.PaqueteService;
+import com.cocinarubi.domain.service.ComboService;
 import com.cocinarubi.presentation.dto.response.BasicoResponseDTO;
 import com.cocinarubi.presentation.dto.response.CategoriaMenuDTO;
+import com.cocinarubi.presentation.dto.response.ComboResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaMenuItemDTO;
 import com.cocinarubi.presentation.dto.response.ComplementoPredeterminadoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComplementoResponseDTO;
 import com.cocinarubi.presentation.dto.response.DesayunoMenuItemDTO;
 import com.cocinarubi.presentation.dto.response.MenuWebResponseDTO;
-import com.cocinarubi.presentation.dto.response.PaqueteResponseDTO;
 import com.cocinarubi.presentation.dto.response.ProductoCocinaMenuItemDTO;
 
 import org.springframework.cache.annotation.Cacheable;
@@ -59,7 +59,7 @@ public class MenuWebService implements IMenuWebService {
     private final ComidaRepository comidaRepository;
     private final BasicoRepository basicoRepository;
     private final DesayunoRepository desayunoRepository;
-    private final PaqueteService paqueteService;
+    private final ComboService comboService;
     private final ProductoCocinaRepository productoCocinaRepository;
     private final ComplementoRepository complementoRepository;
     private final ArchivoRepository archivoRepository;
@@ -67,14 +67,14 @@ public class MenuWebService implements IMenuWebService {
     public MenuWebService(ComidaRepository comidaRepository,
                           BasicoRepository basicoRepository,
                           DesayunoRepository desayunoRepository,
-                          PaqueteService paqueteService,
+                          ComboService comboService,
                           ProductoCocinaRepository productoCocinaRepository,
                           ComplementoRepository complementoRepository,
                           ArchivoRepository archivoRepository) {
         this.comidaRepository = comidaRepository;
         this.basicoRepository = basicoRepository;
         this.desayunoRepository = desayunoRepository;
-        this.paqueteService = paqueteService;
+        this.comboService = comboService;
         this.productoCocinaRepository = productoCocinaRepository;
         this.complementoRepository = complementoRepository;
         this.archivoRepository = archivoRepository;
@@ -118,8 +118,8 @@ public class MenuWebService implements IMenuWebService {
                 .map(d -> toDesayunoDTO(d, portadasDesayuno))
                 .collect(Collectors.toList());
 
-        // PaqueteService.findDisponibles aplica resolverNombres internamente (evita N+1).
-        List<PaqueteResponseDTO> paquetes = paqueteService.findDisponibles();
+        // ComboService.findDisponibles aplica resolverNombres internamente (evita N+1).
+        List<ComboResponseDTO> combos = comboService.findDisponibles();
 
         List<CategoriaMenuDTO> categorias = buildCategorias(pcEntities, portadasPc);
 
@@ -128,7 +128,7 @@ public class MenuWebService implements IMenuWebService {
                 .findDisponiblesOrdenados(Estatus.DISPONIBLE)
                 .stream().map(this::toComplementoDTO).collect(Collectors.toList());
 
-        return new MenuWebResponseDTO(comidas, basicos, desayunos, paquetes, categorias, complementos);
+        return new MenuWebResponseDTO(comidas, basicos, desayunos, combos, categorias, complementos);
     }
 
     // ── Helpers de portadas ───────────────────────────────────────────────────────
