@@ -87,6 +87,8 @@ public class PedidoWebRateLimitFilter extends OncePerRequestFilter {
             bloqueados.invalidate(id);
         }
 
+        // Consumo tentativo: se reserva el token antes de procesar para poder rechazar
+        // si el bucket ya esta vacio; se devuelve si la respuesta no es exitosa (ver abajo).
         Bucket bucket = buckets.get(id, k -> crearBucketRapido());
         if (!bucket.tryConsume(1)) {
             // Tokens agotados: se aplica el bloqueo extendido de 15 minutos
@@ -98,10 +100,14 @@ public class PedidoWebRateLimitFilter extends OncePerRequestFilter {
 
         // Bucket diario solo para POST y solo si hay cookie uuid_cliente
         // (evita castigar IPs compartidas en hogares/oficinas con NAT)
+        boolean consumioBucketDiario = false;
+        Bucket bucketDia = null;
         if ("POST".equalsIgnoreCase(request.getMethod()) && id.startsWith("uuid:")) {
-            Bucket bucketDia = bucketsDiarios.get(id, k -> crearBucketDiario());
+            bucketDia = bucketsDiarios.get(id, k -> crearBucketDiario());
             ConsumptionProbe probeDia = bucketDia.tryConsumeAndReturnRemaining(1);
             if (!probeDia.isConsumed()) {
+                // Se devuelve el token del bucket rapido porque este request sera rechazado
+                bucket.addTokens(1);
                 long segundos = probeDia.getNanosToWaitForRefill() / 1_000_000_000 + 1;
                 responder429(response, segundos,
                         "Has alcanzado el limite de " + MAX_PEDIDOS_DIA
@@ -109,9 +115,20 @@ public class PedidoWebRateLimitFilter extends OncePerRequestFilter {
                                 + formatearEspera(segundos) + ".");
                 return;
             }
+            consumioBucketDiario = true;
         }
 
         filterChain.doFilter(request, response);
+
+        // Solo cuentan las respuestas exitosas: si el servidor devolvio un error,
+        // se reembolsan los tokens para que el intento fallido no consuma cuota.
+        int status = response.getStatus();
+        if (status < 200 || status >= 300) {
+            bucket.addTokens(1);
+            if (consumioBucketDiario && bucketDia != null) {
+                bucketDia.addTokens(1);
+            }
+        }
     }
 
     // Cookie uuid_cliente como identificador (persiste aunque cambie de IP);
