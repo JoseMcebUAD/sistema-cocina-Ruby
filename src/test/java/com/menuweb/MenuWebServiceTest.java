@@ -1,6 +1,7 @@
 package com.menuweb;
 
 import com.cocinarubi.DBConstants.Estatus;
+import com.cocinarubi.dao.ArchivoRepository;
 import com.cocinarubi.dao.BasicoRepository;
 import com.cocinarubi.dao.ComidaRepository;
 import com.cocinarubi.dao.ComplementoRepository;
@@ -39,6 +40,7 @@ public class MenuWebServiceTest {
     @Mock private ComboService comboService;
     @Mock private ProductoCocinaRepository productoCocinaRepository;
     @Mock private ComplementoRepository complementoRepository;
+    @Mock private ArchivoRepository archivoRepository;
 
     @InjectMocks
     private MenuWebService menuWebService;
