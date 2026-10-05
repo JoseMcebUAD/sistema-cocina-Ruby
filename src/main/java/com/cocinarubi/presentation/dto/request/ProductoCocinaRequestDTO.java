@@ -44,6 +44,15 @@ public class ProductoCocinaRequestDTO {
     @JsonProperty("idSubcategorias")
     private List<Integer> idSubcategorias;
 
+    @JsonProperty("descuentoActivo")
+    private boolean descuentoActivo = false;
+
+    @JsonProperty("descripcionDescuento")
+    private String descripcionDescuento;
+
+    @JsonProperty("precioDescuento")
+    private BigDecimal precioDescuento;
+
     @JsonProperty("saltarConfirmacion")
     private boolean saltarConfirmacion = false;
 
@@ -86,6 +95,15 @@ public class ProductoCocinaRequestDTO {
 
     public List<Integer> getIdSubcategorias() { return idSubcategorias; }
     public void setIdSubcategorias(List<Integer> idSubcategorias) { this.idSubcategorias = idSubcategorias; }
+
+    public boolean isDescuentoActivo() { return descuentoActivo; }
+    public void setDescuentoActivo(boolean descuentoActivo) { this.descuentoActivo = descuentoActivo; }
+
+    public String getDescripcionDescuento() { return descripcionDescuento; }
+    public void setDescripcionDescuento(String descripcionDescuento) { this.descripcionDescuento = descripcionDescuento; }
+
+    public BigDecimal getPrecioDescuento() { return precioDescuento; }
+    public void setPrecioDescuento(BigDecimal precioDescuento) { this.precioDescuento = precioDescuento; }
 
     public boolean isSaltarConfirmacion() { return saltarConfirmacion; }
     public void setSaltarConfirmacion(boolean saltarConfirmacion) { this.saltarConfirmacion = saltarConfirmacion; }

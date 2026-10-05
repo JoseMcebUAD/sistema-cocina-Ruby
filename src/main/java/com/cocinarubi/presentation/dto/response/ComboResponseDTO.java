@@ -5,6 +5,7 @@ import com.cocinarubi.DBConstants.Estatus;
 import java.math.BigDecimal;
 import java.util.List;
 
+
 public class ComboResponseDTO {
 
     private int idCombo;
@@ -13,6 +14,9 @@ public class ComboResponseDTO {
     private Estatus estatus;
     private boolean destacado;
     private List<ComboLineaResponseDTO> productos;
+    private boolean descuentoActivo;
+    private String descripcionDescuento;
+    private BigDecimal precioDescuento;
 
     public ComboResponseDTO() {}
 
@@ -43,4 +47,13 @@ public class ComboResponseDTO {
 
     public List<ComboLineaResponseDTO> getProductos() { return productos; }
     public void setProductos(List<ComboLineaResponseDTO> productos) { this.productos = productos; }
+
+    public boolean isDescuentoActivo() { return descuentoActivo; }
+    public void setDescuentoActivo(boolean descuentoActivo) { this.descuentoActivo = descuentoActivo; }
+
+    public String getDescripcionDescuento() { return descripcionDescuento; }
+    public void setDescripcionDescuento(String descripcionDescuento) { this.descripcionDescuento = descripcionDescuento; }
+
+    public BigDecimal getPrecioDescuento() { return precioDescuento; }
+    public void setPrecioDescuento(BigDecimal precioDescuento) { this.precioDescuento = precioDescuento; }
 }

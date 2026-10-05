@@ -67,6 +67,15 @@ public class Comida {
     @Column(name = "tipo_comida")
     private TipoComida tipoComida;
 
+    @Column(name = "descuento_activo")
+    private boolean descuentoActivo = false;
+
+    @Column(name = "descripcion_descuento", length = 400)
+    private String descripcionDescuento;
+
+    @Column(name = "precio_descuento")
+    private BigDecimal precioDescuento;
+
 
     @Builder.Default
     @OneToMany(mappedBy = "comida", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)

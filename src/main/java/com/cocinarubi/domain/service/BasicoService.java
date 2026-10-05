@@ -91,6 +91,9 @@ public class BasicoService {
                 .destacado(dto.isDestacado())
                 .precioBasico(dto.getPrecioBasico())
                 .estatus(dto.getEstatus())
+                .descuentoActivo(dto.isDescuentoActivo())
+                .descripcionDescuento(dto.getDescripcionDescuento())
+                .precioDescuento(dto.getPrecioDescuento())
                 .build();
         agregarComplementos(basico, dto.getIdComplementos());
         return toResponseDTO(basicoRepository.save(basico));
@@ -105,6 +108,9 @@ public class BasicoService {
         existente.setDestacado(dto.isDestacado());
         existente.setPrecioBasico(dto.getPrecioBasico());
         existente.setEstatus(dto.getEstatus());
+        existente.setDescuentoActivo(dto.isDescuentoActivo());
+        existente.setDescripcionDescuento(dto.getDescripcionDescuento());
+        existente.setPrecioDescuento(dto.getPrecioDescuento());
         // Reemplazar la lista completa de complementos en cada actualización total
         existente.getComplementos().clear();
         agregarComplementos(existente, dto.getIdComplementos());
@@ -156,7 +162,7 @@ public class BasicoService {
                         bc.getComplemento().getPrecioExtra(),
                         bc.getComplemento().isCobrarSiempre()))
                 .collect(Collectors.toList());
-        return new BasicoResponseDTO(
+        BasicoResponseDTO dto = new BasicoResponseDTO(
                 basico.getIdBasico(),
                 basico.getUuidBasico(),
                 basico.getComida().getIdComida(),
@@ -167,5 +173,9 @@ public class BasicoService {
                 basico.getEstatus(),
                 complementos
         );
+        dto.setDescuentoActivo(basico.isDescuentoActivo());
+        dto.setDescripcionDescuento(basico.getDescripcionDescuento());
+        dto.setPrecioDescuento(basico.getPrecioDescuento());
+        return dto;
     }
 }

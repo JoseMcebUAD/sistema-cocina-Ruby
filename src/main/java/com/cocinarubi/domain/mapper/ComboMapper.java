@@ -33,6 +33,9 @@ public class ComboMapper {
                 .descripcion(dto.getDescripcion())
                 .destacado(dto.getDestacado())
                 .estatus(dto.getEstatus())
+                .descuentoActivo(dto.isDescuentoActivo())
+                .descripcionDescuento(dto.getDescripcionDescuento())
+                .precioDescuento(dto.getPrecioDescuento())
                 .build();
         for (ComboLineaRequestDTO linea : dto.getProductos()) {
             combo.addProducto(ComboProducto.builder()
@@ -62,13 +65,17 @@ public class ComboMapper {
                     nombre,
                     cp.getCantidad()));
         }
-        return new ComboResponseDTO(
+        ComboResponseDTO resp = new ComboResponseDTO(
                 c.getIdCombo(),
                 c.getPrecio(),
                 c.getDescripcion(),
                 c.getEstatus(),
                 c.isDestacado(),
                 lineas);
+        resp.setDescuentoActivo(c.isDescuentoActivo());
+        resp.setDescripcionDescuento(c.getDescripcionDescuento());
+        resp.setPrecioDescuento(c.getPrecioDescuento());
+        return resp;
     }
 
     /** Atajo cuando el llamador no tiene aún el mapa pre-computado (findById). */

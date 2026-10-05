@@ -59,6 +59,15 @@ public class Basico {
     @Column(name = "estatus")
     private Estatus estatus;
 
+    @Column(name = "descuento_activo")
+    private boolean descuentoActivo = false;
+
+    @Column(name = "descripcion_descuento", length = 400)
+    private String descripcionDescuento;
+
+    @Column(name = "precio_descuento")
+    private BigDecimal precioDescuento;
+
     @Builder.Default
     @OneToMany(mappedBy = "basico", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<BasicoComplemento> complementos = new ArrayList<>();

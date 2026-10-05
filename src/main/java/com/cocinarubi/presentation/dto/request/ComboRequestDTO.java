@@ -30,6 +30,15 @@ public class ComboRequestDTO {
     @JsonProperty("estatus")
     private Estatus estatus;
 
+    @JsonProperty("descuentoActivo")
+    private boolean descuentoActivo = false;
+
+    @JsonProperty("descripcionDescuento")
+    private String descripcionDescuento;
+
+    @JsonProperty("precioDescuento")
+    private BigDecimal precioDescuento;
+
     @Valid
     @NotEmpty(message = "Debe enviar al menos una línea en 'productos'")
     @JsonProperty("productos")
@@ -48,6 +57,15 @@ public class ComboRequestDTO {
 
     public Boolean getDestacado() { return destacado; }
     public void setDestacado(Boolean destacado) { this.destacado = destacado; }
+
+    public boolean isDescuentoActivo() { return descuentoActivo; }
+    public void setDescuentoActivo(boolean descuentoActivo) { this.descuentoActivo = descuentoActivo; }
+
+    public String getDescripcionDescuento() { return descripcionDescuento; }
+    public void setDescripcionDescuento(String descripcionDescuento) { this.descripcionDescuento = descripcionDescuento; }
+
+    public BigDecimal getPrecioDescuento() { return precioDescuento; }
+    public void setPrecioDescuento(BigDecimal precioDescuento) { this.precioDescuento = precioDescuento; }
 
     public List<ComboLineaRequestDTO> getProductos() { return productos; }
     public void setProductos(List<ComboLineaRequestDTO> productos) {

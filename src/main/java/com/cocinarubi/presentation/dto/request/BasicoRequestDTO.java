@@ -33,6 +33,15 @@ public class BasicoRequestDTO {
     @JsonProperty("idComplementos")
     private List<Integer> idComplementos = new ArrayList<>();
 
+    @JsonProperty("descuentoActivo")
+    private boolean descuentoActivo = false;
+
+    @JsonProperty("descripcionDescuento")
+    private String descripcionDescuento;
+
+    @JsonProperty("precioDescuento")
+    private BigDecimal precioDescuento;
+
     @JsonProperty("saltarConfirmacion")
     private boolean saltarConfirmacion = false;
 
@@ -65,6 +74,15 @@ public class BasicoRequestDTO {
 
     public List<Integer> getIdComplementos() { return idComplementos; }
     public void setIdComplementos(List<Integer> idComplementos) { this.idComplementos = idComplementos; }
+
+    public boolean isDescuentoActivo() { return descuentoActivo; }
+    public void setDescuentoActivo(boolean descuentoActivo) { this.descuentoActivo = descuentoActivo; }
+
+    public String getDescripcionDescuento() { return descripcionDescuento; }
+    public void setDescripcionDescuento(String descripcionDescuento) { this.descripcionDescuento = descripcionDescuento; }
+
+    public BigDecimal getPrecioDescuento() { return precioDescuento; }
+    public void setPrecioDescuento(BigDecimal precioDescuento) { this.precioDescuento = precioDescuento; }
 
     public boolean isSaltarConfirmacion() { return saltarConfirmacion; }
     public void setSaltarConfirmacion(boolean saltarConfirmacion) { this.saltarConfirmacion = saltarConfirmacion; }

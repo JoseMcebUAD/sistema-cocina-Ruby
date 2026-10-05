@@ -66,6 +66,15 @@ public class ProductoCocina {
     @Column(name = "destacado", nullable = false)
     private boolean destacado;
 
+    @Column(name = "descuento_activo")
+    private boolean descuentoActivo = false;
+
+    @Column(name = "descripcion_descuento", length = 400)
+    private String descripcionDescuento;
+
+    @Column(name = "precio_descuento")
+    private BigDecimal precioDescuento;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_categoria", nullable = false)
     private Categoria categoria;
