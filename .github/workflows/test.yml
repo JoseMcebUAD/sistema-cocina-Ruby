@@ -9,6 +9,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      # Maven 3.9+ lee MAVEN_ARGS y lo aplica a todos los comandos mvn
+      MAVEN_ARGS: -B -ntp
 
     services:
       mysql:
@@ -43,5 +46,23 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
-      - name: Run tests
-        run: mvn -ntp test -Dspring.profiles.active=test -Dexcludes="**/archivomodulo/**"
+      - name: Compilar
+        run: |
+          echo "::group::mvn test-compile"
+          mvn test-compile
+          echo "::endgroup::"
+
+      - name: Ejecutar pruebas
+        run: mvn verify --fail-at-end -Dspring.profiles.active=test -Dexcludes="**/archivomodulo/**"
+
+      - name: Resumen de pruebas
+        if: always()
+        run: python3 .github/scripts/test_summary.py
+
+      - name: Subir reportes y logs de tests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: "**/target/surefire-reports/"
+          retention-days: 7
