@@ -4,6 +4,7 @@ import com.cocinarubi.Constants;
 import com.cocinarubi.DBConstants;
 import com.cocinarubi.dao.EstadisticasRepository;
 import com.cocinarubi.dao.PagoRepartidorRepository;
+import com.cocinarubi.dao.PedidoDomicilioRepository;
 import com.cocinarubi.dao.VistaResumenPedidoRepository;
 import com.cocinarubi.dao.VistaResumenPedidoRepository.VistaResumenMetricasProjection;
 import com.cocinarubi.dao.estadisticas.CatalogoEstadisticasRepository;
@@ -20,6 +21,8 @@ import com.cocinarubi.presentation.dto.response.estadisticas.CatalogoEstadistica
 import com.cocinarubi.presentation.dto.response.estadisticas.CatalogoEstadisticaDTO;
 import com.cocinarubi.presentation.dto.response.estadisticas.CatalogoProductoEstadisticaDTO;
 import com.cocinarubi.presentation.dto.response.estadisticas.CatalogoProductoEstadisticaProducto;
+import com.cocinarubi.presentation.dto.response.estadisticas.MapaCalorResponseDTO;
+import com.cocinarubi.presentation.dto.response.estadisticas.PuntoMapaCalorDTO;
 import com.cocinarubi.presentation.dto.response.graficas.DatoGrafica;
 import com.cocinarubi.presentation.dto.response.graficas.DatoGraficaDia;
 
@@ -50,16 +53,19 @@ public class EstadisticasService {
     private final EstadisticasRepository estadisticasRepository;
     private final CatalogoEstadisticasRepository catalogoEstadisticasRepository;
     private final PagoRepartidorRepository pagoRepartidorRepository;
+    private final PedidoDomicilioRepository pedidoDomicilioRepository;
     private final EstadisticaHelper estadisticaHelper;
 
     public EstadisticasService(VistaResumenPedidoRepository vistaResumenPedidoRepository,
                                EstadisticasRepository estadisticasRepository,
                                CatalogoEstadisticasRepository catalogoEstadisticasRepository,
-                               PagoRepartidorRepository pagoRepartidorRepository) {
+                               PagoRepartidorRepository pagoRepartidorRepository,
+                               PedidoDomicilioRepository pedidoDomicilioRepository) {
         this.vistaResumenPedidoRepository = vistaResumenPedidoRepository;
         this.estadisticasRepository = estadisticasRepository;
         this.catalogoEstadisticasRepository = catalogoEstadisticasRepository;
         this.pagoRepartidorRepository = pagoRepartidorRepository;
+        this.pedidoDomicilioRepository = pedidoDomicilioRepository;
         this.estadisticaHelper = new EstadisticaHelper();
     }
 
@@ -108,6 +114,36 @@ public class EstadisticasService {
         List<EstadisticaRutaItemDTO> cocina = estadisticasRepository.findIngresosPorRutaCocina(desde, hasta, metodoPago);
 
         return fusionarPorRuta(web, cocina);
+    }
+
+    /**
+     * Devuelve los puntos geográficos de entregas a domicilio (flujo WEB) agrupados
+     * por coordenada exacta, con su conteo como intensidad para Leaflet.heat.
+     * Solo incluye pedidos con latitud y longitud capturadas.
+     *
+     * @param desde     inicio del período (inclusive, opcional)
+     * @param hasta     fin del período (inclusive, opcional)
+     * @param precioMin precio mínimo del pedido (opcional)
+     * @param precioMax precio máximo del pedido (opcional)
+     */
+    @Transactional(readOnly = true)
+    public MapaCalorResponseDTO getMapaCalor(LocalDateTime desde, LocalDateTime hasta,
+                                             BigDecimal precioMin, BigDecimal precioMax) {
+        this.estadisticaHelper.validarRango(desde, hasta);
+
+        List<Object[]> rows = pedidoDomicilioRepository.findPuntosMapaCalor(desde, hasta, precioMin, precioMax);
+
+        List<PuntoMapaCalorDTO> puntos = rows.stream()
+                .map(row -> new PuntoMapaCalorDTO(
+                        (BigDecimal) row[0],
+                        (BigDecimal) row[1],
+                        ((Number) row[2]).longValue()
+                ))
+                .toList();
+
+        long totalPedidos = puntos.stream().mapToLong(PuntoMapaCalorDTO::cantidad).sum();
+
+        return new MapaCalorResponseDTO(puntos.size(), totalPedidos, puntos);
     }
 
     // -------------------------------------------------------------------------
