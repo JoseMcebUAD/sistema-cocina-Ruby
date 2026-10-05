@@ -208,6 +208,9 @@
                     <excludes>
                         <exclude>**/printer/**</exclude>
                     </excludes>
+                    <trimStackTrace>true</trimStackTrace>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    <printSummary>true</printSummary>
                 </configuration>
             </plugin>
         </plugins>
