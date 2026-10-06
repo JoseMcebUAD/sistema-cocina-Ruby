@@ -224,7 +224,6 @@ public class PedidoRestTest {
                   "metodoPagoPrincipal": "EFECTIVO",
                   "tipoPedido": "MOSTRADOR",
                   "pedidoCreadoDesde": "COCINA",
-                  "pagoCliente": 50.00,
                   "nombreCliente": "Test REST",
                   "comidas": [],
                   "desayunos": [],
@@ -331,7 +330,6 @@ public class PedidoRestTest {
                   "metodoPagoPrincipal": "EFECTIVO",
                   "tipoPedido": "PICK_UP",
                   "pedidoCreadoDesde": "COCINA",
-                  "pagoCliente": 30.00,
                   "nombreCliente": "Ana García",
                   "comidas": [],
                   "desayunos": [],
@@ -368,7 +366,6 @@ public class PedidoRestTest {
                   "metodoPagoPrincipal": "EFECTIVO",
                   "tipoPedido": "DOMICILIO",
                   "pedidoCreadoDesde": "COCINA",
-                  "pagoCliente": 80.00,
                   "pedidoDomicilioCocina": {
                     "idRegistroCliente": %d,
                     "tarifa": 40.00,
@@ -449,7 +446,6 @@ public class PedidoRestTest {
                 {
                   "tipoPedido": "MOSTRADOR",
                   "pedidoCreadoDesde": "COCINA",
-                  "pagoCliente": 50.00,
                   "nombreCliente": "Test Sin Metodo Pago",
                   "comidas": [],
                   "desayunos": [],
@@ -529,7 +525,6 @@ public class PedidoRestTest {
                   "metodoPagoPrincipal": "EFECTIVO",
                   "tipoPedido": "MOSTRADOR",
                   "pedidoCreadoDesde": "COCINA",
-                  "pagoCliente": 200.00,
                   "nombreCliente": "Test Limite Complementos",
                   "comidas": [
                     {

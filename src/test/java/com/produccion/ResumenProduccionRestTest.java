@@ -61,7 +61,7 @@ public class ResumenProduccionRestTest {
                   "metodoPagoPrincipal": "EFECTIVO",
                   "tipoPedido": "MOSTRADOR",
                   "pedidoCreadoDesde": "COCINA",
-                  "pagoCliente": 50.00,
+                  "pagoClientePrincipal": 50.00,
                   "nombreCliente": "Test Produccion",
                   "comidas": [],
                   "desayunos": [],
