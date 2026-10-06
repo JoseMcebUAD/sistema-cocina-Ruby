@@ -82,10 +82,10 @@ public class ProductoCocinaController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<?>> delete(
+    public ResponseEntity<Void> delete(
             @PathVariable int id,
             @RequestParam(defaultValue = "false") boolean saltarConfirmacion) {
         productoCocinaService.delete(id, saltarConfirmacion);
-        return ResponseEntity.ok(ApiResponse.exito(200, "Producto de cocina eliminado correctamente", null));
+        return ResponseEntity.noContent().build();
     }
 }
