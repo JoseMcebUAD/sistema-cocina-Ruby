@@ -27,8 +27,8 @@ public class PedidoRequestDTO {
     @JsonProperty("pedidoCreadoDesde")
     private PedidoCreadoDesde pedidoCreadoDesde;
 
-    @JsonProperty("pagoCliente")
-    private BigDecimal pagoCliente;
+    @JsonProperty("pagoClientePrincipal")
+    private BigDecimal pagoClientePrincipal;
 
     @JsonProperty("uuidCliente")
     private String uuidCliente;
@@ -85,8 +85,8 @@ public class PedidoRequestDTO {
     public PedidoCreadoDesde getPedidoCreadoDesde() { return pedidoCreadoDesde; }
     public void setPedidoCreadoDesde(PedidoCreadoDesde pedidoCreadoDesde) { this.pedidoCreadoDesde = pedidoCreadoDesde; }
 
-    public BigDecimal getPagoCliente() { return pagoCliente; }
-    public void setPagoCliente(BigDecimal pagoCliente) { this.pagoCliente = pagoCliente; }
+    public BigDecimal getPagoClientePrincipal() { return pagoClientePrincipal; }
+    public void setPagoClientePrincipal(BigDecimal pagoClientePrincipal) { this.pagoClientePrincipal = pagoClientePrincipal; }
 
     public String getUuidCliente() { return uuidCliente; }
     public void setUuidCliente(String uuidCliente) { this.uuidCliente = uuidCliente; }

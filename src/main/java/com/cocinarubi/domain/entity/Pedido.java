@@ -88,7 +88,7 @@ public class Pedido {
     private TipoDescuento tipoDescuento;
 
     @Column(name = "pago_cliente_principal")
-    private BigDecimal pagoCliente;
+    private BigDecimal pagoClientePrincipal;
 
     @Column(name = "uuid_cliente", length = 45)
     private String uuidCliente;

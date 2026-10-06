@@ -28,7 +28,7 @@ public class PedidoTicketData {
     private TipoPedido tipoPedido;
     private LocalDateTime fechaExpedicionPedido;
     private BigDecimal precioFinalOrden;
-    private BigDecimal pagoCliente;
+    private BigDecimal pagoClientePrincipal;
     private BigDecimal cambio;
     private List<ComidaPedidoResponseDTO> comidas;
     private List<DesayunoPedidoResponseDTO> desayunos;
@@ -61,8 +61,8 @@ public class PedidoTicketData {
     public BigDecimal getPrecioFinalOrden() { return precioFinalOrden; }
     public void setPrecioFinalOrden(BigDecimal precioFinalOrden) { this.precioFinalOrden = precioFinalOrden; }
 
-    public BigDecimal getPagoCliente() { return pagoCliente; }
-    public void setPagoCliente(BigDecimal pagoCliente) { this.pagoCliente = pagoCliente; }
+    public BigDecimal getPagoClientePrincipal() { return pagoClientePrincipal; }
+    public void setPagoClientePrincipal(BigDecimal pagoClientePrincipal) { this.pagoClientePrincipal = pagoClientePrincipal; }
 
     public BigDecimal getCambio() { return cambio; }
     public void setCambio(BigDecimal cambio) { this.cambio = cambio; }
