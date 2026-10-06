@@ -4,6 +4,7 @@ import com.cocinarubi.DBConstants.Estatus;
 import com.cocinarubi.DBConstants.MetodoPago;
 import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.DBConstants.TamanoPorcion;
+import com.cocinarubi.DBConstants.TipoComida;
 import com.cocinarubi.DBConstants.TipoPedido;
 import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.BasicoComplemento;
@@ -46,6 +47,7 @@ public class PedidoMocks {
                 .precioEntera(BigDecimal.valueOf(90))
                 .estatus(Estatus.DISPONIBLE)
                 .destacado(true)
+                .tipoComida(TipoComida.FIJA)
                 .build();
     }
 

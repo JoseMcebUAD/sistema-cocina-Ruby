@@ -52,8 +52,8 @@ public class ClienteWebRestTest {
         String productoJson = """
                 {
                   "nombreProducto": "Agua Web Test",
-                  "precioDomicilio": 15.00,
-                  "precioNormal": 10.00,
+                  "precioDomicilio": 90.00,
+                  "precioNormal": 90.00,
                   "estatus": "DISPONIBLE",
                   "destacado": false,
                   "idCategoria": 1,
@@ -253,16 +253,16 @@ public class ClienteWebRestTest {
         String json = """
                 {
                   "metodoPagoPrincipal": "EFECTIVO",
-                  "tipoPedido": "MOSTRADOR",
+                  "tipoPedido": "PICK_UP",
                   "pedidoCreadoDesde": "WEB",
-                  "pagoCliente": 50.00,
+                  "pagoClientePrincipal": 90.00,
                   "uuidCliente": "%s",
                   "nombreCliente": "Cliente Web Test",
                   "comidas": [],
                   "desayunos": [],
                   "basicos": [],
                   "productosCocina": [
-                    {"idProductoCocina": %d, "precioUnitario": 10.00, "cantidad": 1}
+                    {"idProductoCocina": %d, "precioUnitario": 90.00, "cantidad": 1}
                   ],
                   "combos": [],
                   "saltarConfirmacion": true
@@ -291,16 +291,16 @@ public class ClienteWebRestTest {
         String json = """
                 {
                   "metodoPagoPrincipal": "EFECTIVO",
-                  "tipoPedido": "MOSTRADOR",
+                  "tipoPedido": "PICK_UP",
                   "pedidoCreadoDesde": "WEB",
-                  "pagoCliente": 60.00,
+                  "pagoClientePrincipal": 180.00,
                   "uuidCliente": "%s",
                   "nombreCliente": "Cliente Web Test Actualizado",
                   "comidas": [],
                   "desayunos": [],
                   "basicos": [],
                   "productosCocina": [
-                    {"idProductoCocina": %d, "precioUnitario": 10.00, "cantidad": 2}
+                    {"idProductoCocina": %d, "precioUnitario": 90.00, "cantidad": 2}
                   ],
                   "combos": [],
                   "saltarConfirmacion": true

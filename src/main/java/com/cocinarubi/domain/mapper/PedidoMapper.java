@@ -150,10 +150,10 @@ public class PedidoMapper {
                 : null;
 
         // El cambio solo es calculable cuando el cliente pagó en efectivo; con pagos exactos
-        // (tarjeta, transferencia) pagoCliente llega null y el frontend lo omite del ticket.
+        // (tarjeta, transferencia) pagoClientePrincipal llega null y el frontend lo omite del ticket.
         BigDecimal cambio = null;
-        if (pedido.getPagoCliente() != null && pedido.getPrecioFinalOrden() != null) {
-            cambio = pedido.getPagoCliente().subtract(pedido.getPrecioFinalOrden());
+        if (pedido.getPagoClientePrincipal() != null && pedido.getPrecioFinalOrden() != null) {
+            cambio = pedido.getPagoClientePrincipal().subtract(pedido.getPrecioFinalOrden());
         }
 
         PedidoResponseDTO dto = new PedidoResponseDTO(
@@ -164,7 +164,7 @@ public class PedidoMapper {
                 pedido.getFechaExpedicionPedido(),
                 pedido.getPedidoCreadoDesde(),
                 pedido.getPrecioFinalOrden(),
-                pedido.getPagoCliente(),
+                pedido.getPagoClientePrincipal(),
                 cambio,
                 pedido.getUuidCliente(),
                 pedido.isPagado(),

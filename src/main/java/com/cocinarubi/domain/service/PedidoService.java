@@ -110,7 +110,7 @@ public class PedidoService {
         existente.setMetodoPagoSecundario(dto.getMetodoPagoSecundario());
         existente.setTipoPedido(dto.getTipoPedido());
         existente.setPedidoCreadoDesde(dto.getPedidoCreadoDesde());
-        existente.setPagoCliente(dto.getPagoCliente());
+        existente.setPagoClientePrincipal(dto.getPagoClientePrincipal());
         existente.setUuidCliente(dto.getUuidCliente());
         existente.setComentario(dto.getComentario());
 
@@ -169,8 +169,8 @@ public class PedidoService {
         if (dto.getMetodoPagoSecundario() != null) {
             pedido.setMetodoPagoSecundario(dto.getMetodoPagoSecundario());
         }
-        if (dto.getPagoCliente() != null) {
-            pedido.setPagoCliente(dto.getPagoCliente());
+        if (dto.getPagoClientePrincipal() != null) {
+            pedido.setPagoClientePrincipal(dto.getPagoClientePrincipal());
         }
         if (dto.getPagado() != null) {
             pedido.setPagado(dto.getPagado());
@@ -220,7 +220,7 @@ public class PedidoService {
                 .metodoPagoSecundario(dto.getMetodoPagoSecundario())
                 .tipoPedido(dto.getTipoPedido())
                 .pedidoCreadoDesde(dto.getPedidoCreadoDesde())
-                .pagoCliente(dto.getPagoCliente())
+                .pagoClientePrincipal(dto.getPagoClientePrincipal())
                 .uuidCliente(dto.getUuidCliente())
                 .fechaExpedicionPedido(LocalDateTime.now(Constants.ZONA_MERIDA))
                 .impreso(false)

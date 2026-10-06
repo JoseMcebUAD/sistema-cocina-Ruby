@@ -139,7 +139,7 @@ public class ComboRestTest {
         ResponseEntity<String> response = restTemplate.exchange(
                 "/combo/" + createdId + "?saltarConfirmacion=true",
                 HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        System.out.println("[OK] DELETE 200 | combo id=" + createdId + " eliminado");
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        System.out.println("[OK] DELETE 204 | combo id=" + createdId + " eliminado");
     }
 }

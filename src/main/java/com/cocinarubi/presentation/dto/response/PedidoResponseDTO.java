@@ -18,7 +18,7 @@ public class PedidoResponseDTO {
     private LocalDateTime fechaExpedicionPedido;
     private PedidoCreadoDesde pedidoCreadoDesde;
     private BigDecimal precioFinalOrden;
-    private BigDecimal pagoCliente;
+    private BigDecimal pagoClientePrincipal;
     private BigDecimal cambio;
     private String uuidCliente;
     /**
@@ -52,7 +52,7 @@ public class PedidoResponseDTO {
     public PedidoResponseDTO(int idPedido, MetodoPago metodoPagoPrincipal, MetodoPago metodoPagoSecundario,
                              TipoPedido tipoPedido,
                              LocalDateTime fechaExpedicionPedido, PedidoCreadoDesde pedidoCreadoDesde,
-                             BigDecimal precioFinalOrden, BigDecimal pagoCliente, BigDecimal cambio,
+                             BigDecimal precioFinalOrden, BigDecimal pagoClientePrincipal, BigDecimal cambio,
                              String uuidCliente, boolean pagado, boolean impreso, String comentario,
                              List<ComidaPedidoResponseDTO> comidas,
                              List<DesayunoPedidoResponseDTO> desayunos,
@@ -69,7 +69,7 @@ public class PedidoResponseDTO {
         this.fechaExpedicionPedido = fechaExpedicionPedido;
         this.pedidoCreadoDesde = pedidoCreadoDesde;
         this.precioFinalOrden = precioFinalOrden;
-        this.pagoCliente = pagoCliente;
+        this.pagoClientePrincipal = pagoClientePrincipal;
         this.cambio = cambio;
         this.uuidCliente = uuidCliente;
         this.pagado = pagado;
@@ -106,8 +106,8 @@ public class PedidoResponseDTO {
     public BigDecimal getPrecioFinalOrden() { return precioFinalOrden; }
     public void setPrecioFinalOrden(BigDecimal precioFinalOrden) { this.precioFinalOrden = precioFinalOrden; }
 
-    public BigDecimal getPagoCliente() { return pagoCliente; }
-    public void setPagoCliente(BigDecimal pagoCliente) { this.pagoCliente = pagoCliente; }
+    public BigDecimal getPagoClientePrincipal() { return pagoClientePrincipal; }
+    public void setPagoClientePrincipal(BigDecimal pagoClientePrincipal) { this.pagoClientePrincipal = pagoClientePrincipal; }
 
     public BigDecimal getCambio() { return cambio; }
     public void setCambio(BigDecimal cambio) { this.cambio = cambio; }

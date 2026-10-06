@@ -146,7 +146,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
             if (esDomicilio) {
                 if (dto.getPedidoDomicilioCocina() == null) {
                     throw new BusinessException(
-                            "Un pedido COCINA a domicilio requiere los datos de domicilio'",
+                            "Un pedido COCINA a domicilio requiere los datos de domicilio ('pedidoDomicilioCocina')",
                             HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
                 }
 
@@ -321,13 +321,13 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
      * y la tarifa de domicilio cocina si aplica).
      */
     private void validarPagoClienteNoExcedaTotal(PedidoRequestDTO dto) {
-        if (dto.getPagoCliente() == null) return;
+        if (dto.getPagoClientePrincipal() == null) return;
 
         BigDecimal precioFinalOrden = calcularPrecioFinalOrden(dto);
 
-        if (dto.getPagoCliente().compareTo(precioFinalOrden) > 0) {
+        if (dto.getPagoClientePrincipal().compareTo(precioFinalOrden) > 0) {
             throw new BusinessException(
-                    "El pago del cliente (" + dto.getPagoCliente()
+                    "El pago del cliente (" + dto.getPagoClientePrincipal()
                             + ") no puede ser mayor al precio final de la orden ("
                             + precioFinalOrden + ")",
                     HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
