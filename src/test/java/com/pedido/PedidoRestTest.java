@@ -78,7 +78,7 @@ public class PedidoRestTest {
                 }
                 """, testRutaId);
         ResponseEntity<String> clienteResp = restTemplate.exchange(
-                "/registroCliente", HttpMethod.POST, new HttpEntity<>(clienteJson, authHeaders), String.class
+                "/registro-cliente", HttpMethod.POST, new HttpEntity<>(clienteJson, authHeaders), String.class
         );
         testRegistroClienteId = mapper.readTree(clienteResp.getBody()).get("data").get("idRegistroCliente").asInt();
 
@@ -110,7 +110,8 @@ public class PedidoRestTest {
                   "precioEntera": %.2f,
                   "estatus": "DISPONIBLE",
                   "destacado": false,
-                  "limiteComplemento": %d
+                  "limiteComplemento": %d,
+                  "tipoComida": "FIJA"
                 }
                 """, PRECIO_COMIDA_ENTERA, LIMITE_COMPLEMENTO);
         ResponseEntity<String> comidaResp = restTemplate.exchange(
@@ -195,10 +196,7 @@ public class PedidoRestTest {
             restTemplate.exchange("/producto-cocina/" + testProductoId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
         }
         if (testRegistroClienteId > 0) {
-            restTemplate.exchange("/registroCliente/" + testRegistroClienteId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
-        }
-        if (testRutaId > 0) {
-            restTemplate.exchange("/ruta/" + testRutaId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
+            restTemplate.exchange("/registro-cliente/" + testRegistroClienteId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
         }
         System.out.println("[TEARDOWN] datos de prueba eliminados");
     }

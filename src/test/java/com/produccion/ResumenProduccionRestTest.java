@@ -166,9 +166,11 @@ public class ResumenProduccionRestTest {
         );
         assertEquals(HttpStatus.OK, response.getStatusCode());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
-        assertEquals(0L, data.get("totalSnacks").asLong());
         assertEquals(0L, data.get("totalComidas").asLong());
-        System.out.println("[OK] ruta inexistente retornó 200 | totalSnacks=0");
+        JsonNode totales = data.get("totalesProductosCocina");
+        assertNotNull(totales, "Debe existir 'totalesProductosCocina' en el resumen");
+        assertTrue(totales.isArray() && totales.size() == 0, "Con ruta inexistente no debe haber productos");
+        System.out.println("[OK] ruta inexistente retornó 200 | totalComidas=0 totalesProductosCocina=[]");
     }
 
     @Test
@@ -176,12 +178,12 @@ public class ResumenProduccionRestTest {
     @DisplayName("GET /produccion/resumen/detalle/snacks — debe retornar 200 con al menos un item")
     public void detalleProduccion_snacks_retorna200ConItems() throws Exception {
         ResponseEntity<String> response = restTemplate.exchange(
-                "/produccion/resumen/detalle/snacks", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
+                "/produccion/resumen/detalle/snack", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
-        assertEquals("snacks", data.get("categoria").asText());
+        assertEquals("snack", data.get("categoria").asText());
         assertTrue(data.get("items").isArray());
         assertTrue(data.get("items").size() >= 1, "Debe contener al menos el snack creado en setUp");
         JsonNode primerItem = data.get("items").get(0);
