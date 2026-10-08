@@ -36,6 +36,7 @@ import java.util.List;
  *   <li>{@link ProductoCocinaPedido} — líneas de snacks, charolas y bebidas.</li>
  *   <li>{@link BasicoPedido} — líneas de paquetes básicos.</li>
  *   <li>{@link PaquetePedido} — líneas de paquetes (promociones).</li>
+ *   <li>{@link PedidoTarifaEspecial} — tarifas especiales aplicadas al momento de creación (solo DOMICILIO).</li>
  * </ul>
  * </p>
  */
@@ -124,6 +125,10 @@ public class Pedido {
     @Builder.Default
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PaquetePedido> paquetesPedido = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<PedidoTarifaEspecial> tarifasEspeciales = new ArrayList<>();
 
     // -------------------------------------------------------------------------
     // Métodos helper para sincronización bidireccional
