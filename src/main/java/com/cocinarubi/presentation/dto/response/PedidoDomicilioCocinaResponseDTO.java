@@ -12,7 +12,6 @@ public class PedidoDomicilioCocinaResponseDTO {
     private String nombreRuta;
     private String domicilio;
     private BigDecimal precioTarifa;
-    private BigDecimal tarifasEspeciales;
 
     public PedidoDomicilioCocinaResponseDTO() {}
 
@@ -52,7 +51,4 @@ public class PedidoDomicilioCocinaResponseDTO {
 
     public BigDecimal getPrecioTarifa() { return precioTarifa; }
     public void setPrecioTarifa(BigDecimal precioTarifa) { this.precioTarifa = precioTarifa; }
-
-    public BigDecimal getTarifasEspeciales() { return tarifasEspeciales; }
-    public void setTarifasEspeciales(BigDecimal tarifasEspeciales) { this.tarifasEspeciales = tarifasEspeciales; }
 }

@@ -12,6 +12,7 @@ import com.cocinarubi.presentation.dto.response.PaquetePedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioCocinaResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioResponseDTO;
 import com.cocinarubi.presentation.dto.response.ProductoCocinaPedidoResponseDTO;
+import com.cocinarubi.presentation.dto.response.TarifaEspecialAplicadaResponseDTO;
 import com.cocinarubi.util.FormatearReciboPedidoService;
 import com.cocinarubi.util.template.AbstractOrderTemplate;
 import com.cocinarubi.util.template.data.PedidoTicketData;
@@ -51,8 +52,8 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
 
         // Sección de entrega a domicilio (WEB usa PedidoDomicilioResponseDTO,
         // COCINA usa PedidoDomicilioCocinaResponseDTO)
-        renderDomicilio(escpos, data.getDomicilio());
-        renderDomicilioCocina(escpos, data.getDomicilioCocina());
+        renderDomicilio(escpos, data.getDomicilio(), data.getTarifasEspeciales());
+        renderDomicilioCocina(escpos, data.getDomicilioCocina(), data.getTarifasEspeciales());
         escpos.feed(1);
 
         // Líneas de productos
@@ -136,8 +137,9 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         }
     }
 
-    // Domicilio WEB: ruta, tarifa base, tarifas especiales y dirección
-    private void renderDomicilio(EscPos escpos, PedidoDomicilioResponseDTO domicilio) throws IOException {
+    // Domicilio WEB: ruta, tarifa base, tarifas especiales (una fila c/u) y dirección
+    private void renderDomicilio(EscPos escpos, PedidoDomicilioResponseDTO domicilio,
+            List<TarifaEspecialAplicadaResponseDTO> tarifasEspeciales) throws IOException {
         if (domicilio == null) return;
         escpos.feed(1);
         escpos.writeLF("DOMICILIO");
@@ -147,8 +149,10 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         if (domicilio.getTarifa() != null) {
             escpos.writeLF(formatter.formatearLineaTotal("Tarifa", FORMATO_PRECIO.format(domicilio.getTarifa())));
         }
-        if (domicilio.getTarifasEspeciales() != null) {
-            escpos.writeLF(formatter.formatearLineaTotal("T. especial", FORMATO_PRECIO.format(domicilio.getTarifasEspeciales())));
+        if (tarifasEspeciales != null) {
+            for (TarifaEspecialAplicadaResponseDTO te : tarifasEspeciales) {
+                escpos.writeLF(formatter.formatearLineaTotal(te.getNombreTarifa(), FORMATO_PRECIO.format(te.getPrecioTarifa())));
+            }
         }
         if (domicilio.getDireccion() != null) {
             escpos.writeLF("Dir: " + domicilio.getDireccion());
@@ -159,8 +163,9 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         escpos.writeLF(Constants.SEPARADOR_TICKET);
     }
 
-    // Domicilio COCINA: nombre cliente, ruta, tarifa, tarifas especiales y dirección
-    private void renderDomicilioCocina(EscPos escpos, PedidoDomicilioCocinaResponseDTO domicilio) throws IOException {
+    // Domicilio COCINA: nombre cliente, ruta, tarifa base, tarifas especiales (una fila c/u) y dirección
+    private void renderDomicilioCocina(EscPos escpos, PedidoDomicilioCocinaResponseDTO domicilio,
+            List<TarifaEspecialAplicadaResponseDTO> tarifasEspeciales) throws IOException {
         if (domicilio == null) return;
         escpos.feed(1);
         escpos.writeLF("DOMICILIO");
@@ -170,8 +175,10 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         if (domicilio.getPrecioTarifa() != null) {
             escpos.writeLF(formatter.formatearLineaTotal("Tarifa", FORMATO_PRECIO.format(domicilio.getPrecioTarifa())));
         }
-        if (domicilio.getTarifasEspeciales() != null) {
-            escpos.writeLF(formatter.formatearLineaTotal("T. especial", FORMATO_PRECIO.format(domicilio.getTarifasEspeciales())));
+        if (tarifasEspeciales != null) {
+            for (TarifaEspecialAplicadaResponseDTO te : tarifasEspeciales) {
+                escpos.writeLF(formatter.formatearLineaTotal(te.getNombreTarifa(), FORMATO_PRECIO.format(te.getPrecioTarifa())));
+            }
         }
         if (domicilio.getDomicilio() != null) {
             escpos.writeLF("Dir: " + domicilio.getDomicilio());

@@ -10,6 +10,9 @@ import com.cocinarubi.domain.entity.BasicoPedido;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.domain.entity.Pedido;
+import com.cocinarubi.domain.entity.PedidoDomicilioCocina;
+import com.cocinarubi.domain.entity.PedidoTarifaEspecial;
+import com.cocinarubi.domain.entity.TarifaEspecial;
 import com.cocinarubi.domain.mapper.PedidoMapper;
 import com.cocinarubi.dao.TarifaEspecialRepository;
 import com.cocinarubi.domain.service.CatalogoPedidoService;
@@ -407,5 +410,119 @@ public class PedidoServiceTest {
         assertEquals("sin cebolla", result.getComentario());
         System.out.println("[OK] findById expuso impreso=" + result.isImpreso()
                 + " comentario=" + result.getComentario());
+    }
+
+    @Test
+    @DisplayName("save - cocinaDomicilio con tarifa ruta $15 y tarifa especial activa $10 → precioFinal = $25 y snapshot guardado")
+    public void save_cocinaDomicilio_conTarifaEspecialActiva_sumaPrecioCorrectamente() {
+        // handleTipoPedido establece PedidoDomicilioCocina para que apliquen las tarifas
+        doAnswer(inv -> {
+            Pedido p = inv.getArgument(0);
+            PedidoDomicilioCocina pdc = new PedidoDomicilioCocina();
+            pdc.setPrecioTarifa(BigDecimal.valueOf(15));
+            p.setPedidoDomicilioCocina(pdc);
+            return null;
+        }).when(catalogoPedido).handleTipoPedido(any(Pedido.class), any(PedidoRequestDTO.class));
+
+        when(catalogoPedido.calcularTotal(any(Pedido.class))).thenReturn(BigDecimal.valueOf(15));
+
+        TarifaEspecial tarifaLluvia = TarifaEspecial.builder()
+                .idTarifaLluvia(1)
+                .nombreTarifa("Tarifa lluvia")
+                .tarifa(BigDecimal.TEN)
+                .isActive(true)
+                .build();
+        when(tarifaEspecialRepository.findByIsActiveTrue()).thenReturn(List.of(tarifaLluvia));
+        when(pedidoRepository.save(any(Pedido.class))).thenReturn(PEDIDO_PREPARED);
+
+        ArgumentCaptor<Pedido> captor = ArgumentCaptor.forClass(Pedido.class);
+        pedidoService.save(crearDtoCocinaDomicilio(1));
+
+        verify(pedidoRepository).save(captor.capture());
+        Pedido guardado = captor.getValue();
+
+        assertEquals(0, BigDecimal.valueOf(25).compareTo(guardado.getPrecioFinalOrden()),
+                "precioFinal debe ser $15 (ruta) + $10 (especial) = $25");
+        assertEquals(1, guardado.getTarifasEspeciales().size(),
+                "Debe haber 1 snapshot de tarifa especial");
+        assertEquals(0, BigDecimal.TEN.compareTo(guardado.getTarifasEspeciales().get(0).getPrecioTarifa()),
+                "El snapshot debe tener precioTarifa = $10");
+        System.out.println("[OK] save cocinaDomicilio precioFinal=" + guardado.getPrecioFinalOrden()
+                + " tarifasEspeciales=" + guardado.getTarifasEspeciales().size());
+    }
+
+    @Test
+    @DisplayName("update - sin tarifa especial previa, aunque haya activa en DB, no se agrega al precio")
+    public void update_sinTarifaEspecialPrevia_noAgregaCosto() {
+        Pedido existente = Pedido.builder()
+                .idPedido(10)
+                .metodoPagoPrincipal(MetodoPago.EFECTIVO)
+                .tipoPedido(TipoPedido.DOMICILIO)
+                .pedidoCreadoDesde(PedidoCreadoDesde.COCINA)
+                .precioFinalOrden(BigDecimal.valueOf(50))
+                .impreso(false)
+                .build(); // tarifasEspeciales vacío por @Builder.Default
+
+        when(pedidoRepository.findById(10)).thenReturn(Optional.of(existente));
+        when(catalogoPedido.calcularTotal(any(Pedido.class))).thenReturn(BigDecimal.valueOf(50));
+        when(pedidoRepository.save(any(Pedido.class))).thenReturn(existente);
+
+        ArgumentCaptor<Pedido> captor = ArgumentCaptor.forClass(Pedido.class);
+        pedidoService.update(10, crearDtoCocinaDomicilio(1));
+
+        verify(pedidoRepository).save(captor.capture());
+        Pedido actualizado = captor.getValue();
+
+        assertEquals(0, BigDecimal.valueOf(50).compareTo(actualizado.getPrecioFinalOrden()),
+                "precioFinal no debe cambiar si no había tarifa especial previa");
+        assertTrue(actualizado.getTarifasEspeciales().isEmpty(),
+                "La lista de tarifas especiales debe seguir vacía");
+        verify(tarifaEspecialRepository, never()).findByIsActiveTrue();
+        System.out.println("[OK] update sin tarifa previa precioFinal=" + actualizado.getPrecioFinalOrden());
+    }
+
+    @Test
+    @DisplayName("update - con tarifa especial previa (isActive=false), preserva el snapshot y lo suma al precio")
+    public void update_conTarifaEspecialPrevia_mantieneTarifaIndependientementeDeIsActive() {
+        TarifaEspecial tarifaInactiva = TarifaEspecial.builder()
+                .idTarifaLluvia(1)
+                .nombreTarifa("Tarifa lluvia")
+                .tarifa(BigDecimal.TEN)
+                .isActive(false)
+                .build();
+
+        Pedido existente = Pedido.builder()
+                .idPedido(10)
+                .metodoPagoPrincipal(MetodoPago.EFECTIVO)
+                .tipoPedido(TipoPedido.DOMICILIO)
+                .pedidoCreadoDesde(PedidoCreadoDesde.COCINA)
+                .precioFinalOrden(BigDecimal.valueOf(60))
+                .impreso(false)
+                .build();
+
+        PedidoTarifaEspecial snapshot = PedidoTarifaEspecial.builder()
+                .id(1)
+                .pedido(existente)
+                .tarifaEspecial(tarifaInactiva)
+                .precioTarifa(BigDecimal.TEN)
+                .build();
+        existente.getTarifasEspeciales().add(snapshot);
+
+        when(pedidoRepository.findById(10)).thenReturn(Optional.of(existente));
+        when(catalogoPedido.calcularTotal(any(Pedido.class))).thenReturn(BigDecimal.valueOf(50));
+        when(pedidoRepository.save(any(Pedido.class))).thenReturn(existente);
+
+        ArgumentCaptor<Pedido> captor = ArgumentCaptor.forClass(Pedido.class);
+        pedidoService.update(10, crearDtoCocinaDomicilio(1));
+
+        verify(pedidoRepository).save(captor.capture());
+        Pedido actualizado = captor.getValue();
+
+        assertEquals(0, BigDecimal.valueOf(60).compareTo(actualizado.getPrecioFinalOrden()),
+                "precioFinal debe ser $50 (items) + $10 (snapshot) = $60");
+        assertEquals(1, actualizado.getTarifasEspeciales().size(),
+                "El snapshot debe conservarse intacto");
+        verify(tarifaEspecialRepository, never()).findByIsActiveTrue();
+        System.out.println("[OK] update con tarifa previa inactiva precioFinal=" + actualizado.getPrecioFinalOrden());
     }
 }
