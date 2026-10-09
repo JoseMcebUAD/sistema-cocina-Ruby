@@ -51,4 +51,7 @@ public class ComplementoComidaPedido {
 
     @Column(name = "precio_unitario")
     private BigDecimal precioUnitario;
+
+    @Column(name = "orden")
+    private int orden;
 }

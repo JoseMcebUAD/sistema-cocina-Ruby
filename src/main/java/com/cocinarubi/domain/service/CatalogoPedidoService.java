@@ -136,36 +136,37 @@ public class CatalogoPedidoService {
     }
 
     /**
-     * Agrega los complementos de una línea de comida validando el límite de complementos gratuitos.
+     * Agrega los complementos de una línea de comida validando el límite de slots gratuitos.
      *
-     * <p>Sin límite (null): usa el precio del catálogo para cada complemento, comportamiento original.
-     * Con límite: el frontend envía los precios calculados respetando la regla de slots gratuitos
-     * (cobrar_siempre consume slots y siempre tiene precio; los no-cobrar en exceso deben tener precio).
-     * El servidor valida coherencia antes de persistir.
+     * <p>Sin límite (null): usa el precio del catálogo para cada complemento.
+     * Con límite: {@code cobrarSiempre} siempre se cobra y NO consume slots gratuitos;
+     * los primeros {@code limite} no-cobrar en orden de la lista son gratuitos (precio=0);
+     * los no-cobrar restantes deben traer {@code precioUnitario > 0} en el DTO.
      */
     private void agregarComplementosConLimite(ComidaPedido item,
                                                List<ComplementoPedidoDTO> dtos,
                                                Integer limite) {
         if (limite == null) {
-            for (ComplementoPedidoDTO dto : dtos) {
-                Complemento c = complementoService.findById(dto.getIdComplemento());
+            for (int i = 0; i < dtos.size(); i++) {
+                Complemento c = complementoService.findById(dtos.get(i).getIdComplemento());
                 item.addComplemento(ComplementoComidaPedido.builder()
-                        .complemento(c).precioUnitario(c.getPrecioExtra()).build());
+                        .complemento(c)
+                        .precioUnitario(c.getPrecioExtra())
+                        .orden(i + 1)
+                        .build());
             }
             return;
         }
 
-        // Resolver todas las entidades en el mismo orden que los DTOs
+        // Resolver entidades en el mismo orden que los DTOs
         List<Complemento> complementos = new ArrayList<>(dtos.size());
         for (ComplementoPedidoDTO dto : dtos) {
             complementos.add(complementoService.findById(dto.getIdComplemento()));
         }
 
-        // Calcular cuántos no-cobrar pueden ser gratuitos y cuántos deben tener precio
-        long countSiempre = complementos.stream().filter(Complemento::isCobrarSiempre).count();
-        long slotsLibres = Math.max(0L, limite - countSiempre);
-        long countNoCobrar = complementos.size() - countSiempre;
-        long exceso = Math.max(0L, countNoCobrar - slotsLibres);
+        // cobrarSiempre NO consume slots; los no-cobrar en exceso del límite deben tener precio
+        long countNoCobrar = complementos.stream().filter(c -> !c.isCobrarSiempre()).count();
+        long exceso = Math.max(0L, countNoCobrar - limite);
 
         if (exceso > 0) {
             long noCobrarConPrecio = 0;
@@ -184,30 +185,51 @@ public class CatalogoPedidoService {
             }
         }
 
-        // Validar precios y persistir
+        // Validar y persistir en orden; el servidor decide qué no-cobrar son gratuitos
+        int slotsUsados = 0;
         for (int i = 0; i < dtos.size(); i++) {
             Complemento complemento = complementos.get(i);
             BigDecimal precio = dtos.get(i).getPrecioUnitario();
-            if (complemento.isCobrarSiempre() && (precio == null || precio.compareTo(BigDecimal.ZERO) == 0)) {
-                throw new BusinessException(
-                        "El complemento '" + complemento.getNombreComplemento()
-                                + "' siempre se cobra y debe llevar un precio en la solicitud.",
-                        HttpStatus.BAD_REQUEST);
-            }
-            if (precio != null && precio.compareTo(BigDecimal.ZERO) > 0) {
-                BigDecimal precioEntidad = complemento.getPrecioExtra() != null
-                        ? complemento.getPrecioExtra() : BigDecimal.ZERO;
-                if (precio.compareTo(precioEntidad) != 0) {
+
+            if (complemento.isCobrarSiempre()) {
+                if (precio == null || precio.compareTo(BigDecimal.ZERO) == 0) {
                     throw new BusinessException(
-                            "El precio del complemento '" + complemento.getNombreComplemento()
-                                    + "' no coincide con el catálogo.",
+                            "El complemento '" + complemento.getNombreComplemento()
+                                    + "' siempre se cobra y debe llevar un precio en la solicitud.",
                             HttpStatus.BAD_REQUEST);
                 }
+                validarPrecioVsCatalogo(complemento, precio);
+            } else {
+                if (slotsUsados < limite) {
+                    precio = BigDecimal.ZERO;
+                    slotsUsados++;
+                } else {
+                    if (precio == null || precio.compareTo(BigDecimal.ZERO) == 0) {
+                        throw new BusinessException(
+                                "El complemento '" + complemento.getNombreComplemento()
+                                        + "' excede el límite gratuito y debe llevar un precio en la solicitud.",
+                                HttpStatus.BAD_REQUEST);
+                    }
+                    validarPrecioVsCatalogo(complemento, precio);
+                }
             }
+
             item.addComplemento(ComplementoComidaPedido.builder()
                     .complemento(complemento)
-                    .precioUnitario(precio != null ? precio : BigDecimal.ZERO)
+                    .precioUnitario(precio)
+                    .orden(i + 1)
                     .build());
+        }
+    }
+
+    private void validarPrecioVsCatalogo(Complemento complemento, BigDecimal precio) {
+        BigDecimal precioEntidad = complemento.getPrecioExtra() != null
+                ? complemento.getPrecioExtra() : BigDecimal.ZERO;
+        if (precio.compareTo(precioEntidad) != 0) {
+            throw new BusinessException(
+                    "El precio del complemento '" + complemento.getNombreComplemento()
+                            + "' no coincide con el catálogo.",
+                    HttpStatus.BAD_REQUEST);
         }
     }
 
