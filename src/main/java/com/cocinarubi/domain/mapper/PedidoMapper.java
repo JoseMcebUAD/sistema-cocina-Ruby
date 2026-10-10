@@ -164,7 +164,7 @@ public class PedidoMapper {
                         pte.getPrecioTarifa()))
                 .collect(Collectors.toList());
 
-        PedidoResponseDTO response = new PedidoResponseDTO(
+        PedidoResponseDTO dto = new PedidoResponseDTO(
                 pedido.getIdPedido(),
                 pedido.getMetodoPagoPrincipal(),
                 pedido.getMetodoPagoSecundario(),
@@ -180,10 +180,9 @@ public class PedidoMapper {
                 pedido.getComentario(),
                 comidas, desayunos, basicos, productos, combos, domicilio, domicilioCocina, pedidoCocina
         );
-        response.setTarifasEspeciales(tarifasEspeciales);
-        return response;
         // Por setter y no por constructor: sumarle un parámetro obligaría a tocar todos los
         // llamadores y los tests, igual que ocurre con tarifasAplicadas.
+        dto.setTarifasEspeciales(tarifasEspeciales);
         dto.setNombreCliente(resolverNombreCliente(pedido, nombresPorUuid));
         dto.setTipoDescuento(pedido.getTipoDescuento());
         return dto;
