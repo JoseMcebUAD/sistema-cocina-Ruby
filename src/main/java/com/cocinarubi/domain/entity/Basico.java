@@ -60,7 +60,7 @@ public class Basico {
     private Estatus estatus;
 
     @Column(name = "descuento_activo")
-    private boolean descuentoActivo = false;
+    private boolean descuentoActivo;
 
     @Column(name = "descripcion_descuento", length = 400)
     private String descripcionDescuento;

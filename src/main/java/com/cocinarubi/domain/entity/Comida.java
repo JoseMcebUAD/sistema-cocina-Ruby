@@ -68,7 +68,7 @@ public class Comida {
     private TipoComida tipoComida;
 
     @Column(name = "descuento_activo")
-    private boolean descuentoActivo = false;
+    private boolean descuentoActivo;
 
     @Column(name = "descripcion_descuento", length = 400)
     private String descripcionDescuento;
