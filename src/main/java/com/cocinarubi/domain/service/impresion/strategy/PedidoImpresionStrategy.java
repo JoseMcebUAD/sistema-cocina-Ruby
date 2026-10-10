@@ -72,7 +72,7 @@ public class PedidoImpresionStrategy implements ImpresionStrategy {
         }
 
         data.setComentario(dto.getComentario());
-        data.setTipoDescuento(dto.getTipoDescuento());
+        data.setTarifasEspeciales(dto.getTarifasEspeciales());
         return data;
     }
 }

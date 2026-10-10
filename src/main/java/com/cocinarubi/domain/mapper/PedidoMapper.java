@@ -30,6 +30,7 @@ import com.cocinarubi.presentation.dto.response.PedidoDomicilioCocinaResponseDTO
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ProductoCocinaPedidoResponseDTO;
+import com.cocinarubi.presentation.dto.response.TarifaEspecialAplicadaResponseDTO;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -156,7 +157,14 @@ public class PedidoMapper {
             cambio = pedido.getPagoClientePrincipal().subtract(pedido.getPrecioFinalOrden());
         }
 
-        PedidoResponseDTO dto = new PedidoResponseDTO(
+        List<TarifaEspecialAplicadaResponseDTO> tarifasEspeciales = pedido.getTarifasEspeciales().stream()
+                .map(pte -> new TarifaEspecialAplicadaResponseDTO(
+                        pte.getTarifaEspecial().getIdTarifaLluvia(),
+                        pte.getTarifaEspecial().getNombreTarifa(),
+                        pte.getPrecioTarifa()))
+                .collect(Collectors.toList());
+
+        PedidoResponseDTO response = new PedidoResponseDTO(
                 pedido.getIdPedido(),
                 pedido.getMetodoPagoPrincipal(),
                 pedido.getMetodoPagoSecundario(),
@@ -172,6 +180,8 @@ public class PedidoMapper {
                 pedido.getComentario(),
                 comidas, desayunos, basicos, productos, combos, domicilio, domicilioCocina, pedidoCocina
         );
+        response.setTarifasEspeciales(tarifasEspeciales);
+        return response;
         // Por setter y no por constructor: sumarle un parámetro obligaría a tocar todos los
         // llamadores y los tests, igual que ocurre con tarifasAplicadas.
         dto.setNombreCliente(resolverNombreCliente(pedido, nombresPorUuid));
@@ -312,7 +322,6 @@ public class PedidoMapper {
                 pd.getCodigo()
         );
         dto.setTarifa(pd.getTarifa());
-        dto.setTarifasEspeciales(pd.getTarifasEspeciales());
         return dto;
     }
 
@@ -328,7 +337,6 @@ public class PedidoMapper {
                 pdc.getDomicilio(),
                 pdc.getPrecioTarifa()
         );
-        dto.setTarifasEspeciales(pdc.getTarifasEspeciales());
         return dto;
     }
 

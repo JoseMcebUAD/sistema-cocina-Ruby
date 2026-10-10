@@ -10,6 +10,7 @@ import com.cocinarubi.presentation.dto.response.ComboPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioCocinaResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioResponseDTO;
 import com.cocinarubi.presentation.dto.response.ProductoCocinaPedidoResponseDTO;
+import com.cocinarubi.presentation.dto.response.TarifaEspecialAplicadaResponseDTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -39,6 +40,7 @@ public class PedidoTicketData {
     private PedidoDomicilioCocinaResponseDTO domicilioCocina;
     private String nombreCliente;
     private String comentario;
+    private List<TarifaEspecialAplicadaResponseDTO> tarifasEspeciales;
     private TipoDescuento tipoDescuento;
 
     public PedidoTicketData() {}
@@ -93,6 +95,9 @@ public class PedidoTicketData {
 
     public String getComentario() { return comentario; }
     public void setComentario(String comentario) { this.comentario = comentario; }
+
+    public List<TarifaEspecialAplicadaResponseDTO> getTarifasEspeciales() { return tarifasEspeciales; }
+    public void setTarifasEspeciales(List<TarifaEspecialAplicadaResponseDTO> tarifasEspeciales) { this.tarifasEspeciales = tarifasEspeciales; }
 
     public TipoDescuento getTipoDescuento() { return tipoDescuento; }
     public void setTipoDescuento(TipoDescuento tipoDescuento) { this.tipoDescuento = tipoDescuento; }

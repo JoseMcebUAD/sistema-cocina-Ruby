@@ -47,6 +47,17 @@ public class PedidoRestTest {
     private static final double PRECIO_CON_COBRAR = 12.00;
     private static final double PRECIO_COMIDA_ENTERA = 90.00;
 
+    // ── campos para tests de complementos (escenarios 1-5) ───────────────────
+    private int testComida1Id;            // limiteComplemento=1
+    private int testComida3Id;            // limiteComplemento=3
+    private int compAId;                  // cobrarSiempre=false, precioExtra=3.00
+    private int compBId;                  // cobrarSiempre=false, precioExtra=3.00
+    private int compCId;                  // cobrarSiempre=false, precioExtra=3.00
+    private int compDId;                  // cobrarSiempre=false, precioExtra=3.00
+    private int compEId;                  // cobrarSiempre=false, precioExtra=3.00
+    private int compCSId;                 // cobrarSiempre=true,  precioExtra=5.00
+    private int pedidoComplementos3Id;    // pedido creado en escenario 3, reutilizado en 4 y 5
+
     @BeforeAll
     void setUp() throws Exception {
         UserDetails jefa = usuarioDetailsService.loadUserByUsername("rubi");
@@ -467,6 +478,212 @@ public class PedidoRestTest {
         assertTrue(createdSinMetodoPagoId > 0);
         assertTrue(data.get("metodoPagoPrincipal").isNull());
         System.out.println("[OK] save sin metodoPagoPrincipal → 201 | id=" + createdSinMetodoPagoId);
+    }
+
+    // ── Setup / teardown exclusivos de los tests de complementos ─────────────
+
+    @BeforeAll
+    void setUpComplementos() throws Exception {
+        String compNoCobrar = """
+                {"nombreComplemento":"%s","precioExtra":3.00,"estatus":"DISPONIBLE","destacado":false,"cobrarSiempre":false}
+                """;
+        String compCobrarSiempre = """
+                {"nombreComplemento":"CS-Test","precioExtra":5.00,"estatus":"DISPONIBLE","destacado":false,"cobrarSiempre":true}
+                """;
+
+        compAId = crearComplemento(String.format(compNoCobrar, "CompA-Test"));
+        compBId = crearComplemento(String.format(compNoCobrar, "CompB-Test"));
+        compCId = crearComplemento(String.format(compNoCobrar, "CompC-Test"));
+        compDId = crearComplemento(String.format(compNoCobrar, "CompD-Test"));
+        compEId = crearComplemento(String.format(compNoCobrar, "CompE-Test"));
+        compCSId = crearComplemento(compCobrarSiempre);
+
+        testComida1Id = crearComida(1);
+        testComida3Id = crearComida(3);
+
+        System.out.println("[SETUP-COMP] comida1=" + testComida1Id + " comida3=" + testComida3Id
+                + " compA=" + compAId + " compB=" + compBId + " compC=" + compCId
+                + " compD=" + compDId + " compE=" + compEId + " compCS=" + compCSId);
+    }
+
+    @AfterAll
+    void tearDownComplementos() {
+        if (pedidoComplementos3Id > 0) {
+            restTemplate.exchange("/pedido/" + pedidoComplementos3Id, HttpMethod.DELETE,
+                    new HttpEntity<>(authHeaders), String.class);
+        }
+        for (int id : new int[]{compAId, compBId, compCId, compDId, compEId, compCSId}) {
+            if (id > 0) {
+                restTemplate.exchange("/complemento/" + id + "?saltarConfirmacion=true",
+                        HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
+            }
+        }
+        for (int id : new int[]{testComida1Id, testComida3Id}) {
+            if (id > 0) {
+                restTemplate.exchange("/comida/" + id + "?saltarConfirmacion=true",
+                        HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
+            }
+        }
+        System.out.println("[TEARDOWN-COMP] datos de complementos eliminados");
+    }
+
+    private int crearComplemento(String json) throws Exception {
+        ResponseEntity<String> resp = restTemplate.exchange(
+                "/complemento", HttpMethod.POST, new HttpEntity<>(json, authHeaders), String.class);
+        return mapper.readTree(resp.getBody()).get("data").get("idComplemento").asInt();
+    }
+
+    private int crearComida(int limiteComplemento) throws Exception {
+        String json = String.format("""
+                {"nombreComida":"ComidaTest-Limite%d","precioMedia":45.00,"precioEntera":90.00,
+                 "estatus":"DISPONIBLE","destacado":false,"limiteComplemento":%d}
+                """, limiteComplemento, limiteComplemento);
+        ResponseEntity<String> resp = restTemplate.exchange(
+                "/comida", HttpMethod.POST, new HttpEntity<>(json, authHeaders), String.class);
+        return mapper.readTree(resp.getBody()).get("data").get("idComida").asInt();
+    }
+
+    private String pedidoConComplementos(int idComida, String complementosJson) {
+        return String.format("""
+                {"metodoPagoPrincipal":"EFECTIVO","tipoPedido":"MOSTRADOR","pedidoCreadoDesde":"COCINA",
+                 "pagoCliente":100.00,"nombreCliente":"Test Complementos",
+                 "comidas":[{"idComida":%d,"precioUnitario":90.00,"tamanoPorcion":"ENTERA","complementos":%s}],
+                 "desayunos":[],"basicos":[],"productosCocina":[],"saltarConfirmacion":true}
+                """, idComida, complementosJson);
+    }
+
+    // ── Escenarios 1-5 de complementos ───────────────────────────────────────
+
+    @Test
+    @Order(20)
+    @DisplayName("Escenario 1 — limite=1: primer no-cobrar gratis, segundo no-cobrar cobrado")
+    public void limite1_primerNoCobrarGratis_segundoNoCobrarCobrado() throws Exception {
+        String comps = String.format(
+                "[{\"idComplemento\":%d},{\"idComplemento\":%d,\"precio_unitario\":3.00}]",
+                compAId, compBId);
+        ResponseEntity<String> resp = restTemplate.exchange(
+                "/pedido", HttpMethod.POST,
+                new HttpEntity<>(pedidoConComplementos(testComida1Id, comps), authHeaders), String.class);
+
+        assertEquals(HttpStatus.CREATED, resp.getStatusCode());
+        JsonNode complementos = mapper.readTree(resp.getBody())
+                .get("data").get("comidasPedido").get(0).get("complementos");
+
+        assertEquals(2, complementos.size());
+        assertEquals(0.0, complementos.get(0).get("precioUnitario").asDouble(), "compA debe ser gratis");
+        assertEquals(3.0, complementos.get(1).get("precioUnitario").asDouble(), "compB debe ser cobrado");
+
+        int pedidoId = mapper.readTree(resp.getBody()).get("data").get("idPedido").asInt();
+        restTemplate.exchange("/pedido/" + pedidoId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
+        System.out.println("[OK] Esc1 compA=0, compB=3");
+    }
+
+    @Test
+    @Order(21)
+    @DisplayName("Escenario 2 — limite=1: no-cobrar gratis + cobrarSiempre cobrado (no consume slot)")
+    public void limite1_noCobrarGratis_cobrarSiempreCobrado() throws Exception {
+        String comps = String.format(
+                "[{\"idComplemento\":%d},{\"idComplemento\":%d,\"precio_unitario\":5.00}]",
+                compAId, compCSId);
+        ResponseEntity<String> resp = restTemplate.exchange(
+                "/pedido", HttpMethod.POST,
+                new HttpEntity<>(pedidoConComplementos(testComida1Id, comps), authHeaders), String.class);
+
+        assertEquals(HttpStatus.CREATED, resp.getStatusCode());
+        JsonNode complementos = mapper.readTree(resp.getBody())
+                .get("data").get("comidasPedido").get(0).get("complementos");
+
+        assertEquals(2, complementos.size());
+        assertEquals(0.0, complementos.get(0).get("precioUnitario").asDouble(), "compA debe ser gratis");
+        assertEquals(5.0, complementos.get(1).get("precioUnitario").asDouble(), "cobrarSiempre debe ser cobrado");
+
+        int pedidoId = mapper.readTree(resp.getBody()).get("data").get("idPedido").asInt();
+        restTemplate.exchange("/pedido/" + pedidoId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
+        System.out.println("[OK] Esc2 compA=0, compCS=5");
+    }
+
+    @Test
+    @Order(22)
+    @DisplayName("Escenario 3 — limite=3: tres gratis y el cuarto cobrado")
+    public void limite3_tresFreeUnoExceso() throws Exception {
+        String comps = String.format(
+                "[{\"idComplemento\":%d},{\"idComplemento\":%d},{\"idComplemento\":%d}" +
+                ",{\"idComplemento\":%d,\"precio_unitario\":3.00}]",
+                compAId, compBId, compCId, compDId);
+        ResponseEntity<String> resp = restTemplate.exchange(
+                "/pedido", HttpMethod.POST,
+                new HttpEntity<>(pedidoConComplementos(testComida3Id, comps), authHeaders), String.class);
+
+        assertEquals(HttpStatus.CREATED, resp.getStatusCode());
+        JsonNode data = mapper.readTree(resp.getBody()).get("data");
+        pedidoComplementos3Id = data.get("idPedido").asInt();
+        JsonNode complementos = data.get("comidasPedido").get(0).get("complementos");
+
+        assertEquals(4, complementos.size());
+        assertEquals(0.0, complementos.get(0).get("precioUnitario").asDouble(), "compA gratis");
+        assertEquals(0.0, complementos.get(1).get("precioUnitario").asDouble(), "compB gratis");
+        assertEquals(0.0, complementos.get(2).get("precioUnitario").asDouble(), "compC gratis");
+        assertEquals(3.0, complementos.get(3).get("precioUnitario").asDouble(), "compD cobrado");
+        System.out.println("[OK] Esc3 id=" + pedidoComplementos3Id + " A,B,C=0 D=3");
+    }
+
+    @Test
+    @Order(23)
+    @DisplayName("Escenario 4 — PUT agrega compE y cobrarSiempre: mantiene 3 gratis")
+    public void limite3_put_agregarNoCobrarYCobrarSiempre_mantienenTresGratis() throws Exception {
+        // Lista completa: A, B, C (gratis), D (cobrado), E (cobrado), CS (cobrarSiempre)
+        String comps = String.format(
+                "[{\"idComplemento\":%d},{\"idComplemento\":%d},{\"idComplemento\":%d}" +
+                ",{\"idComplemento\":%d,\"precio_unitario\":3.00}" +
+                ",{\"idComplemento\":%d,\"precio_unitario\":3.00}" +
+                ",{\"idComplemento\":%d,\"precio_unitario\":5.00}]",
+                compAId, compBId, compCId, compDId, compEId, compCSId);
+        ResponseEntity<String> resp = restTemplate.exchange(
+                "/pedido/" + pedidoComplementos3Id, HttpMethod.PUT,
+                new HttpEntity<>(pedidoConComplementos(testComida3Id, comps), authHeaders), String.class);
+
+        assertEquals(HttpStatus.OK, resp.getStatusCode());
+        JsonNode complementos = mapper.readTree(resp.getBody())
+                .get("data").get("comidasPedido").get(0).get("complementos");
+
+        assertEquals(6, complementos.size());
+        assertEquals(0.0, complementos.get(0).get("precioUnitario").asDouble(), "A gratis");
+        assertEquals(0.0, complementos.get(1).get("precioUnitario").asDouble(), "B gratis");
+        assertEquals(0.0, complementos.get(2).get("precioUnitario").asDouble(), "C gratis");
+        assertEquals(3.0, complementos.get(3).get("precioUnitario").asDouble(), "D cobrado");
+        assertEquals(3.0, complementos.get(4).get("precioUnitario").asDouble(), "E cobrado");
+        assertEquals(5.0, complementos.get(5).get("precioUnitario").asDouble(), "CS cobrado");
+        System.out.println("[OK] Esc4 A,B,C=0 D,E=3 CS=5");
+    }
+
+    @Test
+    @Order(24)
+    @DisplayName("Escenario 5 — PUT quita un gratis: el siguiente cobrado pasa a gratis")
+    public void limite3_put_quitarUnGratis_siguienteCobradoPasaAGratis() throws Exception {
+        // Quitamos A: lista = B, C, D, E, CS
+        // Con límite=3: B(gratis), C(gratis), D(gratis←era cobrado), E(cobrado), CS(cobrarSiempre)
+        // El servidor fuerza precio=0 para slots libres; D ya no necesita precio en el DTO
+        String compsCorrectos = String.format(
+                "[{\"idComplemento\":%d},{\"idComplemento\":%d},{\"idComplemento\":%d}" +
+                ",{\"idComplemento\":%d,\"precio_unitario\":3.00}" +
+                ",{\"idComplemento\":%d,\"precio_unitario\":5.00}]",
+                compBId, compCId, compDId, compEId, compCSId);
+
+        ResponseEntity<String> resp = restTemplate.exchange(
+                "/pedido/" + pedidoComplementos3Id, HttpMethod.PUT,
+                new HttpEntity<>(pedidoConComplementos(testComida3Id, compsCorrectos), authHeaders), String.class);
+
+        assertEquals(HttpStatus.OK, resp.getStatusCode());
+        JsonNode complementos = mapper.readTree(resp.getBody())
+                .get("data").get("comidasPedido").get(0).get("complementos");
+
+        assertEquals(5, complementos.size());
+        assertEquals(0.0, complementos.get(0).get("precioUnitario").asDouble(), "B gratis");
+        assertEquals(0.0, complementos.get(1).get("precioUnitario").asDouble(), "C gratis");
+        assertEquals(0.0, complementos.get(2).get("precioUnitario").asDouble(), "D ahora gratis");
+        assertEquals(3.0, complementos.get(3).get("precioUnitario").asDouble(), "E cobrado");
+        assertEquals(5.0, complementos.get(4).get("precioUnitario").asDouble(), "CS cobrado");
+        System.out.println("[OK] Esc5 B,C,D=0 E=3 CS=5 — D pasó de cobrado a gratis");
     }
 
     @Test

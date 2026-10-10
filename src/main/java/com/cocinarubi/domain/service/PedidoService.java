@@ -5,6 +5,7 @@ import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.dao.PedidoRepository;
 import com.cocinarubi.dao.TarifaEspecialRepository;
 import com.cocinarubi.domain.entity.Pedido;
+import com.cocinarubi.domain.entity.PedidoTarifaEspecial;
 import com.cocinarubi.domain.entity.TarifaEspecial;
 import com.cocinarubi.domain.mapper.PedidoMapper;
 import com.cocinarubi.event.ws.PedidoWebActualizadoEvent;
@@ -88,7 +89,8 @@ public class PedidoService {
             pedidoConfirmation.validarPost(dto);
         }
         Pedido pedido = construirPedido(dto);
-        List<String> mensajesTarifas = poblarLineasYPrecio(pedido, dto);
+        poblarLineas(pedido, dto);
+        List<String> mensajesTarifas = aplicarTarifasActivas(pedido);
         PedidoResponseDTO response = pedidoMapper.toResponseDTO(pedidoRepository.save(pedido));
         if (!mensajesTarifas.isEmpty()) {
             response.setTarifasAplicadas(mensajesTarifas);
@@ -127,12 +129,18 @@ public class PedidoService {
         // handleTipoPedido gestiona sus nulls y actualizaciones en lugar de
         // reemplazarlos.
 
-        List<String> mensajesTarifas = poblarLineasYPrecio(existente, dto);
-        PedidoResponseDTO response = pedidoMapper.toResponseDTO(pedidoRepository.save(existente));
-        if (!mensajesTarifas.isEmpty()) {
-            response.setTarifasAplicadas(mensajesTarifas);
+        poblarLineas(existente, dto);
+
+        // Las tarifas especiales se preservan como snapshot inmutable:
+        // no se consultan las tarifas activas en DB, se suma lo ya registrado.
+        BigDecimal sumaTarifas = existente.getTarifasEspeciales().stream()
+                .map(PedidoTarifaEspecial::getPrecioTarifa)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (sumaTarifas.compareTo(BigDecimal.ZERO) > 0) {
+            existente.setPrecioFinalOrden(existente.getPrecioFinalOrden().add(sumaTarifas));
         }
-        return response;
+
+        return pedidoMapper.toResponseDTO(pedidoRepository.save(existente));
     }
 
     /**
@@ -230,11 +238,11 @@ public class PedidoService {
     }
 
     /**
-     * Agrega las líneas de catálogo al pedido, resuelve el tipo de entrega,
-     * calcula el precio final y aplica tarifas activas.
-     * Devuelve los mensajes de tarifas aplicadas (vacío si no había ninguna).
+     * Agrega las líneas de catálogo al pedido, resuelve el tipo de entrega y
+     * calcula el precio base. No aplica tarifas especiales; eso se delega al
+     * llamador (solo {@code save()} las aplica; {@code update()} preserva las existentes).
      */
-    private List<String> poblarLineasYPrecio(Pedido pedido, PedidoRequestDTO dto) {
+    private void poblarLineas(Pedido pedido, PedidoRequestDTO dto) {
         catalogoPedido.agregarComidas(pedido, dto.getComidas());
         catalogoPedido.agregarDesayunos(pedido, dto.getDesayunos());
         catalogoPedido.agregarBasicos(pedido, dto.getBasicos());
@@ -244,18 +252,12 @@ public class PedidoService {
         // Aplica $10 por comida MEDIA+FIJA si el pedido alcanza las 12 líneas calificadas
         catalogoPedido.aplicarDescuentoVolumen(pedido);
         pedido.setPrecioFinalOrden(catalogoPedido.calcularTotal(pedido));
-        return aplicarTarifasActivas(pedido);
     }
 
     /**
-     * Suma al {@code precioFinalOrden} las tarifas especiales activas, pero solo
-     * cuando el
-     * pedido es de tipo DOMICILIO (tiene {@code pedidoDomicilio} o
-     * {@code pedidoDomicilioCocina}).
-     * El total se persiste en la entidad de domicilio correspondiente para
-     * trazabilidad.
-     * Devuelve los mensajes descriptivos de cada tarifa aplicada; vacío si no
-     * aplica ninguna.
+     * Aplica las tarifas especiales activas al pedido, creando un snapshot en
+     * {@code pedido_tarifa_especial}. Solo actúa cuando el pedido es DOMICILIO.
+     * Devuelve los mensajes descriptivos de cada tarifa aplicada; vacío si no aplica ninguna.
      */
     private List<String> aplicarTarifasActivas(Pedido pedido) {
         boolean esDomicilio = pedido.getPedidoDomicilio() != null
@@ -270,16 +272,17 @@ public class PedidoService {
         BigDecimal totalTarifas = BigDecimal.ZERO;
         List<String> mensajes = new java.util.ArrayList<>();
         for (TarifaEspecial tarifa : activas) {
+            PedidoTarifaEspecial snapshot = PedidoTarifaEspecial.builder()
+                    .pedido(pedido)
+                    .tarifaEspecial(tarifa)
+                    .precioTarifa(tarifa.getTarifa())
+                    .build();
+            pedido.getTarifasEspeciales().add(snapshot);
             totalTarifas = totalTarifas.add(tarifa.getTarifa());
             mensajes.add("Se han agregado $" + tarifa.getTarifa().toPlainString()
                     + " de la tarifa " + tarifa.getNombreTarifa());
         }
 
-        if (pedido.getPedidoDomicilio() != null) {
-            pedido.getPedidoDomicilio().setTarifasEspeciales(totalTarifas);
-        } else {
-            pedido.getPedidoDomicilioCocina().setTarifasEspeciales(totalTarifas);
-        }
         pedido.setPrecioFinalOrden(pedido.getPrecioFinalOrden().add(totalTarifas));
         return mensajes;
     }

@@ -69,6 +69,7 @@ public class ComidaPedido {
 
     @Builder.Default
     @OneToMany(mappedBy = "comidaPedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("orden ASC")
     private List<ComplementoComidaPedido> complementos = new ArrayList<>();
 
     public void addComplemento(ComplementoComidaPedido complemento) {

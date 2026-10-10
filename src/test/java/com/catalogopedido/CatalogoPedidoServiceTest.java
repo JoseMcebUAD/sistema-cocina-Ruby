@@ -149,11 +149,10 @@ public class CatalogoPedidoServiceTest {
     }
 
     @Test
-    @DisplayName("agregarComidas - límite=3, 2 cobrar_siempre + 2 no_cobrar: cobrar_siempre NO consume slots → los 2 no_cobrar caben en el límite sin precio")
-    public void agregarComidas_conLimite_cobrarSiempreNoConsumeSlots_ok() {
-        // Los cobrar_siempre no cuentan contra el límite; solo los no_cobrar consumen slots.
-        // límite=3 y solo hay 2 no_cobrar → exceso=0 → ambos pueden ir gratuitos.
-        // Los cobrar_siempre siempre deben llevar su precio.
+    @DisplayName("agregarComidas - límite=3, 2 cobrar_siempre + 2 no_cobrar → cobrarSiempre no consume slots, ambos no-cobrar son gratis")
+    public void agregarComidas_conLimite_escenario_del_plan_validacionOk() {
+        // cobrarSiempre NO consume slots → slotsLibres=3
+        // 2 no_cobrar → exceso=0 → ambos quedan gratis aunque cobrarSiempre esté presente
         when(comidaService.findById(1)).thenReturn(comida(3));
         when(complementoService.findById(1)).thenReturn(complemento(1, true,  BigDecimal.valueOf(5)));
         when(complementoService.findById(2)).thenReturn(complemento(2, true,  BigDecimal.valueOf(5)));
@@ -164,37 +163,132 @@ public class CatalogoPedidoServiceTest {
         assertDoesNotThrow(() ->
                 catalogoPedidoService.agregarComidas(pedido,
                         List.of(lineaCon(List.of(
-                                compDto(1, BigDecimal.valueOf(5)),  // cobrar_siempre, con precio (obligatorio)
-                                compDto(2, BigDecimal.valueOf(5)),  // cobrar_siempre, con precio (obligatorio)
-                                compDto(3, null),                    // no_cobrar, gratuito (dentro del límite)
-                                compDto(4, null))))));              // no_cobrar, gratuito (dentro del límite)
-        System.out.println("[OK] límite=3, 2 cobrar_siempre + 2 no_cobrar gratuitos pasa validación");
+                                compDto(1, BigDecimal.valueOf(5)),  // cobrar_siempre, con precio
+                                compDto(2, BigDecimal.valueOf(5)),  // cobrar_siempre, con precio
+                                compDto(3, null),                   // no_cobrar → gratis (slot 1)
+                                compDto(4, null))))));              // no_cobrar → gratis (slot 2)
+
+        var comps = pedido.getComidasPedido().get(0).getComplementos();
+        assertEquals(0, BigDecimal.valueOf(5).compareTo(comps.get(0).getPrecioUnitario()));
+        assertEquals(0, BigDecimal.valueOf(5).compareTo(comps.get(1).getPrecioUnitario()));
+        assertEquals(0, BigDecimal.ZERO.compareTo(comps.get(2).getPrecioUnitario()));
+        assertEquals(0, BigDecimal.ZERO.compareTo(comps.get(3).getPrecioUnitario()));
+        System.out.println("[OK] cobrarSiempre no consume slots: 2 no-cobrar quedan gratis con límite=3");
     }
 
     @Test
     @DisplayName("agregarComidas - Exceso de no_cobrar sobre el límite sin precios suficientes lanza BusinessException con mensaje 'Al menos N'")
     public void agregarComidas_conLimite_exceso_sinPrecioSuficiente_lanzaError() {
-        // límite=2 y 3 no_cobrar → exceso=1: al menos 1 no_cobrar debe llevar precio.
-        // Los cobrar_siempre no consumen slots pero siguen incluidos para probar que no afectan el cálculo del exceso.
-        when(comidaService.findById(1)).thenReturn(comida(2));
+        // límite=1, cobrarSiempre no consume slots → slotsLibres=1
+        // 2 no_cobrar → exceso=1 → necesita al menos 1 con precio, pero ninguno lo lleva → error
+        when(comidaService.findById(1)).thenReturn(comida(1));
         when(complementoService.findById(1)).thenReturn(complemento(1, true,  BigDecimal.valueOf(5)));
         when(complementoService.findById(2)).thenReturn(complemento(2, false, BigDecimal.valueOf(3)));
         when(complementoService.findById(3)).thenReturn(complemento(3, false, BigDecimal.valueOf(3)));
-        when(complementoService.findById(4)).thenReturn(complemento(4, false, BigDecimal.valueOf(3)));
 
         Pedido pedido = Pedido.builder().build();
         BusinessException ex = assertThrows(BusinessException.class, () ->
                 catalogoPedidoService.agregarComidas(pedido,
                         List.of(lineaCon(List.of(
                                 compDto(1, BigDecimal.valueOf(5)),  // cobrar_siempre (no consume slot)
-                                compDto(2, null),                    // no_cobrar sin precio
-                                compDto(3, null),                    // no_cobrar sin precio
-                                compDto(4, null))))));              // no_cobrar sin precio → exceso=1 sin precios suficientes
+                                compDto(2, null),                   // no_cobrar sin precio
+                                compDto(3, null))))));              // no_cobrar sin precio → exceso=1 → error
         assertTrue(ex.getMessage().contains("Al menos 1"));
         System.out.println("[OK] exceso sin precios suficientes lanza: " + ex.getMessage());
     }
 
-    // ── Tests agregarCombos ───────────────────────────────────────────────────
+    // ── Tests nueva lógica cobrarSiempre / slots ──────────────────────────────
+
+    @Test
+    @DisplayName("Escenario 1 — límite=1: primer no-cobrar gratis, segundo no-cobrar cobrado")
+    public void agregarComidas_conLimite1_primerGratisSegundoCobrado_ok() {
+        when(comidaService.findById(1)).thenReturn(comida(1));
+        when(complementoService.findById(1)).thenReturn(complemento(1, false, BigDecimal.valueOf(3)));
+        when(complementoService.findById(2)).thenReturn(complemento(2, false, BigDecimal.valueOf(3)));
+
+        Pedido pedido = Pedido.builder().build();
+        assertDoesNotThrow(() ->
+                catalogoPedidoService.agregarComidas(pedido,
+                        List.of(lineaCon(List.of(
+                                compDto(1, null),                   // orden 1 → gratis (slot 1)
+                                compDto(2, BigDecimal.valueOf(3)))))));  // orden 2 → cobrado (exceso)
+
+        var comps = pedido.getComidasPedido().get(0).getComplementos();
+        assertEquals(0, BigDecimal.ZERO.compareTo(comps.get(0).getPrecioUnitario()), "comp1 debe ser gratis");
+        assertEquals(0, BigDecimal.valueOf(3).compareTo(comps.get(1).getPrecioUnitario()), "comp2 debe ser cobrado");
+        System.out.println("[OK] límite=1: comp1=0, comp2=3");
+    }
+
+    @Test
+    @DisplayName("Escenario 2 — límite=1: no-cobrar gratis + cobrarSiempre cobrado (cobrarSiempre no consume slot)")
+    public void agregarComidas_conLimite1_noCobrarGratis_cobrarSiempreCobrado() {
+        when(comidaService.findById(1)).thenReturn(comida(1));
+        when(complementoService.findById(1)).thenReturn(complemento(1, false, BigDecimal.valueOf(3)));
+        when(complementoService.findById(2)).thenReturn(complemento(2, true,  BigDecimal.valueOf(5)));
+
+        Pedido pedido = Pedido.builder().build();
+        assertDoesNotThrow(() ->
+                catalogoPedidoService.agregarComidas(pedido,
+                        List.of(lineaCon(List.of(
+                                compDto(1, null),                   // no-cobrar → gratis (slot 1)
+                                compDto(2, BigDecimal.valueOf(5)))))));  // cobrarSiempre → cobrado, NO consume slot
+
+        var comps = pedido.getComidasPedido().get(0).getComplementos();
+        assertEquals(0, BigDecimal.ZERO.compareTo(comps.get(0).getPrecioUnitario()), "no-cobrar debe ser gratis");
+        assertEquals(0, BigDecimal.valueOf(5).compareTo(comps.get(1).getPrecioUnitario()), "cobrarSiempre debe ser cobrado");
+        System.out.println("[OK] límite=1: no-cobrar=0, cobrarSiempre=5");
+    }
+
+    @Test
+    @DisplayName("Escenario 3 — límite=3: tres gratis y el cuarto cobrado")
+    public void agregarComidas_conLimite3_tresFreeUnoExceso_ok() {
+        when(comidaService.findById(1)).thenReturn(comida(3));
+        when(complementoService.findById(1)).thenReturn(complemento(1, false, BigDecimal.valueOf(3)));
+        when(complementoService.findById(2)).thenReturn(complemento(2, false, BigDecimal.valueOf(3)));
+        when(complementoService.findById(3)).thenReturn(complemento(3, false, BigDecimal.valueOf(3)));
+        when(complementoService.findById(4)).thenReturn(complemento(4, false, BigDecimal.valueOf(3)));
+
+        Pedido pedido = Pedido.builder().build();
+        assertDoesNotThrow(() ->
+                catalogoPedidoService.agregarComidas(pedido,
+                        List.of(lineaCon(List.of(
+                                compDto(1, null),                       // slot 1 → gratis
+                                compDto(2, null),                       // slot 2 → gratis
+                                compDto(3, null),                       // slot 3 → gratis
+                                compDto(4, BigDecimal.valueOf(3)))))));  // exceso → cobrado
+
+        var comps = pedido.getComidasPedido().get(0).getComplementos();
+        assertEquals(4, comps.size());
+        assertEquals(0, BigDecimal.ZERO.compareTo(comps.get(0).getPrecioUnitario()), "comp1 gratis");
+        assertEquals(0, BigDecimal.ZERO.compareTo(comps.get(1).getPrecioUnitario()), "comp2 gratis");
+        assertEquals(0, BigDecimal.ZERO.compareTo(comps.get(2).getPrecioUnitario()), "comp3 gratis");
+        assertEquals(0, BigDecimal.valueOf(3).compareTo(comps.get(3).getPrecioUnitario()), "comp4 cobrado");
+        System.out.println("[OK] límite=3: comp1,2,3=0, comp4=3");
+    }
+
+    @Test
+    @DisplayName("Escenario 4 — cobrarSiempre primero NO consume slot: el no-cobrar siguiente es gratis")
+    public void agregarComidas_cobrarSiempre_noConsumeSlotsGratuitos() {
+        // cobrarSiempre viene PRIMERO, no-cobrar viene DESPUÉS
+        // Con límite=1 el no-cobrar debe quedar gratis igualmente
+        when(comidaService.findById(1)).thenReturn(comida(1));
+        when(complementoService.findById(1)).thenReturn(complemento(1, true,  BigDecimal.valueOf(5)));
+        when(complementoService.findById(2)).thenReturn(complemento(2, false, BigDecimal.valueOf(3)));
+
+        Pedido pedido = Pedido.builder().build();
+        assertDoesNotThrow(() ->
+                catalogoPedidoService.agregarComidas(pedido,
+                        List.of(lineaCon(List.of(
+                                compDto(1, BigDecimal.valueOf(5)),   // cobrarSiempre primero → cobrado, no toca slots
+                                compDto(2, null))))));               // no-cobrar → gratis (slot 1 sigue libre)
+
+        var comps = pedido.getComidasPedido().get(0).getComplementos();
+        assertEquals(0, BigDecimal.valueOf(5).compareTo(comps.get(0).getPrecioUnitario()), "cobrarSiempre cobrado");
+        assertEquals(0, BigDecimal.ZERO.compareTo(comps.get(1).getPrecioUnitario()), "no-cobrar gratis aunque cobrarSiempre vino primero");
+        System.out.println("[OK] cobrarSiempre primero no consume slot: cobrarSiempre=5, no-cobrar=0");
+    }
+
+    // ── Tests agregarPaquetes ─────────────────────────────────────────────────
 
     @Test
     @DisplayName("agregarCombos - agrega línea al pedido cuando el combo existe y está DISPONIBLE")
