@@ -67,4 +67,13 @@ public class DBConstants {
      */
     public enum TipoDescuento { COMIDAS_DIEZ }
 
+    /** Nivel de urgencia/visibilidad de un anuncio en el carrito del cliente. */
+    public enum PrioridadAnuncio { ALTA, MEDIA, BAJA }
+
+    /**
+     * Discriminador polimórfico para {@code anuncio_producto.tipo_producto}.
+     * Indica a qué tabla maestra pertenece el {@code id_producto} referenciado.
+     */
+    public enum TipoProductoAnuncio { COMIDA, DESAYUNO, COMPLEMENTO, PRODUCTO_COCINA, BASICO, COMBO }
+
 }

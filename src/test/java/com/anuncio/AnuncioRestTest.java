@@ -23,7 +23,6 @@ public class AnuncioRestTest {
     @Autowired private TestRestTemplate restTemplate;
 
     private HttpHeaders authHeaders;
-    private HttpHeaders authHeadersCocina;
     private final ObjectMapper mapper = new ObjectMapper();
 
     private int createdId;
@@ -34,18 +33,13 @@ public class AnuncioRestTest {
         authHeaders = new HttpHeaders();
         authHeaders.setBearerAuth(jwtService.generarToken(jefa));
         authHeaders.setContentType(MediaType.APPLICATION_JSON);
-
-        UserDetails cocina = usuarioDetailsService.loadUserByUsername("ana");
-        authHeadersCocina = new HttpHeaders();
-        authHeadersCocina.setBearerAuth(jwtService.generarToken(cocina));
-        authHeadersCocina.setContentType(MediaType.APPLICATION_JSON);
     }
 
     @Test
     @Order(1)
     @DisplayName("GET /anuncio - Debe retornar lista de anuncios con status 200")
     public void findAll() throws Exception {
-        ResponseEntity<String> response = this.restTemplate.exchange(
+        ResponseEntity<String> response = restTemplate.exchange(
                 "/anuncio", HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
 
@@ -57,17 +51,19 @@ public class AnuncioRestTest {
 
     @Test
     @Order(2)
-    @DisplayName("POST /anuncio - Debe crear un anuncio y retornar status 201 con la descripción correcta")
+    @DisplayName("POST /anuncio - Debe crear un anuncio con prioridad y retornar status 201")
     public void save() throws Exception {
         String json = """
                 {
                   "descripcionAnuncio": "Cerrado el lunes por festivo",
                   "color": "#FF5733",
+                  "prioridad": "ALTA",
+                  "activo": true,
                   "fechaExpiracionAnuncio": "2026-12-31T23:59:59"
                 }
                 """;
 
-        ResponseEntity<String> response = this.restTemplate.exchange(
+        ResponseEntity<String> response = restTemplate.exchange(
                 "/anuncio", HttpMethod.POST, new HttpEntity<>(json, authHeaders), String.class
         );
 
@@ -75,14 +71,18 @@ public class AnuncioRestTest {
         JsonNode data = mapper.readTree(response.getBody()).get("data");
         createdId = data.get("idAnuncio").asInt();
         assertEquals("Cerrado el lunes por festivo", data.get("descripcionAnuncio").asText());
-        System.out.println("[OK] " + response.getStatusCode() + " | id=" + createdId + " descripcion=" + data.get("descripcionAnuncio").asText());
+        assertEquals("ALTA", data.get("prioridad").asText());
+        assertTrue(data.get("activo").asBoolean());
+        System.out.println("[OK] " + response.getStatusCode() + " | id=" + createdId
+                + " descripcion=" + data.get("descripcionAnuncio").asText()
+                + " prioridad=" + data.get("prioridad").asText());
     }
 
     @Test
     @Order(3)
-    @DisplayName("GET /anuncio/{id} - Debe retornar el anuncio correspondiente al ID con status 200")
+    @DisplayName("GET /anuncio/{id} - Debe retornar el anuncio correspondiente con status 200")
     public void findById() throws Exception {
-        ResponseEntity<String> response = this.restTemplate.exchange(
+        ResponseEntity<String> response = restTemplate.exchange(
                 "/anuncio/" + createdId, HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
 
@@ -95,37 +95,57 @@ public class AnuncioRestTest {
 
     @Test
     @Order(4)
-    @DisplayName("PUT /anuncio - Debe actualizar la descripción del anuncio y retornar status 200")
+    @DisplayName("PUT /anuncio/{id} - Debe actualizar la descripción del anuncio y retornar status 200")
     public void update() throws Exception {
         String json = """
                 {
-                  "idAnuncio": %d,
                   "descripcionAnuncio": "Reabrimos el martes",
                   "color": "#00FF00",
+                  "prioridad": "MEDIA",
+                  "activo": true,
                   "fechaExpiracionAnuncio": "2027-01-02T23:59:59"
                 }
-                """.formatted(createdId);
+                """;
 
-        ResponseEntity<String> response = this.restTemplate.exchange(
-                "/anuncio", HttpMethod.PUT, new HttpEntity<>(json, authHeaders), String.class
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/anuncio/" + createdId, HttpMethod.PUT, new HttpEntity<>(json, authHeaders), String.class
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
         assertEquals("Reabrimos el martes", data.get("descripcionAnuncio").asText());
+        assertEquals("MEDIA", data.get("prioridad").asText());
         System.out.println("[OK] " + response.getStatusCode() + " | descripcion=" + data.get("descripcionAnuncio").asText());
     }
 
     @Test
     @Order(5)
+    @DisplayName("PATCH /anuncio/{id} - Debe desactivar el anuncio con activo=false")
+    public void patch_desactivar() throws Exception {
+        String json = """
+                { "activo": false }
+                """;
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/anuncio/" + createdId, HttpMethod.PATCH, new HttpEntity<>(json, authHeaders), String.class
+        );
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        JsonNode data = mapper.readTree(response.getBody()).get("data");
+        assertFalse(data.get("activo").asBoolean());
+        System.out.println("[OK] " + response.getStatusCode() + " | activo=" + data.get("activo").asBoolean());
+    }
+
+    @Test
+    @Order(6)
     @DisplayName("DELETE /anuncio/{id} - Debe eliminar el anuncio y retornar 404 al buscarlo nuevamente")
     public void delete() throws Exception {
-        ResponseEntity<String> deleteResponse = this.restTemplate.exchange(
+        ResponseEntity<String> deleteResponse = restTemplate.exchange(
                 "/anuncio/" + createdId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class
         );
         assertEquals(HttpStatus.NO_CONTENT, deleteResponse.getStatusCode());
 
-        ResponseEntity<String> getResponse = this.restTemplate.exchange(
+        ResponseEntity<String> getResponse = restTemplate.exchange(
                 "/anuncio/" + createdId, HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
         assertEquals(HttpStatus.NOT_FOUND, getResponse.getStatusCode());
@@ -133,10 +153,10 @@ public class AnuncioRestTest {
     }
 
     @Test
-    @Order(6)
-    @DisplayName("GET /anuncio - sin token debe responder 401")
+    @Order(7)
+    @DisplayName("GET /anuncio - Sin token debe responder 401")
     public void seguridad_sinToken() {
-        ResponseEntity<String> response = this.restTemplate.exchange(
+        ResponseEntity<String> response = restTemplate.exchange(
                 "/anuncio", HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), String.class
         );
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());

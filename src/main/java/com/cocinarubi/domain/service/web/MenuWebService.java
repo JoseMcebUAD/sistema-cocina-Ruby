@@ -16,7 +16,9 @@ import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.domain.entity.Desayuno;
 import com.cocinarubi.domain.entity.ProductoCocina;
 import com.cocinarubi.domain.interfaces.IMenuWebService;
+import com.cocinarubi.domain.service.AnuncioService;
 import com.cocinarubi.domain.service.ComboService;
+import com.cocinarubi.presentation.dto.response.AnuncioResponseDTO;
 import com.cocinarubi.presentation.dto.response.BasicoResponseDTO;
 import com.cocinarubi.presentation.dto.response.CategoriaMenuDTO;
 import com.cocinarubi.presentation.dto.response.ComboResponseDTO;
@@ -63,6 +65,7 @@ public class MenuWebService implements IMenuWebService {
     private final ProductoCocinaRepository productoCocinaRepository;
     private final ComplementoRepository complementoRepository;
     private final ArchivoRepository archivoRepository;
+    private final AnuncioService anuncioService;
 
     public MenuWebService(ComidaRepository comidaRepository,
                           BasicoRepository basicoRepository,
@@ -70,7 +73,8 @@ public class MenuWebService implements IMenuWebService {
                           ComboService comboService,
                           ProductoCocinaRepository productoCocinaRepository,
                           ComplementoRepository complementoRepository,
-                          ArchivoRepository archivoRepository) {
+                          ArchivoRepository archivoRepository,
+                          AnuncioService anuncioService) {
         this.comidaRepository = comidaRepository;
         this.basicoRepository = basicoRepository;
         this.desayunoRepository = desayunoRepository;
@@ -78,6 +82,7 @@ public class MenuWebService implements IMenuWebService {
         this.productoCocinaRepository = productoCocinaRepository;
         this.complementoRepository = complementoRepository;
         this.archivoRepository = archivoRepository;
+        this.anuncioService = anuncioService;
     }
 
     @Override
@@ -128,7 +133,10 @@ public class MenuWebService implements IMenuWebService {
                 .findDisponiblesOrdenados(Estatus.DISPONIBLE)
                 .stream().map(this::toComplementoDTO).collect(Collectors.toList());
 
-        return new MenuWebResponseDTO(comidas, basicos, desayunos, combos, categorias, complementos);
+        // AnuncioService: solo anuncios con activo=true, ordenados por prioridad y fecha
+        List<AnuncioResponseDTO> anuncios = anuncioService.findActivos();
+
+        return new MenuWebResponseDTO(comidas, basicos, desayunos, combos, categorias, complementos, anuncios);
     }
 
     // ── Helpers de portadas ───────────────────────────────────────────────────────

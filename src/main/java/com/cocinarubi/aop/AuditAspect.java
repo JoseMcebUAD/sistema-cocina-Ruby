@@ -177,6 +177,7 @@ public class AuditAspect {
             "getIdArchivo", "getIdArchivoModulo", "getIdRol",
             "getIdCategoria", "getIdSubcategoria",
             "getIdCombo", "getIdComboProducto", "getIdComboPedido",
+            "getIdAnuncioProducto",
             "getId"
     };
 

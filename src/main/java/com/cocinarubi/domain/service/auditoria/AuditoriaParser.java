@@ -61,6 +61,7 @@ public class AuditoriaParser {
             case "categoria"          -> describirCategoria(accion, despues, antes, id, fecha);
             case "subcategoria"       -> describirSubcategoria(accion, despues, antes, id, fecha);
             case "combo"              -> describirCombo(accion, despues, antes, id, fecha);
+            case "anuncio_producto"   -> describirAnuncioProducto(accion, id);
             default                   -> accion + " en " + tabla + (id != null ? " #" + id : "");
         };
     }
@@ -225,6 +226,14 @@ public class AuditoriaParser {
             }
             case PUT    -> "Se actualizó el anuncio #" + id;
             case DELETE -> "Se eliminó el anuncio #" + id;
+        };
+    }
+
+    private String describirAnuncioProducto(TipoOperacion accion, Integer id) {
+        return switch (accion) {
+            case POST   -> "Se asoció un producto al anuncio";
+            case PUT    -> "Se actualizó la asociación de producto #" + id;
+            case DELETE -> "Se eliminó la asociación de producto #" + id;
         };
     }
 
