@@ -191,6 +191,7 @@ public class SecurityConfig {
                             "/impresora/**",
                             "/inventarioComida/**",
                             "/menu-digital/**",
+                            "/oferta/**",
                             "/pago-repartidor/**",
                             "/pedido/**",
                             "/producto-cocina/**",

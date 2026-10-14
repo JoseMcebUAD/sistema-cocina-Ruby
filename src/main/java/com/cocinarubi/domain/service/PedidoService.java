@@ -8,6 +8,7 @@ import com.cocinarubi.domain.entity.Pedido;
 import com.cocinarubi.domain.entity.PedidoTarifaEspecial;
 import com.cocinarubi.domain.entity.TarifaEspecial;
 import com.cocinarubi.domain.mapper.PedidoMapper;
+import com.cocinarubi.domain.model.OfertaAplicacion;
 import com.cocinarubi.event.ws.PedidoWebActualizadoEvent;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.PedidoMetodoPagoDTO;
@@ -28,18 +29,14 @@ import java.util.stream.Collectors;
 
 /**
  * Gestiona el ciclo de vida transaccional del {@link Pedido}: creación,
- * consulta,
- * actualización, marcado de impresión y eliminación.
+ * consulta, actualización, marcado de impresión y eliminación.
  *
- * <p>
- * Delega en {@link CatalogoPedidoService} la resolución de referencias de
- * catálogo
- * y en
- * {@link com.cocinarubi.presentation.strategy.strategyImplementation.PedidoValidationImp}
- * la validación estructural. La confirmación de negocio puede omitirse mediante
- * el flag
- * {@code saltarConfirmacion} para pedidos originados en canales internos de
- * confianza (cocina).
+ * <p>Delega en {@link CatalogoPedidoService} la resolución de referencias de catálogo,
+ * en {@link PedidoValidationImp} la validación estructural, y en {@link PedidoOfertaService}
+ * toda la lógica de detección y persistencia de ofertas. La aplicación de ofertas sigue
+ * un two-phase save: Phase 1 construye y persiste el pedido con sus líneas
+ * ({@code saveAndFlush}); Phase 2 usa los IDs generados para persistir
+ * {@code OfertaPedido}/{@code OfertaPedidoLinea}.</p>
  */
 @Service
 public class PedidoService {
@@ -51,6 +48,7 @@ public class PedidoService {
     private final CatalogoPedidoService catalogoPedido;
     private final ApplicationEventPublisher eventPublisher;
     private final TarifaEspecialRepository tarifaEspecialRepository;
+    private final PedidoOfertaService pedidoOferta;
 
     public PedidoService(PedidoRepository pedidoRepository,
             PedidoValidationImp pedidoValidation,
@@ -58,7 +56,8 @@ public class PedidoService {
             PedidoMapper pedidoMapper,
             CatalogoPedidoService catalogoPedido,
             ApplicationEventPublisher eventPublisher,
-            TarifaEspecialRepository tarifaEspecialRepository) {
+            TarifaEspecialRepository tarifaEspecialRepository,
+            PedidoOfertaService pedidoOferta) {
         this.pedidoRepository = pedidoRepository;
         this.pedidoValidation = pedidoValidation;
         this.pedidoConfirmation = pedidoConfirmation;
@@ -66,6 +65,7 @@ public class PedidoService {
         this.catalogoPedido = catalogoPedido;
         this.eventPublisher = eventPublisher;
         this.tarifaEspecialRepository = tarifaEspecialRepository;
+        this.pedidoOferta = pedidoOferta;
     }
 
     @Transactional(readOnly = true)
@@ -82,16 +82,33 @@ public class PedidoService {
 
     @Transactional
     public PedidoResponseDTO save(PedidoRequestDTO dto) {
-        // Validación de estructura siempre se ejecuta; la confirmación de negocio
-        // puede omitirse cuando el pedido proviene de un canal interno de confianza.
         pedidoValidation.validarPost(dto);
         if (!dto.isSaltarConfirmacion()) {
             pedidoConfirmation.validarPost(dto);
         }
+
+        // Phase 1 — construir pedido en memoria
         Pedido pedido = construirPedido(dto);
         poblarLineas(pedido, dto);
+
+        // Detectar/validar ofertas y excluir sus comidas del conteo de volumen
+        List<OfertaAplicacion> aplicaciones = pedidoOferta.detectar(pedido, dto);
+        catalogoPedido.aplicarDescuentoVolumen(pedido, pedidoOferta.extraerComidasConsumidas(aplicaciones));
+
+        // Precio base (líneas + domicilio) – ahorro de ofertas
+        pedido.setPrecioFinalOrden(
+                catalogoPedido.calcularTotal(pedido).subtract(pedidoOferta.sumarAhorros(aplicaciones)));
+
+        // Tarifas especiales (solo en save; update preserva el snapshot)
         List<String> mensajesTarifas = aplicarTarifasActivas(pedido);
-        PedidoResponseDTO response = pedidoMapper.toResponseDTO(pedidoRepository.save(pedido));
+
+        // Phase 1 save — IDs de líneas disponibles tras el flush
+        Pedido guardado = pedidoRepository.saveAndFlush(pedido);
+
+        // Phase 2 — construir y asociar OfertaPedido/OfertaPedidoLinea con IDs reales
+        guardado = pedidoOferta.guardar(guardado, aplicaciones);
+
+        PedidoResponseDTO response = pedidoMapper.toResponseDTO(guardado);
         if (!mensajesTarifas.isEmpty()) {
             response.setTarifasAplicadas(mensajesTarifas);
         }
@@ -116,44 +133,43 @@ public class PedidoService {
         existente.setUuidCliente(dto.getUuidCliente());
         existente.setComentario(dto.getComentario());
 
-        // Se limpian las colecciones en lugar de mergear elemento a elemento
-        // para evitar referencias huérfanas en las tablas de detalle.
+        // Limpiar todas las líneas para re-construir desde el DTO
         existente.getComidasPedido().clear();
         existente.getDesayunosPedido().clear();
         existente.getBasicosPedido().clear();
         existente.getProductosCocina().clear();
         existente.getCombosPedido().clear();
-        // pedidoCocina, pedidoDomicilio y pedidoDomicilioCocina NO se nulifican aquí:
-        // los tres usan @MapsId y comparten PK con Pedido. Nulificar + recrear dentro
-        // de la misma sesión produce "deleted object would be re-saved by cascade".
-        // handleTipoPedido gestiona sus nulls y actualizaciones en lugar de
-        // reemplazarlos.
+        existente.getOfertasPedido().clear();
 
         poblarLineas(existente, dto);
 
-        // Las tarifas especiales se preservan como snapshot inmutable:
-        // no se consultan las tarifas activas en DB, se suma lo ya registrado.
+        List<OfertaAplicacion> aplicaciones = pedidoOferta.detectar(existente, dto);
+        catalogoPedido.aplicarDescuentoVolumen(existente, pedidoOferta.extraerComidasConsumidas(aplicaciones));
+
+        BigDecimal total = catalogoPedido.calcularTotal(existente)
+                .subtract(pedidoOferta.sumarAhorros(aplicaciones));
+
+        // Las tarifas especiales se preservan como snapshot inmutable del momento del alta
         BigDecimal sumaTarifas = existente.getTarifasEspeciales().stream()
                 .map(PedidoTarifaEspecial::getPrecioTarifa)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        if (sumaTarifas.compareTo(BigDecimal.ZERO) > 0) {
-            existente.setPrecioFinalOrden(existente.getPrecioFinalOrden().add(sumaTarifas));
-        }
+        existente.setPrecioFinalOrden(total.add(sumaTarifas));
 
-        return pedidoMapper.toResponseDTO(pedidoRepository.save(existente));
+        // Phase 1 save
+        Pedido guardado = pedidoRepository.saveAndFlush(existente);
+
+        // Phase 2
+        guardado = pedidoOferta.guardar(guardado, aplicaciones);
+
+        return pedidoMapper.toResponseDTO(guardado);
     }
 
     /**
      * Intenta marcar el pedido como impreso de forma atómica (0→1).
-     * Si dos solicitudes concurrentes llegan al mismo tiempo, solo una obtendrá
-     * rowsAffected=1; la otra verá rowsAffected=0 porque el WHERE impreso=false ya
-     * no se cumple.
      * Retorna true si se otorgó el cambio, false si ya estaba impreso.
      */
     @Transactional
     public boolean marcarImpreso(int id) {
-        // Verificamos que el pedido existe antes del UPDATE para poder lanzar 404 si no
-        // existe
         Pedido pedido = findEntityById(id);
         int filasAfectadas = pedidoRepository.marcarImpresoSiNoImpreso(id);
         boolean otorgado = filasAfectadas > 0;
@@ -203,7 +219,6 @@ public class PedidoService {
         }
     }
 
-    // Encontrar los pedidos web sin imprimir para la lista del frontEnd
     @Transactional(readOnly = true)
     public List<PedidoResponseDTO> findWebSinImprimir() {
         return pedidoRepository.findByPedidoCreadoDesdeAndImpresoFalse(PedidoCreadoDesde.WEB)
@@ -211,8 +226,6 @@ public class PedidoService {
                 .map(pedidoMapper::toResponseDTO)
                 .toList();
     }
-
-    // contar pedidos web sin imprimir del día actual para el contador del frontEnd
 
     @Transactional(readOnly = true)
     public long contarWebSinImprimir() {
@@ -238,9 +251,9 @@ public class PedidoService {
     }
 
     /**
-     * Agrega las líneas de catálogo al pedido, resuelve el tipo de entrega y
-     * calcula el precio base. No aplica tarifas especiales; eso se delega al
-     * llamador (solo {@code save()} las aplica; {@code update()} preserva las existentes).
+     * Agrega las líneas de catálogo al pedido y resuelve el tipo de entrega.
+     * No aplica descuento de volumen ni calcula el precio final — eso lo hace el llamador
+     * una vez conocidas las ofertas para evitar double-discount.
      */
     private void poblarLineas(Pedido pedido, PedidoRequestDTO dto) {
         catalogoPedido.agregarComidas(pedido, dto.getComidas());
@@ -249,25 +262,19 @@ public class PedidoService {
         catalogoPedido.agregarProductosCocina(pedido, dto.getProductosCocina());
         catalogoPedido.agregarCombos(pedido, dto.getCombos());
         catalogoPedido.handleTipoPedido(pedido, dto);
-        // Aplica $10 por comida MEDIA+FIJA si el pedido alcanza las 12 líneas calificadas
-        catalogoPedido.aplicarDescuentoVolumen(pedido);
-        pedido.setPrecioFinalOrden(catalogoPedido.calcularTotal(pedido));
     }
 
     /**
-     * Aplica las tarifas especiales activas al pedido, creando un snapshot en
-     * {@code pedido_tarifa_especial}. Solo actúa cuando el pedido es DOMICILIO.
-     * Devuelve los mensajes descriptivos de cada tarifa aplicada; vacío si no aplica ninguna.
+     * Aplica las tarifas especiales activas al pedido (snapshot). Solo actúa cuando el
+     * pedido es DOMICILIO. Devuelve los mensajes descriptivos; vacío si no aplica ninguna.
      */
     private List<String> aplicarTarifasActivas(Pedido pedido) {
         boolean esDomicilio = pedido.getPedidoDomicilio() != null
                 || pedido.getPedidoDomicilioCocina() != null;
-        if (!esDomicilio)
-            return List.of();
+        if (!esDomicilio) return List.of();
 
         List<TarifaEspecial> activas = tarifaEspecialRepository.findByIsActiveTrue();
-        if (activas.isEmpty())
-            return List.of();
+        if (activas.isEmpty()) return List.of();
 
         BigDecimal totalTarifas = BigDecimal.ZERO;
         List<String> mensajes = new java.util.ArrayList<>();
@@ -282,7 +289,6 @@ public class PedidoService {
             mensajes.add("Se han agregado $" + tarifa.getTarifa().toPlainString()
                     + " de la tarifa " + tarifa.getNombreTarifa());
         }
-
         pedido.setPrecioFinalOrden(pedido.getPrecioFinalOrden().add(totalTarifas));
         return mensajes;
     }

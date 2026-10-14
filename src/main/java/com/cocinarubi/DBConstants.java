@@ -76,4 +76,40 @@ public class DBConstants {
      */
     public enum TipoProductoAnuncio { COMIDA, DESAYUNO, COMPLEMENTO, PRODUCTO_COCINA, BASICO, COMBO }
 
+    /**
+     * Tipo de entidad de catálogo que puede participar en una {@code Oferta}.
+     * Desayuno queda excluido intencionalmente en v1.
+     */
+    public enum TipoEntidadOferta { COMIDA, PRODUCTO_COCINA, BASICO, COMBO }
+
+    /**
+     * Modo de matching de una línea ({@code oferta_linea}) dentro de una {@code Oferta}.
+     *
+     * <p>El campo {@code id_referencia} en la línea se interpreta según el modo:
+     * <ul>
+     *   <li>{@code COMIDA_ESPECIFICA} → idComida.</li>
+     *   <li>{@code COMIDA_POR_TIPO} → null; el filtro lo da {@code tipo_comida_filtro}.</li>
+     *   <li>{@code PRODUCTO_ESPECIFICO} → idProductoCocina.</li>
+     *   <li>{@code PRODUCTO_POR_CATEGORIA} → idCategoria.</li>
+     *   <li>{@code PRODUCTO_POR_SUBCATEGORIA} → idSubcategoria.</li>
+     *   <li>{@code PRODUCTO_GENERAL} → null (cualquier ProductoCocina).</li>
+     *   <li>{@code BASICO_ESPECIFICO} → idBasico.</li>
+     *   <li>{@code BASICO_GENERAL} → null (cualquier Basico).</li>
+     *   <li>{@code COMBO_ESPECIFICO} → idCombo.</li>
+     *   <li>{@code COMBO_GENERAL} → null (cualquier Combo).</li>
+     * </ul>
+     */
+    public enum ModoMatchOferta {
+        COMIDA_ESPECIFICA,
+        COMIDA_POR_TIPO,
+        PRODUCTO_ESPECIFICO,
+        PRODUCTO_POR_CATEGORIA,
+        PRODUCTO_POR_SUBCATEGORIA,
+        PRODUCTO_GENERAL,
+        BASICO_ESPECIFICO,
+        BASICO_GENERAL,
+        COMBO_ESPECIFICO,
+        COMBO_GENERAL
+    }
+
 }

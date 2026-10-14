@@ -2,6 +2,7 @@ package com.cocinarubi.domain.service.web;
 
 import com.cocinarubi.DBConstants.Estatus;
 import com.cocinarubi.DBConstants.TipoCatalogoProducto;
+import com.cocinarubi.DBConstants.TipoComida;
 import com.cocinarubi.dao.ArchivoRepository;
 import com.cocinarubi.dao.BasicoRepository;
 import com.cocinarubi.dao.ComidaRepository;
@@ -18,8 +19,13 @@ import com.cocinarubi.domain.entity.ProductoCocina;
 import com.cocinarubi.domain.interfaces.IMenuWebService;
 import com.cocinarubi.domain.service.AnuncioService;
 import com.cocinarubi.domain.service.ComboService;
+import com.cocinarubi.domain.service.OfertaService;
 import com.cocinarubi.presentation.dto.response.AnuncioResponseDTO;
 import com.cocinarubi.presentation.dto.response.BasicoResponseDTO;
+import com.cocinarubi.presentation.dto.response.OfertaLineaMenuDTO;
+import com.cocinarubi.presentation.dto.response.OfertaLineaResponseDTO;
+import com.cocinarubi.presentation.dto.response.OfertaMenuDTO;
+import com.cocinarubi.presentation.dto.response.OfertaResponseDTO;
 import com.cocinarubi.presentation.dto.response.CategoriaMenuDTO;
 import com.cocinarubi.presentation.dto.response.ComboResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaMenuItemDTO;
@@ -38,6 +44,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 
 /**
  * Agrega en una sola transacción todos los ítems DISPONIBLE del menú web:
@@ -66,6 +73,7 @@ public class MenuWebService implements IMenuWebService {
     private final ComplementoRepository complementoRepository;
     private final ArchivoRepository archivoRepository;
     private final AnuncioService anuncioService;
+    private final OfertaService ofertaService;
 
     public MenuWebService(ComidaRepository comidaRepository,
                           BasicoRepository basicoRepository,
@@ -74,7 +82,8 @@ public class MenuWebService implements IMenuWebService {
                           ProductoCocinaRepository productoCocinaRepository,
                           ComplementoRepository complementoRepository,
                           ArchivoRepository archivoRepository,
-                          AnuncioService anuncioService) {
+                          AnuncioService anuncioService,
+                          OfertaService ofertaService) {
         this.comidaRepository = comidaRepository;
         this.basicoRepository = basicoRepository;
         this.desayunoRepository = desayunoRepository;
@@ -83,6 +92,7 @@ public class MenuWebService implements IMenuWebService {
         this.complementoRepository = complementoRepository;
         this.archivoRepository = archivoRepository;
         this.anuncioService = anuncioService;
+        this.ofertaService = ofertaService;
     }
 
     @Override
@@ -136,7 +146,30 @@ public class MenuWebService implements IMenuWebService {
         // AnuncioService: solo anuncios con activo=true, ordenados por prioridad y fecha
         List<AnuncioResponseDTO> anuncios = anuncioService.findActivos();
 
-        return new MenuWebResponseDTO(comidas, basicos, desayunos, combos, categorias, complementos, anuncios);
+        // ── Mapas id→nombre para resolver líneas de oferta sin queries extra ─────
+        Map<Integer, String> nombrePorComida = comidaEntities.stream()
+                .collect(Collectors.toMap(Comida::getIdComida, Comida::getNombreComida));
+        Map<Integer, String> nombrePorBasico = basicoEntities.stream()
+                .collect(Collectors.toMap(Basico::getIdBasico, b -> b.getComida().getNombreComida()));
+        // ComboResponseDTO.getDescripcion() es el nombre visible del paquete
+        Map<Integer, String> nombrePorCombo = combos.stream()
+                .collect(Collectors.toMap(ComboResponseDTO::getIdCombo, ComboResponseDTO::getDescripcion));
+        Map<Integer, String> nombrePorProducto = pcEntities.stream()
+                .collect(Collectors.toMap(ProductoCocina::getIdProductoCocina, ProductoCocina::getNombreProducto));
+        // Dedup: si dos productos comparten categoría, el primero gana (misma categoría → mismo nombre)
+        Map<Integer, String> nombrePorCategoria = pcEntities.stream()
+                .collect(Collectors.toMap(
+                        pc -> pc.getCategoria().getIdCategoria(),
+                        pc -> pc.getCategoria().getNombre(),
+                        (a, b) -> a));
+
+        // OfertaService: ofertas activas con líneas de matching traducidas a texto legible
+        List<OfertaMenuDTO> ofertas = ofertaService.findActivas().stream()
+                .map(o -> toOfertaMenuDTO(o, nombrePorComida, nombrePorBasico, nombrePorCombo,
+                        nombrePorProducto, nombrePorCategoria))
+                .collect(Collectors.toList());
+
+        return new MenuWebResponseDTO(comidas, basicos, desayunos, combos, categorias, complementos, anuncios, ofertas);
     }
 
     // ── Helpers de portadas ───────────────────────────────────────────────────────
@@ -270,5 +303,52 @@ public class MenuWebService implements IMenuWebService {
                 pc.isDestacado());
         dto.setUrlImagen(portadas.get(pc.getIdProductoCocina()));
         return dto;
+    }
+
+    // ── Helpers de ofertas ────────────────────────────────────────────────────────
+
+    /**
+     * Convierte una oferta del catálogo a su vista web, resolviendo cada línea de matching
+     * a texto legible usando los mapas id→nombre ya construidos en memoria.
+     */
+    private OfertaMenuDTO toOfertaMenuDTO(OfertaResponseDTO oferta,
+                                           Map<Integer, String> nombrePorComida,
+                                           Map<Integer, String> nombrePorBasico,
+                                           Map<Integer, String> nombrePorCombo,
+                                           Map<Integer, String> nombrePorProducto,
+                                           Map<Integer, String> nombrePorCategoria) {
+        List<OfertaLineaMenuDTO> lineas = oferta.getLineas().stream()
+                .map(l -> new OfertaLineaMenuDTO(l.getCantidad(),
+                        resolverDescripcion(l, nombrePorComida, nombrePorBasico, nombrePorCombo,
+                                nombrePorProducto, nombrePorCategoria)))
+                .collect(Collectors.toList());
+        return new OfertaMenuDTO(oferta.getIdOferta(), oferta.getNombre(), oferta.getDescripcion(),
+                oferta.getPrecioOferta(), oferta.getTiposPedidoRestriccion(), lineas);
+    }
+
+    /**
+     * Traduce una línea de oferta (enum técnico + idReferencia) a una descripción legible.
+     * Para reglas específicas usa el mapa id→nombre del catálogo; para reglas genéricas
+     * devuelve una etiqueta fija.
+     */
+    private String resolverDescripcion(OfertaLineaResponseDTO linea,
+                                        Map<Integer, String> nombrePorComida,
+                                        Map<Integer, String> nombrePorBasico,
+                                        Map<Integer, String> nombrePorCombo,
+                                        Map<Integer, String> nombrePorProducto,
+                                        Map<Integer, String> nombrePorCategoria) {
+        return switch (linea.getModoMatch()) {
+            case COMIDA_ESPECIFICA        -> nombrePorComida.getOrDefault(linea.getIdReferencia(), "Comida");
+            case COMIDA_POR_TIPO          -> linea.getTipoComidaFiltro() == TipoComida.FIJA
+                                                ? "Comida del Día" : "Comida Especial";
+            case BASICO_ESPECIFICO        -> nombrePorBasico.getOrDefault(linea.getIdReferencia(), "Básico");
+            case BASICO_GENERAL           -> "Básico (cualquiera)";
+            case COMBO_ESPECIFICO         -> nombrePorCombo.getOrDefault(linea.getIdReferencia(), "Combo");
+            case COMBO_GENERAL            -> "Combo (cualquiera)";
+            case PRODUCTO_ESPECIFICO      -> nombrePorProducto.getOrDefault(linea.getIdReferencia(), "Producto");
+            case PRODUCTO_POR_CATEGORIA   -> nombrePorCategoria.getOrDefault(linea.getIdReferencia(), "Producto de categoría");
+            case PRODUCTO_POR_SUBCATEGORIA -> "Producto de subcategoría";
+            case PRODUCTO_GENERAL         -> "Producto (cualquiera)";
+        };
     }
 }

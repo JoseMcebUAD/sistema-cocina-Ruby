@@ -47,6 +47,7 @@ public class PedidoResponseDTO {
     private PedidoCocinaResponseDTO pedidoCocina;
     private List<String> tarifasAplicadas;
     private List<TarifaEspecialAplicadaResponseDTO> tarifasEspeciales;
+    private List<OfertaPedidoResponseDTO> ofertasAplicadas;
 
     public PedidoResponseDTO() {}
 
@@ -160,4 +161,7 @@ public class PedidoResponseDTO {
 
     public List<TarifaEspecialAplicadaResponseDTO> getTarifasEspeciales() { return tarifasEspeciales; }
     public void setTarifasEspeciales(List<TarifaEspecialAplicadaResponseDTO> tarifasEspeciales) { this.tarifasEspeciales = tarifasEspeciales; }
+
+    public List<OfertaPedidoResponseDTO> getOfertasAplicadas() { return ofertasAplicadas; }
+    public void setOfertasAplicadas(List<OfertaPedidoResponseDTO> ofertasAplicadas) { this.ofertasAplicadas = ofertasAplicadas; }
 }

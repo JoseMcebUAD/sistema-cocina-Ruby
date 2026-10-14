@@ -18,6 +18,7 @@ import com.cocinarubi.domain.entity.RegistroCliente;
 import com.cocinarubi.domain.entity.ProductoCocinaPedido;
 import com.cocinarubi.domain.service.ComboService;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoExtraResponseDTO;
+import com.cocinarubi.presentation.dto.response.OfertaPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.BasicoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComboPedidoResponseDTO;
@@ -59,10 +60,13 @@ public class PedidoMapper {
 
     private final ComboService comboService;
     private final ClienteRepository clienteRepository;
+    private final OfertaMapper ofertaMapper;
 
-    public PedidoMapper(ComboService comboService, ClienteRepository clienteRepository) {
+    public PedidoMapper(ComboService comboService, ClienteRepository clienteRepository,
+                        OfertaMapper ofertaMapper) {
         this.comboService = comboService;
         this.clienteRepository = clienteRepository;
+        this.ofertaMapper = ofertaMapper;
     }
 
     /**
@@ -185,6 +189,12 @@ public class PedidoMapper {
         dto.setTarifasEspeciales(tarifasEspeciales);
         dto.setNombreCliente(resolverNombreCliente(pedido, nombresPorUuid));
         dto.setTipoDescuento(pedido.getTipoDescuento());
+        if (!pedido.getOfertasPedido().isEmpty()) {
+            List<OfertaPedidoResponseDTO> ofertasAplicadas = pedido.getOfertasPedido().stream()
+                    .map(ofertaMapper::toOfertaPedidoResponse)
+                    .collect(Collectors.toList());
+            dto.setOfertasAplicadas(ofertasAplicadas);
+        }
         return dto;
     }
 

@@ -17,6 +17,7 @@ import com.cocinarubi.domain.entity.Pedido;
 import com.cocinarubi.domain.entity.Ruta;
 import com.cocinarubi.domain.mapper.PedidoMapper;
 import com.cocinarubi.domain.service.CatalogoPedidoService;
+import com.cocinarubi.domain.service.PedidoOfertaService;
 import com.cocinarubi.domain.service.PedidoService;
 import com.cocinarubi.domain.service.RutaService;
 import com.cocinarubi.exception.BusinessException;
@@ -76,13 +77,14 @@ public class PedidoWebService extends PedidoService {
                             CatalogoPedidoService catalogoPedido,
                             ApplicationEventPublisher eventPublisher,
                             TarifaEspecialRepository tarifaEspecialRepository,
+                            PedidoOfertaService pedidoOferta,
                             ClienteRepository clienteRepository,
                             HorarioAtencionRepository horarioRepo,
                             RutaService rutaService,
                             HttpServletRequest httpRequest,
                             CodigoClienteRepository codigoClienteRepository) {
         super(pedidoRepository, pedidoValidation, pedidoConfirmation, pedidoMapper,
-                catalogoPedido, eventPublisher, tarifaEspecialRepository);
+                catalogoPedido, eventPublisher, tarifaEspecialRepository, pedidoOferta);
         this.pedidoRepository = pedidoRepository;
         this.clienteRepository = clienteRepository;
         this.horarioRepo = horarioRepo;

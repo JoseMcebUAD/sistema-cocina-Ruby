@@ -308,20 +308,17 @@ public class CatalogoPedidoService {
 
     /**
      * Aplica el descuento de volumen al pedido si corresponde.
+     * Las comidas excluidas (consumidas por una oferta) no cuentan para el umbral
+     * ni reciben el descuento — evita double-discount entre oferta y volumen.
      *
-     * <p>Regla: cuando el pedido contiene ≥ 12 líneas de comida con
-     * {@code tamanoPorcion == MEDIA} y {@code comida.tipoComida == FIJA},
-     * se descuentan $10 en cada una de esas líneas y se registra
-     * {@code COMIDAS_DIEZ} en {@link Pedido#getTipoDescuento()}.
-     * Debe invocarse después de {@link #agregarComidas} y antes de
-     * {@link #calcularTotal}.
+     * @param excluidas comidas ya consumidas por una oferta aplicada; vacío si no hay ofertas
      */
-    public void aplicarDescuentoVolumen(Pedido pedido) {
-        // Resetea para re-evaluar correctamente en actualizaciones de pedido
+    public void aplicarDescuentoVolumen(Pedido pedido, java.util.Set<ComidaPedido> excluidas) {
         pedido.setTipoDescuento(null);
 
         List<ComidaPedido> calificadas = pedido.getComidasPedido().stream()
-                .filter(cp -> cp.getTamanoPorcion() == TamanoPorcion.MEDIA
+                .filter(cp -> !excluidas.contains(cp)
+                        && cp.getTamanoPorcion() == TamanoPorcion.MEDIA
                         && cp.getComida() != null
                         && cp.getComida().getTipoComida() == TipoComida.FIJA)
                 .toList();
@@ -330,6 +327,11 @@ public class CatalogoPedidoService {
             calificadas.forEach(cp -> cp.setDescuentoAplicado(DESCUENTO_COMIDAS_DIEZ));
             pedido.setTipoDescuento(TipoDescuento.COMIDAS_DIEZ);
         }
+    }
+
+    /** Delegado sin exclusiones — conserva la firma original para compatibilidad. */
+    public void aplicarDescuentoVolumen(Pedido pedido) {
+        aplicarDescuentoVolumen(pedido, java.util.Set.of());
     }
 
     public BigDecimal calcularTotal(Pedido pedido) {

@@ -140,6 +140,10 @@ public class Pedido {
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PedidoTarifaEspecial> tarifasEspeciales = new ArrayList<>();
 
+    @Builder.Default
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<OfertaPedido> ofertasPedido = new ArrayList<>();
+
     // -------------------------------------------------------------------------
     // Métodos helper para sincronización bidireccional
     // -------------------------------------------------------------------------
@@ -167,5 +171,10 @@ public class Pedido {
     public void addComboPedido(ComboPedido item) {
         item.setPedido(this);
         this.combosPedido.add(item);
+    }
+
+    public void addOfertaPedido(OfertaPedido item) {
+        item.setPedido(this);
+        this.ofertasPedido.add(item);
     }
 }

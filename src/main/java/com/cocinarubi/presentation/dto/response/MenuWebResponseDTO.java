@@ -16,6 +16,7 @@ public class MenuWebResponseDTO {
     private List<CategoriaMenuDTO> categorias;
     private List<ComplementoResponseDTO> complementos;
     private List<AnuncioResponseDTO> anuncios;
+    private List<OfertaMenuDTO> ofertas;
 
     public MenuWebResponseDTO() {}
 
@@ -25,7 +26,8 @@ public class MenuWebResponseDTO {
                                List<ComboResponseDTO> combos,
                                List<CategoriaMenuDTO> categorias,
                                List<ComplementoResponseDTO> complementos,
-                               List<AnuncioResponseDTO> anuncios) {
+                               List<AnuncioResponseDTO> anuncios,
+                               List<OfertaMenuDTO> ofertas) {
         this.comidas = comidas;
         this.basicos = basicos;
         this.desayunos = desayunos;
@@ -33,6 +35,7 @@ public class MenuWebResponseDTO {
         this.categorias = categorias;
         this.complementos = complementos;
         this.anuncios = anuncios;
+        this.ofertas = ofertas;
     }
 
     public List<ComidaMenuItemDTO> getComidas() { return comidas; }
@@ -55,4 +58,7 @@ public class MenuWebResponseDTO {
 
     public List<AnuncioResponseDTO> getAnuncios() { return anuncios; }
     public void setAnuncios(List<AnuncioResponseDTO> anuncios) { this.anuncios = anuncios; }
+
+    public List<OfertaMenuDTO> getOfertas() { return ofertas; }
+    public void setOfertas(List<OfertaMenuDTO> ofertas) { this.ofertas = ofertas; }
 }

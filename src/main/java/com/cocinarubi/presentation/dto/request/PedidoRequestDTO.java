@@ -60,6 +60,11 @@ public class PedidoRequestDTO {
     @JsonProperty("combos")
     private List<ComboPedidoDTO> combos = new ArrayList<>();
 
+    /** Solo canal COCINA: permite indicar explícitamente las ofertas a aplicar. WEB las detecta automáticamente. */
+    @Valid
+    @JsonProperty("ofertas")
+    private List<OfertaCocinaPedidoDTO> ofertas = new ArrayList<>();
+
     @Valid
     @JsonProperty("domicilio")
     private PedidoDomicilioDTO domicilio;
@@ -120,6 +125,11 @@ public class PedidoRequestDTO {
     public List<ComboPedidoDTO> getCombos() { return combos; }
     public void setCombos(List<ComboPedidoDTO> combos) {
         this.combos = combos != null ? combos : new ArrayList<>();
+    }
+
+    public List<OfertaCocinaPedidoDTO> getOfertas() { return ofertas; }
+    public void setOfertas(List<OfertaCocinaPedidoDTO> ofertas) {
+        this.ofertas = ofertas != null ? ofertas : new ArrayList<>();
     }
 
     public PedidoDomicilioDTO getDomicilio() { return domicilio; }

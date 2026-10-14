@@ -8,6 +8,7 @@ import com.cocinarubi.dao.ComidaRepository;
 import com.cocinarubi.dao.ComplementoRepository;
 import com.cocinarubi.dao.DesayunoRepository;
 import com.cocinarubi.dao.ComboRepository;
+import com.cocinarubi.dao.OfertaRepository;
 import com.cocinarubi.dao.ProductoCocinaRepository;
 import com.cocinarubi.dao.RegistroClienteRepository;
 import com.cocinarubi.dao.RutaRepository;
@@ -16,6 +17,7 @@ import com.cocinarubi.domain.entity.Combo;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.domain.entity.Desayuno;
+import com.cocinarubi.domain.entity.Oferta;
 import com.cocinarubi.domain.entity.ProductoCocina;
 import com.cocinarubi.domain.entity.Ruta;
 import com.cocinarubi.exception.BusinessException;
@@ -25,6 +27,7 @@ import com.cocinarubi.presentation.dto.request.ComboPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComidaPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComplementoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.DesayunoPedidoDTO;
+import com.cocinarubi.presentation.dto.request.OfertaCocinaPedidoDTO;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.request.ProductoCocinaPedidoDTO;
 import com.cocinarubi.presentation.strategy.ValidationStrategy;
@@ -66,6 +69,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
     private final RutaRepository rutaRepository;
     private final RegistroClienteRepository registroClienteRepository;
     private final ComboRepository comboRepository;
+    private final OfertaRepository ofertaRepository;
 
     // Virtual threads (Java 21): un hilo virtual por tarea, sin pool fijo — ideal para I/O bloqueante.
     private static final Executor EXECUTOR_VALIDACION = Executors.newVirtualThreadPerTaskExecutor();
@@ -77,7 +81,8 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                                ComplementoRepository complementoRepository,
                                RutaRepository rutaRepository,
                                RegistroClienteRepository registroClienteRepository,
-                               ComboRepository comboRepository) {
+                               ComboRepository comboRepository,
+                               OfertaRepository ofertaRepository) {
         this.comidaRepository = comidaRepository;
         this.desayunoRepository = desayunoRepository;
         this.basicoRepository = basicoRepository;
@@ -86,6 +91,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
         this.rutaRepository = rutaRepository;
         this.registroClienteRepository = registroClienteRepository;
         this.comboRepository = comboRepository;
+        this.ofertaRepository = ofertaRepository;
     }
 
     @Override
@@ -103,7 +109,8 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                 CompletableFuture.runAsync(() -> validarRegistroCliente(dto),         EXECUTOR_VALIDACION),
                 CompletableFuture.runAsync(() -> validarMetodosPagoNoDuplicados(dto), EXECUTOR_VALIDACION),
                 CompletableFuture.runAsync(() -> validarPagoClienteNoExcedaTotal(dto),EXECUTOR_VALIDACION),
-                CompletableFuture.runAsync(() -> validarSubtotalMinimoWeb(dto),       EXECUTOR_VALIDACION)
+                CompletableFuture.runAsync(() -> validarSubtotalMinimoWeb(dto),       EXECUTOR_VALIDACION),
+                CompletableFuture.runAsync(() -> validarOfertasCocina(dto),           EXECUTOR_VALIDACION)
         );
         try {
             CompletableFuture.allOf(tareas.toArray(new CompletableFuture[0])).join();
@@ -407,6 +414,30 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
             throw new BusinessException(
                     "El subtotal de los productos ($" + subtotal + ") debe ser mayor a $80.00 para realizar un pedido web",
                     HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
+        }
+    }
+
+    /** Solo canal COCINA: verifica que cada oferta indicada en el DTO exista, esté activa y aplique al tipoPedido. */
+    private void validarOfertasCocina(PedidoRequestDTO dto) {
+        if (dto.getPedidoCreadoDesde() != PedidoCreadoDesde.COCINA) return;
+        for (OfertaCocinaPedidoDTO ofertaDto : dto.getOfertas()) {
+            Oferta oferta = ofertaRepository.findById(ofertaDto.getIdOferta())
+                    .orElseThrow(() -> new BusinessException(
+                            "La oferta #" + ofertaDto.getIdOferta() + " no existe",
+                            HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION));
+            if (!oferta.isActivo()) {
+                throw new BusinessException(
+                        "La oferta '" + oferta.getNombre() + "' no está activa",
+                        HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
+            }
+            if (!oferta.estaDisponiblePara(dto.getTipoPedido())) {
+                String restriccion = oferta.getTiposPedidoRestriccion().isEmpty()
+                        ? "" : ". Solo aplica a: " + oferta.getTiposPedidoRestriccion();
+                throw new BusinessException(
+                        "La oferta '" + oferta.getNombre() + "' no está disponible para pedidos de tipo "
+                                + dto.getTipoPedido() + restriccion,
+                        HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
+            }
         }
     }
 }
