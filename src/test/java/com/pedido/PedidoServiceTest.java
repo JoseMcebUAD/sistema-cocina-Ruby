@@ -26,7 +26,11 @@ import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
 import com.cocinarubi.presentation.strategy.strategyImplementation.PedidoConfirmationImp;
 import com.cocinarubi.presentation.strategy.strategyImplementation.PedidoValidationImp;
+import com.cocinarubi.domain.mapper.OfertaMapper;
 import com.cocinarubi.domain.service.ComboService;
+import com.cocinarubi.domain.service.PedidoOfertaService;
+
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -58,16 +62,23 @@ public class PedidoServiceTest {
     @Mock private TarifaEspecialRepository tarifaEspecialRepository;
     @Mock private ComboService comboService;
     @Mock private ClienteRepository clienteRepository;
+    @Mock private OfertaMapper ofertaMapper;
+    @Mock private PedidoOfertaService pedidoOferta;
 
     private PedidoMapper pedidoMapper;
     private PedidoService pedidoService;
 
     @BeforeEach
     void setUp() {
-        pedidoMapper = spy(new PedidoMapper(comboService, clienteRepository));
+        pedidoMapper = spy(new PedidoMapper(comboService, clienteRepository, ofertaMapper));
         pedidoService = new PedidoService(
                 pedidoRepository, pedidoValidation, pedidoConfirmation,
-                pedidoMapper, catalogoPedido, eventPublisher, tarifaEspecialRepository);
+                pedidoMapper, catalogoPedido, eventPublisher, tarifaEspecialRepository,
+                pedidoOferta);
+        lenient().when(pedidoOferta.detectar(any(), any())).thenReturn(List.of());
+        lenient().when(pedidoOferta.extraerComidasConsumidas(any())).thenReturn(Set.of());
+        lenient().when(pedidoOferta.sumarAhorros(any())).thenReturn(BigDecimal.ZERO);
+        lenient().when(pedidoOferta.guardar(any(), any())).thenAnswer(inv -> inv.getArgument(0));
     }
 
     public Pedido PEDIDO_PREPARED = Pedido.builder()
@@ -183,14 +194,14 @@ public class PedidoServiceTest {
     @DisplayName("save - Debe guardar un pedido MOSTRADOR COCINA y delegar al catálogo")
     public void save_mostradorVacio() {
         when(catalogoPedido.calcularTotal(any(Pedido.class))).thenReturn(BigDecimal.ZERO);
-        when(pedidoRepository.save(any(Pedido.class))).thenReturn(PEDIDO_PREPARED);
+        when(pedidoRepository.saveAndFlush(any(Pedido.class))).thenReturn(PEDIDO_PREPARED);
 
         PedidoResponseDTO result = pedidoService.save(crearDtoMostrador());
 
         assertNotNull(result);
         assertEquals(MetodoPago.EFECTIVO, result.getMetodoPagoPrincipal());
         verify(catalogoPedido).handleTipoPedido(any(Pedido.class), any(PedidoRequestDTO.class));
-        verify(pedidoRepository).save(any(Pedido.class));
+        verify(pedidoRepository).saveAndFlush(any(Pedido.class));
         System.out.println("[OK] save guardó pedido MOSTRADOR: id=" + result.getIdPedido());
     }
 
@@ -198,13 +209,13 @@ public class PedidoServiceTest {
     @DisplayName("save - Pedido WEB DOMICILIO debe invocar catalogoPedido.handleTipoPedido")
     public void save_webDomicilio() {
         when(catalogoPedido.calcularTotal(any(Pedido.class))).thenReturn(BigDecimal.valueOf(30));
-        when(pedidoRepository.save(any(Pedido.class))).thenReturn(PEDIDO_PREPARED);
+        when(pedidoRepository.saveAndFlush(any(Pedido.class))).thenReturn(PEDIDO_PREPARED);
 
         PedidoResponseDTO result = pedidoService.save(crearDtoWebDomicilio());
 
         assertNotNull(result);
         verify(catalogoPedido).handleTipoPedido(any(Pedido.class), any(PedidoRequestDTO.class));
-        verify(pedidoRepository).save(any(Pedido.class));
+        verify(pedidoRepository).saveAndFlush(any(Pedido.class));
         System.out.println("[OK] save guardó pedido WEB-DOMICILIO");
     }
 
@@ -215,7 +226,7 @@ public class PedidoServiceTest {
                 .when(catalogoPedido).handleTipoPedido(any(Pedido.class), any(PedidoRequestDTO.class));
 
         assertThrows(BusinessException.class, () -> pedidoService.save(crearDtoWebDomicilio()));
-        verify(pedidoRepository, never()).save(any(Pedido.class));
+        verify(pedidoRepository, never()).saveAndFlush(any(Pedido.class));
         System.out.println("[OK] save no guardó pedido cuando catálogo lanza excepción");
     }
 
@@ -223,13 +234,13 @@ public class PedidoServiceTest {
     @DisplayName("save - Pedido COCINA PICK_UP con nombre de cliente debe invocar catalogoPedido")
     public void save_cocinaPickUp() {
         when(catalogoPedido.calcularTotal(any(Pedido.class))).thenReturn(BigDecimal.ZERO);
-        when(pedidoRepository.save(any(Pedido.class))).thenReturn(PEDIDO_PREPARED);
+        when(pedidoRepository.saveAndFlush(any(Pedido.class))).thenReturn(PEDIDO_PREPARED);
 
         PedidoResponseDTO result = pedidoService.save(crearDtoCocinaPickUp("Juan Pérez"));
 
         assertNotNull(result);
         verify(catalogoPedido).handleTipoPedido(any(Pedido.class), any(PedidoRequestDTO.class));
-        verify(pedidoRepository).save(any(Pedido.class));
+        verify(pedidoRepository).saveAndFlush(any(Pedido.class));
         System.out.println("[OK] save guardó pedido COCINA-PICK_UP");
     }
 
@@ -237,13 +248,13 @@ public class PedidoServiceTest {
     @DisplayName("save - Pedido COCINA DOMICILIO con idRegistroCliente debe invocar catalogoPedido")
     public void save_cocinaDomicilio() {
         when(catalogoPedido.calcularTotal(any(Pedido.class))).thenReturn(BigDecimal.valueOf(35));
-        when(pedidoRepository.save(any(Pedido.class))).thenReturn(PEDIDO_PREPARED);
+        when(pedidoRepository.saveAndFlush(any(Pedido.class))).thenReturn(PEDIDO_PREPARED);
 
         PedidoResponseDTO result = pedidoService.save(crearDtoCocinaDomicilio(1));
 
         assertNotNull(result);
         verify(catalogoPedido).handleTipoPedido(any(Pedido.class), any(PedidoRequestDTO.class));
-        verify(pedidoRepository).save(any(Pedido.class));
+        verify(pedidoRepository).saveAndFlush(any(Pedido.class));
         System.out.println("[OK] save guardó pedido COCINA-DOMICILIO");
     }
 
@@ -260,7 +271,7 @@ public class PedidoServiceTest {
                 .impreso(false)
                 .build();
         when(catalogoPedido.calcularTotal(any(Pedido.class))).thenReturn(BigDecimal.ZERO);
-        when(pedidoRepository.save(any(Pedido.class))).thenReturn(actualizado);
+        when(pedidoRepository.saveAndFlush(any(Pedido.class))).thenReturn(actualizado);
 
         PedidoRequestDTO dtoUpdate = crearDtoMostrador();
         dtoUpdate.setMetodoPagoPrincipal(MetodoPago.TARJETA);
@@ -353,7 +364,7 @@ public class PedidoServiceTest {
                 .impreso(false)
                 .build();
         when(catalogoPedido.calcularTotal(any(Pedido.class))).thenReturn(BigDecimal.ZERO);
-        when(pedidoRepository.save(any(Pedido.class))).thenReturn(pedidoSinMetodoPago);
+        when(pedidoRepository.saveAndFlush(any(Pedido.class))).thenReturn(pedidoSinMetodoPago);
 
         PedidoRequestDTO dto = crearDtoMostrador();
         dto.setMetodoPagoPrincipal(null);
@@ -362,7 +373,7 @@ public class PedidoServiceTest {
 
         assertNotNull(result);
         assertNull(result.getMetodoPagoPrincipal());
-        verify(pedidoRepository).save(any(Pedido.class));
+        verify(pedidoRepository).saveAndFlush(any(Pedido.class));
         System.out.println("[OK] save guardó pedido con metodoPagoPrincipal=null");
     }
 
@@ -380,14 +391,14 @@ public class PedidoServiceTest {
     @DisplayName("save - El comentario del DTO se persiste en el Pedido que se guarda")
     public void save_comentarioPersistidoEnPedido() {
         when(catalogoPedido.calcularTotal(any(Pedido.class))).thenReturn(BigDecimal.ZERO);
-        when(pedidoRepository.save(any(Pedido.class))).thenReturn(PEDIDO_PREPARED);
+        when(pedidoRepository.saveAndFlush(any(Pedido.class))).thenReturn(PEDIDO_PREPARED);
 
         PedidoRequestDTO dto = crearDtoMostrador();
         dto.setComentario("sin cebolla");
         pedidoService.save(dto);
 
         ArgumentCaptor<Pedido> captor = ArgumentCaptor.forClass(Pedido.class);
-        verify(pedidoRepository).save(captor.capture());
+        verify(pedidoRepository).saveAndFlush(captor.capture());
         assertEquals("sin cebolla", captor.getValue().getComentario());
         System.out.println("[OK] save persistió comentario: " + captor.getValue().getComentario());
     }
@@ -435,12 +446,12 @@ public class PedidoServiceTest {
                 .isActive(true)
                 .build();
         when(tarifaEspecialRepository.findByIsActiveTrue()).thenReturn(List.of(tarifaLluvia));
-        when(pedidoRepository.save(any(Pedido.class))).thenReturn(PEDIDO_PREPARED);
+        when(pedidoRepository.saveAndFlush(any(Pedido.class))).thenReturn(PEDIDO_PREPARED);
 
         ArgumentCaptor<Pedido> captor = ArgumentCaptor.forClass(Pedido.class);
         pedidoService.save(crearDtoCocinaDomicilio(1));
 
-        verify(pedidoRepository).save(captor.capture());
+        verify(pedidoRepository).saveAndFlush(captor.capture());
         Pedido guardado = captor.getValue();
 
         assertEquals(0, BigDecimal.valueOf(25).compareTo(guardado.getPrecioFinalOrden()),
@@ -467,12 +478,12 @@ public class PedidoServiceTest {
 
         when(pedidoRepository.findById(10)).thenReturn(Optional.of(existente));
         when(catalogoPedido.calcularTotal(any(Pedido.class))).thenReturn(BigDecimal.valueOf(50));
-        when(pedidoRepository.save(any(Pedido.class))).thenReturn(existente);
+        when(pedidoRepository.saveAndFlush(any(Pedido.class))).thenReturn(existente);
 
         ArgumentCaptor<Pedido> captor = ArgumentCaptor.forClass(Pedido.class);
         pedidoService.update(10, crearDtoCocinaDomicilio(1));
 
-        verify(pedidoRepository).save(captor.capture());
+        verify(pedidoRepository).saveAndFlush(captor.capture());
         Pedido actualizado = captor.getValue();
 
         assertEquals(0, BigDecimal.valueOf(50).compareTo(actualizado.getPrecioFinalOrden()),
@@ -512,12 +523,12 @@ public class PedidoServiceTest {
 
         when(pedidoRepository.findById(10)).thenReturn(Optional.of(existente));
         when(catalogoPedido.calcularTotal(any(Pedido.class))).thenReturn(BigDecimal.valueOf(50));
-        when(pedidoRepository.save(any(Pedido.class))).thenReturn(existente);
+        when(pedidoRepository.saveAndFlush(any(Pedido.class))).thenReturn(existente);
 
         ArgumentCaptor<Pedido> captor = ArgumentCaptor.forClass(Pedido.class);
         pedidoService.update(10, crearDtoCocinaDomicilio(1));
 
-        verify(pedidoRepository).save(captor.capture());
+        verify(pedidoRepository).saveAndFlush(captor.capture());
         Pedido actualizado = captor.getValue();
 
         assertEquals(0, BigDecimal.valueOf(60).compareTo(actualizado.getPrecioFinalOrden()),
