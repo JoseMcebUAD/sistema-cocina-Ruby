@@ -70,8 +70,8 @@ public interface EstadisticasRepository extends JpaRepository<Pedido, Integer> {
                 COALESCE(SUM(
                     CASE
                         WHEN p.metodoPagoSecundario IS NULL THEN p.precioFinalOrden
-                        WHEN p.metodoPagoPrincipal = :metodoPago THEN COALESCE(p.pagoCliente, 0)
-                        WHEN p.metodoPagoSecundario = :metodoPago THEN (p.precioFinalOrden - COALESCE(p.pagoCliente, 0))
+                        WHEN p.metodoPagoPrincipal = :metodoPago THEN COALESCE(p.pagoClientePrincipal, 0)
+                        WHEN p.metodoPagoSecundario = :metodoPago THEN (p.precioFinalOrden - COALESCE(p.pagoClientePrincipal, 0))
                         ELSE p.precioFinalOrden
                     END
                 ), 0)
@@ -104,8 +104,8 @@ public interface EstadisticasRepository extends JpaRepository<Pedido, Integer> {
                 COALESCE(SUM(
                     CASE
                         WHEN p.metodoPagoSecundario IS NULL THEN p.precioFinalOrden
-                        WHEN p.metodoPagoPrincipal = :metodoPago THEN COALESCE(p.pagoCliente, 0)
-                        WHEN p.metodoPagoSecundario = :metodoPago THEN (p.precioFinalOrden - COALESCE(p.pagoCliente, 0))
+                        WHEN p.metodoPagoPrincipal = :metodoPago THEN COALESCE(p.pagoClientePrincipal, 0)
+                        WHEN p.metodoPagoSecundario = :metodoPago THEN (p.precioFinalOrden - COALESCE(p.pagoClientePrincipal, 0))
                         ELSE p.precioFinalOrden
                     END
                 ), 0)

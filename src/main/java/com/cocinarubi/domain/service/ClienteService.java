@@ -6,6 +6,7 @@ import com.cocinarubi.presentation.dto.request.ClienteRequestDTO;
 import com.cocinarubi.domain.entity.Cliente;
 import com.cocinarubi.domain.entity.Ruta;
 import com.cocinarubi.exception.BusinessException;
+import com.cocinarubi.util.HashUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -37,27 +38,29 @@ public class ClienteService {
     }
 
     public Cliente save(ClienteRequestDTO dto) {
-        // El sessionToken identifica al dispositivo/sesión; no puede estar duplicado
-        if (clienteRepository.existsBySessionToken(dto.getSessionToken())) {
+        // El sessionToken se hashea antes de persistir; identifica al dispositivo/sesion.
+        String hash = HashUtils.sha256Hex(dto.getSessionToken());
+        if (clienteRepository.existsBySessionTokenHash(hash)) {
             throw new BusinessException(
                     "Ya existe un cliente con ese session token", HttpStatus.CONFLICT);
         }
         Ruta ruta = resolveRuta(dto.getIdRuta());
-        return clienteRepository.save(buildCliente(dto, ruta));
+        return clienteRepository.save(buildCliente(dto, ruta, hash));
     }
 
     public Cliente update(int id, ClienteRequestDTO dto) {
         Cliente existente = findById(id);
-        // Solo se valida unicidad si el token realmente cambió
-        if (!existente.getSessionToken().equals(dto.getSessionToken())
-                && clienteRepository.existsBySessionToken(dto.getSessionToken())) {
+        String hashNuevo = HashUtils.sha256Hex(dto.getSessionToken());
+        // Solo se valida unicidad si el token realmente cambio
+        if (!existente.getSessionTokenHash().equals(hashNuevo)
+                && clienteRepository.existsBySessionTokenHash(hashNuevo)) {
             throw new BusinessException(
                     "Ya existe un cliente con ese session token", HttpStatus.CONFLICT);
         }
         Ruta ruta = resolveRuta(dto.getIdRuta());
         existente.setRuta(ruta);
         existente.setUuidCliente(dto.getUuidCliente());
-        existente.setSessionToken(dto.getSessionToken());
+        existente.setSessionTokenHash(hashNuevo);
         existente.setCodigoCliente(dto.getCodigoCliente());
         existente.setUserAgent(dto.getUserAgent());
         existente.setIpAddress(dto.getIpAddress());
@@ -101,11 +104,11 @@ public class ClienteService {
                         "Ruta no encontrada con id: " + idRuta, HttpStatus.NOT_FOUND));
     }
 
-    private Cliente buildCliente(ClienteRequestDTO dto, Ruta ruta) {
+    private Cliente buildCliente(ClienteRequestDTO dto, Ruta ruta, String sessionTokenHash) {
         return Cliente.builder()
                 .ruta(ruta)
                 .uuidCliente(dto.getUuidCliente())
-                .sessionToken(dto.getSessionToken())
+                .sessionTokenHash(sessionTokenHash)
                 .codigoCliente(dto.getCodigoCliente())
                 .userAgent(dto.getUserAgent())
                 .ipAddress(dto.getIpAddress())

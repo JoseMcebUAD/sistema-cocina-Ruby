@@ -23,10 +23,10 @@ public class DBConstants {
     }
 
     /**
-     * Discriminador polimórfico para {@code paquete_producto.tipo_producto}.
-     * Una línea de paquete referencia UNA de estas cuatro tablas maestras según el valor.
+     * Discriminador polimórfico para {@code combo_producto.tipo_producto}.
+     * Una línea de combo referencia UNA de estas cuatro tablas maestras según el valor.
      */
-    public enum TipoLineaPaquete { COMIDA, DESAYUNO, COMPLEMENTO, PRODUCTO_COCINA }
+    public enum TipoLineaCombo { COMIDA, DESAYUNO, COMPLEMENTO, PRODUCTO_COCINA }
 
 
     /** Estado de disponibilidad de platillos para el menú web. */
@@ -56,5 +56,60 @@ public class DBConstants {
 
     /** Tipo de operación HTTP registrada en la tabla auditoria. PATCH se mapea como PUT. */
     public enum TipoOperacion { POST, PUT, DELETE }
+
+    /** Clasifica si una comida pertenece al menú fijo del día o es un especial temporal. */
+    public enum TipoComida { FIJA, ESPECIAL }
+
+    /**
+     * Tipo de descuento automático aplicado a un pedido.
+     * {@code COMIDAS_DIEZ} se activa cuando el pedido contiene ≥ 12 comidas MEDIA + FIJA,
+     * descontando $10 en cada una de esas líneas.
+     */
+    public enum TipoDescuento { COMIDAS_DIEZ }
+
+    /** Nivel de urgencia/visibilidad de un anuncio en el carrito del cliente. */
+    public enum PrioridadAnuncio { ALTA, MEDIA, BAJA }
+
+    /**
+     * Discriminador polimórfico para {@code anuncio_producto.tipo_producto}.
+     * Indica a qué tabla maestra pertenece el {@code id_producto} referenciado.
+     */
+    public enum TipoProductoAnuncio { COMIDA, DESAYUNO, COMPLEMENTO, PRODUCTO_COCINA, BASICO, COMBO }
+
+    /**
+     * Tipo de entidad de catálogo que puede participar en una {@code Oferta}.
+     * Desayuno queda excluido intencionalmente en v1.
+     */
+    public enum TipoEntidadOferta { COMIDA, PRODUCTO_COCINA, BASICO, COMBO }
+
+    /**
+     * Modo de matching de una línea ({@code oferta_linea}) dentro de una {@code Oferta}.
+     *
+     * <p>El campo {@code id_referencia} en la línea se interpreta según el modo:
+     * <ul>
+     *   <li>{@code COMIDA_ESPECIFICA} → idComida.</li>
+     *   <li>{@code COMIDA_POR_TIPO} → null; el filtro lo da {@code tipo_comida_filtro}.</li>
+     *   <li>{@code PRODUCTO_ESPECIFICO} → idProductoCocina.</li>
+     *   <li>{@code PRODUCTO_POR_CATEGORIA} → idCategoria.</li>
+     *   <li>{@code PRODUCTO_POR_SUBCATEGORIA} → idSubcategoria.</li>
+     *   <li>{@code PRODUCTO_GENERAL} → null (cualquier ProductoCocina).</li>
+     *   <li>{@code BASICO_ESPECIFICO} → idBasico.</li>
+     *   <li>{@code BASICO_GENERAL} → null (cualquier Basico).</li>
+     *   <li>{@code COMBO_ESPECIFICO} → idCombo.</li>
+     *   <li>{@code COMBO_GENERAL} → null (cualquier Combo).</li>
+     * </ul>
+     */
+    public enum ModoMatchOferta {
+        COMIDA_ESPECIFICA,
+        COMIDA_POR_TIPO,
+        PRODUCTO_ESPECIFICO,
+        PRODUCTO_POR_CATEGORIA,
+        PRODUCTO_POR_SUBCATEGORIA,
+        PRODUCTO_GENERAL,
+        BASICO_ESPECIFICO,
+        BASICO_GENERAL,
+        COMBO_ESPECIFICO,
+        COMBO_GENERAL
+    }
 
 }

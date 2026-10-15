@@ -1,6 +1,7 @@
 package com.comida;
 
 import com.cocinarubi.DBConstants.Estatus;
+import com.cocinarubi.DBConstants.TipoComida;
 import com.cocinarubi.dao.ComidaRepository;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.domain.service.ComidaService;
@@ -41,6 +42,7 @@ public class ComidaServiceTest {
             .precioEntera(BigDecimal.valueOf(90))
             .estatus(Estatus.DISPONIBLE)
             .destacado(true)
+            .tipoComida(TipoComida.FIJA)
             .build();
 
     @Test
@@ -90,6 +92,7 @@ public class ComidaServiceTest {
 
         assertNotNull(result);
         assertEquals("Pollo en salsa roja", result.getNombreComida());
+        assertEquals(TipoComida.FIJA, result.getTipoComida());
         verify(comidaRepository).save(COMIDA_PREPARED);
         System.out.println("[OK] save guardó comida: " + result.getNombreComida());
     }

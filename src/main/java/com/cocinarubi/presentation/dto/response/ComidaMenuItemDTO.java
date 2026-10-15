@@ -1,6 +1,10 @@
 package com.cocinarubi.presentation.dto.response;
 
+import com.cocinarubi.DBConstants.TipoComida;
+
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Vista ligera de {@link com.cocinarubi.domain.entity.Comida} para el menú web.
@@ -9,6 +13,7 @@ import java.math.BigDecimal;
  */
 public class ComidaMenuItemDTO {
 
+    private Integer idComida;
     private String uuidComida;
     private String nombreComida;
     private String descripcion;
@@ -16,12 +21,16 @@ public class ComidaMenuItemDTO {
     private BigDecimal precioEntera;
     private boolean destacado;
     private Integer limiteComplemento;
+    private TipoComida tipoComida;
+    private String urlImagen;
+    private List<ComplementoPredeterminadoResponseDTO> complementosPredeterminados = new ArrayList<>();
 
     public ComidaMenuItemDTO() {}
 
-    public ComidaMenuItemDTO(String uuidComida, String nombreComida, String descripcion,
+    public ComidaMenuItemDTO(Integer idComida, String uuidComida, String nombreComida, String descripcion,
                               BigDecimal precioMedia, BigDecimal precioEntera,
                               boolean destacado, Integer limiteComplemento) {
+        this.idComida = idComida;
         this.uuidComida = uuidComida;
         this.nombreComida = nombreComida;
         this.descripcion = descripcion;
@@ -30,6 +39,9 @@ public class ComidaMenuItemDTO {
         this.destacado = destacado;
         this.limiteComplemento = limiteComplemento;
     }
+
+    public Integer getIdComida() { return idComida; }
+    public void setIdComida(Integer idComida) { this.idComida = idComida; }
 
     public String getUuidComida() { return uuidComida; }
     public void setUuidComida(String uuidComida) { this.uuidComida = uuidComida; }
@@ -51,4 +63,13 @@ public class ComidaMenuItemDTO {
 
     public Integer getLimiteComplemento() { return limiteComplemento; }
     public void setLimiteComplemento(Integer limiteComplemento) { this.limiteComplemento = limiteComplemento; }
+
+    public TipoComida getTipoComida() { return tipoComida; }
+    public void setTipoComida(TipoComida tipoComida) { this.tipoComida = tipoComida; }
+
+    public String getUrlImagen() { return urlImagen; }
+    public void setUrlImagen(String urlImagen) { this.urlImagen = urlImagen; }
+
+    public List<ComplementoPredeterminadoResponseDTO> getComplementosPredeterminados() { return complementosPredeterminados; }
+    public void setComplementosPredeterminados(List<ComplementoPredeterminadoResponseDTO> complementosPredeterminados) { this.complementosPredeterminados = complementosPredeterminados; }
 }

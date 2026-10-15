@@ -13,7 +13,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +29,14 @@ import java.util.Map;
  */
 @Component
 public class ArchivoUploader {
+
+    // Firmas de bytes (magic bytes) para detectar el tipo real del archivo ignorando el Content-Type del cliente
+    private static final Map<String, byte[]> FIRMAS_MIME = Map.of(
+            "image/jpeg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF},
+            "image/png",  new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47},
+            "image/gif",  new byte[]{0x47, 0x49, 0x46, 0x38},
+            "image/webp", new byte[]{0x52, 0x49, 0x46, 0x46}
+    );
 
     private final Cloudinary cloudinary;
     private final ArchivoRepository archivoRepository;
@@ -54,10 +65,15 @@ public class ArchivoUploader {
             throw new BusinessException("Archivo vacío en la petición", HttpStatus.BAD_REQUEST);
         }
 
-        String contentType = file.getContentType();
+        String contentType;
+        try {
+            contentType = detectarMimeReal(file);
+        } catch (IOException e) {
+            throw new BusinessException("No se pudo leer el archivo para validar su tipo", HttpStatus.BAD_REQUEST);
+        }
         if (contentType == null || !mimesPermitidos.contains(contentType)) {
             throw new BusinessException(
-                    "Tipo de archivo no permitido: " + contentType + ". Permitidos: " + mimesPermitidos,
+                    "Tipo de archivo no permitido. Tipos válidos: " + mimesPermitidos,
                     HttpStatus.UNSUPPORTED_MEDIA_TYPE);
         }
 
@@ -91,5 +107,32 @@ public class ArchivoUploader {
                 .build();
 
         return archivoRepository.save(archivo);
+    }
+
+    /** Lee los primeros bytes del archivo y los compara contra firmas conocidas. */
+    private static String detectarMimeReal(MultipartFile file) throws IOException {
+        byte[] cabecera = new byte[12];
+        try (InputStream is = file.getInputStream()) {
+            if (is.read(cabecera) < 4) return null;
+        }
+        for (Map.Entry<String, byte[]> entrada : FIRMAS_MIME.entrySet()) {
+            if (iniciaConFirma(cabecera, entrada.getValue())) {
+                if ("image/webp".equals(entrada.getKey())) {
+                    // WebP: RIFF en bytes 0-3 + "WEBP" en bytes 8-11
+                    byte[] webp = {0x57, 0x45, 0x42, 0x50};
+                    if (!iniciaConFirma(Arrays.copyOfRange(cabecera, 8, 12), webp)) continue;
+                }
+                return entrada.getKey();
+            }
+        }
+        return null;
+    }
+
+    private static boolean iniciaConFirma(byte[] datos, byte[] firma) {
+        if (datos.length < firma.length) return false;
+        for (int i = 0; i < firma.length; i++) {
+            if (datos[i] != firma[i]) return false;
+        }
+        return true;
     }
 }

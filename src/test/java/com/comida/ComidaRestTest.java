@@ -62,7 +62,8 @@ public class ComidaRestTest {
                   "precioEntera": 90.00,
                   "estatus": "DISPONIBLE",
                   "destacado": false,
-                  "limiteComplemento": 3
+                  "limiteComplemento": 3,
+                  "tipoComida": "FIJA"
                 }
                 """;
 
@@ -74,6 +75,7 @@ public class ComidaRestTest {
         JsonNode data = mapper.readTree(response.getBody()).get("data");
         createdId = data.get("idComida").asInt();
         assertEquals("Enchiladas Test", data.get("nombreComida").asText());
+        assertEquals("FIJA", data.get("tipoComida").asText());
         assertTrue(data.get("complementosPredeterminados").isArray());
         assertEquals(0, data.get("complementosPredeterminados").size());
         System.out.println("[OK] " + response.getStatusCode() + " | id=" + createdId + " nombre=" + data.get("nombreComida").asText());
@@ -110,7 +112,8 @@ public class ComidaRestTest {
                   "precioEntera": 100.00,
                   "estatus": "DISPONIBLE",
                   "destacado": true,
-                  "limiteComplemento": 3
+                  "limiteComplemento": 3,
+                  "tipoComida": "ESPECIAL"
                 }
                 """.formatted(createdId);
 
@@ -121,6 +124,7 @@ public class ComidaRestTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         JsonNode data = mapper.readTree(response.getBody()).get("data");
         assertEquals("Enchiladas Verdes Actualizadas", data.get("nombreComida").asText());
+        assertEquals("ESPECIAL", data.get("tipoComida").asText());
         assertTrue(data.get("complementosPredeterminados").isArray());
         assertEquals(0, data.get("complementosPredeterminados").size());
         System.out.println("[OK] " + response.getStatusCode() + " | nombre=" + data.get("nombreComida").asText());
@@ -133,17 +137,14 @@ public class ComidaRestTest {
         ResponseEntity<String> deleteResponse = this.restTemplate.exchange(
                 "/comida/" + createdId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class
         );
-        assertEquals(HttpStatus.OK, deleteResponse.getStatusCode(),
+        assertEquals(HttpStatus.NO_CONTENT, deleteResponse.getStatusCode(),
                 "DELETE /comida/" + createdId + " falló. Body: " + deleteResponse.getBody());
-        JsonNode deleteData = mapper.readTree(deleteResponse.getBody());
-        assertEquals(200, deleteData.get("status").asInt(),
-                "Se esperaba status=200 en body de DELETE. Body: " + deleteResponse.getBody());
 
         ResponseEntity<String> getResponse = this.restTemplate.exchange(
                 "/comida/" + createdId, HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
         assertEquals(HttpStatus.NOT_FOUND, getResponse.getStatusCode());
-        System.out.println("[OK] DELETE 200 → GET 404 para comida id=" + createdId);
+        System.out.println("[OK] DELETE 204 → GET 404 para comida id=" + createdId);
     }
 
     @Test

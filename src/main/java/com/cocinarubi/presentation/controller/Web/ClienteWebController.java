@@ -1,14 +1,19 @@
 package com.cocinarubi.presentation.controller.Web;
 
+import com.cocinarubi.domain.entity.Cliente;
 import com.cocinarubi.domain.interfaces.web.IClienteWebService;
+import com.cocinarubi.domain.interfaces.web.SesionWebResult;
+import com.cocinarubi.domain.service.CodigoClienteService;
 import com.cocinarubi.domain.service.web.PedidoWebService;
 import com.cocinarubi.exception.BusinessException;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
+import com.cocinarubi.presentation.dto.response.CodigoClienteResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
 import com.cocinarubi.presentation.dto.web.ClienteWebRequestDTO;
 import com.cocinarubi.presentation.dto.web.ClienteWebResponseDTO;
 import com.cocinarubi.presentation.dto.web.RutaWebResponseDTO;
+import com.cocinarubi.presentation.filter.ClienteSessionFilter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,10 +37,14 @@ public class ClienteWebController {
 
     private final IClienteWebService clienteWebService;
     private final PedidoWebService pedidoWebService;
+    private final CodigoClienteService codigoClienteService;
 
-    public ClienteWebController(IClienteWebService clienteWebService, PedidoWebService pedidoWebService) {
+    public ClienteWebController(IClienteWebService clienteWebService,
+                                PedidoWebService pedidoWebService,
+                                CodigoClienteService codigoClienteService) {
         this.clienteWebService = clienteWebService;
         this.pedidoWebService = pedidoWebService;
+        this.codigoClienteService = codigoClienteService;
     }
 
     // Inicia o recupera la sesión del cliente; prioriza la cookie existente sobre el UUID del body y la genera si no hay ninguno
@@ -48,17 +57,32 @@ public class ClienteWebController {
         String uuid = resolverUuid(request, dto.getUuidCliente());
         dto.setUuidCliente(uuid);
 
-        ResponseCookie cookie = ResponseCookie.from("uuid_cliente", uuid)
+        // Cookie de identidad del navegador (persistente 1 año, no es un secreto)
+        ResponseCookie cookieUuid = ResponseCookie.from("uuid_cliente", uuid)
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("None")
                 .maxAge(Duration.ofDays(365))
                 .path("/")
                 .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, cookieUuid.toString());
+
+        SesionWebResult resultado = clienteWebService.sesion(dto);
+        // Solo emitimos la cookie de sesion cuando el service genera un token nuevo (renovacion o alta).
+        // El token vive solo en la cookie HttpOnly; nunca en el body ni en logs.
+        if (resultado.tokenPlano() != null) {
+            ResponseCookie cookieToken = ResponseCookie.from("session_token", resultado.tokenPlano())
+                    .httpOnly(true)
+                    .secure(true)
+                    .sameSite("None")
+                    .maxAge(Duration.ofDays(7))
+                    .path("/")
+                    .build();
+            response.addHeader(HttpHeaders.SET_COOKIE, cookieToken.toString());
+        }
 
         return ResponseEntity.ok(ApiResponse.exito(200, "Sesión iniciada correctamente",
-                clienteWebService.sesion(dto)));
+                resultado.dto()));
     }
 
     private String resolverUuid(HttpServletRequest request, String uuidDelBody) {
@@ -97,12 +121,22 @@ public class ClienteWebController {
         return ResponseEntity.ok(ApiResponse.exito(200, mensaje, rutas));
     }
 
-    // Retorna los últimos pedidos asociados al UUID del cliente
-    @GetMapping("/pedidos/{uuidCliente}")
+    // Retorna los últimos pedidos del cliente autenticado (resuelto desde el session token)
+    @GetMapping("/pedidos")
     public ResponseEntity<ApiResponse<List<PedidoResponseDTO>>> ultimosPedidos(
-            @PathVariable String uuidCliente) {
+            HttpServletRequest request) {
+        // ClienteSessionFilter: valida el session token y expone el Cliente autenticado
+        Cliente autenticado = (Cliente) request.getAttribute(ClienteSessionFilter.CLIENTE_ATTR);
         return ResponseEntity.ok(ApiResponse.exito(200, "Pedidos obtenidos correctamente",
-                clienteWebService.ultimosPedidos(uuidCliente)));
+                clienteWebService.ultimosPedidos(autenticado.getUuidCliente())));
+    }
+
+    // Consulta el estatus y la tarifa de un código de cliente especial
+    @GetMapping("/codigo-cliente/{codigo}")
+    public ResponseEntity<ApiResponse<CodigoClienteResponseDTO>> consultarCodigoCliente(
+            @PathVariable String codigo) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Código de cliente encontrado",
+                codigoClienteService.findByCodigoCliente(codigo)));
     }
 
     // Registra un nuevo pedido y retorna 201 con el recurso creado

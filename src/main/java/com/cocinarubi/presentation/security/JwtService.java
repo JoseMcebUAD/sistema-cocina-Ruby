@@ -1,5 +1,6 @@
 package com.cocinarubi.presentation.security;
 
+import com.cocinarubi.domain.entity.Usuario;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,9 +28,6 @@ public class JwtService {
     // JEFA_COCINA gestiona el local todo el día → token de 24 horas
     private static final long EXPIRACION_JEFA_COCINA_MS = 24L * 60 * 60 * 1000;
 
-    // Ambos roles trabajan turnos largos → ventana de renovación de 3 horas
-    private static final long VENTANA_RENOVACION_MS = 3L * 60 * 60 * 1000;
-
     // ── Generación ───────────────────────────────────────────────────────────
 
     public String generarToken(UserDetails userDetails) {
@@ -41,27 +40,28 @@ public class JwtService {
                 .anyMatch("ROLE_JEFA_COCINA"::equals);
 
         long expiracion = esJefaCocina ? EXPIRACION_JEFA_COCINA_MS : EXPIRACION_MS;
+        int tokenVersion = (userDetails instanceof Usuario u) ? u.getTokenVersion() : 0;
 
         return Jwts.builder()
                 .subject(userDetails.getUsername())
+                .id(UUID.randomUUID().toString())                 // jti para denylist
                 .claim("roles", roles)
-                .claim("vrms", VENTANA_RENOVACION_MS)
+                .claim("ver", tokenVersion)                       // permite revocar todos los tokens del usuario
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiracion))
                 .signWith(getSigningKey())
                 .compact();
     }
 
+    /**
+     * Renueva un token vigente. Si el token esta expirado, se propaga
+     * {@link ExpiredJwtException}: hay que forzar re-login.
+     */
     public String renovarToken(String tokenOriginal) {
-        Claims claims;
-        try {
-            claims = parsearClaims(tokenOriginal);
-        } catch (ExpiredJwtException e) {
-            claims = e.getClaims();
-        }
-
+        Claims claims = parsearClaims(tokenOriginal);
         return Jwts.builder()
                 .claims(claims)
+                .id(UUID.randomUUID().toString())                 // nuevo jti — el anterior queda inactivo naturalmente
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + EXPIRACION_MS))
                 .signWith(getSigningKey())
@@ -80,36 +80,39 @@ public class JwtService {
         }
     }
 
+    /**
+     * Devuelve los claims incluso si el token esta expirado. Solo lanza
+     * {@link JwtException} si la firma es invalida.
+     * Uso: logout — necesita leer el jti para revocarlo aunque el token
+     * ya haya caducado.
+     */
+    public Claims extraerClaimsAunqueExpirado(String token) {
+        try {
+            return parsearClaims(token);
+        } catch (ExpiredJwtException e) {
+            return e.getClaims();
+        }
+    }
+
     // ── Validación ───────────────────────────────────────────────────────────
 
     public boolean esTokenValido(String token, UserDetails userDetails) {
         try {
-            String subject = parsearClaims(token).getSubject();
-            return subject.equals(userDetails.getUsername());
-        } catch (JwtException e) {
-            return false;
-        }
-    }
-
-    public boolean estaEnVentanaDeRenovacion(String token) {
-        try {
-            parsearClaims(token);
+            Claims claims = parsearClaims(token);
+            if (!claims.getSubject().equals(userDetails.getUsername())) return false;
+            // Comparar version del token contra la del usuario para invalidar
+            // masivamente si el operador cambio password o forzo logout global
+            if (userDetails instanceof Usuario u) {
+                Integer ver = claims.get("ver", Integer.class);
+                return ver != null && ver >= u.getTokenVersion();
+            }
             return true;
-        } catch (ExpiredJwtException e) {
-            long ventana = obtenerVentanaRenovacion(e.getClaims());
-            long msDesdeExpiracion = System.currentTimeMillis() - e.getClaims().getExpiration().getTime();
-            return msDesdeExpiracion < ventana;
         } catch (JwtException e) {
             return false;
         }
     }
 
     // ── Privados ─────────────────────────────────────────────────────────────
-
-    private long obtenerVentanaRenovacion(Claims claims) {
-        Long vrms = claims.get("vrms", Long.class);
-        return vrms != null ? vrms : VENTANA_RENOVACION_MS;
-    }
 
     private Claims parsearClaims(String token) {
         return Jwts.parser()

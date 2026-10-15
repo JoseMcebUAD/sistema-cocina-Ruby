@@ -7,13 +7,17 @@ public class ComplementoResponseDTO {
     private Integer idComplemento;
     private String nombreComplemento;
     private BigDecimal precioExtra;
+    // Indica que el complemento se cobra siempre, aun cuando forma parte de un básico
+    private boolean cobrarSiempre;
 
     public ComplementoResponseDTO() {}
 
-    public ComplementoResponseDTO(Integer idComplemento, String nombreComplemento, BigDecimal precioExtra) {
+    public ComplementoResponseDTO(Integer idComplemento, String nombreComplemento,
+                                  BigDecimal precioExtra, boolean cobrarSiempre) {
         this.idComplemento = idComplemento;
         this.nombreComplemento = nombreComplemento;
         this.precioExtra = precioExtra;
+        this.cobrarSiempre = cobrarSiempre;
     }
 
     public Integer getIdComplemento() { return idComplemento; }
@@ -24,4 +28,7 @@ public class ComplementoResponseDTO {
 
     public BigDecimal getPrecioExtra() { return precioExtra; }
     public void setPrecioExtra(BigDecimal precioExtra) { this.precioExtra = precioExtra; }
+
+    public boolean isCobrarSiempre() { return cobrarSiempre; }
+    public void setCobrarSiempre(boolean cobrarSiempre) { this.cobrarSiempre = cobrarSiempre; }
 }

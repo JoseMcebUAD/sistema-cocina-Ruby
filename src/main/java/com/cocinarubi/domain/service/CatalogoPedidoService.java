@@ -2,8 +2,13 @@ package com.cocinarubi.domain.service;
 
 import com.cocinarubi.DBConstants.Estatus;
 import com.cocinarubi.DBConstants.PedidoCreadoDesde;
+import com.cocinarubi.DBConstants.TamanoPorcion;
+import com.cocinarubi.DBConstants.TipoComida;
+import com.cocinarubi.DBConstants.TipoDescuento;
 import com.cocinarubi.dao.BasicoRepository;
+import com.cocinarubi.dao.CodigoClienteRepository;
 import com.cocinarubi.dao.RegistroClienteRepository;
+import com.cocinarubi.domain.entity.CodigoCliente;
 import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.BasicoPedido;
 import com.cocinarubi.domain.entity.Comida;
@@ -13,8 +18,8 @@ import com.cocinarubi.domain.entity.Complemento;
 import com.cocinarubi.domain.entity.ComplementoComidaPedido;
 import com.cocinarubi.domain.entity.Desayuno;
 import com.cocinarubi.domain.entity.DesayunoPedido;
-import com.cocinarubi.domain.entity.Paquete;
-import com.cocinarubi.domain.entity.PaquetePedido;
+import com.cocinarubi.domain.entity.Combo;
+import com.cocinarubi.domain.entity.ComboPedido;
 import com.cocinarubi.domain.entity.Pedido;
 import com.cocinarubi.domain.entity.PedidoCocina;
 import com.cocinarubi.domain.entity.PedidoDomicilio;
@@ -29,7 +34,7 @@ import com.cocinarubi.presentation.dto.request.BasicoPedidoExtraDTO;
 import com.cocinarubi.presentation.dto.request.ComidaPedidoDTO;
 import com.cocinarubi.presentation.dto.request.ComplementoPedidoDTO;
 import com.cocinarubi.presentation.dto.request.DesayunoPedidoDTO;
-import com.cocinarubi.presentation.dto.request.PaquetePedidoDTO;
+import com.cocinarubi.presentation.dto.request.ComboPedidoDTO;
 import com.cocinarubi.presentation.dto.request.PedidoDomicilioCocinaDTO;
 import com.cocinarubi.presentation.dto.request.PedidoDomicilioDTO;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
@@ -65,7 +70,8 @@ public class CatalogoPedidoService {
     private final ComplementoService complementoService;
     private final RutaService rutaService;
     private final RegistroClienteRepository registroClienteRepository;
-    private final PaqueteService paqueteService;
+    private final ComboService comboService;
+    private final CodigoClienteRepository codigoClienteRepository;
 
     public CatalogoPedidoService(ComidaService comidaService,
                                   DesayunoService desayunoService,
@@ -74,7 +80,8 @@ public class CatalogoPedidoService {
                                   ComplementoService complementoService,
                                   RutaService rutaService,
                                   RegistroClienteRepository registroClienteRepository,
-                                  PaqueteService paqueteService) {
+                                  ComboService comboService,
+                                  CodigoClienteRepository codigoClienteRepository) {
         this.comidaService = comidaService;
         this.desayunoService = desayunoService;
         this.basicoRepository = basicoRepository;
@@ -82,7 +89,8 @@ public class CatalogoPedidoService {
         this.complementoService = complementoService;
         this.rutaService = rutaService;
         this.registroClienteRepository = registroClienteRepository;
-        this.paqueteService = paqueteService;
+        this.comboService = comboService;
+        this.codigoClienteRepository = codigoClienteRepository;
     }
 
     /**
@@ -276,29 +284,61 @@ public class CatalogoPedidoService {
     }
 
     /**
-     * Agrega líneas de Paquete (promoción) al pedido. Valida que cada paquete exista
-     * y esté DISPONIBLE — un paquete NO_DISPONIBLE/AGOTADO no puede venderse.
+     * Agrega líneas de Combo (promoción) al pedido. Valida que cada combo exista
+     * y esté DISPONIBLE — un combo NO_DISPONIBLE/AGOTADO no puede venderse.
      */
-    public void agregarPaquetes(Pedido pedido, List<PaquetePedidoDTO> lineas) {
-        for (PaquetePedidoDTO linea : lineas) {
-            Paquete paquete = paqueteService.findEntityById(linea.getIdPaquete());
-            if (paquete.getEstatus() != Estatus.DISPONIBLE) {
+    public void agregarCombos(Pedido pedido, List<ComboPedidoDTO> lineas) {
+        for (ComboPedidoDTO linea : lineas) {
+            Combo combo = comboService.findEntityById(linea.getIdCombo());
+            if (combo.getEstatus() != Estatus.DISPONIBLE) {
                 throw new BusinessException(
-                        "El paquete #" + paquete.getIdPaquete() + " no está disponible",
+                        "El combo #" + combo.getIdCombo() + " no está disponible",
                         HttpStatus.BAD_REQUEST);
             }
-            pedido.addPaquetePedido(PaquetePedido.builder()
-                    .paquete(paquete)
+            pedido.addComboPedido(ComboPedido.builder()
+                    .combo(combo)
                     .precioUnitario(linea.getPrecioUnitario())
                     .cantidad(linea.getCantidad())
                     .build());
         }
     }
 
+    private static final BigDecimal DESCUENTO_COMIDAS_DIEZ = BigDecimal.TEN;
+    private static final int MINIMO_COMIDAS_DESCUENTO = 12;
+
+    /**
+     * Aplica el descuento de volumen al pedido si corresponde.
+     * Las comidas excluidas (consumidas por una oferta) no cuentan para el umbral
+     * ni reciben el descuento — evita double-discount entre oferta y volumen.
+     *
+     * @param excluidas comidas ya consumidas por una oferta aplicada; vacío si no hay ofertas
+     */
+    public void aplicarDescuentoVolumen(Pedido pedido, java.util.Set<ComidaPedido> excluidas) {
+        pedido.setTipoDescuento(null);
+
+        List<ComidaPedido> calificadas = pedido.getComidasPedido().stream()
+                .filter(cp -> !excluidas.contains(cp)
+                        && cp.getTamanoPorcion() == TamanoPorcion.MEDIA
+                        && cp.getComida() != null
+                        && cp.getComida().getTipoComida() == TipoComida.FIJA)
+                .toList();
+
+        if (calificadas.size() >= MINIMO_COMIDAS_DESCUENTO) {
+            calificadas.forEach(cp -> cp.setDescuentoAplicado(DESCUENTO_COMIDAS_DIEZ));
+            pedido.setTipoDescuento(TipoDescuento.COMIDAS_DIEZ);
+        }
+    }
+
+    /** Delegado sin exclusiones — conserva la firma original para compatibilidad. */
+    public void aplicarDescuentoVolumen(Pedido pedido) {
+        aplicarDescuentoVolumen(pedido, java.util.Set.of());
+    }
+
     public BigDecimal calcularTotal(Pedido pedido) {
         BigDecimal total = BigDecimal.ZERO;
         for (ComidaPedido cp : pedido.getComidasPedido()) {
-            total = total.add(cp.getPrecioUnitario());
+            // descuentoAplicado es $10 por línea cuando aplica el descuento de volumen; cero en caso contrario
+            total = total.add(cp.getPrecioUnitario().subtract(cp.getDescuentoAplicado()));
             for (ComplementoComidaPedido ccp : cp.getComplementos()) {
                 total = total.add(ccp.getPrecioUnitario());
             }
@@ -315,11 +355,13 @@ public class CatalogoPedidoService {
         for (ProductoCocinaPedido pcp : pedido.getProductosCocina()) {
             total = total.add(pcp.getPrecioUnitario().multiply(BigDecimal.valueOf(pcp.getCantidad())));
         }
-        for (PaquetePedido pp : pedido.getPaquetesPedido()) {
-            total = total.add(pp.getPrecioUnitario().multiply(BigDecimal.valueOf(pp.getCantidad())));
+        for (ComboPedido cp : pedido.getCombosPedido()) {
+            total = total.add(cp.getPrecioUnitario().multiply(BigDecimal.valueOf(cp.getCantidad())));
         }
-        if (pedido.getPedidoDomicilio() != null && pedido.getPedidoDomicilio().getRuta() != null) {
-            total = total.add(pedido.getPedidoDomicilio().getRuta().getTarifaEnvio());
+        if (pedido.getPedidoDomicilio() != null) {
+            // Usa el snapshot de tarifa guardado en PedidoDomicilio: refleja la tarifaEspecial
+            // del CodigoCliente (si aplica) o la tarifaEnvio de la ruta (flujo normal).
+            total = total.add(pedido.getPedidoDomicilio().getTarifa());
         }
         if (pedido.getPedidoDomicilioCocina() != null) {
             total = total.add(pedido.getPedidoDomicilioCocina().getPrecioTarifa());
@@ -329,13 +371,14 @@ public class CatalogoPedidoService {
 
     private void agregarDomicilio(Pedido pedido, PedidoDomicilioDTO domicilioDto) {
         Ruta ruta = rutaService.findEntityById(domicilioDto.getIdRuta());
+        BigDecimal tarifa = resolverTarifaDomicilio(domicilioDto.getCodigo(), ruta);
         if (pedido.getPedidoDomicilio() != null) {
             // Actualizar en lugar de recrear: PedidoDomicilio también usa @MapsId.
             PedidoDomicilio existente = pedido.getPedidoDomicilio();
             existente.setRuta(ruta);
             existente.setDireccion(domicilioDto.getDireccion());
             existente.setCodigo(domicilioDto.getCodigo());
-            existente.setTarifa(ruta.getTarifaEnvio());
+            existente.setTarifa(tarifa);
             return;
         }
         pedido.setPedidoDomicilio(PedidoDomicilio.builder()
@@ -343,8 +386,24 @@ public class CatalogoPedidoService {
                 .ruta(ruta)
                 .direccion(domicilioDto.getDireccion())
                 .codigo(domicilioDto.getCodigo())
-                .tarifa(ruta.getTarifaEnvio())
+                .tarifa(tarifa)
                 .build());
+    }
+
+    /**
+     * Devuelve la tarifa de envío según el origen del precio:
+     * si el pedido viene con un CodigoCliente, consulta su tarifaEspecial en la BD;
+     * de lo contrario usa la tarifaEnvio de la ruta geográfica.
+     */
+    private BigDecimal resolverTarifaDomicilio(String codigo, Ruta ruta) {
+        if (codigo != null && !codigo.isBlank()) {
+            // CodigoCliente: la tarifa viene del registro del código, no de la ruta General.
+            CodigoCliente codigoEnt = codigoClienteRepository.findByCodigoCliente(codigo)
+                    .orElseThrow(() -> new BusinessException(
+                            "Código de cliente no encontrado: " + codigo, HttpStatus.BAD_REQUEST));
+            return codigoEnt.getTarifaEspecial();
+        }
+        return ruta.getTarifaEnvio();
     }
 
     private void agregarDomicilioCocina(Pedido pedido, PedidoDomicilioCocinaDTO dto) {

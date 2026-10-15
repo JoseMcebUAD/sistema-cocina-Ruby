@@ -89,7 +89,7 @@ public class RutaController {
     /** Actualiza el tiempo estimado y/o el rango de horario de llegada de un grupo de rutas. Solo se aplican los campos no nulos. */
     @PutMapping("/orden/{id}")
     public ResponseEntity<ApiResponse<OrdenRutaResponseDTO>> actualizarOrdenRuta(
-            @PathVariable int id, @RequestBody OrdenRutaRequestDTO dto) {
+            @PathVariable int id, @Valid @RequestBody OrdenRutaRequestDTO dto) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Grupo de rutas actualizado",
                 ordenRutaService.actualizarOrdenRuta(id, dto)));
     }

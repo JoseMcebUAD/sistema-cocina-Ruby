@@ -10,6 +10,7 @@ import com.cocinarubi.presentation.dto.response.ResumenDiasSemanaEstadisticaDTO;
 import com.cocinarubi.presentation.dto.response.ResumenHorarioEstadisticaDTO;
 import com.cocinarubi.presentation.dto.response.estadisticas.CatalogoEstadisticaDTO;
 import com.cocinarubi.presentation.dto.response.estadisticas.CatalogoProductoEstadisticaDTO;
+import com.cocinarubi.presentation.dto.response.estadisticas.MapaCalorResponseDTO;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -157,5 +159,29 @@ public class EstadisticasController {
         CatalogoProductoEstadisticaDTO datos = estadisticasService.getCatalogoProductos(
                 desdeTs, hastaTs, tipoPedido, tipoCategoria, idCategoria, idSubcategoria);
         return ResponseEntity.ok(ApiResponse.exito(200, "Productos del catálogo obtenidos correctamente", datos));
+    }
+
+    /**
+     * Puntos geográficos de entregas a domicilio (WEB) agrupados por coordenada,
+     * listos para alimentar Leaflet.heat como {@code [lat, lng, intensidad]}.
+     * Solo incluye pedidos con latitud y longitud capturadas.
+     *
+     * @param desde     fecha de inicio del período (inclusive, opcional)
+     * @param hasta     fecha de fin del período (inclusive, opcional)
+     * @param precioMin precio mínimo del pedido en MXN (opcional)
+     * @param precioMax precio máximo del pedido en MXN (opcional)
+     */
+    @GetMapping("/mapa-calor")
+    public ResponseEntity<ApiResponse<MapaCalorResponseDTO>> getMapaCalor(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            @RequestParam(required = false) BigDecimal precioMin,
+            @RequestParam(required = false) BigDecimal precioMax) {
+
+        LocalDateTime desdeTs = desde != null ? desde.atStartOfDay() : null;
+        LocalDateTime hastaTs = hasta != null ? hasta.atTime(23, 59, 59) : null;
+
+        MapaCalorResponseDTO datos = estadisticasService.getMapaCalor(desdeTs, hastaTs, precioMin, precioMax);
+        return ResponseEntity.ok(ApiResponse.exito(200, "Datos del mapa de calor obtenidos correctamente", datos));
     }
 }

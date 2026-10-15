@@ -4,13 +4,14 @@ import com.cocinarubi.DBConstants.Estatus;
 import com.cocinarubi.DBConstants.MetodoPago;
 import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.DBConstants.TamanoPorcion;
+import com.cocinarubi.DBConstants.TipoComida;
 import com.cocinarubi.DBConstants.TipoPedido;
 import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.BasicoComplemento;
 import com.cocinarubi.domain.entity.Categoria;
 import com.cocinarubi.domain.entity.BasicoPedido;
 import com.cocinarubi.domain.entity.Complemento;
-import com.cocinarubi.presentation.dto.response.PaqueteResponseDTO;
+import com.cocinarubi.presentation.dto.response.ComboResponseDTO;
 import com.cocinarubi.domain.entity.Comida;
 import com.cocinarubi.domain.entity.ComidaPedido;
 import com.cocinarubi.domain.entity.Desayuno;
@@ -46,6 +47,7 @@ public class PedidoMocks {
                 .precioEntera(BigDecimal.valueOf(90))
                 .estatus(Estatus.DISPONIBLE)
                 .destacado(true)
+                .tipoComida(TipoComida.FIJA)
                 .build();
     }
 
@@ -165,9 +167,9 @@ public class PedidoMocks {
         return b;
     }
 
-    /** PaqueteResponseDTO mínimo para stubbing de PaqueteService.findDisponibles(). */
-    public static PaqueteResponseDTO paqueteResponseDTO() {
-        return new PaqueteResponseDTO(10, BigDecimal.valueOf(120), "Promo mixta",
+    /** ComboResponseDTO mínimo para stubbing de ComboService.findDisponibles(). */
+    public static ComboResponseDTO comboResponseDTO() {
+        return new ComboResponseDTO(10, BigDecimal.valueOf(120), "Promo mixta",
                 Estatus.DISPONIBLE, false, List.of());
     }
 

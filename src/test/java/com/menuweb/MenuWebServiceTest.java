@@ -1,12 +1,14 @@
 package com.menuweb;
 
 import com.cocinarubi.DBConstants.Estatus;
+import com.cocinarubi.dao.ArchivoRepository;
 import com.cocinarubi.dao.BasicoRepository;
 import com.cocinarubi.dao.ComidaRepository;
+import com.cocinarubi.dao.ComplementoRepository;
 import com.cocinarubi.dao.DesayunoRepository;
 import com.cocinarubi.dao.ProductoCocinaRepository;
 import com.cocinarubi.domain.entity.ProductoCocina;
-import com.cocinarubi.domain.service.PaqueteService;
+import com.cocinarubi.domain.service.ComboService;
 import com.cocinarubi.domain.service.web.MenuWebService;
 import com.cocinarubi.presentation.dto.response.MenuWebResponseDTO;
 import com.testutil.PedidoMocks;
@@ -35,8 +37,10 @@ public class MenuWebServiceTest {
     @Mock private ComidaRepository comidaRepository;
     @Mock private BasicoRepository basicoRepository;
     @Mock private DesayunoRepository desayunoRepository;
-    @Mock private PaqueteService paqueteService;
+    @Mock private ComboService comboService;
     @Mock private ProductoCocinaRepository productoCocinaRepository;
+    @Mock private ComplementoRepository complementoRepository;
+    @Mock private ArchivoRepository archivoRepository;
 
     @InjectMocks
     private MenuWebService menuWebService;
@@ -52,8 +56,8 @@ public class MenuWebServiceTest {
                 .thenReturn(List.of(PedidoMocks.basicoConComida()));
         when(desayunoRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE))
                 .thenReturn(List.of(PedidoMocks.desayuno()));
-        when(paqueteService.findDisponibles())
-                .thenReturn(List.of(PedidoMocks.paqueteResponseDTO()));
+        when(comboService.findDisponibles())
+                .thenReturn(List.of(PedidoMocks.comboResponseDTO()));
         when(productoCocinaRepository.findDisponiblesOrdenadosConCategoria(Estatus.DISPONIBLE))
                 .thenReturn(List.of(PedidoMocks.snack()));
 
@@ -68,8 +72,8 @@ public class MenuWebServiceTest {
         assertEquals(1, result.getDesayunos().size());
         assertEquals("Huevos con jamón", result.getDesayunos().get(0).getNombreDesayuno());
 
-        assertEquals(1, result.getPaquetes().size());
-        assertEquals(10, result.getPaquetes().get(0).getIdPaquete());
+        assertEquals(1, result.getCombos().size());
+        assertEquals(10, result.getCombos().get(0).getIdCombo());
 
         assertEquals(1, result.getCategorias().size());
         assertEquals("SNACK", result.getCategorias().get(0).getNombre());
@@ -129,7 +133,7 @@ public class MenuWebServiceTest {
         when(basicoRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE))
                 .thenReturn(List.of(PedidoMocks.basicoConComplemento()));
         when(desayunoRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE)).thenReturn(List.of());
-        when(paqueteService.findDisponibles()).thenReturn(List.of());
+        when(comboService.findDisponibles()).thenReturn(List.of());
         when(productoCocinaRepository.findDisponiblesOrdenadosConCategoria(Estatus.DISPONIBLE))
                 .thenReturn(List.of());
 
@@ -148,7 +152,7 @@ public class MenuWebServiceTest {
         when(comidaRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE)).thenReturn(List.of());
         when(basicoRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE)).thenReturn(List.of());
         when(desayunoRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE)).thenReturn(List.of());
-        when(paqueteService.findDisponibles()).thenReturn(List.of());
+        when(comboService.findDisponibles()).thenReturn(List.of());
         when(productoCocinaRepository.findDisponiblesOrdenadosConCategoria(Estatus.DISPONIBLE))
                 .thenReturn(List.of());
 
@@ -157,7 +161,7 @@ public class MenuWebServiceTest {
         assertNotNull(result.getComidas(),   "comidas no debe ser null");
         assertNotNull(result.getBasicos(),   "basicos no debe ser null");
         assertNotNull(result.getDesayunos(), "desayunos no debe ser null");
-        assertNotNull(result.getPaquetes(),  "paquetes no debe ser null");
+        assertNotNull(result.getCombos(),    "combos no debe ser null");
         assertNotNull(result.getCategorias(),"categorias no debe ser null");
         assertTrue(result.getComidas().isEmpty());
         assertTrue(result.getCategorias().isEmpty());
@@ -175,6 +179,6 @@ public class MenuWebServiceTest {
         when(comidaRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE)).thenReturn(List.of());
         when(basicoRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE)).thenReturn(List.of());
         when(desayunoRepository.findDisponiblesOrdenados(Estatus.DISPONIBLE)).thenReturn(List.of());
-        when(paqueteService.findDisponibles()).thenReturn(List.of());
+        when(comboService.findDisponibles()).thenReturn(List.of());
     }
 }

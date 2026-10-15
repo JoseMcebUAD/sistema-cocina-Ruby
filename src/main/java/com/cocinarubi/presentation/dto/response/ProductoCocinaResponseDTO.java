@@ -17,6 +17,9 @@ public class ProductoCocinaResponseDTO {
     private int idCategoria;
     private String nombreCategoria;
     private List<SubcategoriaResponseDTO> subcategorias;
+    private boolean descuentoActivo;
+    private String descripcionDescuento;
+    private BigDecimal precioDescuento;
 
     public ProductoCocinaResponseDTO() {}
 
@@ -66,4 +69,13 @@ public class ProductoCocinaResponseDTO {
 
     public List<SubcategoriaResponseDTO> getSubcategorias() { return subcategorias; }
     public void setSubcategorias(List<SubcategoriaResponseDTO> subcategorias) { this.subcategorias = subcategorias; }
+
+    public boolean isDescuentoActivo() { return descuentoActivo; }
+    public void setDescuentoActivo(boolean descuentoActivo) { this.descuentoActivo = descuentoActivo; }
+
+    public String getDescripcionDescuento() { return descripcionDescuento; }
+    public void setDescripcionDescuento(String descripcionDescuento) { this.descripcionDescuento = descripcionDescuento; }
+
+    public BigDecimal getPrecioDescuento() { return precioDescuento; }
+    public void setPrecioDescuento(BigDecimal precioDescuento) { this.precioDescuento = precioDescuento; }
 }

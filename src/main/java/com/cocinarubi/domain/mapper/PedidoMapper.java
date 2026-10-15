@@ -1,28 +1,31 @@
 package com.cocinarubi.domain.mapper;
 
+import com.cocinarubi.dao.ClienteRepository;
 import com.cocinarubi.domain.entity.Basico;
 import com.cocinarubi.domain.entity.BasicoPedido;
-import com.cocinarubi.DBConstants.TipoLineaPaquete;
+import com.cocinarubi.DBConstants.TipoLineaCombo;
+import com.cocinarubi.domain.entity.Combo;
+import com.cocinarubi.domain.entity.ComboPedido;
+import com.cocinarubi.domain.entity.ComboProducto;
+import com.cocinarubi.domain.entity.Cliente;
 import com.cocinarubi.domain.entity.ComidaPedido;
 import com.cocinarubi.domain.entity.DesayunoPedido;
-import com.cocinarubi.domain.entity.Paquete;
-import com.cocinarubi.domain.entity.PaquetePedido;
-import com.cocinarubi.domain.entity.PaqueteProducto;
 import com.cocinarubi.domain.entity.Pedido;
 import com.cocinarubi.domain.entity.PedidoCocina;
 import com.cocinarubi.domain.entity.PedidoDomicilio;
 import com.cocinarubi.domain.entity.PedidoDomicilioCocina;
 import com.cocinarubi.domain.entity.RegistroCliente;
 import com.cocinarubi.domain.entity.ProductoCocinaPedido;
-import com.cocinarubi.domain.service.PaqueteService;
+import com.cocinarubi.domain.service.ComboService;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoExtraResponseDTO;
+import com.cocinarubi.presentation.dto.response.OfertaPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.BasicoResponseDTO;
+import com.cocinarubi.presentation.dto.response.ComboPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComplementoPredeterminadoComidaResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComplementoResponseDTO;
 import com.cocinarubi.presentation.dto.response.DesayunoPedidoResponseDTO;
-import com.cocinarubi.presentation.dto.response.PaquetePedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoCocinaResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioCocinaResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioResponseDTO;
@@ -33,8 +36,11 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -52,13 +58,72 @@ import java.util.stream.Collectors;
 @Component
 public class PedidoMapper {
 
-    private final PaqueteService paqueteService;
+    private final ComboService comboService;
+    private final ClienteRepository clienteRepository;
+    private final OfertaMapper ofertaMapper;
 
-    public PedidoMapper(PaqueteService paqueteService) {
-        this.paqueteService = paqueteService;
+    public PedidoMapper(ComboService comboService, ClienteRepository clienteRepository,
+                        OfertaMapper ofertaMapper) {
+        this.comboService = comboService;
+        this.clienteRepository = clienteRepository;
+        this.ofertaMapper = ofertaMapper;
+    }
+
+    /**
+     * Resuelve el nombre del cliente con la misma precedencia que la vista {@code vista_resumen_pedido}:
+     * {@code COALESCE(pedido_cocina.nombre_cliente, registro_cliente.nombre, cliente.nombre)}.
+     *
+     * <p>Los dos primeros ya viven en las entidades del pedido; el tercero (cliente WEB) solo se
+     * alcanza por {@code uuidCliente}, porque {@link PedidoDomicilio} no modela una relación con
+     * {@code Cliente}. {@code nombresPorUuid} permite pasar esos nombres precargados en lote al
+     * mapear una página; si llega vacío se consulta el uuid suelto, que es el caso de un pedido solo.
+     */
+    private String resolverNombreCliente(Pedido pedido, Map<String, String> nombresPorUuid) {
+        if (pedido.getPedidoCocina() != null && pedido.getPedidoCocina().getNombreCliente() != null) {
+            return pedido.getPedidoCocina().getNombreCliente();
+        }
+        PedidoDomicilioCocina pdc = pedido.getPedidoDomicilioCocina();
+        if (pdc != null && pdc.getRegistroCliente() != null && pdc.getRegistroCliente().getNombre() != null) {
+            return pdc.getRegistroCliente().getNombre();
+        }
+        String uuid = pedido.getUuidCliente();
+        if (uuid == null) return null;
+        if (nombresPorUuid != null && nombresPorUuid.containsKey(uuid)) {
+            return nombresPorUuid.get(uuid);
+        }
+        return clienteRepository.findByUuidCliente(uuid).map(Cliente::getNombre).orElse(null);
+    }
+
+    /**
+     * Nombres de cliente de varios pedidos en una sola consulta, para mapear una página sin N+1.
+     *
+     * <p>Solo pide los uuid que van a necesitar la tabla {@code cliente}: los pedidos que ya traen
+     * el nombre en sus propias entidades (los de cocina) no tocan la consulta.
+     */
+    public Map<String, String> precargarNombresCliente(List<Pedido> pedidos) {
+        Set<String> uuids = pedidos.stream()
+                .filter(p -> p.getPedidoCocina() == null || p.getPedidoCocina().getNombreCliente() == null)
+                .map(Pedido::getUuidCliente)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (uuids.isEmpty()) return Map.of();
+        Map<String, String> nombres = new HashMap<>();
+        // El nombre puede ser NULL en BD, así que no se usa Collectors.toMap (lanza NPE con valor null).
+        for (Object[] fila : clienteRepository.findNombresPorUuids(uuids)) {
+            nombres.put((String) fila[0], (String) fila[1]);
+        }
+        return nombres;
     }
 
     public PedidoResponseDTO toResponseDTO(Pedido pedido) {
+        return toResponseDTO(pedido, null);
+    }
+
+    /**
+     * Variante para mapear en lote: {@code nombresPorUuid} viene de
+     * {@link #precargarNombresCliente(List)} y evita una consulta por pedido.
+     */
+    public PedidoResponseDTO toResponseDTO(Pedido pedido, Map<String, String> nombresPorUuid) {
         List<ComidaPedidoResponseDTO> comidas = pedido.getComidasPedido().stream()
                 .map(this::toComidaPedidoDTO).collect(Collectors.toList());
         List<DesayunoPedidoResponseDTO> desayunos = pedido.getDesayunosPedido().stream()
@@ -67,17 +132,17 @@ public class PedidoMapper {
                 .map(this::toBasicoPedidoDTO).collect(Collectors.toList());
         List<ProductoCocinaPedidoResponseDTO> productos = pedido.getProductosCocina().stream()
                 .map(this::toProductoCocinaPedidoDTO).collect(Collectors.toList());
-        // Pre-computa nombres de productos de todos los paquetes en batch para evitar N+1 al mapear;
-        // filtra nulls porque id_paquete puede ser NULL (SET NULL) si el paquete fue eliminado.
-        List<Paquete> paquetesEntidades = pedido.getPaquetesPedido().stream()
-                .map(PaquetePedido::getPaquete)
-                .filter(p -> p != null)
+        // Pre-computa nombres de productos de todos los combos en batch para evitar N+1 al mapear;
+        // filtra nulls porque id_combo puede ser NULL (SET NULL) si el combo fue eliminado.
+        List<Combo> combosEntidades = pedido.getCombosPedido().stream()
+                .map(ComboPedido::getCombo)
+                .filter(c -> c != null)
                 .collect(Collectors.toList());
-        Map<TipoLineaPaquete, Map<Integer, String>> nombresPaquete = paquetesEntidades.isEmpty()
+        Map<TipoLineaCombo, Map<Integer, String>> nombresCombo = combosEntidades.isEmpty()
                 ? Map.of()
-                : paqueteService.resolverNombresPara(paquetesEntidades);
-        List<PaquetePedidoResponseDTO> paquetes = pedido.getPaquetesPedido().stream()
-                .map(pp -> toPaquetePedidoDTO(pp, nombresPaquete))
+                : comboService.resolverNombresPara(combosEntidades);
+        List<ComboPedidoResponseDTO> combos = pedido.getCombosPedido().stream()
+                .map(cp -> toComboPedidoDTO(cp, nombresCombo))
                 .collect(Collectors.toList());
         PedidoDomicilioResponseDTO domicilio = pedido.getPedidoDomicilio() != null
                 ? toDomicilioDTO(pedido.getPedidoDomicilio())
@@ -90,10 +155,10 @@ public class PedidoMapper {
                 : null;
 
         // El cambio solo es calculable cuando el cliente pagó en efectivo; con pagos exactos
-        // (tarjeta, transferencia) pagoCliente llega null y el frontend lo omite del ticket.
+        // (tarjeta, transferencia) pagoClientePrincipal llega null y el frontend lo omite del ticket.
         BigDecimal cambio = null;
-        if (pedido.getPagoCliente() != null && pedido.getPrecioFinalOrden() != null) {
-            cambio = pedido.getPagoCliente().subtract(pedido.getPrecioFinalOrden());
+        if (pedido.getPagoClientePrincipal() != null && pedido.getPrecioFinalOrden() != null) {
+            cambio = pedido.getPagoClientePrincipal().subtract(pedido.getPrecioFinalOrden());
         }
 
         List<TarifaEspecialAplicadaResponseDTO> tarifasEspeciales = pedido.getTarifasEspeciales().stream()
@@ -103,7 +168,7 @@ public class PedidoMapper {
                         pte.getPrecioTarifa()))
                 .collect(Collectors.toList());
 
-        PedidoResponseDTO response = new PedidoResponseDTO(
+        PedidoResponseDTO dto = new PedidoResponseDTO(
                 pedido.getIdPedido(),
                 pedido.getMetodoPagoPrincipal(),
                 pedido.getMetodoPagoSecundario(),
@@ -111,34 +176,44 @@ public class PedidoMapper {
                 pedido.getFechaExpedicionPedido(),
                 pedido.getPedidoCreadoDesde(),
                 pedido.getPrecioFinalOrden(),
-                pedido.getPagoCliente(),
+                pedido.getPagoClientePrincipal(),
                 cambio,
                 pedido.getUuidCliente(),
                 pedido.isPagado(),
                 pedido.isImpreso(),
                 pedido.getComentario(),
-                comidas, desayunos, basicos, productos, paquetes, domicilio, domicilioCocina, pedidoCocina
+                comidas, desayunos, basicos, productos, combos, domicilio, domicilioCocina, pedidoCocina
         );
-        response.setTarifasEspeciales(tarifasEspeciales);
-        return response;
+        // Por setter y no por constructor: sumarle un parámetro obligaría a tocar todos los
+        // llamadores y los tests, igual que ocurre con tarifasAplicadas.
+        dto.setTarifasEspeciales(tarifasEspeciales);
+        dto.setNombreCliente(resolverNombreCliente(pedido, nombresPorUuid));
+        dto.setTipoDescuento(pedido.getTipoDescuento());
+        if (!pedido.getOfertasPedido().isEmpty()) {
+            List<OfertaPedidoResponseDTO> ofertasAplicadas = pedido.getOfertasPedido().stream()
+                    .map(ofertaMapper::toOfertaPedidoResponse)
+                    .collect(Collectors.toList());
+            dto.setOfertasAplicadas(ofertasAplicadas);
+        }
+        return dto;
     }
 
-    public PaquetePedidoResponseDTO toPaquetePedidoDTO(PaquetePedido pp,
-                                                       Map<TipoLineaPaquete, Map<Integer, String>> nombres) {
-        Paquete paquete = pp.getPaquete();
-        // id_paquete puede ser NULL si el paquete fue eliminado (SET NULL migration V28)
-        List<String> nombresProductos = new ArrayList<>(paquete.getProductos().size());
-        for (PaqueteProducto linea : paquete.getProductos()) {
+    public ComboPedidoResponseDTO toComboPedidoDTO(ComboPedido cp,
+                                                    Map<TipoLineaCombo, Map<Integer, String>> nombres) {
+        Combo combo = cp.getCombo();
+        // id_combo puede ser NULL si el combo fue eliminado (SET NULL migration V28)
+        List<String> nombresProductos = new ArrayList<>(combo.getProductos().size());
+        for (ComboProducto linea : combo.getProductos()) {
             String nombre = nombres.getOrDefault(linea.getTipoProducto(), Map.of())
                     .getOrDefault(linea.getIdProducto(), "(eliminado)");
             nombresProductos.add(nombre);
         }
-        return new PaquetePedidoResponseDTO(
-                pp.getIdPaquetePedido(),
-                paquete.getIdPaquete(),
-                paquete.getDescripcion(),
-                pp.getPrecioUnitario(),
-                pp.getCantidad(),
+        return new ComboPedidoResponseDTO(
+                cp.getIdComboPedido(),
+                combo.getIdCombo(),
+                combo.getDescripcion(),
+                cp.getPrecioUnitario(),
+                cp.getCantidad(),
                 nombresProductos
         );
     }
@@ -151,7 +226,8 @@ public class PedidoMapper {
                     return new ComplementoResponseDTO(
                             comp != null ? comp.getIdComplemento() : null,
                             comp != null ? comp.getNombreComplemento() : "(eliminado)",
-                            ccp.getPrecioUnitario());
+                            ccp.getPrecioUnitario(),
+                            comp != null && comp.isCobrarSiempre());
                 })
                 .collect(Collectors.toList());
         // id_comida puede ser NULL (SET NULL) si la comida fue eliminada
@@ -172,6 +248,7 @@ public class PedidoMapper {
                 comida != null ? comida.getIdComida() : null,
                 comida != null ? comida.getNombreComida() : "(eliminado)",
                 cp.getPrecioUnitario(),
+                cp.getDescuentoAplicado(),
                 cp.getTamanoPorcion(),
                 complementos,
                 predeterminados
@@ -201,7 +278,8 @@ public class PedidoMapper {
                     .map(bc -> new ComplementoResponseDTO(
                             bc.getComplemento().getIdComplemento(),
                             bc.getComplemento().getNombreComplemento(),
-                            bc.getComplemento().getPrecioExtra()))
+                            bc.getComplemento().getPrecioExtra(),
+                            bc.getComplemento().isCobrarSiempre()))
                     .collect(Collectors.toList());
             // id_comida puede ser NULL (SET NULL) si la comida fue eliminada del catálogo
             var comida = b.getComida();

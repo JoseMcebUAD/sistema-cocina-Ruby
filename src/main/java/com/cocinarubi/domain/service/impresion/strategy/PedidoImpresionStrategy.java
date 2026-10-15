@@ -55,13 +55,13 @@ public class PedidoImpresionStrategy implements ImpresionStrategy {
         data.setTipoPedido(dto.getTipoPedido());
         data.setFechaExpedicionPedido(dto.getFechaExpedicionPedido());
         data.setPrecioFinalOrden(dto.getPrecioFinalOrden());
-        data.setPagoCliente(dto.getPagoCliente());
+        data.setPagoClientePrincipal(dto.getPagoClientePrincipal());
         data.setCambio(dto.getCambio());
         data.setComidas(dto.getComidas());
         data.setDesayunos(dto.getDesayunos());
         data.setBasicos(dto.getBasicos());
         data.setProductosCocina(dto.getProductosCocina());
-        data.setPaquetes(dto.getPaquetes());
+        data.setCombos(dto.getCombos());
         data.setDomicilio(dto.getTipoPedido() == TipoPedido.DOMICILIO ? dto.getDomicilio() : null);
         data.setDomicilioCocina(dto.getTipoPedido() == TipoPedido.DOMICILIO ? dto.getDomicilioCocina() : null);
 
