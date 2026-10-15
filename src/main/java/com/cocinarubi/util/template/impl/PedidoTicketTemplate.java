@@ -3,6 +3,7 @@ package com.cocinarubi.util.template.impl;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import com.cocinarubi.Constants;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
@@ -20,6 +21,12 @@ import com.github.anastaciocintra.escpos.EscPos;
 
 public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData> {
 
+    private static final Map<String, String> ETIQUETA_TIPO_PEDIDO = Map.of(
+        "PICK_UP", "PICK_UP",
+        "DOMICILIO", "DOMICILIO",
+        "MOSTRADOR", "COMEDOR"
+    );
+
     private final FormatearReciboPedidoService formatter = new FormatearReciboPedidoService();
     int anchoEfectivo = Constants.ANCHO_TICKET / 2;
 
@@ -35,7 +42,7 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         if (data.getFechaExpedicionPedido() != null) {
             escpos.writeLF(FORMATO_FECHA.format(data.getFechaExpedicionPedido()));
         }
-        escpos.writeLF("Tipo: " + data.getTipoPedido());
+        escpos.writeLF("Tipo: " + ETIQUETA_TIPO_PEDIDO.getOrDefault(data.getTipoPedido().name(), data.getTipoPedido().name()));
         if (data.getNombreCliente() != null && !data.getNombreCliente().isBlank()) {
             escpos.writeLF("Cliente: " + data.getNombreCliente());
         }
