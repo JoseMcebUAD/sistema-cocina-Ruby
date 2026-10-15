@@ -8,7 +8,9 @@ import com.cocinarubi.dao.ComplementoRepository;
 import com.cocinarubi.dao.DesayunoRepository;
 import com.cocinarubi.dao.ProductoCocinaRepository;
 import com.cocinarubi.domain.entity.ProductoCocina;
+import com.cocinarubi.domain.service.AnuncioService;
 import com.cocinarubi.domain.service.ComboService;
+import com.cocinarubi.domain.service.OfertaService;
 import com.cocinarubi.domain.service.web.MenuWebService;
 import com.cocinarubi.presentation.dto.response.MenuWebResponseDTO;
 import com.testutil.PedidoMocks;
@@ -41,6 +43,8 @@ public class MenuWebServiceTest {
     @Mock private ProductoCocinaRepository productoCocinaRepository;
     @Mock private ComplementoRepository complementoRepository;
     @Mock private ArchivoRepository archivoRepository;
+    @Mock private AnuncioService anuncioService;
+    @Mock private OfertaService ofertaService;
 
     @InjectMocks
     private MenuWebService menuWebService;
