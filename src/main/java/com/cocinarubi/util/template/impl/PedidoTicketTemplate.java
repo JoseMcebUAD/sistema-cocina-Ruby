@@ -7,7 +7,6 @@ import java.util.Map;
 
 import com.cocinarubi.Constants;
 import com.cocinarubi.DBConstants.TipoDescuento;
-import com.cocinarubi.DBConstants.TipoPedido;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.DesayunoPedidoResponseDTO;
@@ -44,7 +43,9 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         if (data.getFechaExpedicionPedido() != null) {
             escpos.writeLF(FORMATO_FECHA.format(data.getFechaExpedicionPedido()));
         }
-        escpos.writeLF("Tipo: " + ETIQUETA_TIPO_PEDIDO.getOrDefault(data.getTipoPedido().name(), data.getTipoPedido().name()));
+        escpos.writeLF("Tipo: " + ETIQUETA_TIPO_PEDIDO.getOrDefault(
+            data.getTipoPedido().name(), data.getTipoPedido().name()));
+
         if (data.getNombreCliente() != null && !data.getNombreCliente().isBlank()) {
             escpos.writeLF("Cliente: " + data.getNombreCliente());
         }
