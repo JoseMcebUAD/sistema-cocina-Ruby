@@ -62,6 +62,7 @@ public class AuditoriaParser {
             case "subcategoria"       -> describirSubcategoria(accion, despues, antes, id, fecha);
             case "combo"              -> describirCombo(accion, despues, antes, id, fecha);
             case "anuncio_producto"   -> describirAnuncioProducto(accion, id);
+            case "tarjeta_transferencia" -> describirTarjetaTransferencia(accion, despues, antes, id);
             default                   -> accion + " en " + tabla + (id != null ? " #" + id : "");
         };
     }
@@ -309,6 +310,24 @@ public class AuditoriaParser {
                 yield "Se actualizó la categoría '" + nombre + "'";
             }
             case DELETE -> "Se eliminó la categoría #" + id;
+        };
+    }
+
+    private String describirTarjetaTransferencia(TipoOperacion accion, JsonNode despues, JsonNode antes, Integer id) {
+        return switch (accion) {
+            case POST -> {
+                String dest = textOrElse(despues, "nombreDestinatario", "sin nombre");
+                String banco = textOrElse(despues, "banco", "");
+                String sufijo = banco.isBlank() ? "" : " (" + banco + ")";
+                yield "Se registró la tarjeta de transferencia de '" + dest + "'" + sufijo;
+            }
+            case PUT -> {
+                String destDespues = textOrElse(despues, "nombreDestinatario", null);
+                String destAntes = textOrElse(antes, "nombreDestinatario", null);
+                String dest = destDespues != null ? destDespues : (destAntes != null ? destAntes : "#" + id);
+                yield "Se actualizó la tarjeta de transferencia '" + dest + "'";
+            }
+            case DELETE -> "Se eliminó la tarjeta de transferencia #" + id;
         };
     }
 

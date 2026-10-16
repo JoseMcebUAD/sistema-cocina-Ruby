@@ -199,6 +199,7 @@ public class SecurityConfig {
                             "/ruta/**",
                             "/subcategoria/**",
                             "/tarifa-especial/**",
+                            "/tarjeta-transferencia/**",
                             "/vista-resumen-pedido/**"
                     ).hasAnyRole("JEFA_COCINA", "COCINA")
 

@@ -51,26 +51,36 @@ public class PedidoOfertaService {
      * COCINA: aplica las ofertas indicadas explícitamente en el DTO y valida el matching.
      */
     public List<OfertaAplicacion> detectar(Pedido pedido, PedidoRequestDTO dto) {
-        if (PedidoCreadoDesde.COCINA.equals(dto.getPedidoCreadoDesde())
-                && !dto.getOfertas().isEmpty()) {
+        boolean isPedidoFromCocina = PedidoCreadoDesde.COCINA.equals(dto.getPedidoCreadoDesde()); 
+        boolean hasOfertas = !dto.getOfertas().isEmpty();
+
+        if (isPedidoFromCocina && hasOfertas) {
             List<Oferta> ofertasOrdenadas = dto.getOfertas().stream()
-                    .map(o -> ofertaRepository.findByIdConLineas(o.getIdOferta())
+                    .map(
+                        o -> ofertaRepository.findByIdConLineas(
+                                o.getIdOferta())
                             .orElseThrow(() -> new BusinessException(
                                     "Oferta #" + o.getIdOferta() + " no encontrada",
                                     HttpStatus.NOT_FOUND)))
                     .toList();
             return ofertaMatcher.aplicarCocina(
-                    dto.getOfertas(), ofertasOrdenadas,
-                    pedido.getComidasPedido(), pedido.getProductosCocina(),
-                    pedido.getBasicosPedido(), pedido.getCombosPedido());
+                    dto.getOfertas(), 
+                    ofertasOrdenadas,
+                    pedido.getComidasPedido(), 
+                    pedido.getProductosCocina(),
+                    pedido.getBasicosPedido(), 
+                    pedido.getCombosPedido());
         }
+
         List<Oferta> activas = ofertaRepository.findActivasConLineas().stream()
                 .filter(o -> o.estaDisponiblePara(pedido.getTipoPedido()))
                 .toList();
         if (activas.isEmpty()) return List.of();
         return ofertaMatcher.detectar(
-                pedido.getComidasPedido(), pedido.getProductosCocina(),
-                pedido.getBasicosPedido(), pedido.getCombosPedido(),
+                pedido.getComidasPedido(), 
+                pedido.getProductosCocina(),
+                pedido.getBasicosPedido(), 
+                pedido.getCombosPedido(),
                 activas);
     }
 
@@ -80,6 +90,7 @@ public class PedidoOfertaService {
      */
     public Pedido guardar(Pedido guardado, List<OfertaAplicacion> aplicaciones) {
         if (aplicaciones.isEmpty()) return guardado;
+        
         ofertaAplicador.guardar(guardado, aplicaciones);
         return pedidoRepository.save(guardado);
     }
