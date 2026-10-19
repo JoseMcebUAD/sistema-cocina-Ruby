@@ -5,6 +5,7 @@ import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.DBConstants.TamanoPorcion;
 import com.cocinarubi.DBConstants.TipoComida;
 import com.cocinarubi.DBConstants.TipoDescuento;
+import com.cocinarubi.DBConstants.TipoPedido;
 import com.cocinarubi.dao.BasicoRepository;
 import com.cocinarubi.dao.CodigoClienteRepository;
 import com.cocinarubi.dao.RegistroClienteRepository;
@@ -130,17 +131,28 @@ public class CatalogoPedidoService {
         }
     }
 
-    public void agregarComidas(Pedido pedido, List<ComidaPedidoDTO> lineas) {
+    public void agregarComidas(Pedido pedido, List<ComidaPedidoDTO> lineas, PedidoCreadoDesde canal) {
         for (ComidaPedidoDTO linea : lineas) {
             Comida comida = comidaService.findById(linea.getIdComida());
+            BigDecimal precio = canal == PedidoCreadoDesde.WEB
+                    ? resolverPrecioComidaWeb(comida, linea.getTamanoPorcion())
+                    : linea.getPrecioUnitario();
             ComidaPedido item = ComidaPedido.builder()
                     .comida(comida)
-                    .precioUnitario(linea.getPrecioUnitario())
+                    .precioUnitario(precio)
                     .tamanoPorcion(linea.getTamanoPorcion())
                     .build();
             agregarComplementosConLimite(item, linea.getComplementos(), comida.getLimiteComplemento());
             pedido.addComidaPedido(item);
         }
+    }
+
+    /** WEB: respeta descuento activo; si no, usa el precio de catálogo según porción. */
+    private BigDecimal resolverPrecioComidaWeb(Comida comida, TamanoPorcion tamanoPorcion) {
+        if (comida.isDescuentoActivo() && comida.getPrecioDescuento() != null) {
+            return comida.getPrecioDescuento();
+        }
+        return tamanoPorcion == TamanoPorcion.ENTERA ? comida.getPrecioEntera() : comida.getPrecioMedia();
     }
 
     /**
@@ -241,24 +253,38 @@ public class CatalogoPedidoService {
         }
     }
 
-    public void agregarDesayunos(Pedido pedido, List<DesayunoPedidoDTO> lineas) {
+    public void agregarDesayunos(Pedido pedido, List<DesayunoPedidoDTO> lineas, PedidoCreadoDesde canal) {
         for (DesayunoPedidoDTO linea : lineas) {
             Desayuno desayuno = desayunoService.findById(linea.getIdDesayuno());
+            BigDecimal precio = canal == PedidoCreadoDesde.WEB
+                    ? resolverPrecioDesayunoWeb(desayuno)
+                    : linea.getPrecio();
             pedido.addDesayunoPedido(DesayunoPedido.builder()
                     .desayuno(desayuno)
-                    .precio(linea.getPrecio())
+                    .precio(precio)
                     .build());
         }
     }
 
-    public void agregarBasicos(Pedido pedido, List<BasicoPedidoDTO> lineas) {
+    /** WEB: respeta descuento activo; si no, usa precioMedia como precio de catálogo. */
+    private BigDecimal resolverPrecioDesayunoWeb(Desayuno desayuno) {
+        if (desayuno.isDescuentoActivo() && desayuno.getPrecioDescuento() != null) {
+            return desayuno.getPrecioDescuento();
+        }
+        return desayuno.getPrecioMedia();
+    }
+
+    public void agregarBasicos(Pedido pedido, List<BasicoPedidoDTO> lineas, PedidoCreadoDesde canal) {
         for (BasicoPedidoDTO linea : lineas) {
             Basico basico = basicoRepository.findByIdWithComplementos(linea.getIdBasico())
                     .orElseThrow(() -> new BusinessException(
                             "Básico no encontrado con id: " + linea.getIdBasico(), HttpStatus.BAD_REQUEST));
+            BigDecimal precio = canal == PedidoCreadoDesde.WEB
+                    ? resolverPrecioBasicoWeb(basico)
+                    : linea.getPrecioUnitario();
             BasicoPedido item = BasicoPedido.builder()
                     .basico(basico)
-                    .precioUnitario(linea.getPrecioUnitario())
+                    .precioUnitario(precio)
                     .build();
             for (BasicoPedidoExtraDTO extraDto : linea.getExtras()) {
                 Complemento c = complementoService.findById(extraDto.getIdComplemento());
@@ -272,22 +298,44 @@ public class CatalogoPedidoService {
         }
     }
 
-    public void agregarProductosCocina(Pedido pedido, List<ProductoCocinaPedidoDTO> lineas) {
+    /** WEB: respeta descuento activo; si no, usa precioBasico del catálogo. */
+    private BigDecimal resolverPrecioBasicoWeb(Basico basico) {
+        if (basico.isDescuentoActivo() && basico.getPrecioDescuento() != null) {
+            return basico.getPrecioDescuento();
+        }
+        return basico.getPrecioBasico();
+    }
+
+    public void agregarProductosCocina(Pedido pedido, List<ProductoCocinaPedidoDTO> lineas, PedidoCreadoDesde canal) {
         for (ProductoCocinaPedidoDTO linea : lineas) {
             ProductoCocina producto = productoCocinaService.findEntityById(linea.getIdProductoCocina());
+            BigDecimal precio = canal == PedidoCreadoDesde.WEB
+                    ? resolverPrecioProductoCocinaWeb(producto, pedido.getTipoPedido())
+                    : linea.getPrecioUnitario();
             pedido.addProductoCocinaPedido(ProductoCocinaPedido.builder()
                     .productoCocina(producto)
-                    .precioUnitario(linea.getPrecioUnitario())
+                    .precioUnitario(precio)
                     .cantidad(linea.getCantidad().byteValue())
                     .build());
         }
     }
 
     /**
+     * WEB: respeta descuento activo; si no, usa precioDomicilio para pedidos DOMICILIO
+     * y precioNormal para PICK_UP/MOSTRADOR.
+     */
+    private BigDecimal resolverPrecioProductoCocinaWeb(ProductoCocina producto, TipoPedido tipoPedido) {
+        if (producto.isDescuentoActivo() && producto.getPrecioDescuento() != null) {
+            return producto.getPrecioDescuento();
+        }
+        return tipoPedido == TipoPedido.DOMICILIO ? producto.getPrecioDomicilio() : producto.getPrecioNormal();
+    }
+
+    /**
      * Agrega líneas de Combo (promoción) al pedido. Valida que cada combo exista
      * y esté DISPONIBLE — un combo NO_DISPONIBLE/AGOTADO no puede venderse.
      */
-    public void agregarCombos(Pedido pedido, List<ComboPedidoDTO> lineas) {
+    public void agregarCombos(Pedido pedido, List<ComboPedidoDTO> lineas, PedidoCreadoDesde canal) {
         for (ComboPedidoDTO linea : lineas) {
             Combo combo = comboService.findEntityById(linea.getIdCombo());
             if (combo.getEstatus() != Estatus.DISPONIBLE) {
@@ -295,12 +343,23 @@ public class CatalogoPedidoService {
                         "El combo #" + combo.getIdCombo() + " no está disponible",
                         HttpStatus.BAD_REQUEST);
             }
+            BigDecimal precio = canal == PedidoCreadoDesde.WEB
+                    ? resolverPrecioComboWeb(combo)
+                    : linea.getPrecioUnitario();
             pedido.addComboPedido(ComboPedido.builder()
                     .combo(combo)
-                    .precioUnitario(linea.getPrecioUnitario())
+                    .precioUnitario(precio)
                     .cantidad(linea.getCantidad())
                     .build());
         }
+    }
+
+    /** WEB: respeta descuento activo; si no, usa el precio de catálogo del combo. */
+    private BigDecimal resolverPrecioComboWeb(Combo combo) {
+        if (combo.isDescuentoActivo() && combo.getPrecioDescuento() != null) {
+            return combo.getPrecioDescuento();
+        }
+        return combo.getPrecio();
     }
 
     private static final BigDecimal DESCUENTO_COMIDAS_DIEZ = BigDecimal.TEN;
