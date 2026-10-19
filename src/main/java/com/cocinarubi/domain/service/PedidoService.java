@@ -256,11 +256,12 @@ public class PedidoService {
      * una vez conocidas las ofertas para evitar double-discount.
      */
     private void poblarLineas(Pedido pedido, PedidoRequestDTO dto) {
-        catalogoPedido.agregarComidas(pedido, dto.getComidas());
-        catalogoPedido.agregarDesayunos(pedido, dto.getDesayunos());
-        catalogoPedido.agregarBasicos(pedido, dto.getBasicos());
-        catalogoPedido.agregarProductosCocina(pedido, dto.getProductosCocina());
-        catalogoPedido.agregarCombos(pedido, dto.getCombos());
+        PedidoCreadoDesde canal = dto.getPedidoCreadoDesde();
+        catalogoPedido.agregarComidas(pedido, dto.getComidas(), canal);
+        catalogoPedido.agregarDesayunos(pedido, dto.getDesayunos(), canal);
+        catalogoPedido.agregarBasicos(pedido, dto.getBasicos(), canal);
+        catalogoPedido.agregarProductosCocina(pedido, dto.getProductosCocina(), canal);
+        catalogoPedido.agregarCombos(pedido, dto.getCombos(), canal);
         catalogoPedido.handleTipoPedido(pedido, dto);
     }
 

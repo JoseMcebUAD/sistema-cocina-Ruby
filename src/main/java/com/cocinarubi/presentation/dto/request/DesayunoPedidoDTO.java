@@ -13,7 +13,6 @@ public class DesayunoPedidoDTO {
     @JsonProperty("idDesayuno")
     private Integer idDesayuno;
 
-    @NotNull(message = "El precio no puede ser nulo")
     @Positive(message = "El precio debe ser mayor a cero")
     @JsonProperty("precio")
     private BigDecimal precio;

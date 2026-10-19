@@ -16,7 +16,6 @@ public class ComidaPedidoDTO {
     @JsonProperty("idComida")
     private Integer idComida;
 
-    @NotNull(message = "El precio unitario no puede ser nulo")
     @Positive(message = "El precio unitario debe ser mayor a cero")
     @JsonProperty("precioUnitario")
     private BigDecimal precioUnitario;
