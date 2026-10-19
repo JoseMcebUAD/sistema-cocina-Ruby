@@ -13,7 +13,7 @@ public class ComplementoPedidoDTO {
     @JsonProperty("idComplemento")
     private Integer idComplemento;
 
-    @JsonProperty("precio_unitario")
+    @JsonProperty("precioUnitario")
     private BigDecimal precioUnitario;
 
     public ComplementoPedidoDTO() {}
