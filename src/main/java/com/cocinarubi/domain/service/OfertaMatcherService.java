@@ -265,6 +265,8 @@ public class OfertaMatcherService {
 
         for (ComidaPedido cp : comidas) {
             if (cp.getComida() == null) continue;
+            // Comidas con descuento individual no participan en ofertas (double-discount)
+            if (cp.getComida().isDescuentoActivo()) continue;
             pool.add(new LineaConsumo(
                     cp,
                     TipoEntidadOferta.COMIDA,
@@ -276,6 +278,8 @@ public class OfertaMatcherService {
 
         for (ProductoCocinaPedido pcp : productos) {
             if (pcp.getProductoCocina() == null) continue;
+            // Productos con descuento individual no participan en ofertas (double-discount)
+            if (pcp.getProductoCocina().isDescuentoActivo()) continue;
             // Cada línea de ProductoCocina se trata como un candidato individual.
             // cantidadConsumida refleja la cantidad total de la línea.
             pool.add(new LineaConsumo(
@@ -289,6 +293,8 @@ public class OfertaMatcherService {
 
         for (BasicoPedido bp : basicos) {
             if (bp.getBasico() == null) continue;
+            // Básicos con descuento individual no participan en ofertas (double-discount)
+            if (bp.getBasico().isDescuentoActivo()) continue;
             pool.add(new LineaConsumo(
                     bp,
                     TipoEntidadOferta.BASICO,
@@ -300,6 +306,8 @@ public class OfertaMatcherService {
 
         for (ComboPedido cp : combos) {
             if (cp.getCombo() == null) continue;
+            // Combos con descuento individual no participan en ofertas (double-discount)
+            if (cp.getCombo().isDescuentoActivo()) continue;
             pool.add(new LineaConsumo(
                     cp,
                     TipoEntidadOferta.COMBO,
