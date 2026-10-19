@@ -24,6 +24,9 @@ public class ComidaMenuItemDTO {
     private TipoComida tipoComida;
     private String urlImagen;
     private List<ComplementoPredeterminadoResponseDTO> complementosPredeterminados = new ArrayList<>();
+    private boolean descuentoActivo;
+    private String descripcionDescuento;
+    private BigDecimal precioDescuento;
 
     public ComidaMenuItemDTO() {}
 
@@ -72,4 +75,13 @@ public class ComidaMenuItemDTO {
 
     public List<ComplementoPredeterminadoResponseDTO> getComplementosPredeterminados() { return complementosPredeterminados; }
     public void setComplementosPredeterminados(List<ComplementoPredeterminadoResponseDTO> complementosPredeterminados) { this.complementosPredeterminados = complementosPredeterminados; }
+
+    public boolean isDescuentoActivo() { return descuentoActivo; }
+    public void setDescuentoActivo(boolean descuentoActivo) { this.descuentoActivo = descuentoActivo; }
+
+    public String getDescripcionDescuento() { return descripcionDescuento; }
+    public void setDescripcionDescuento(String descripcionDescuento) { this.descripcionDescuento = descripcionDescuento; }
+
+    public BigDecimal getPrecioDescuento() { return precioDescuento; }
+    public void setPrecioDescuento(BigDecimal precioDescuento) { this.precioDescuento = precioDescuento; }
 }

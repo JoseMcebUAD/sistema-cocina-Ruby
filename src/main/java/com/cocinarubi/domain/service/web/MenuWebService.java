@@ -241,6 +241,9 @@ public class MenuWebService implements IMenuWebService {
                 c.getLimiteComplemento());
 
         dto.setUrlImagen(portadas.get(c.getIdComida()));
+        dto.setDescuentoActivo(c.isDescuentoActivo());
+        dto.setDescripcionDescuento(c.getDescripcionDescuento());
+        dto.setPrecioDescuento(c.getPrecioDescuento());
 
         // Complementos predeterminados ya cargados en memoria por @OneToMany(EAGER) + JOIN FETCH en repo
         dto.setComplementosPredeterminados(
@@ -275,6 +278,9 @@ public class MenuWebService implements IMenuWebService {
                 b.getEstatus(),
                 complementos);
         dto.setUrlImagen(portadas.get(b.getIdBasico()));
+        dto.setDescuentoActivo(b.isDescuentoActivo());
+        dto.setDescripcionDescuento(b.getDescripcionDescuento());
+        dto.setPrecioDescuento(b.getPrecioDescuento());
         return dto;
     }
 
@@ -288,6 +294,9 @@ public class MenuWebService implements IMenuWebService {
                 d.getPrecioEntera(),
                 d.isDestacado());
         dto.setUrlImagen(portadas.get(d.getIdDesayuno()));
+        dto.setDescuentoActivo(d.isDescuentoActivo());
+        dto.setDescripcionDescuento(d.getDescripcionDescuento());
+        dto.setPrecioDescuento(d.getPrecioDescuento());
         return dto;
     }
 
@@ -302,6 +311,9 @@ public class MenuWebService implements IMenuWebService {
                 pc.getPrecioNormal(),
                 pc.isDestacado());
         dto.setUrlImagen(portadas.get(pc.getIdProductoCocina()));
+        dto.setDescuentoActivo(pc.isDescuentoActivo());
+        dto.setDescripcionDescuento(pc.getDescripcionDescuento());
+        dto.setPrecioDescuento(pc.getPrecioDescuento());
         return dto;
     }
 
