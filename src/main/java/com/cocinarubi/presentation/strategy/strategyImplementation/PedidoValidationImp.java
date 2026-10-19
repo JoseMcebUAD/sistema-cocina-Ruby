@@ -109,7 +109,7 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
                 CompletableFuture.runAsync(() -> validarRegistroCliente(dto),         EXECUTOR_VALIDACION),
                 CompletableFuture.runAsync(() -> validarMetodosPagoNoDuplicados(dto), EXECUTOR_VALIDACION),
                 CompletableFuture.runAsync(() -> validarPagoClienteNoExcedaTotal(dto),EXECUTOR_VALIDACION),
-                CompletableFuture.runAsync(() -> validarSubtotalMinimoWeb(dto),       EXECUTOR_VALIDACION),
+                CompletableFuture.runAsync(() -> validarPreciosCocina(dto),           EXECUTOR_VALIDACION),
                 CompletableFuture.runAsync(() -> validarOfertasCocina(dto),           EXECUTOR_VALIDACION)
         );
         try {
@@ -377,43 +377,46 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
         return total;
     }
 
-    /** Solo WEB: el subtotal de productos debe ser mayor a $80.00. */
-    private void validarSubtotalMinimoWeb(PedidoRequestDTO dto) {
-        if (dto.getPedidoCreadoDesde() == PedidoCreadoDesde.COCINA) return;
-
-        BigDecimal subtotal = BigDecimal.ZERO;
-
-        for (ComidaPedidoDTO comida : dto.getComidas()) {
-            if (comida.getPrecioUnitario() != null)
-                subtotal = subtotal.add(comida.getPrecioUnitario());
-            for (ComplementoPedidoDTO comp : comida.getComplementos()) {
-                if (comp.getPrecioUnitario() != null)
-                    subtotal = subtotal.add(comp.getPrecioUnitario());
+    /**
+     * Solo canal COCINA: verifica que cada línea de producto incluya un precio explícito.
+     * Para WEB los precios se derivan del catálogo en el servicio y no se envían en el DTO.
+     */
+    private void validarPreciosCocina(PedidoRequestDTO dto) {
+        if (dto.getPedidoCreadoDesde() != PedidoCreadoDesde.COCINA) return;
+        for (ComidaPedidoDTO linea : dto.getComidas()) {
+            if (linea.getPrecioUnitario() == null || linea.getPrecioUnitario().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new BusinessException(
+                        "El precio unitario de cada comida es requerido para pedidos COCINA",
+                        HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
             }
         }
-        for (DesayunoPedidoDTO desayuno : dto.getDesayunos()) {
-            if (desayuno.getPrecio() != null)
-                subtotal = subtotal.add(desayuno.getPrecio());
+        for (DesayunoPedidoDTO linea : dto.getDesayunos()) {
+            if (linea.getPrecio() == null || linea.getPrecio().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new BusinessException(
+                        "El precio de cada desayuno es requerido para pedidos COCINA",
+                        HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
+            }
         }
-        for (BasicoPedidoDTO basico : dto.getBasicos()) {
-            if (basico.getPrecioUnitario() != null)
-                subtotal = subtotal.add(basico.getPrecioUnitario());
+        for (BasicoPedidoDTO linea : dto.getBasicos()) {
+            if (linea.getPrecioUnitario() == null || linea.getPrecioUnitario().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new BusinessException(
+                        "El precio unitario de cada básico es requerido para pedidos COCINA",
+                        HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
+            }
         }
-        for (ProductoCocinaPedidoDTO producto : dto.getProductosCocina()) {
-            if (producto.getPrecioUnitario() != null && producto.getCantidad() != null)
-                subtotal = subtotal.add(producto.getPrecioUnitario()
-                        .multiply(BigDecimal.valueOf(producto.getCantidad())));
+        for (ProductoCocinaPedidoDTO linea : dto.getProductosCocina()) {
+            if (linea.getPrecioUnitario() == null || linea.getPrecioUnitario().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new BusinessException(
+                        "El precio unitario de cada producto de cocina es requerido para pedidos COCINA",
+                        HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
+            }
         }
-        for (ComboPedidoDTO combo : dto.getCombos()) {
-            if (combo.getPrecioUnitario() != null && combo.getCantidad() != null)
-                subtotal = subtotal.add(combo.getPrecioUnitario()
-                        .multiply(BigDecimal.valueOf(combo.getCantidad())));
-        }
-
-        if (subtotal.compareTo(new BigDecimal("80")) <= 0) {
-            throw new BusinessException(
-                    "El subtotal de los productos ($" + subtotal + ") debe ser mayor a $80.00 para realizar un pedido web",
-                    HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
+        for (ComboPedidoDTO linea : dto.getCombos()) {
+            if (linea.getPrecioUnitario() == null || linea.getPrecioUnitario().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new BusinessException(
+                        "El precio unitario de cada combo es requerido para pedidos COCINA",
+                        HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
+            }
         }
     }
 
