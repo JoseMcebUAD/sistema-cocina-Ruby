@@ -54,4 +54,13 @@ public class Desayuno {
 
     @Column(name = "destacado", nullable = false)
     private boolean destacado;
+
+    @Column(name = "descuento_activo")
+    private boolean descuentoActivo;
+
+    @Column(name = "descripcion_descuento", length = 400)
+    private String descripcionDescuento;
+
+    @Column(name = "precio_descuento")
+    private BigDecimal precioDescuento;
 }
