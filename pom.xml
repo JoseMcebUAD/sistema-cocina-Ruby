@@ -207,6 +207,7 @@
                 <configuration>
                     <excludes>
                         <exclude>**/printer/**</exclude>
+                        <exclude>**/cocinarubi/**</exclude>
                     </excludes>
                     <trimStackTrace>true</trimStackTrace>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>

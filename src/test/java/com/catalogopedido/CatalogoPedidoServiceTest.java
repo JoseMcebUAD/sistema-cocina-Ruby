@@ -1,6 +1,7 @@
 package com.catalogopedido;
 
 import com.cocinarubi.DBConstants.Estatus;
+import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.DBConstants.TamanoPorcion;
 import com.cocinarubi.DBConstants.TipoComida;
 import com.cocinarubi.DBConstants.TipoDescuento;
@@ -97,7 +98,7 @@ public class CatalogoPedidoServiceTest {
 
         Pedido pedido = Pedido.builder().build();
         // El cliente no envía precioUnitario (era ignorado antes del cambio)
-        catalogoPedidoService.agregarComidas(pedido, List.of(lineaCon(List.of(compDto(1, null)))));
+        catalogoPedidoService.agregarComidas(pedido, List.of(lineaCon(List.of(compDto(1, null)))), PedidoCreadoDesde.COCINA);
 
         BigDecimal precio = pedido.getComidasPedido().get(0).getComplementos().get(0).getPrecioUnitario();
         assertEquals(0, BigDecimal.valueOf(5).compareTo(precio));
@@ -111,7 +112,7 @@ public class CatalogoPedidoServiceTest {
 
         Pedido pedido = Pedido.builder().build();
         assertDoesNotThrow(() ->
-                catalogoPedidoService.agregarComidas(pedido, List.of(lineaCon(List.of()))));
+                catalogoPedidoService.agregarComidas(pedido, List.of(lineaCon(List.of())), PedidoCreadoDesde.COCINA));
 
         assertTrue(pedido.getComidasPedido().get(0).getComplementos().isEmpty());
         System.out.println("[OK] sin complementos con límite=3 no lanza error");
@@ -127,7 +128,7 @@ public class CatalogoPedidoServiceTest {
         // El cliente envía cobrar_siempre sin precio → error
         assertThrows(BusinessException.class, () ->
                 catalogoPedidoService.agregarComidas(pedido,
-                        List.of(lineaCon(List.of(compDto(1, null))))));
+                        List.of(lineaCon(List.of(compDto(1, null)))), PedidoCreadoDesde.COCINA));
         System.out.println("[OK] cobrar_siempre sin precio lanza BusinessException");
     }
 
@@ -144,7 +145,7 @@ public class CatalogoPedidoServiceTest {
                 catalogoPedidoService.agregarComidas(pedido,
                         List.of(lineaCon(List.of(
                                 compDto(1, null),
-                                compDto(2, null))))));
+                                compDto(2, null)))), PedidoCreadoDesde.COCINA));
         System.out.println("[OK] 2 no-cobrar sin precio dentro de límite=3 pasa sin error");
     }
 
@@ -166,7 +167,8 @@ public class CatalogoPedidoServiceTest {
                                 compDto(1, BigDecimal.valueOf(5)),  // cobrar_siempre, con precio
                                 compDto(2, BigDecimal.valueOf(5)),  // cobrar_siempre, con precio
                                 compDto(3, null),                   // no_cobrar → gratis (slot 1)
-                                compDto(4, null))))));              // no_cobrar → gratis (slot 2)
+                                compDto(4, null)))),                // no_cobrar → gratis (slot 2)
+                        PedidoCreadoDesde.COCINA));
 
         var comps = pedido.getComidasPedido().get(0).getComplementos();
         assertEquals(0, BigDecimal.valueOf(5).compareTo(comps.get(0).getPrecioUnitario()));
@@ -192,7 +194,8 @@ public class CatalogoPedidoServiceTest {
                         List.of(lineaCon(List.of(
                                 compDto(1, BigDecimal.valueOf(5)),  // cobrar_siempre (no consume slot)
                                 compDto(2, null),                   // no_cobrar sin precio
-                                compDto(3, null))))));              // no_cobrar sin precio → exceso=1 → error
+                                compDto(3, null)))),                // no_cobrar sin precio → exceso=1 → error
+                        PedidoCreadoDesde.COCINA));
         assertTrue(ex.getMessage().contains("Al menos 1"));
         System.out.println("[OK] exceso sin precios suficientes lanza: " + ex.getMessage());
     }
@@ -210,8 +213,9 @@ public class CatalogoPedidoServiceTest {
         assertDoesNotThrow(() ->
                 catalogoPedidoService.agregarComidas(pedido,
                         List.of(lineaCon(List.of(
-                                compDto(1, null),                   // orden 1 → gratis (slot 1)
-                                compDto(2, BigDecimal.valueOf(3)))))));  // orden 2 → cobrado (exceso)
+                                compDto(1, null),                        // orden 1 → gratis (slot 1)
+                                compDto(2, BigDecimal.valueOf(3))))),    // orden 2 → cobrado (exceso)
+                        PedidoCreadoDesde.COCINA));
 
         var comps = pedido.getComidasPedido().get(0).getComplementos();
         assertEquals(0, BigDecimal.ZERO.compareTo(comps.get(0).getPrecioUnitario()), "comp1 debe ser gratis");
@@ -230,8 +234,9 @@ public class CatalogoPedidoServiceTest {
         assertDoesNotThrow(() ->
                 catalogoPedidoService.agregarComidas(pedido,
                         List.of(lineaCon(List.of(
-                                compDto(1, null),                   // no-cobrar → gratis (slot 1)
-                                compDto(2, BigDecimal.valueOf(5)))))));  // cobrarSiempre → cobrado, NO consume slot
+                                compDto(1, null),                        // no-cobrar → gratis (slot 1)
+                                compDto(2, BigDecimal.valueOf(5))))),    // cobrarSiempre → cobrado, NO consume slot
+                        PedidoCreadoDesde.COCINA));
 
         var comps = pedido.getComidasPedido().get(0).getComplementos();
         assertEquals(0, BigDecimal.ZERO.compareTo(comps.get(0).getPrecioUnitario()), "no-cobrar debe ser gratis");
@@ -255,7 +260,8 @@ public class CatalogoPedidoServiceTest {
                                 compDto(1, null),                       // slot 1 → gratis
                                 compDto(2, null),                       // slot 2 → gratis
                                 compDto(3, null),                       // slot 3 → gratis
-                                compDto(4, BigDecimal.valueOf(3)))))));  // exceso → cobrado
+                                compDto(4, BigDecimal.valueOf(3))))),   // exceso → cobrado
+                        PedidoCreadoDesde.COCINA));
 
         var comps = pedido.getComidasPedido().get(0).getComplementos();
         assertEquals(4, comps.size());
@@ -280,7 +286,8 @@ public class CatalogoPedidoServiceTest {
                 catalogoPedidoService.agregarComidas(pedido,
                         List.of(lineaCon(List.of(
                                 compDto(1, BigDecimal.valueOf(5)),   // cobrarSiempre primero → cobrado, no toca slots
-                                compDto(2, null))))));               // no-cobrar → gratis (slot 1 sigue libre)
+                                compDto(2, null)))),                 // no-cobrar → gratis (slot 1 sigue libre)
+                        PedidoCreadoDesde.COCINA));
 
         var comps = pedido.getComidasPedido().get(0).getComplementos();
         assertEquals(0, BigDecimal.valueOf(5).compareTo(comps.get(0).getPrecioUnitario()), "cobrarSiempre cobrado");
@@ -303,7 +310,7 @@ public class CatalogoPedidoServiceTest {
 
         ComboPedidoDTO dto = new ComboPedidoDTO(7, new BigDecimal("140.00"), 2);
         Pedido pedido = Pedido.builder().build();
-        catalogoPedidoService.agregarCombos(pedido, List.of(dto));
+        catalogoPedidoService.agregarCombos(pedido, List.of(dto), PedidoCreadoDesde.COCINA);
 
         assertEquals(1, pedido.getCombosPedido().size());
         assertEquals(7, pedido.getCombosPedido().get(0).getCombo().getIdCombo());
@@ -328,7 +335,7 @@ public class CatalogoPedidoServiceTest {
         ComboPedidoDTO dto = new ComboPedidoDTO(8, new BigDecimal("90.00"), 1);
         Pedido pedido = Pedido.builder().build();
         BusinessException ex = assertThrows(BusinessException.class,
-                () -> catalogoPedidoService.agregarCombos(pedido, List.of(dto)));
+                () -> catalogoPedidoService.agregarCombos(pedido, List.of(dto), PedidoCreadoDesde.COCINA));
         assertTrue(ex.getMessage().contains("no está disponible"));
         assertTrue(pedido.getCombosPedido().isEmpty());
         System.out.println("[OK] agregarCombos lanzó error por combo NO_DISPONIBLE");
@@ -348,7 +355,7 @@ public class CatalogoPedidoServiceTest {
         ComboPedidoDTO dto = new ComboPedidoDTO(9, new BigDecimal("80.00"), 1);
         Pedido pedido = Pedido.builder().build();
         assertThrows(BusinessException.class,
-                () -> catalogoPedidoService.agregarCombos(pedido, List.of(dto)));
+                () -> catalogoPedidoService.agregarCombos(pedido, List.of(dto), PedidoCreadoDesde.COCINA));
         System.out.println("[OK] agregarCombos lanzó error por combo AGOTADO");
     }
 
@@ -356,7 +363,7 @@ public class CatalogoPedidoServiceTest {
     @DisplayName("agregarCombos - lista vacía no toca el pedido")
     public void agregarCombos_listaVacia_noHaceNada() {
         Pedido pedido = Pedido.builder().build();
-        catalogoPedidoService.agregarCombos(pedido, List.of());
+        catalogoPedidoService.agregarCombos(pedido, List.of(), PedidoCreadoDesde.COCINA);
         assertTrue(pedido.getCombosPedido().isEmpty());
         verifyNoInteractions(comboService);
         System.out.println("[OK] agregarCombos con lista vacía no interactúa con ComboService");
