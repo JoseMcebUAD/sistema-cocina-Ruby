@@ -60,7 +60,8 @@ public class OfertaMapper {
         dto.setActivo(oferta.isActivo());
         dto.setFechaInicio(oferta.getFechaInicio());
         dto.setFechaFin(oferta.getFechaFin());
-        dto.setTiposPedidoRestriccion(oferta.getTiposPedidoRestriccion());
+        // new HashSet<>() fuerza la inicialización del PersistentSet dentro de la sesión
+        dto.setTiposPedidoRestriccion(new java.util.HashSet<>(oferta.getTiposPedidoRestriccion()));
         dto.setLineas(oferta.getLineas().stream()
                 .map(this::toLineaResponse)
                 .collect(Collectors.toList()));

@@ -79,6 +79,10 @@ public class OfertaService {
         existente.setActivo(dto.isActivo());
         existente.setFechaInicio(dto.getFechaInicio());
         existente.setFechaFin(dto.getFechaFin());
+        existente.getTiposPedidoRestriccion().clear();
+        if (dto.getTiposPedidoRestriccion() != null) {
+            existente.getTiposPedidoRestriccion().addAll(dto.getTiposPedidoRestriccion());
+        }
         existente.getLineas().clear();
         for (OfertaLineaRequestDTO lineaDto : dto.getLineas()) {
             existente.addLinea(ofertaMapper.toLineaEntity(lineaDto));
