@@ -31,55 +31,71 @@ import java.util.stream.Collectors;
 public class PedidoOfertaService {
 
     private final OfertaRepository ofertaRepository;
+    private final OfertaService ofertaService;
     private final OfertaMatcherService ofertaMatcher;
     private final OfertaAplicadorService ofertaAplicador;
     private final PedidoRepository pedidoRepository;
 
     public PedidoOfertaService(OfertaRepository ofertaRepository,
+                                OfertaService ofertaService,
                                 OfertaMatcherService ofertaMatcher,
                                 OfertaAplicadorService ofertaAplicador,
                                 PedidoRepository pedidoRepository) {
         this.ofertaRepository = ofertaRepository;
+        this.ofertaService = ofertaService;
         this.ofertaMatcher = ofertaMatcher;
         this.ofertaAplicador = ofertaAplicador;
         this.pedidoRepository = pedidoRepository;
     }
 
     /**
-     * Detecta o valida las ofertas según el canal.
-     * WEB: auto-detección greedy sobre las ofertas activas filtradas por tipoPedido.
-     * COCINA: aplica las ofertas indicadas explícitamente en el DTO y valida el matching.
+     * Despacha la detección de ofertas al canal correcto.
+     * COCINA: solo aplica las ofertas que el operador indicó explícitamente; lista vacía = sin ofertas.
+     * WEB: auto-detección greedy sobre todas las ofertas activas del tipoPedido.
      */
     public List<OfertaAplicacion> detectar(Pedido pedido, PedidoRequestDTO dto) {
-        boolean isPedidoFromCocina = PedidoCreadoDesde.COCINA.equals(dto.getPedidoCreadoDesde()); 
-        boolean hasOfertas = !dto.getOfertas().isEmpty();
-
-        if (isPedidoFromCocina && hasOfertas) {
-            List<Oferta> ofertasOrdenadas = dto.getOfertas().stream()
-                    .map(
-                        o -> ofertaRepository.findByIdConLineas(
-                                o.getIdOferta())
-                            .orElseThrow(() -> new BusinessException(
-                                    "Oferta #" + o.getIdOferta() + " no encontrada",
-                                    HttpStatus.NOT_FOUND)))
-                    .toList();
-            return ofertaMatcher.aplicarCocina(
-                    dto.getOfertas(), 
-                    ofertasOrdenadas,
-                    pedido.getComidasPedido(), 
-                    pedido.getProductosCocina(),
-                    pedido.getBasicosPedido(), 
-                    pedido.getCombosPedido());
+        if (PedidoCreadoDesde.COCINA.equals(dto.getPedidoCreadoDesde())) {
+            return detectarCocina(pedido, dto);
         }
+        return detectarWeb(pedido);
+    }
 
-        List<Oferta> activas = ofertaRepository.findActivasConLineas().stream()
+    /**
+     * Canal COCINA — el operador tiene control total.
+     * Si no seleccionó ninguna oferta, devuelve lista vacía sin intentar auto-detectar.
+     */
+    private List<OfertaAplicacion> detectarCocina(Pedido pedido, PedidoRequestDTO dto) {
+        if (dto.getOfertas().isEmpty()) return List.of();
+
+        List<Oferta> ofertasOrdenadas = dto.getOfertas().stream()
+                .map(o -> ofertaRepository.findByIdConLineas(o.getIdOferta())
+                        .orElseThrow(() -> new BusinessException(
+                                "Oferta #" + o.getIdOferta() + " no encontrada",
+                                HttpStatus.NOT_FOUND)))
+                .toList();
+        return ofertaMatcher.aplicarCocina(
+                dto.getOfertas(),
+                ofertasOrdenadas,
+                pedido.getComidasPedido(),
+                pedido.getProductosCocina(),
+                pedido.getBasicosPedido(),
+                pedido.getCombosPedido());
+    }
+
+    /**
+     * Canal WEB — auto-detección greedy.
+     * Carga las ofertas activas (cacheadas en Redis) y aplica las que coincidan con el tipoPedido.
+     */
+    private List<OfertaAplicacion> detectarWeb(Pedido pedido) {
+        // ofertaService.findActivasEntidades(): cargadas con FETCH JOIN y cacheadas en Redis
+        List<Oferta> activas = ofertaService.findActivasEntidades().stream()
                 .filter(o -> o.estaDisponiblePara(pedido.getTipoPedido()))
                 .toList();
         if (activas.isEmpty()) return List.of();
         return ofertaMatcher.detectar(
-                pedido.getComidasPedido(), 
+                pedido.getComidasPedido(),
                 pedido.getProductosCocina(),
-                pedido.getBasicosPedido(), 
+                pedido.getBasicosPedido(),
                 pedido.getCombosPedido(),
                 activas);
     }
