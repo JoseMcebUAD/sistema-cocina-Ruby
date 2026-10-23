@@ -1,8 +1,11 @@
 package com.cocinarubi.presentation.controller;
 
+import com.cocinarubi.domain.service.OfertaPreviewService;
 import com.cocinarubi.domain.service.OfertaService;
+import com.cocinarubi.presentation.dto.request.OfertaPreviewRequestDTO;
 import com.cocinarubi.presentation.dto.request.OfertaRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
+import com.cocinarubi.presentation.dto.response.OfertaPreviewResponseDTO;
 import com.cocinarubi.presentation.dto.response.OfertaResponseDTO;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -22,9 +25,12 @@ import java.util.List;
 public class OfertaController {
 
     private final OfertaService ofertaService;
+    private final OfertaPreviewService ofertaPreviewService;
 
-    public OfertaController(OfertaService ofertaService) {
+    public OfertaController(OfertaService ofertaService,
+                             OfertaPreviewService ofertaPreviewService) {
         this.ofertaService = ofertaService;
+        this.ofertaPreviewService = ofertaPreviewService;
     }
 
     @GetMapping
@@ -64,5 +70,12 @@ public class OfertaController {
                                        @RequestParam(defaultValue = "false") boolean saltarConfirmacion) {
         ofertaService.delete(id, saltarConfirmacion);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/preview-pedido")
+    public ResponseEntity<ApiResponse<List<OfertaPreviewResponseDTO>>> previewPedido(
+            @RequestBody OfertaPreviewRequestDTO dto) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Preview de ofertas calculado",
+                ofertaPreviewService.preview(dto)));
     }
 }

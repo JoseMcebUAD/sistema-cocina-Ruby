@@ -30,7 +30,8 @@ public class RedisConfig {
                 .disableCachingNullValues();
 
         Map<String, RedisCacheConfiguration> configs = Map.of(
-            "menu-web", defaults.entryTtl(Duration.ofMinutes(3))
+            "menu-web",        defaults.entryTtl(Duration.ofMinutes(3)),
+            "ofertas-activas", defaults.entryTtl(Duration.ofMinutes(5))
         );
 
         return RedisCacheManager.builder(connectionFactory)

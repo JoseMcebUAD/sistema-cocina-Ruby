@@ -10,6 +10,8 @@ import com.cocinarubi.presentation.dto.request.OfertaRequestDTO;
 import com.cocinarubi.presentation.dto.response.OfertaResponseDTO;
 import com.cocinarubi.presentation.strategy.strategyImplementation.OfertaValidationImp;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +46,17 @@ public class OfertaService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Devuelve las entidades {@link Oferta} activas con sus líneas cargadas,
+     * cacheadas en Redis para evitar la query en cada llamada del preview y del save.
+     * Seguro de serializar: lineas hidratadas por FETCH JOIN, tiposPedidoRestriccion EAGER.
+     */
+    @Cacheable(value = "ofertas-activas")
+    @Transactional(readOnly = true)
+    public List<Oferta> findActivasEntidades() {
+        return ofertaRepository.findActivasConLineas();
+    }
+
     @Transactional(readOnly = true)
     public List<OfertaResponseDTO> findAll() {
         return ofertaRepository.findAll().stream()
@@ -56,7 +69,10 @@ public class OfertaService {
         return ofertaMapper.toResponse(findEntityById(id));
     }
 
-    @CacheEvict(value = "menu-web", allEntries = true)
+    @Caching(evict = {
+        @CacheEvict(value = "menu-web", allEntries = true),
+        @CacheEvict(value = "ofertas-activas", allEntries = true)
+    })
     @Transactional
     public OfertaResponseDTO save(OfertaRequestDTO dto) {
         ofertaValidation.validarPost(dto);
@@ -67,7 +83,10 @@ public class OfertaService {
      * Reemplaza todos los campos y líneas de matching de la oferta existente.
      * Las líneas antiguas se eliminan por orphanRemoval; las nuevas se insertan.
      */
-    @CacheEvict(value = "menu-web", allEntries = true)
+    @Caching(evict = {
+        @CacheEvict(value = "menu-web", allEntries = true),
+        @CacheEvict(value = "ofertas-activas", allEntries = true)
+    })
     @Transactional
     public OfertaResponseDTO update(int id, OfertaRequestDTO dto) {
         ofertaValidation.validarPost(dto);
@@ -90,7 +109,10 @@ public class OfertaService {
         return ofertaMapper.toResponse(ofertaRepository.save(existente));
     }
 
-    @CacheEvict(value = "menu-web", allEntries = true)
+    @Caching(evict = {
+        @CacheEvict(value = "menu-web", allEntries = true),
+        @CacheEvict(value = "ofertas-activas", allEntries = true)
+    })
     @Transactional
     public OfertaResponseDTO toggleActivo(int id) {
         Oferta oferta = findEntityById(id);
@@ -102,7 +124,10 @@ public class OfertaService {
      * Elimina la oferta del catálogo. Si tiene pedidos asociados y {@code saltarConfirmacion}
      * es false, lanza {@link AdvertenciaEliminacionException} para que el front muestre el diálogo.
      */
-    @CacheEvict(value = "menu-web", allEntries = true)
+    @Caching(evict = {
+        @CacheEvict(value = "menu-web", allEntries = true),
+        @CacheEvict(value = "ofertas-activas", allEntries = true)
+    })
     @Transactional
     public void delete(int id, boolean saltarConfirmacion) {
         Oferta oferta = findEntityById(id);

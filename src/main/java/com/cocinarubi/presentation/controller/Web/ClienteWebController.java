@@ -4,11 +4,14 @@ import com.cocinarubi.domain.entity.Cliente;
 import com.cocinarubi.domain.interfaces.web.IClienteWebService;
 import com.cocinarubi.domain.interfaces.web.SesionWebResult;
 import com.cocinarubi.domain.service.CodigoClienteService;
+import com.cocinarubi.domain.service.OfertaPreviewService;
 import com.cocinarubi.domain.service.web.PedidoWebService;
 import com.cocinarubi.exception.BusinessException;
+import com.cocinarubi.presentation.dto.request.OfertaPreviewRequestDTO;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import com.cocinarubi.presentation.dto.response.ApiResponse;
 import com.cocinarubi.presentation.dto.response.CodigoClienteResponseDTO;
+import com.cocinarubi.presentation.dto.response.OfertaPreviewResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
 import com.cocinarubi.presentation.dto.web.ClienteWebRequestDTO;
 import com.cocinarubi.presentation.dto.web.ClienteWebResponseDTO;
@@ -38,13 +41,16 @@ public class ClienteWebController {
     private final IClienteWebService clienteWebService;
     private final PedidoWebService pedidoWebService;
     private final CodigoClienteService codigoClienteService;
+    private final OfertaPreviewService ofertaPreviewService;
 
     public ClienteWebController(IClienteWebService clienteWebService,
                                 PedidoWebService pedidoWebService,
-                                CodigoClienteService codigoClienteService) {
+                                CodigoClienteService codigoClienteService,
+                                OfertaPreviewService ofertaPreviewService) {
         this.clienteWebService = clienteWebService;
         this.pedidoWebService = pedidoWebService;
         this.codigoClienteService = codigoClienteService;
+        this.ofertaPreviewService = ofertaPreviewService;
     }
 
     // Inicia o recupera la sesión del cliente; prioriza la cookie existente sobre el UUID del body y la genera si no hay ninguno
@@ -155,5 +161,13 @@ public class ClienteWebController {
             @Valid @RequestBody PedidoRequestDTO dto) {
         return ResponseEntity.ok(ApiResponse.exito(200, "Pedido actualizado correctamente",
                 pedidoWebService.update(id, dto)));
+    }
+
+    // Calcula las ofertas que aplicarían al carrito actual sin persistir nada
+    @PostMapping("/ofertas/preview")
+    public ResponseEntity<ApiResponse<List<OfertaPreviewResponseDTO>>> previewOfertas(
+            @RequestBody OfertaPreviewRequestDTO dto) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Preview de ofertas calculado",
+                ofertaPreviewService.preview(dto)));
     }
 }
