@@ -5,6 +5,7 @@ import com.cocinarubi.domain.entity.Oferta;
 import com.cocinarubi.domain.mapper.OfertaMapper;
 import com.cocinarubi.exception.AdvertenciaEliminacionException;
 import com.cocinarubi.exception.BusinessException;
+import com.cocinarubi.exception.ErrorCode;
 import com.cocinarubi.presentation.dto.request.OfertaLineaRequestDTO;
 import com.cocinarubi.presentation.dto.request.OfertaRequestDTO;
 import com.cocinarubi.presentation.dto.response.OfertaResponseDTO;
@@ -81,6 +82,11 @@ public class OfertaService {
     @Transactional
     public OfertaResponseDTO save(OfertaRequestDTO dto) {
         ofertaValidation.validarPost(dto);
+        if (ofertaRepository.existsByPrioridad(dto.getPrioridad())) {
+            throw new BusinessException(
+                    "Ya existe una oferta con prioridad " + dto.getPrioridad(),
+                    HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
+        }
         return ofertaMapper.toResponse(ofertaRepository.save(ofertaMapper.toEntity(dto)));
     }
 
@@ -95,6 +101,11 @@ public class OfertaService {
     @Transactional
     public OfertaResponseDTO update(int id, OfertaRequestDTO dto) {
         ofertaValidation.validarPost(dto);
+        if (ofertaRepository.existsByPrioridadAndIdOfertaNot(dto.getPrioridad(), id)) {
+            throw new BusinessException(
+                    "Ya existe una oferta con prioridad " + dto.getPrioridad(),
+                    HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
+        }
         Oferta existente = findEntityById(id);
         existente.setNombre(dto.getNombre());
         existente.setDescripcion(dto.getDescripcion());

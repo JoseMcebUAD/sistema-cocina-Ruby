@@ -33,4 +33,8 @@ public interface OfertaRepository extends JpaRepository<Oferta, Integer> {
 
     @Query("SELECT DISTINCT o FROM Oferta o LEFT JOIN FETCH o.lineas WHERE o.idOferta = :id")
     Optional<Oferta> findByIdConLineas(int id);
+
+    boolean existsByPrioridad(int prioridad);
+
+    boolean existsByPrioridadAndIdOfertaNot(int prioridad, int idOferta);
 }
