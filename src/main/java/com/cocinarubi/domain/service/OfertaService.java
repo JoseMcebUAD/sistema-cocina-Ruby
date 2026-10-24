@@ -16,6 +16,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cocinarubi.Constants;
+
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,21 +43,23 @@ public class OfertaService {
 
     @Transactional(readOnly = true)
     public List<OfertaResponseDTO> findActivas() {
-        return ofertaRepository.findActivasConLineas()
+        LocalDate hoy = LocalDate.now(Constants.ZONA_MERIDA);
+        return ofertaRepository.findActivasConLineas(hoy)
                 .stream()
                 .map(ofertaMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Devuelve las entidades {@link Oferta} activas con sus líneas cargadas,
+     * Devuelve las entidades {@link Oferta} activas y vigentes con sus líneas cargadas,
      * cacheadas en Redis para evitar la query en cada llamada del preview y del save.
-     * Seguro de serializar: lineas hidratadas por FETCH JOIN, tiposPedidoRestriccion EAGER.
+     * La fecha se incluye en la clave de caché: al cruce de medianoche la clave cambia
+     * automáticamente → cache miss → query fresca sin necesidad de scheduled eviction.
      */
     @Cacheable(value = "ofertas-activas")
     @Transactional(readOnly = true)
-    public List<Oferta> findActivasEntidades() {
-        return ofertaRepository.findActivasConLineas();
+    public List<Oferta> findActivasEntidades(LocalDate hoy) {
+        return ofertaRepository.findActivasConLineas(hoy);
     }
 
     @Transactional(readOnly = true)

@@ -9,11 +9,15 @@ import com.cocinarubi.domain.entity.Oferta;
 import com.cocinarubi.domain.entity.Pedido;
 import com.cocinarubi.domain.model.OfertaAplicacion;
 import com.cocinarubi.exception.BusinessException;
+import com.cocinarubi.exception.ErrorCode;
 import com.cocinarubi.presentation.dto.request.PedidoRequestDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import com.cocinarubi.Constants;
+
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -63,15 +67,26 @@ public class PedidoOfertaService {
     /**
      * Canal COCINA — el operador tiene control total.
      * Si no seleccionó ninguna oferta, devuelve lista vacía sin intentar auto-detectar.
+     * Valida vigencia como defensa en profundidad: la capa de validación ya lo verificó,
+     * pero este guard protege si en algún momento esa validación cambia o se desactiva.
      */
     private List<OfertaAplicacion> detectarCocina(Pedido pedido, PedidoRequestDTO dto) {
         if (dto.getOfertas().isEmpty()) return List.of();
 
+        LocalDate hoy = LocalDate.now(Constants.ZONA_MERIDA);
         List<Oferta> ofertasOrdenadas = dto.getOfertas().stream()
-                .map(o -> ofertaRepository.findByIdConLineas(o.getIdOferta())
-                        .orElseThrow(() -> new BusinessException(
-                                "Oferta #" + o.getIdOferta() + " no encontrada",
-                                HttpStatus.NOT_FOUND)))
+                .map(o -> {
+                    Oferta oferta = ofertaRepository.findByIdConLineas(o.getIdOferta())
+                            .orElseThrow(() -> new BusinessException(
+                                    "Oferta #" + o.getIdOferta() + " no encontrada",
+                                    HttpStatus.NOT_FOUND));
+                    if (!oferta.estaVigente(hoy)) {
+                        throw new BusinessException(
+                                "La oferta '" + oferta.getNombre() + "' no está vigente en la fecha actual",
+                                HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
+                    }
+                    return oferta;
+                })
                 .toList();
         return ofertaMatcher.aplicarCocina(
                 dto.getOfertas(),
@@ -84,11 +99,12 @@ public class PedidoOfertaService {
 
     /**
      * Canal WEB — auto-detección greedy.
-     * Carga las ofertas activas (cacheadas en Redis) y aplica las que coincidan con el tipoPedido.
+     * Carga las ofertas activas y vigentes (cacheadas en Redis con clave fecha) y aplica las que coincidan con el tipoPedido.
      */
     private List<OfertaAplicacion> detectarWeb(Pedido pedido) {
-        // ofertaService.findActivasEntidades(): cargadas con FETCH JOIN y cacheadas en Redis
-        List<Oferta> activas = ofertaService.findActivasEntidades().stream()
+        LocalDate hoy = LocalDate.now(Constants.ZONA_MERIDA);
+        // ofertaService.findActivasEntidades(): cargadas con FETCH JOIN, cacheadas en Redis con clave fecha+zona
+        List<Oferta> activas = ofertaService.findActivasEntidades(hoy).stream()
                 .filter(o -> o.estaDisponiblePara(pedido.getTipoPedido()))
                 .toList();
         if (activas.isEmpty()) return List.of();

@@ -34,7 +34,10 @@ import com.cocinarubi.presentation.strategy.ValidationStrategy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import com.cocinarubi.Constants;
+
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -420,9 +423,10 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
         }
     }
 
-    /** Solo canal COCINA: verifica que cada oferta indicada en el DTO exista, esté activa y aplique al tipoPedido. */
+    /** Solo canal COCINA: verifica que cada oferta indicada en el DTO exista, esté activa, vigente y aplique al tipoPedido. */
     private void validarOfertasCocina(PedidoRequestDTO dto) {
         if (dto.getPedidoCreadoDesde() != PedidoCreadoDesde.COCINA) return;
+        LocalDate hoy = LocalDate.now(Constants.ZONA_MERIDA);
         for (OfertaCocinaPedidoDTO ofertaDto : dto.getOfertas()) {
             Oferta oferta = ofertaRepository.findById(ofertaDto.getIdOferta())
                     .orElseThrow(() -> new BusinessException(
@@ -431,6 +435,14 @@ public class PedidoValidationImp implements ValidationStrategy<PedidoRequestDTO>
             if (!oferta.isActivo()) {
                 throw new BusinessException(
                         "La oferta '" + oferta.getNombre() + "' no está activa",
+                        HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
+            }
+            if (!oferta.estaVigente(hoy)) {
+                String detalle = (oferta.getFechaFin() != null && hoy.isAfter(oferta.getFechaFin()))
+                        ? " (venció el " + oferta.getFechaFin() + ")"
+                        : " (inicia el " + oferta.getFechaInicio() + ")";
+                throw new BusinessException(
+                        "La oferta '" + oferta.getNombre() + "' no está vigente" + detalle,
                         HttpStatus.BAD_REQUEST, ErrorCode.VALIDACION);
             }
             if (!oferta.estaDisponiblePara(dto.getTipoPedido())) {

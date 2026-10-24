@@ -20,7 +20,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.cocinarubi.Constants;
+
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -264,6 +267,21 @@ public class OfertaServiceTest {
     // tiposPedidoRestriccion
     // -------------------------------------------------------------------------
 
+    private Oferta buildEntityVencida() {
+        LocalDate hoy = LocalDate.now(Constants.ZONA_MERIDA);
+        return Oferta.builder()
+                .idOferta(2).nombre("Oferta Vencida").activo(true)
+                .precioOferta(new BigDecimal("60.00")).prioridad(3)
+                .fechaInicio(hoy.minusDays(10)).fechaFin(hoy.minusDays(1)).build();
+    }
+
+    private Oferta buildEntityFutura() {
+        return Oferta.builder()
+                .idOferta(3).nombre("Oferta Futura").activo(true)
+                .precioOferta(new BigDecimal("50.00")).prioridad(2)
+                .fechaInicio(LocalDate.now(Constants.ZONA_MERIDA).plusDays(5)).build();
+    }
+
     @Test
     @DisplayName("save - con tiposPedidoRestriccion → la restricción se persiste en la entidad")
     void save_conRestriccion_persisteRestriccion() {
@@ -290,5 +308,44 @@ public class OfertaServiceTest {
         assertFalse(capturada.get().getTiposPedidoRestriccion().contains(TipoPedido.DOMICILIO));
         System.out.println("[OK] save con restricción → tiposPedidoRestriccion="
                 + capturada.get().getTiposPedidoRestriccion());
+    }
+
+    // -------------------------------------------------------------------------
+    // estaVigente — contrato del método de dominio
+    // -------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("estaVigente - fechas nulas → siempre vigente")
+    void estaVigente_sinFechas_vigente() {
+        Oferta o = buildEntity();
+        o.setFechaInicio(null);
+        o.setFechaFin(null);
+        assertTrue(o.estaVigente(LocalDate.now(Constants.ZONA_MERIDA)));
+        System.out.println("[OK] estaVigente sin fechas → vigente");
+    }
+
+    @Test
+    @DisplayName("estaVigente - oferta vencida → false")
+    void estaVigente_vencida_false() {
+        assertFalse(buildEntityVencida().estaVigente(LocalDate.now(Constants.ZONA_MERIDA)));
+        System.out.println("[OK] estaVigente vencida → false");
+    }
+
+    @Test
+    @DisplayName("estaVigente - oferta futura → false")
+    void estaVigente_futura_false() {
+        assertFalse(buildEntityFutura().estaVigente(LocalDate.now(Constants.ZONA_MERIDA)));
+        System.out.println("[OK] estaVigente futura → false");
+    }
+
+    @Test
+    @DisplayName("estaVigente - borde: fechaInicio == hoy y fechaFin == hoy → vigente")
+    void estaVigente_bordeFechasIgualesHoy_vigente() {
+        LocalDate hoy = LocalDate.now(Constants.ZONA_MERIDA);
+        Oferta o = buildEntity();
+        o.setFechaInicio(hoy);
+        o.setFechaFin(hoy);
+        assertTrue(o.estaVigente(hoy));
+        System.out.println("[OK] estaVigente borde fechaInicio==fechaFin==hoy → vigente");
     }
 }

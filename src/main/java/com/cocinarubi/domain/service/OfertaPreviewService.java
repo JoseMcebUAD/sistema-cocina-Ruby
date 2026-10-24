@@ -12,7 +12,10 @@ import com.cocinarubi.presentation.dto.response.OfertaPreviewResponseDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cocinarubi.Constants;
+
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -56,8 +59,9 @@ public class OfertaPreviewService {
      */
     @Transactional(readOnly = true)
     public List<OfertaPreviewResponseDTO> preview(OfertaPreviewRequestDTO dto) {
-        // ofertaService.findActivasEntidades(): cargadas con FETCH JOIN y cacheadas en Redis
-        List<Oferta> activas = ofertaService.findActivasEntidades();
+        LocalDate hoy = LocalDate.now(Constants.ZONA_MERIDA);
+        // ofertaService.findActivasEntidades(): cargadas con FETCH JOIN, cacheadas en Redis con clave fecha
+        List<Oferta> activas = ofertaService.findActivasEntidades(hoy);
         if (dto.getTipoPedido() != null) {
             activas = activas.stream()
                     .filter(o -> o.estaDisponiblePara(dto.getTipoPedido()))

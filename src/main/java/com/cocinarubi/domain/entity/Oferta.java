@@ -88,4 +88,14 @@ public class Oferta {
         return tiposPedidoRestriccion == null || tiposPedidoRestriccion.isEmpty()
                 || tiposPedidoRestriccion.contains(tipo);
     }
+
+    /**
+     * @return {@code true} si {@code hoy} cae dentro del rango de vigencia.
+     * Fecha nula = sin restricción por ese extremo (null fechaInicio = desde siempre; null fechaFin = hasta siempre).
+     */
+    public boolean estaVigente(LocalDate hoy) {
+        if (fechaInicio != null && hoy.isBefore(fechaInicio)) return false;
+        if (fechaFin    != null && hoy.isAfter(fechaFin))     return false;
+        return true;
+    }
 }
