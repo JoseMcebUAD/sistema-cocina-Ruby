@@ -52,6 +52,27 @@ public class TarjetaTransferenciaService implements ITarjetaTransferenciaService
     }
 
     /**
+     * Reemplaza los datos bancarios de una tarjeta existente.
+     *
+     * Deliberadamente NO toca el estatus: la tarjeta activa sigue siendo la
+     * misma después de editarla. Si corregir una CLABE pudiera además activar
+     * o desactivar, bastaría un descuido en el formulario para cambiar en
+     * silencio la cuenta que el checkout web le muestra al cliente. El estatus
+     * tiene su propio endpoint, que es el único que mantiene la invariante de
+     * "una sola activa".
+     */
+    @Override
+    @Transactional
+    public TarjetaTransferenciaResponseDTO update(int id, TarjetaTransferenciaRequestDTO dto) {
+        TarjetaTransferencia tarjeta = findEntityById(id);
+        tarjeta.setClabe(dto.getClabe());
+        tarjeta.setNumeroTarjeta(dto.getNumeroTarjeta());
+        tarjeta.setNombreDestinatario(dto.getNombreDestinatario());
+        tarjeta.setBanco(dto.getBanco());
+        return toResponseDTO(tarjetaRepository.save(tarjeta));
+    }
+
+    /**
      * Cambia el estatus de la tarjeta indicada.
      * Si el nuevo estatus es DISPONIBLE, desactiva todas las demás en la misma transacción
      * para garantizar la invariante "solo una activa". Si se intenta desactivar la única

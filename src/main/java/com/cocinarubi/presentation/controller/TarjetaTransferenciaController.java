@@ -44,6 +44,15 @@ public class TarjetaTransferenciaController {
                         tarjetaService.save(dto)));
     }
 
+    
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<TarjetaTransferenciaResponseDTO>> update(
+            @PathVariable int id,
+            @Valid @RequestBody TarjetaTransferenciaRequestDTO dto) {
+        return ResponseEntity.ok(ApiResponse.exito(200, "Tarjeta actualizada correctamente",
+                tarjetaService.update(id, dto)));
+    }
+
     @PatchMapping("/{id}/estatus")
     public ResponseEntity<ApiResponse<TarjetaTransferenciaResponseDTO>> cambiarEstatus(
             @PathVariable int id,
