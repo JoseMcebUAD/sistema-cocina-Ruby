@@ -13,6 +13,7 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -31,12 +32,20 @@ public class RedisConfig {
         // Permite serializar LocalDate/LocalDateTime como strings ISO-8601
         om.registerModule(new JavaTimeModule());
         om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        // Incluye "@class" en el JSON para que la deserialización reconstruya el tipo correcto
-        om.activateDefaultTyping(
-            om.getPolymorphicTypeValidator(),
-            ObjectMapper.DefaultTyping.NON_FINAL,
-            JsonTypeInfo.As.PROPERTY
-        );
+        // @class permite reconstruir el tipo correcto al deserializar; se excluyen
+        // org.hibernate.collection.* porque construirlos fuera de sesión lanza LazyInitializationException.
+        ObjectMapper.DefaultTypeResolverBuilder typer = new ObjectMapper.DefaultTypeResolverBuilder(
+                ObjectMapper.DefaultTyping.NON_FINAL, om.getPolymorphicTypeValidator()) {
+            @Override
+            public boolean useForType(JavaType t) {
+                if (t.isPrimitive()) return false;
+                if (t.getRawClass().getName().startsWith("org.hibernate.collection.")) return false;
+                return !t.isFinal();
+            }
+        };
+        typer.init(JsonTypeInfo.Id.CLASS, null);
+        typer.inclusion(JsonTypeInfo.As.PROPERTY);
+        om.setDefaultTyping(typer);
         GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(om);
 
         RedisCacheConfiguration defaults = RedisCacheConfiguration.defaultCacheConfig()
