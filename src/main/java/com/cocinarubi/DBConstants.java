@@ -112,4 +112,7 @@ public class DBConstants {
         COMBO_GENERAL
     }
 
+    /** Indica si una suscripción semanal fue creada por el operador (COCINA) o comprada por el cliente vía web (WEB). */
+    public enum OrigenSuscripcion { COCINA, WEB }
+
 }

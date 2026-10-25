@@ -192,6 +192,7 @@ public class SecurityConfig {
                             "/inventarioComida/**",
                             "/menu-digital/**",
                             "/oferta/**",
+                            "/suscripcion-semanal/**",
                             "/pago-repartidor/**",
                             "/pedido/**",
                             "/producto-cocina/**",

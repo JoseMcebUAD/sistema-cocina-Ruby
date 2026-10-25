@@ -62,8 +62,9 @@ public class AuditoriaParser {
             case "subcategoria"       -> describirSubcategoria(accion, despues, antes, id, fecha);
             case "combo"              -> describirCombo(accion, despues, antes, id, fecha);
             case "anuncio_producto"   -> describirAnuncioProducto(accion, id);
-            case "tarjeta_transferencia" -> describirTarjetaTransferencia(accion, despues, antes, id);
-            default                   -> accion + " en " + tabla + (id != null ? " #" + id : "");
+            case "tarjeta_transferencia"  -> describirTarjetaTransferencia(accion, despues, antes, id);
+            case "suscripcion_semanal"    -> describirSuscripcionSemanal(accion, despues, antes, id);
+            default                       -> accion + " en " + tabla + (id != null ? " #" + id : "");
         };
     }
 
@@ -346,6 +347,22 @@ public class AuditoriaParser {
                 yield "Se actualizó la subcategoría '" + nombre + "'";
             }
             case DELETE -> "Se eliminó la subcategoría #" + id;
+        };
+    }
+
+    private String describirSuscripcionSemanal(TipoOperacion accion, JsonNode despues, JsonNode antes, Integer id) {
+        return switch (accion) {
+            case POST -> {
+                String cliente = textOrElse(despues, "identificadorCliente", "sin identificador");
+                yield "Se creó la suscripción semanal para '" + cliente + "'";
+            }
+            case PUT -> {
+                String clienteDespues = textOrElse(despues, "identificadorCliente", null);
+                String clienteAntes = textOrElse(antes, "identificadorCliente", null);
+                String cliente = clienteDespues != null ? clienteDespues : (clienteAntes != null ? clienteAntes : "#" + id);
+                yield "Se actualizó la suscripción semanal de '" + cliente + "'";
+            }
+            case DELETE -> "Se eliminó la suscripción semanal #" + id;
         };
     }
 
