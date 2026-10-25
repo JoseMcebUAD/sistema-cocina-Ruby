@@ -20,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.cocinarubi.Constants;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,11 +58,20 @@ public class OfertaService {
      * cacheadas en Redis para evitar la query en cada llamada del preview y del save.
      * La fecha se incluye en la clave de caché: al cruce de medianoche la clave cambia
      * automáticamente → cache miss → query fresca sin necesidad de scheduled eviction.
+     *
+     * Las colecciones se copian a ArrayList/HashSet planos dentro de la transacción para
+     * que Redis no serialice PersistentBag/PersistentSet de Hibernate, los cuales no pueden
+     * deserializarse fuera de una sesión JPA y causarían LazyInitializationException al leer la caché.
      */
     @Cacheable(value = "ofertas-activas")
     @Transactional(readOnly = true)
     public List<Oferta> findActivasEntidades(LocalDate hoy) {
-        return ofertaRepository.findActivasConLineas(hoy);
+        List<Oferta> ofertas = ofertaRepository.findActivasConLineas(hoy);
+        ofertas.forEach(o -> {
+            o.setLineas(new ArrayList<>(o.getLineas()));
+            o.setTiposPedidoRestriccion(new HashSet<>(o.getTiposPedidoRestriccion()));
+        });
+        return ofertas;
     }
 
     @Transactional(readOnly = true)
