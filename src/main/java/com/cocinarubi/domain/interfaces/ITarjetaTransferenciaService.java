@@ -18,6 +18,13 @@ public interface ITarjetaTransferenciaService {
     TarjetaTransferenciaResponseDTO save(TarjetaTransferenciaRequestDTO dto);
 
     /**
+     * Reemplaza los datos bancarios de la tarjeta indicada.
+     * No toca el estatus: ese solo cambia por {@link #cambiarEstatus}, de modo
+     * que corregir una CLABE nunca altera cuál es la tarjeta activa.
+     */
+    TarjetaTransferenciaResponseDTO update(int id, TarjetaTransferenciaRequestDTO dto);
+
+    /**
      * Cambia el estatus de la tarjeta indicada.
      * Garantiza la invariante: solo una tarjeta puede tener estatus DISPONIBLE.
      */

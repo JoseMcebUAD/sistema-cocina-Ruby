@@ -98,6 +98,65 @@ public class TarjetaTransferenciaServiceTest {
         System.out.println("[OK] save guardó tarjeta estatus=" + result.getEstatus());
     }
 
+    // ── update ────────────────────────────────────────────────────────────────
+
+    /**
+     * Valores de relleno para el update. Dígitos repetidos a propósito: en un
+     * archivo sobre datos bancarios conviene que ningún número pueda
+     * confundirse con una cuenta real al leerlo de pasada.
+     */
+    private static final String CLABE_FALSA = "000000000000000000";
+    private static final String TARJETA_FALSA = "0000000000000000";
+
+    @Test
+    @DisplayName("update - Debe reemplazar los cuatro datos bancarios de la tarjeta")
+    public void update_reemplazaDatosBancarios() {
+        when(tarjetaRepository.findById(1)).thenReturn(Optional.of(TARJETA_INACTIVA));
+        when(tarjetaRepository.save(any(TarjetaTransferencia.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        TarjetaTransferenciaRequestDTO dto = new TarjetaTransferenciaRequestDTO();
+        dto.setClabe(CLABE_FALSA);
+        dto.setNumeroTarjeta(TARJETA_FALSA);
+        dto.setNombreDestinatario("Destinatario De Prueba");
+        dto.setBanco("BANCO DE PRUEBA");
+
+        TarjetaTransferenciaResponseDTO result = tarjetaService.update(1, dto);
+
+        assertEquals(CLABE_FALSA, result.getClabe());
+        assertEquals(TARJETA_FALSA, result.getNumeroTarjeta());
+        assertEquals("Destinatario De Prueba", result.getNombreDestinatario());
+        assertEquals("BANCO DE PRUEBA", result.getBanco());
+        System.out.println("[OK] update reemplazó los datos de la tarjeta id=1");
+    }
+
+    @Test
+    @DisplayName("update - No debe alterar el estatus de una tarjeta activa")
+    public void update_conservaEstatus() {
+        // Clave de la invariante: editar la cuenta activa NO puede cambiar
+        // cuál es la que ve el cliente en el checkout web.
+        when(tarjetaRepository.findById(2)).thenReturn(Optional.of(TARJETA_ACTIVA));
+        when(tarjetaRepository.save(any(TarjetaTransferencia.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        TarjetaTransferenciaResponseDTO result = tarjetaService.update(2, buildRequestDTO());
+
+        assertEquals(Estatus.DISPONIBLE, result.getEstatus());
+        verify(tarjetaRepository, never()).updateAllEstatus(any());
+        System.out.println("[OK] update conservó estatus=" + result.getEstatus() + " en id=2");
+    }
+
+    @Test
+    @DisplayName("update - Debe lanzar 404 cuando el ID no existe")
+    public void update_idNoExiste_lanza404() {
+        when(tarjetaRepository.findById(99)).thenReturn(Optional.empty());
+
+        assertThrows(BusinessException.class, () -> tarjetaService.update(99, buildRequestDTO()));
+
+        verify(tarjetaRepository, never()).save(any());
+        System.out.println("[OK] update id=99 inexistente lanzó BusinessException, save nunca llamado");
+    }
+
     // ── cambiarEstatus ────────────────────────────────────────────────────────
 
     @Test
