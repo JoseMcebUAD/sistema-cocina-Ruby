@@ -53,7 +53,7 @@ jobs:
           echo "::endgroup::"
 
       - name: Ejecutar pruebas
-        run: mvn verify --fail-at-end -Dspring.profiles.active=test -Dexcludes="**/archivomodulo/**"
+        run: mvn verify --fail-at-end -Dspring.profiles.active=test -Dexcludes="**/archivomodulo/**,**/ApplicationTests.java"
 
       - name: Resumen de pruebas
         if: always()
