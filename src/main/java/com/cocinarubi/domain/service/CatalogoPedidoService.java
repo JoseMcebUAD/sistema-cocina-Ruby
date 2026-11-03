@@ -137,10 +137,16 @@ public class CatalogoPedidoService {
             BigDecimal precio = canal == PedidoCreadoDesde.WEB
                     ? resolverPrecioComidaWeb(comida, linea.getTamanoPorcion())
                     : linea.getPrecioUnitario();
+            // precioEspecial se activa cuando el canal WEB usó precioDescuento del catálogo;
+            // esas líneas quedan excluidas del descuento de volumen (evita double-discount)
+            boolean precioEspecial = canal == PedidoCreadoDesde.WEB
+                    && comida.isDescuentoActivo()
+                    && comida.getPrecioDescuento() != null;
             ComidaPedido item = ComidaPedido.builder()
                     .comida(comida)
                     .precioUnitario(precio)
                     .tamanoPorcion(linea.getTamanoPorcion())
+                    .precioEspecial(precioEspecial)
                     .build();
             agregarComplementosConLimite(item, linea.getComplementos(), comida.getLimiteComplemento());
             pedido.addComidaPedido(item);
@@ -367,8 +373,11 @@ public class CatalogoPedidoService {
 
     /**
      * Aplica el descuento de volumen al pedido si corresponde.
-     * Las comidas excluidas (consumidas por una oferta) no cuentan para el umbral
-     * ni reciben el descuento — evita double-discount entre oferta y volumen.
+     * Quedan excluidas del conteo y del descuento:
+     * <ul>
+     *   <li>Líneas en {@code excluidas} (consumidas por una oferta) — evita double-discount oferta/volumen.</li>
+     *   <li>Líneas con {@code precioEspecial=true} (precio del catálogo ya rebajado) — evita double-discount catálogo/volumen.</li>
+     * </ul>
      *
      * @param excluidas comidas ya consumidas por una oferta aplicada; vacío si no hay ofertas
      */
@@ -377,6 +386,7 @@ public class CatalogoPedidoService {
 
         List<ComidaPedido> calificadas = pedido.getComidasPedido().stream()
                 .filter(cp -> !excluidas.contains(cp)
+                        && !cp.isPrecioEspecial()
                         && cp.getTamanoPorcion() == TamanoPorcion.MEDIA
                         && cp.getComida() != null
                         && cp.getComida().getTipoComida() == TipoComida.FIJA)

@@ -390,6 +390,19 @@ public class CatalogoPedidoServiceTest {
         return pedido;
     }
 
+    /** Crea una línea MEDIA FIJA con precioEspecial=true (simula canal WEB con descuentoActivo). */
+    private ComidaPedido lineaComidaPrecioEspecial() {
+        Comida comida = new Comida();
+        comida.setIdComida(1);
+        comida.setTipoComida(TipoComida.FIJA);
+        return ComidaPedido.builder()
+                .comida(comida)
+                .tamanoPorcion(TamanoPorcion.MEDIA)
+                .precioUnitario(BigDecimal.valueOf(40))
+                .precioEspecial(true)
+                .build();
+    }
+
     // ── Tests aplicarDescuentoVolumen ─────────────────────────────────────────
 
     @Test
@@ -489,6 +502,44 @@ public class CatalogoPedidoServiceTest {
         assertEquals(0, BigDecimal.ZERO.compareTo(especial.getDescuentoAplicado()),
                 "La comida ESPECIAL no debe tener descuento");
         System.out.println("[OK] 13 medias (12 FIJA + 1 ESPECIAL) → descuento en las 12 FIJA, ESPECIAL intacta");
+    }
+
+    @Test
+    @DisplayName("aplicarDescuentoVolumen - 12 medias (11 FIJA normal + 1 FIJA precioEspecial): count calificadas=11 → sin descuento")
+    public void descuentoVolumen_12MediaFijaCon1PrecioEspecial_sinDescuento() {
+        List<ComidaPedido> items = new java.util.ArrayList<>();
+        for (int i = 0; i < 11; i++) items.add(lineaComida(TamanoPorcion.MEDIA, TipoComida.FIJA));
+        items.add(lineaComidaPrecioEspecial());
+        Pedido pedido = pedidoCon(items);
+
+        catalogoPedidoService.aplicarDescuentoVolumen(pedido);
+
+        assertNull(pedido.getTipoDescuento());
+        pedido.getComidasPedido().forEach(cp ->
+                assertEquals(0, BigDecimal.ZERO.compareTo(cp.getDescuentoAplicado()),
+                        "Sin umbral alcanzado, descuentoAplicado debe ser $0 en todas"));
+        System.out.println("[OK] 12 medias (11 FIJA normal + 1 precioEspecial) → count=11 → sin descuento");
+    }
+
+    @Test
+    @DisplayName("aplicarDescuentoVolumen - 13 medias (12 FIJA normal + 1 FIJA precioEspecial): descuento solo en las 12 normales")
+    public void descuentoVolumen_13MediaFijaCon1PrecioEspecial_descuentoSoloEnNormales() {
+        List<ComidaPedido> items = new java.util.ArrayList<>();
+        for (int i = 0; i < 12; i++) items.add(lineaComida(TamanoPorcion.MEDIA, TipoComida.FIJA));
+        ComidaPedido conPrecioEspecial = lineaComidaPrecioEspecial();
+        items.add(conPrecioEspecial);
+        Pedido pedido = pedidoCon(items);
+
+        catalogoPedidoService.aplicarDescuentoVolumen(pedido);
+
+        assertEquals(TipoDescuento.COMIDAS_DIEZ, pedido.getTipoDescuento());
+        long conDescuento = pedido.getComidasPedido().stream()
+                .filter(cp -> BigDecimal.TEN.compareTo(cp.getDescuentoAplicado()) == 0)
+                .count();
+        assertEquals(12, conDescuento, "Solo las 12 normales deben recibir el descuento de volumen");
+        assertEquals(0, BigDecimal.ZERO.compareTo(conPrecioEspecial.getDescuentoAplicado()),
+                "La línea con precioEspecial no debe acumular el descuento de volumen");
+        System.out.println("[OK] 13 medias (12 FIJA normal + 1 precioEspecial) → descuento en las 12 normales, precioEspecial intacta");
     }
 
     @Test

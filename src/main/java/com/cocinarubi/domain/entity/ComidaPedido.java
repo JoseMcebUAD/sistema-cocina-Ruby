@@ -24,6 +24,10 @@ import java.util.List;
  * el descuento de volumen (≥ 12 comidas MEDIA + FIJA en el mismo pedido). El precio neto
  * efectivo de la línea es {@code precioUnitario - descuentoAplicado}.</p>
  *
+ * <p>{@code precio_especial=true} indica que el {@code precioUnitario} proviene del
+ * {@code precioDescuento} del catálogo (aplicado vía canal WEB). Estas líneas quedan
+ * excluidas del descuento de volumen para evitar la acumulación de ambos beneficios.</p>
+ *
  * <p>Relaciones:
  * <ul>
  *   <li>{@code @ManyToOne} LAZY a {@link Pedido} — orden a la que pertenece.</li>
@@ -66,6 +70,10 @@ public class ComidaPedido {
     @Enumerated(EnumType.STRING)
     @Column(name = "tamano_porcion")
     private TamanoPorcion tamanoPorcion;
+
+    @Builder.Default
+    @Column(name = "precio_especial", nullable = false)
+    private boolean precioEspecial = false;
 
     @Builder.Default
     @OneToMany(mappedBy = "comidaPedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
