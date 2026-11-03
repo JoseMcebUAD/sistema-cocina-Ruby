@@ -15,7 +15,12 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
 
     public List<String> formatProductBlock(ComidaPedidoResponseDTO comida, String precio, int anchoEfectivo) {
         List<String> lineas = new ArrayList<>();
-        String lineaComida = comida.getTamanoPorcion() + " " + comida.getNombreComida();
+
+        boolean esOferta = comida.getDescuentoAplicado() != null
+                && comida.getDescuentoAplicado().compareTo(BigDecimal.ZERO) > 0;
+
+        String lineaComida = (esOferta ? "[OFERTA] " : "")
+                + comida.getTamanoPorcion() + " " + comida.getNombreComida();
 
         List<ComplementoResponseDTO> complementos = comida.getComplementos();
         List<ComplementoPredeterminadoComidaResponseDTO> predeterminados = comida.getComplementosPredeterminados();
@@ -24,6 +29,11 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
         boolean hayPredeterminados = predeterminados != null && !predeterminados.isEmpty();
 
         lineas.addAll(formatearItemConPrecio(lineaComida, precio, anchoEfectivo));
+
+        if (esOferta) {
+            String descuento = "Ahorro: -" + FORMATO_PRECIO.format(comida.getDescuentoAplicado());
+            lineas.add(alinearDerechaCompleto(descuento, anchoEfectivo));
+        }
 
         if (hayComplementos || hayPredeterminados) {
             lineas.add("");
