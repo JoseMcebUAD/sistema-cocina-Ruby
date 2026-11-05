@@ -28,12 +28,10 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
         boolean hayComplementos = complementos != null && !complementos.isEmpty();
         boolean hayPredeterminados = predeterminados != null && !predeterminados.isEmpty();
 
-        lineas.addAll(formatearItemConPrecio(lineaComida, precio, anchoEfectivo));
-
-        if (esOferta) {
-            String descuento = "Ahorro: -" + FORMATO_PRECIO.format(comida.getDescuentoAplicado());
-            lineas.add(alinearDerechaCompleto(descuento, anchoEfectivo));
-        }
+        String precioFinal = esOferta
+                ? precio + " -" + FORMATO_PRECIO.format(comida.getDescuentoAplicado())
+                : precio;
+        lineas.addAll(formatearItemConPrecio(lineaComida, precioFinal, anchoEfectivo));
 
         if (hayComplementos || hayPredeterminados) {
             lineas.add("");
