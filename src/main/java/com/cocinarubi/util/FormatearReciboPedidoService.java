@@ -28,10 +28,19 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
         boolean hayComplementos = complementos != null && !complementos.isEmpty();
         boolean hayPredeterminados = predeterminados != null && !predeterminados.isEmpty();
 
-        String precioFinal = esOferta
-                ? precio + " -" + FORMATO_PRECIO.format(comida.getDescuentoAplicado())
-                : precio;
-        lineas.addAll(formatearItemConPrecio(lineaComida, precioFinal, anchoEfectivo));
+        List<String> lineasComida = formatearItemConPrecio(lineaComida, precio, anchoEfectivo);
+        if (esOferta) {
+            // Intenta agregar el descuento al final de la última línea ya formateada.
+            // Si no cabe, lo alinea a la derecha en una línea nueva.
+            String sufDescuento = " -" + FORMATO_PRECIO.format(comida.getDescuentoAplicado());
+            String ultimaLinea = lineasComida.get(lineasComida.size() - 1);
+            if (ultimaLinea.length() + sufDescuento.length() <= anchoEfectivo) {
+                lineasComida.set(lineasComida.size() - 1, ultimaLinea + sufDescuento);
+            } else {
+                lineasComida.add(alinearDerechaCompleto(sufDescuento.trim(), anchoEfectivo));
+            }
+        }
+        lineas.addAll(lineasComida);
 
         if (hayComplementos || hayPredeterminados) {
             lineas.add("");
