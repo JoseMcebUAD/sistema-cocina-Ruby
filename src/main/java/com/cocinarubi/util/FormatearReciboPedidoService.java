@@ -18,7 +18,7 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
 
         boolean esOferta = comida.isDescuento();
 
-        String lineaComida = (esOferta ? "[OFERTA] " : "")
+        String lineaComida = (esOferta ? "[DESCUENTO] " : "")
                 + comida.getTamanoPorcion() + " " + comida.getNombreComida();
 
         List<ComplementoResponseDTO> complementos = comida.getComplementos();
