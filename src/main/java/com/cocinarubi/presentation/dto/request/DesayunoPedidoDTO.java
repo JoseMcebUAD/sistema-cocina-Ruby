@@ -17,6 +17,13 @@ public class DesayunoPedidoDTO {
     @JsonProperty("precio")
     private BigDecimal precio;
 
+    @JsonProperty("descuento")
+    private boolean descuento;
+
+    @Positive(message = "El precio de descuento debe ser mayor a cero")
+    @JsonProperty("precioDescuento")
+    private BigDecimal precioDescuento;
+
     public DesayunoPedidoDTO() {}
 
     public DesayunoPedidoDTO(Integer idDesayuno, BigDecimal precio) {
@@ -29,4 +36,10 @@ public class DesayunoPedidoDTO {
 
     public BigDecimal getPrecio() { return precio; }
     public void setPrecio(BigDecimal precio) { this.precio = precio; }
+
+    public boolean isDescuento() { return descuento; }
+    public void setDescuento(boolean descuento) { this.descuento = descuento; }
+
+    public BigDecimal getPrecioDescuento() { return precioDescuento; }
+    public void setPrecioDescuento(BigDecimal precioDescuento) { this.precioDescuento = precioDescuento; }
 }

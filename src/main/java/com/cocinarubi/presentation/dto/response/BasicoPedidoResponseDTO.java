@@ -31,4 +31,13 @@ public class BasicoPedidoResponseDTO {
 
     public List<BasicoPedidoExtraResponseDTO> getExtras() { return extras; }
     public void setExtras(List<BasicoPedidoExtraResponseDTO> extras) { this.extras = extras; }
+
+    private boolean descuento;
+    private BigDecimal precioDescuento;
+
+    public boolean isDescuento() { return descuento; }
+    public void setDescuento(boolean descuento) { this.descuento = descuento; }
+
+    public BigDecimal getPrecioDescuento() { return precioDescuento; }
+    public void setPrecioDescuento(BigDecimal precioDescuento) { this.precioDescuento = precioDescuento; }
 }

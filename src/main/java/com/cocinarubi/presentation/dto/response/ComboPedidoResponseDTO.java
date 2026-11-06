@@ -43,4 +43,13 @@ public class ComboPedidoResponseDTO {
 
     public List<String> getNombresProductos() { return nombresProductos; }
     public void setNombresProductos(List<String> nombresProductos) { this.nombresProductos = nombresProductos; }
+
+    private boolean descuento;
+    private BigDecimal precioDescuento;
+
+    public boolean isDescuento() { return descuento; }
+    public void setDescuento(boolean descuento) { this.descuento = descuento; }
+
+    public BigDecimal getPrecioDescuento() { return precioDescuento; }
+    public void setPrecioDescuento(BigDecimal precioDescuento) { this.precioDescuento = precioDescuento; }
 }

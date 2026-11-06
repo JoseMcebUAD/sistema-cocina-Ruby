@@ -42,4 +42,10 @@ public class ComboPedido {
 
     @Column(name = "cantidad")
     private Integer cantidad;
+
+    @Column(name = "descuento")
+    private boolean descuento;
+
+    @Column(name = "precio_descuento", precision = 7, scale = 2)
+    private BigDecimal precioDescuento;
 }

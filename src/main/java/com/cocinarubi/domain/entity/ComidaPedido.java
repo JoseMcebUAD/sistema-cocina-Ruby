@@ -20,13 +20,12 @@ import java.util.List;
  * <p>El cliente puede agregar {@link ComplementoComidaPedido}s específicos para
  * esta línea, independientemente de los complementos de otras líneas del mismo pedido.</p>
  *
- * <p>El campo {@code descuento_aplicado} registra el monto descontado por línea cuando aplica
- * el descuento de volumen (≥ 12 comidas MEDIA + FIJA en el mismo pedido). El precio neto
- * efectivo de la línea es {@code precioUnitario - descuentoAplicado}.</p>
+ * <p>{@code descuento=true} indica que se aplicó algún descuento a esta línea
+ * (catálogo WEB, volumen automático o manual COCINA). En ese caso {@code precioDescuento}
+ * es el precio efectivo que paga el cliente. Las líneas con {@code descuento=true} quedan
+ * excluidas del descuento de volumen para evitar la acumulación de beneficios.</p>
  *
- * <p>{@code precio_especial=true} indica que el {@code precioUnitario} proviene del
- * {@code precioDescuento} del catálogo (aplicado vía canal WEB). Estas líneas quedan
- * excluidas del descuento de volumen para evitar la acumulación de ambos beneficios.</p>
+ * <p>Precio efectivo: {@code descuento ? precioDescuento : precioUnitario}.</p>
  *
  * <p>Relaciones:
  * <ul>
@@ -63,17 +62,15 @@ public class ComidaPedido {
     @Column(name = "precio_unitario", precision = 5, scale = 2)
     private BigDecimal precioUnitario;
 
-    @Builder.Default
-    @Column(name = "descuento_aplicado", precision = 7, scale = 2)
-    private BigDecimal descuentoAplicado = BigDecimal.ZERO;
+    @Column(name = "descuento")
+    private boolean descuento;
+
+    @Column(name = "precio_descuento", precision = 7, scale = 2)
+    private BigDecimal precioDescuento;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tamano_porcion")
     private TamanoPorcion tamanoPorcion;
-
-    @Builder.Default
-    @Column(name = "precio_especial", nullable = false)
-    private boolean precioEspecial = false;
 
     @Builder.Default
     @OneToMany(mappedBy = "comidaPedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

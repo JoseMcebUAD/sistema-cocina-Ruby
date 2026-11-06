@@ -92,8 +92,10 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         if (comidas == null || comidas.isEmpty()) return;
 
         for (int i = 0; i < comidas.size(); i++) {
-            String precio = FORMATO_PRECIO.format(comidas.get(i).getPrecioUnitario());
-            for (String linea : formatter.formatProductBlock(comidas.get(i), precio, anchoEfectivo)) {
+            ComidaPedidoResponseDTO comida = comidas.get(i);
+            BigDecimal precioEfectivo = comida.isDescuento() ? comida.getPrecioDescuento() : comida.getPrecioUnitario();
+            String precio = FORMATO_PRECIO.format(precioEfectivo);
+            for (String linea : formatter.formatProductBlock(comida, precio, anchoEfectivo)) {
                 if (linea.isEmpty()) escpos.feed(1);
                 else escpos.writeLF(subtitleStyle, linea);
             }
@@ -107,7 +109,8 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
     private void renderDesayunos(EscPos escpos, List<DesayunoPedidoResponseDTO> desayunos) throws IOException {
         if (desayunos == null || desayunos.isEmpty()) return;
         for (DesayunoPedidoResponseDTO d : desayunos) {
-            String precio = FORMATO_PRECIO.format(d.getPrecio());
+            BigDecimal precioEfectivo = d.isDescuento() ? d.getPrecioDescuento() : d.getPrecio();
+            String precio = FORMATO_PRECIO.format(precioEfectivo);
             for (String linea : formatter.formatearDetalleOrden(d.getNombreDesayuno(), precio, anchoEfectivo)) {
                 escpos.writeLF(subtitleStyle, linea);
             }
@@ -117,7 +120,8 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
     private void renderBasicos(EscPos escpos, List<BasicoPedidoResponseDTO> basicos) throws IOException {
         if (basicos == null || basicos.isEmpty()) return;
         for (BasicoPedidoResponseDTO b : basicos) {
-            String precio = FORMATO_PRECIO.format(b.getPrecioUnitario());
+            BigDecimal precioEfectivo = b.isDescuento() ? b.getPrecioDescuento() : b.getPrecioUnitario();
+            String precio = FORMATO_PRECIO.format(precioEfectivo);
             for (String linea : formatter.formatBasicoBlock(b, precio, anchoEfectivo)) {
                 if (linea.isEmpty()) escpos.feed(1);
                 else escpos.writeLF(subtitleStyle,linea);
@@ -129,8 +133,9 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         if (productos == null || productos.isEmpty()) return;
         for (ProductoCocinaPedidoResponseDTO p : productos) {
             String descripcion = p.getCantidad() + "x " + p.getNombreProducto();
+            BigDecimal precioEfectivo = p.isDescuento() ? p.getPrecioDescuento() : p.getPrecioUnitario();
             String precio = FORMATO_PRECIO.format(
-                    p.getPrecioUnitario().multiply(java.math.BigDecimal.valueOf(p.getCantidad())));
+                    precioEfectivo.multiply(java.math.BigDecimal.valueOf(p.getCantidad())));
             for (String linea : formatter.formatearDetalleOrden(descripcion, precio, anchoEfectivo)) {
                 escpos.writeLF(subtitleStyle, linea);
             }
@@ -142,8 +147,9 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
     private void renderCombos(EscPos escpos, List<ComboPedidoResponseDTO> combos) throws IOException {
         if (combos == null || combos.isEmpty()) return;
         for (ComboPedidoResponseDTO p : combos) {
+            BigDecimal precioEfectivo = p.isDescuento() ? p.getPrecioDescuento() : p.getPrecioUnitario();
             String precio = FORMATO_PRECIO.format(
-                    p.getPrecioUnitario().multiply(java.math.BigDecimal.valueOf(p.getCantidad())));
+                    precioEfectivo.multiply(java.math.BigDecimal.valueOf(p.getCantidad())));
             for (String linea : formatter.formatComboBlock(p, precio, anchoEfectivo)) {
                 if (linea.isEmpty()) escpos.feed(1);
                 else escpos.writeLF(subtitleStyle, linea);

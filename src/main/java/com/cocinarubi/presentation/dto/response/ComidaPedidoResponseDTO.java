@@ -11,7 +11,8 @@ public class ComidaPedidoResponseDTO {
     private Integer idComida;
     private String nombreComida;
     private BigDecimal precioUnitario;
-    private BigDecimal descuentoAplicado;
+    private boolean descuento;
+    private BigDecimal precioDescuento;
     private TamanoPorcion tamanoPorcion;
     private List<ComplementoResponseDTO> complementos;
     private List<ComplementoPredeterminadoComidaResponseDTO> complementosPredeterminados;
@@ -19,7 +20,7 @@ public class ComidaPedidoResponseDTO {
     public ComidaPedidoResponseDTO() {}
 
     public ComidaPedidoResponseDTO(int idComidaPedido, Integer idComida, String nombreComida,
-                                   BigDecimal precioUnitario, BigDecimal descuentoAplicado,
+                                   BigDecimal precioUnitario, boolean descuento, BigDecimal precioDescuento,
                                    TamanoPorcion tamanoPorcion,
                                    List<ComplementoResponseDTO> complementos,
                                    List<ComplementoPredeterminadoComidaResponseDTO> complementosPredeterminados) {
@@ -27,7 +28,8 @@ public class ComidaPedidoResponseDTO {
         this.idComida = idComida;
         this.nombreComida = nombreComida;
         this.precioUnitario = precioUnitario;
-        this.descuentoAplicado = descuentoAplicado;
+        this.descuento = descuento;
+        this.precioDescuento = precioDescuento;
         this.tamanoPorcion = tamanoPorcion;
         this.complementos = complementos;
         this.complementosPredeterminados = complementosPredeterminados;
@@ -45,8 +47,11 @@ public class ComidaPedidoResponseDTO {
     public BigDecimal getPrecioUnitario() { return precioUnitario; }
     public void setPrecioUnitario(BigDecimal precioUnitario) { this.precioUnitario = precioUnitario; }
 
-    public BigDecimal getDescuentoAplicado() { return descuentoAplicado; }
-    public void setDescuentoAplicado(BigDecimal descuentoAplicado) { this.descuentoAplicado = descuentoAplicado; }
+    public boolean isDescuento() { return descuento; }
+    public void setDescuento(boolean descuento) { this.descuento = descuento; }
+
+    public BigDecimal getPrecioDescuento() { return precioDescuento; }
+    public void setPrecioDescuento(BigDecimal precioDescuento) { this.precioDescuento = precioDescuento; }
 
     public TamanoPorcion getTamanoPorcion() { return tamanoPorcion; }
     public void setTamanoPorcion(TamanoPorcion tamanoPorcion) { this.tamanoPorcion = tamanoPorcion; }

@@ -16,8 +16,7 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
     public List<String> formatProductBlock(ComidaPedidoResponseDTO comida, String precio, int anchoEfectivo) {
         List<String> lineas = new ArrayList<>();
 
-        boolean esOferta = comida.getDescuentoAplicado() != null
-                && comida.getDescuentoAplicado().compareTo(BigDecimal.ZERO) > 0;
+        boolean esOferta = comida.isDescuento();
 
         String lineaComida = (esOferta ? "[OFERTA] " : "")
                 + comida.getTamanoPorcion() + " " + comida.getNombreComida();
@@ -32,7 +31,7 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
         if (esOferta) {
             // Intenta agregar el descuento al final de la última línea ya formateada.
             // Si no cabe, lo alinea a la derecha en una línea nueva.
-            String sufDescuento = " -" + FORMATO_PRECIO.format(comida.getDescuentoAplicado());
+            String sufDescuento = " -" + FORMATO_PRECIO.format(comida.getPrecioUnitario().subtract(comida.getPrecioDescuento()));
             String ultimaLinea = lineasComida.get(lineasComida.size() - 1);
             if (ultimaLinea.length() + sufDescuento.length() <= anchoEfectivo) {
                 lineasComida.set(lineasComida.size() - 1, ultimaLinea + sufDescuento);

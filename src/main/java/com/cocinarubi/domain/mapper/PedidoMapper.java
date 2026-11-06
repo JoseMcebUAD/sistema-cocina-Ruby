@@ -208,7 +208,7 @@ public class PedidoMapper {
                     .getOrDefault(linea.getIdProducto(), "(eliminado)");
             nombresProductos.add(nombre);
         }
-        return new ComboPedidoResponseDTO(
+        ComboPedidoResponseDTO dto = new ComboPedidoResponseDTO(
                 cp.getIdComboPedido(),
                 combo.getIdCombo(),
                 combo.getDescripcion(),
@@ -216,6 +216,9 @@ public class PedidoMapper {
                 cp.getCantidad(),
                 nombresProductos
         );
+        dto.setDescuento(cp.isDescuento());
+        dto.setPrecioDescuento(cp.getPrecioDescuento());
+        return dto;
     }
 
     public ComidaPedidoResponseDTO toComidaPedidoDTO(ComidaPedido cp) {
@@ -248,7 +251,8 @@ public class PedidoMapper {
                 comida != null ? comida.getIdComida() : null,
                 comida != null ? comida.getNombreComida() : "(eliminado)",
                 cp.getPrecioUnitario(),
-                cp.getDescuentoAplicado(),
+                cp.isDescuento(),
+                cp.getPrecioDescuento(),
                 cp.getTamanoPorcion(),
                 complementos,
                 predeterminados
@@ -258,12 +262,15 @@ public class PedidoMapper {
     public DesayunoPedidoResponseDTO toDesayunoPedidoDTO(DesayunoPedido dp) {
         // id_desayuno puede ser NULL (SET NULL) si el desayuno fue eliminado
         var desayuno = dp.getDesayuno();
-        return new DesayunoPedidoResponseDTO(
+        DesayunoPedidoResponseDTO dto = new DesayunoPedidoResponseDTO(
                 dp.getIdDesayunoPedido(),
                 desayuno != null ? desayuno.getIdDesayuno() : null,
                 desayuno != null ? desayuno.getNombreDesayuno() : "(eliminado)",
                 dp.getPrecio()
         );
+        dto.setDescuento(dp.isDescuento());
+        dto.setPrecioDescuento(dp.getPrecioDescuento());
+        return dto;
     }
 
     public BasicoPedidoResponseDTO toBasicoPedidoDTO(BasicoPedido bp) {
@@ -307,19 +314,25 @@ public class PedidoMapper {
                             e.getPrecio());
                 })
                 .collect(Collectors.toList());
-        return new BasicoPedidoResponseDTO(bp.getIdBasicoPedido(), basicoDTO, bp.getPrecioUnitario(), extras);
+        BasicoPedidoResponseDTO dto = new BasicoPedidoResponseDTO(bp.getIdBasicoPedido(), basicoDTO, bp.getPrecioUnitario(), extras);
+        dto.setDescuento(bp.isDescuento());
+        dto.setPrecioDescuento(bp.getPrecioDescuento());
+        return dto;
     }
 
     public ProductoCocinaPedidoResponseDTO toProductoCocinaPedidoDTO(ProductoCocinaPedido pcp) {
         // id_producto_cocina puede ser NULL (SET NULL) si el producto fue eliminado
         var prod = pcp.getProductoCocina();
-        return new ProductoCocinaPedidoResponseDTO(
+        ProductoCocinaPedidoResponseDTO dto = new ProductoCocinaPedidoResponseDTO(
                 pcp.getIdProductoCocinaPedido(),
                 prod != null ? prod.getIdProductoCocina() : null,
                 prod != null ? prod.getNombreProducto() : "(eliminado)",
                 pcp.getPrecioUnitario(),
                 pcp.getCantidad()
         );
+        dto.setDescuento(pcp.isDescuento());
+        dto.setPrecioDescuento(pcp.getPrecioDescuento());
+        return dto;
     }
 
     public PedidoDomicilioResponseDTO toDomicilioDTO(PedidoDomicilio pd) {

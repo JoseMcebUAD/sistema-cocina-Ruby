@@ -390,16 +390,17 @@ public class CatalogoPedidoServiceTest {
         return pedido;
     }
 
-    /** Crea una línea MEDIA FIJA con precioEspecial=true (simula canal WEB con descuentoActivo). */
-    private ComidaPedido lineaComidaPrecioEspecial() {
+    /** Crea una línea MEDIA FIJA con descuento previo (simula canal WEB con descuentoActivo). */
+    private ComidaPedido lineaComidaConDescuento() {
         Comida comida = new Comida();
         comida.setIdComida(1);
         comida.setTipoComida(TipoComida.FIJA);
         return ComidaPedido.builder()
                 .comida(comida)
                 .tamanoPorcion(TamanoPorcion.MEDIA)
-                .precioUnitario(BigDecimal.valueOf(40))
-                .precioEspecial(true)
+                .precioUnitario(BigDecimal.valueOf(50))
+                .descuento(true)
+                .precioDescuento(BigDecimal.valueOf(25))
                 .build();
     }
 
@@ -415,9 +416,11 @@ public class CatalogoPedidoServiceTest {
         catalogoPedidoService.aplicarDescuentoVolumen(pedido);
 
         assertEquals(TipoDescuento.COMIDAS_DIEZ, pedido.getTipoDescuento());
-        pedido.getComidasPedido().forEach(cp ->
-                assertEquals(0, BigDecimal.TEN.compareTo(cp.getDescuentoAplicado()),
-                        "Cada línea debe tener descuentoAplicado=$10"));
+        pedido.getComidasPedido().forEach(cp -> {
+            assertTrue(cp.isDescuento(), "Cada línea debe tener descuento=true");
+            assertEquals(0, cp.getPrecioUnitario().subtract(BigDecimal.TEN).compareTo(cp.getPrecioDescuento()),
+                    "precioDescuento debe ser precioUnitario - $10");
+        });
         System.out.println("[OK] 12 MEDIA FIJA → descuento aplicado a todas");
     }
 
@@ -432,7 +435,7 @@ public class CatalogoPedidoServiceTest {
 
         assertEquals(TipoDescuento.COMIDAS_DIEZ, pedido.getTipoDescuento());
         long conDescuento = pedido.getComidasPedido().stream()
-                .filter(cp -> BigDecimal.TEN.compareTo(cp.getDescuentoAplicado()) == 0)
+                .filter(cp -> cp.isDescuento())
                 .count();
         assertEquals(15, conDescuento);
         System.out.println("[OK] 15 MEDIA FIJA → $10 en las 15 = $150 total descontado");
@@ -450,8 +453,7 @@ public class CatalogoPedidoServiceTest {
 
         assertNull(pedido.getTipoDescuento());
         pedido.getComidasPedido().forEach(cp ->
-                assertEquals(0, BigDecimal.ZERO.compareTo(cp.getDescuentoAplicado()),
-                        "Sin descuento, descuentoAplicado debe ser $0"));
+                assertFalse(cp.isDescuento(), "Sin descuento, descuento debe ser false"));
         System.out.println("[OK] 11 MEDIA + 1 ENTERA → count(MEDIA+FIJA)=11 < 12 → sin descuento");
     }
 
@@ -496,50 +498,53 @@ public class CatalogoPedidoServiceTest {
 
         assertEquals(TipoDescuento.COMIDAS_DIEZ, pedido.getTipoDescuento());
         long conDescuento = pedido.getComidasPedido().stream()
-                .filter(cp -> BigDecimal.TEN.compareTo(cp.getDescuentoAplicado()) == 0)
+                .filter(cp -> cp.isDescuento())
                 .count();
         assertEquals(12, conDescuento, "Solo las 12 FIJA deben tener descuento; la ESPECIAL no");
-        assertEquals(0, BigDecimal.ZERO.compareTo(especial.getDescuentoAplicado()),
-                "La comida ESPECIAL no debe tener descuento");
+        assertFalse(especial.isDescuento(), "La comida ESPECIAL no debe tener descuento");
         System.out.println("[OK] 13 medias (12 FIJA + 1 ESPECIAL) → descuento en las 12 FIJA, ESPECIAL intacta");
     }
 
     @Test
-    @DisplayName("aplicarDescuentoVolumen - 12 medias (11 FIJA normal + 1 FIJA precioEspecial): count calificadas=11 → sin descuento")
+    @DisplayName("aplicarDescuentoVolumen - 12 medias (11 FIJA normal + 1 FIJA conDescuento): count calificadas=11 → sin descuento")
     public void descuentoVolumen_12MediaFijaCon1PrecioEspecial_sinDescuento() {
         List<ComidaPedido> items = new java.util.ArrayList<>();
         for (int i = 0; i < 11; i++) items.add(lineaComida(TamanoPorcion.MEDIA, TipoComida.FIJA));
-        items.add(lineaComidaPrecioEspecial());
+        ComidaPedido conDescuento = lineaComidaConDescuento();
+        items.add(conDescuento);
         Pedido pedido = pedidoCon(items);
 
         catalogoPedidoService.aplicarDescuentoVolumen(pedido);
 
         assertNull(pedido.getTipoDescuento());
-        pedido.getComidasPedido().forEach(cp ->
-                assertEquals(0, BigDecimal.ZERO.compareTo(cp.getDescuentoAplicado()),
-                        "Sin umbral alcanzado, descuentoAplicado debe ser $0 en todas"));
-        System.out.println("[OK] 12 medias (11 FIJA normal + 1 precioEspecial) → count=11 → sin descuento");
+        pedido.getComidasPedido().stream()
+                .filter(cp -> cp != conDescuento)
+                .forEach(cp -> assertFalse(cp.isDescuento(), "Sin umbral alcanzado, las líneas normales no deben tener descuento"));
+        assertTrue(conDescuento.isDescuento(), "La línea conDescuento mantiene su descuento previo sin modificar");
+        System.out.println("[OK] 12 medias (11 FIJA normal + 1 conDescuento) → count=11 → sin descuento de volumen");
     }
 
     @Test
-    @DisplayName("aplicarDescuentoVolumen - 13 medias (12 FIJA normal + 1 FIJA precioEspecial): descuento solo en las 12 normales")
+    @DisplayName("aplicarDescuentoVolumen - 13 medias (12 FIJA normal + 1 FIJA conDescuento): descuento solo en las 12 normales")
     public void descuentoVolumen_13MediaFijaCon1PrecioEspecial_descuentoSoloEnNormales() {
         List<ComidaPedido> items = new java.util.ArrayList<>();
         for (int i = 0; i < 12; i++) items.add(lineaComida(TamanoPorcion.MEDIA, TipoComida.FIJA));
-        ComidaPedido conPrecioEspecial = lineaComidaPrecioEspecial();
-        items.add(conPrecioEspecial);
+        ComidaPedido conDescuento = lineaComidaConDescuento();
+        items.add(conDescuento);
         Pedido pedido = pedidoCon(items);
 
         catalogoPedidoService.aplicarDescuentoVolumen(pedido);
 
         assertEquals(TipoDescuento.COMIDAS_DIEZ, pedido.getTipoDescuento());
-        long conDescuento = pedido.getComidasPedido().stream()
-                .filter(cp -> BigDecimal.TEN.compareTo(cp.getDescuentoAplicado()) == 0)
+        // Líneas con descuento de volumen: descuento=true y precioDescuento == precioUnitario - 10
+        long conVolumen = pedido.getComidasPedido().stream()
+                .filter(cp -> cp.isDescuento()
+                        && cp.getPrecioUnitario().subtract(BigDecimal.TEN).compareTo(cp.getPrecioDescuento()) == 0)
                 .count();
-        assertEquals(12, conDescuento, "Solo las 12 normales deben recibir el descuento de volumen");
-        assertEquals(0, BigDecimal.ZERO.compareTo(conPrecioEspecial.getDescuentoAplicado()),
-                "La línea con precioEspecial no debe acumular el descuento de volumen");
-        System.out.println("[OK] 13 medias (12 FIJA normal + 1 precioEspecial) → descuento en las 12 normales, precioEspecial intacta");
+        assertEquals(12, conVolumen, "Solo las 12 normales deben recibir el descuento de volumen");
+        assertEquals(0, BigDecimal.valueOf(25).compareTo(conDescuento.getPrecioDescuento()),
+                "La línea conDescuento no debe acumular el descuento de volumen");
+        System.out.println("[OK] 13 medias (12 FIJA normal + 1 conDescuento) → descuento en las 12 normales, conDescuento intacta");
     }
 
     @Test
@@ -555,5 +560,222 @@ public class CatalogoPedidoServiceTest {
 
         assertNull(pedido.getTipoDescuento(), "Después de re-evaluar, tipoDescuento debe ser null");
         System.out.println("[OK] update con 5 comidas resetea tipoDescuento a null");
+    }
+
+    // ── Helpers adicionales para tests de descuento manual ────────────────────
+
+    private ComidaPedidoDTO dtoComida(BigDecimal precioUnitario, TamanoPorcion porcion) {
+        ComidaPedidoDTO dto = new ComidaPedidoDTO();
+        dto.setIdComida(1);
+        dto.setPrecioUnitario(precioUnitario);
+        dto.setTamanoPorcion(porcion);
+        dto.setComplementos(List.of());
+        return dto;
+    }
+
+    private ComidaPedidoDTO dtoComidaConDescuento(BigDecimal precioUnitario, BigDecimal precioDescuento) {
+        ComidaPedidoDTO dto = dtoComida(precioUnitario, TamanoPorcion.MEDIA);
+        dto.setDescuento(true);
+        dto.setPrecioDescuento(precioDescuento);
+        return dto;
+    }
+
+    // ── Grupo 1: Creación con descuento manual (canal COCINA) ─────────────────
+
+    @Test
+    @DisplayName("HU-1: agregarComidas COCINA - descuento válido guarda descuento y precioDescuento")
+    public void agregarComidas_cocina_descuentoValido_guardaDescuentoYPrecioEfectivo() {
+        when(comidaService.findById(1)).thenReturn(comida(null));
+
+        Pedido pedido = Pedido.builder().build();
+        catalogoPedidoService.agregarComidas(pedido,
+                List.of(dtoComidaConDescuento(BigDecimal.valueOf(50), BigDecimal.valueOf(40))),
+                PedidoCreadoDesde.COCINA);
+
+        ComidaPedido cp = pedido.getComidasPedido().get(0);
+        assertTrue(cp.isDescuento(), "descuento debe ser true");
+        assertEquals(0, BigDecimal.valueOf(50).compareTo(cp.getPrecioUnitario()), "precioUnitario es el original");
+        assertEquals(0, BigDecimal.valueOf(40).compareTo(cp.getPrecioDescuento()), "precioDescuento es el efectivo");
+        System.out.println("[OK] HU-1 COCINA descuento válido: precioUnitario=50, precioDescuento=40");
+    }
+
+    @Test
+    @DisplayName("HU-2: agregarComidas COCINA - sin descuento la línea no queda marcada")
+    public void agregarComidas_cocina_sinDescuento_entidadSinDescuento() {
+        when(comidaService.findById(1)).thenReturn(comida(null));
+
+        Pedido pedido = Pedido.builder().build();
+        catalogoPedidoService.agregarComidas(pedido,
+                List.of(dtoComida(BigDecimal.valueOf(50), TamanoPorcion.MEDIA)),
+                PedidoCreadoDesde.COCINA);
+
+        ComidaPedido cp = pedido.getComidasPedido().get(0);
+        assertFalse(cp.isDescuento(), "descuento debe ser false");
+        assertNull(cp.getPrecioDescuento(), "precioDescuento debe ser null sin descuento");
+        assertEquals(0, BigDecimal.valueOf(50).compareTo(cp.getPrecioUnitario()));
+        System.out.println("[OK] HU-2 COCINA sin descuento: descuento=false, precioDescuento=null");
+    }
+
+    @Test
+    @DisplayName("HU-3: agregarComidas COCINA - descuento con precioDescuento=null lanza BusinessException")
+    public void agregarComidas_cocina_descuento_precioDescuentoNulo_lanzaError() {
+        when(comidaService.findById(1)).thenReturn(comida(null));
+
+        ComidaPedidoDTO dto = dtoComida(BigDecimal.valueOf(50), TamanoPorcion.MEDIA);
+        dto.setDescuento(true); // precioDescuento queda null
+
+        Pedido pedido = Pedido.builder().build();
+        BusinessException ex = assertThrows(BusinessException.class, () ->
+                catalogoPedidoService.agregarComidas(pedido, List.of(dto), PedidoCreadoDesde.COCINA));
+        assertTrue(ex.getMessage().contains("mayor a cero"));
+        System.out.println("[OK] HU-3 descuento con precioDescuento=null → " + ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("HU-4: agregarComidas COCINA - descuento con precioDescuento=0 lanza BusinessException")
+    public void agregarComidas_cocina_descuento_precioDescuentoCero_lanzaError() {
+        when(comidaService.findById(1)).thenReturn(comida(null));
+
+        Pedido pedido = Pedido.builder().build();
+        BusinessException ex = assertThrows(BusinessException.class, () ->
+                catalogoPedidoService.agregarComidas(pedido,
+                        List.of(dtoComidaConDescuento(BigDecimal.valueOf(50), BigDecimal.ZERO)),
+                        PedidoCreadoDesde.COCINA));
+        assertTrue(ex.getMessage().contains("mayor a cero"));
+        System.out.println("[OK] HU-4 descuento con precioDescuento=0 → " + ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("HU-5: agregarComidas COCINA - descuento con precioDescuento>=precioUnitario lanza BusinessException")
+    public void agregarComidas_cocina_descuento_precioDescuentoIgualAlOriginal_lanzaError() {
+        when(comidaService.findById(1)).thenReturn(comida(null));
+
+        Pedido pedido = Pedido.builder().build();
+        BusinessException ex = assertThrows(BusinessException.class, () ->
+                catalogoPedidoService.agregarComidas(pedido,
+                        List.of(dtoComidaConDescuento(BigDecimal.valueOf(50), BigDecimal.valueOf(50))),
+                        PedidoCreadoDesde.COCINA));
+        assertTrue(ex.getMessage().contains("menor al precioUnitario"));
+        System.out.println("[OK] HU-5 descuento con precioDescuento=precioUnitario → " + ex.getMessage());
+    }
+
+    // ── Grupo 2: calcularTotal con precios efectivos ──────────────────────────
+
+    @Test
+    @DisplayName("HU-6: calcularTotal - 3 comidas con descuento suma solo los precioDescuento")
+    public void calcularTotal_tresComidas_conDescuento_usaPrecioDescuento() {
+        // HU-6 con 3 comidas para verificar que todas usan precioDescuento independientemente
+        ComidaPedido c1 = ComidaPedido.builder().precioUnitario(BigDecimal.valueOf(55))
+                .descuento(true).precioDescuento(BigDecimal.valueOf(45)).build();
+        ComidaPedido c2 = ComidaPedido.builder().precioUnitario(BigDecimal.valueOf(55))
+                .descuento(true).precioDescuento(BigDecimal.valueOf(40)).build();
+        ComidaPedido c3 = ComidaPedido.builder().precioUnitario(BigDecimal.valueOf(55))
+                .descuento(true).precioDescuento(BigDecimal.valueOf(35)).build();
+        Pedido pedido = pedidoCon(new java.util.ArrayList<>(List.of(c1, c2, c3)));
+
+        BigDecimal total = catalogoPedidoService.calcularTotal(pedido);
+
+        // 45+40+35=120, no 55+55+55=165
+        assertEquals(0, BigDecimal.valueOf(120).compareTo(total),
+                "Total debe ser suma de precioDescuento: 45+40+35=120, no 55×3=165");
+        System.out.println("[OK] HU-6 3 comidas con descuento → total=" + total + " (no 165)");
+    }
+
+    @Test
+    @DisplayName("HU-7: calcularTotal - comida sin descuento usa precioUnitario")
+    public void calcularTotal_comidaSinDescuento_usaPrecioUnitario() {
+        ComidaPedido c = ComidaPedido.builder().precioUnitario(BigDecimal.valueOf(50)).build();
+        Pedido pedido = pedidoCon(new java.util.ArrayList<>(List.of(c)));
+
+        BigDecimal total = catalogoPedidoService.calcularTotal(pedido);
+
+        assertEquals(0, BigDecimal.valueOf(50).compareTo(total));
+        System.out.println("[OK] HU-7 sin descuento → total=50");
+    }
+
+    @Test
+    @DisplayName("HU-8: calcularTotal - mezcla con y sin descuento suma precios efectivos de cada línea")
+    public void calcularTotal_mezclaConYSinDescuento_sumaPreciosEfectivos() {
+        ComidaPedido conDesc = ComidaPedido.builder().precioUnitario(BigDecimal.valueOf(50))
+                .descuento(true).precioDescuento(BigDecimal.valueOf(40)).build();
+        ComidaPedido sinDesc = ComidaPedido.builder().precioUnitario(BigDecimal.valueOf(30)).build();
+        Pedido pedido = pedidoCon(new java.util.ArrayList<>(List.of(conDesc, sinDesc)));
+
+        BigDecimal total = catalogoPedidoService.calcularTotal(pedido);
+
+        // 40 (descuento) + 30 (unitario) = 70, no 50+30=80
+        assertEquals(0, BigDecimal.valueOf(70).compareTo(total),
+                "Total debe ser 40+30=70, no 50+30=80");
+        System.out.println("[OK] HU-8 mezcla: 40(desc)+30(normal)=70, no 50+30=80");
+    }
+
+    @Test
+    @DisplayName("HU-9: calcularTotal - después de descuento de volumen total usa precioDescuento")
+    public void calcularTotal_descuentoVolumen_totalUsaPrecioDescuento() {
+        // 12 comidas MEDIA FIJA a $45 → aplicarDescuentoVolumen → precioDescuento=$35
+        List<ComidaPedido> items = new java.util.ArrayList<>();
+        for (int i = 0; i < 12; i++) items.add(lineaComida(TamanoPorcion.MEDIA, TipoComida.FIJA));
+        Pedido pedido = pedidoCon(items);
+        catalogoPedidoService.aplicarDescuentoVolumen(pedido);
+
+        BigDecimal total = catalogoPedidoService.calcularTotal(pedido);
+
+        // 12×35=420, no 12×45=540
+        assertEquals(0, BigDecimal.valueOf(420).compareTo(total),
+                "Total debe ser 12×35=420, no 12×45=540");
+        System.out.println("[OK] HU-9 volumen aplicado → total=420 (12×35), no 540");
+    }
+
+    // ── Grupo 3: Edición — re-evaluación de descuentos ────────────────────────
+
+    @Test
+    @DisplayName("HU-10: edición - reducir de 12 a 5 comidas elimina descuento de volumen del total")
+    public void edicion_reducirComidas_eliminaDescuentoVolumenYRecalculaTotal() {
+        // Estado original: 12 comidas → volumen activo, total=420
+        List<ComidaPedido> itemsOriginal = new java.util.ArrayList<>();
+        for (int i = 0; i < 12; i++) itemsOriginal.add(lineaComida(TamanoPorcion.MEDIA, TipoComida.FIJA));
+        Pedido pedidoOriginal = pedidoCon(itemsOriginal);
+        catalogoPedidoService.aplicarDescuentoVolumen(pedidoOriginal);
+        assertEquals(0, BigDecimal.valueOf(420).compareTo(catalogoPedidoService.calcularTotal(pedidoOriginal)));
+
+        // Edición: solo 5 comidas (líneas frescas, sin descuento previo)
+        List<ComidaPedido> itemsEditado = new java.util.ArrayList<>();
+        for (int i = 0; i < 5; i++) itemsEditado.add(lineaComida(TamanoPorcion.MEDIA, TipoComida.FIJA));
+        Pedido pedidoEditado = pedidoCon(itemsEditado);
+        pedidoEditado.setTipoDescuento(TipoDescuento.COMIDAS_DIEZ); // simula estado previo en DB
+
+        catalogoPedidoService.aplicarDescuentoVolumen(pedidoEditado);
+        BigDecimal totalEditado = catalogoPedidoService.calcularTotal(pedidoEditado);
+
+        assertNull(pedidoEditado.getTipoDescuento(), "tipoDescuento debe resetearse a null");
+        // 5×45=225, sin descuento de volumen
+        assertEquals(0, BigDecimal.valueOf(225).compareTo(totalEditado),
+                "Total editado debe ser 5×45=225");
+        System.out.println("[OK] HU-10 edición 12→5 comidas: total 420→225, tipoDescuento=null");
+    }
+
+    @Test
+    @DisplayName("HU-11: edición - quitar descuento manual recalcula total con precioUnitario")
+    public void edicion_quitarDescuentoManual_totalUsaPrecioUnitario() {
+        when(comidaService.findById(1)).thenReturn(comida(null));
+
+        // Creación original con descuento manual: total=40
+        Pedido pedidoOriginal = Pedido.builder().build();
+        catalogoPedidoService.agregarComidas(pedidoOriginal,
+                List.of(dtoComidaConDescuento(BigDecimal.valueOf(50), BigDecimal.valueOf(40))),
+                PedidoCreadoDesde.COCINA);
+        assertEquals(0, BigDecimal.valueOf(40).compareTo(
+                catalogoPedidoService.calcularTotal(pedidoOriginal)));
+
+        // Edición: misma comida sin descuento
+        Pedido pedidoEditado = Pedido.builder().build();
+        catalogoPedidoService.agregarComidas(pedidoEditado,
+                List.of(dtoComida(BigDecimal.valueOf(50), TamanoPorcion.MEDIA)),
+                PedidoCreadoDesde.COCINA);
+        BigDecimal totalSinDescuento = catalogoPedidoService.calcularTotal(pedidoEditado);
+
+        assertEquals(0, BigDecimal.valueOf(50).compareTo(totalSinDescuento),
+                "Total debe ser precioUnitario=50 al quitar el descuento");
+        System.out.println("[OK] HU-11 edición quita descuento: total 40→50");
     }
 }

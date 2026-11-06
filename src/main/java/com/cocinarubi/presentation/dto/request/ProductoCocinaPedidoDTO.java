@@ -30,6 +30,13 @@ public class ProductoCocinaPedidoDTO {
         this.cantidad = cantidad;
     }
 
+    @JsonProperty("descuento")
+    private boolean descuento;
+
+    @Positive(message = "El precio de descuento debe ser mayor a cero")
+    @JsonProperty("precioDescuento")
+    private BigDecimal precioDescuento;
+
     public Integer getIdProductoCocina() { return idProductoCocina; }
     public void setIdProductoCocina(Integer idProductoCocina) { this.idProductoCocina = idProductoCocina; }
 
@@ -38,4 +45,10 @@ public class ProductoCocinaPedidoDTO {
 
     public Integer getCantidad() { return cantidad; }
     public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
+
+    public boolean isDescuento() { return descuento; }
+    public void setDescuento(boolean descuento) { this.descuento = descuento; }
+
+    public BigDecimal getPrecioDescuento() { return precioDescuento; }
+    public void setPrecioDescuento(BigDecimal precioDescuento) { this.precioDescuento = precioDescuento; }
 }

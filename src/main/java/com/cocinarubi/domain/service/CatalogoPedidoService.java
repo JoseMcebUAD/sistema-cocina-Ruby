@@ -131,34 +131,46 @@ public class CatalogoPedidoService {
         }
     }
 
+    /**
+     * Agrega líneas de Comida al pedido.
+     *
+     * <p>Canal WEB: el servidor resuelve {@code precioUnitario} desde el catálogo (precio original
+     * según porción) y activa {@code descuento/precioDescuento} si el catálogo tiene descuento vigente.
+     * Canal COCINA: usa los valores del DTO directamente; valida que si {@code descuento=true},
+     * {@code precioDescuento} sea válido y menor al precio original.
+     */
     public void agregarComidas(Pedido pedido, List<ComidaPedidoDTO> lineas, PedidoCreadoDesde canal) {
         for (ComidaPedidoDTO linea : lineas) {
             Comida comida = comidaService.findById(linea.getIdComida());
-            BigDecimal precio = canal == PedidoCreadoDesde.WEB
-                    ? resolverPrecioComidaWeb(comida, linea.getTamanoPorcion())
-                    : linea.getPrecioUnitario();
-            // precioEspecial se activa cuando el canal WEB usó precioDescuento del catálogo;
-            // esas líneas quedan excluidas del descuento de volumen (evita double-discount)
-            boolean precioEspecial = canal == PedidoCreadoDesde.WEB
-                    && comida.isDescuentoActivo()
-                    && comida.getPrecioDescuento() != null;
+            boolean descuento;
+            BigDecimal precioUnitario;
+            BigDecimal precioDescuento;
+
+            if (canal == PedidoCreadoDesde.WEB) {
+                // Precio original según porción — nunca el precio de descuento del catálogo
+                precioUnitario = linea.getTamanoPorcion() == TamanoPorcion.ENTERA
+                        ? comida.getPrecioEntera() : comida.getPrecioMedia();
+                descuento = comida.isDescuentoActivo() && comida.getPrecioDescuento() != null;
+                precioDescuento = descuento ? comida.getPrecioDescuento() : null;
+            } else {
+                precioUnitario = linea.getPrecioUnitario();
+                descuento = linea.isDescuento();
+                precioDescuento = linea.getPrecioDescuento();
+                if (descuento) {
+                    validarPrecioDescuento(precioDescuento, precioUnitario, "comida");
+                }
+            }
+
             ComidaPedido item = ComidaPedido.builder()
                     .comida(comida)
-                    .precioUnitario(precio)
+                    .precioUnitario(precioUnitario)
+                    .descuento(descuento)
+                    .precioDescuento(precioDescuento)
                     .tamanoPorcion(linea.getTamanoPorcion())
-                    .precioEspecial(precioEspecial)
                     .build();
             agregarComplementosConLimite(item, linea.getComplementos(), comida.getLimiteComplemento());
             pedido.addComidaPedido(item);
         }
-    }
-
-    /** WEB: respeta descuento activo; si no, usa el precio de catálogo según porción. */
-    private BigDecimal resolverPrecioComidaWeb(Comida comida, TamanoPorcion tamanoPorcion) {
-        if (comida.isDescuentoActivo() && comida.getPrecioDescuento() != null) {
-            return comida.getPrecioDescuento();
-        }
-        return tamanoPorcion == TamanoPorcion.ENTERA ? comida.getPrecioEntera() : comida.getPrecioMedia();
     }
 
     /**
@@ -262,22 +274,30 @@ public class CatalogoPedidoService {
     public void agregarDesayunos(Pedido pedido, List<DesayunoPedidoDTO> lineas, PedidoCreadoDesde canal) {
         for (DesayunoPedidoDTO linea : lineas) {
             Desayuno desayuno = desayunoService.findById(linea.getIdDesayuno());
-            BigDecimal precio = canal == PedidoCreadoDesde.WEB
-                    ? resolverPrecioDesayunoWeb(desayuno)
-                    : linea.getPrecio();
+            boolean descuento;
+            BigDecimal precio;
+            BigDecimal precioDescuento;
+
+            if (canal == PedidoCreadoDesde.WEB) {
+                precio = desayuno.getPrecioMedia();
+                descuento = desayuno.isDescuentoActivo() && desayuno.getPrecioDescuento() != null;
+                precioDescuento = descuento ? desayuno.getPrecioDescuento() : null;
+            } else {
+                precio = linea.getPrecio();
+                descuento = linea.isDescuento();
+                precioDescuento = linea.getPrecioDescuento();
+                if (descuento) {
+                    validarPrecioDescuento(precioDescuento, precio, "desayuno");
+                }
+            }
+
             pedido.addDesayunoPedido(DesayunoPedido.builder()
                     .desayuno(desayuno)
                     .precio(precio)
+                    .descuento(descuento)
+                    .precioDescuento(precioDescuento)
                     .build());
         }
-    }
-
-    /** WEB: respeta descuento activo; si no, usa precioMedia como precio de catálogo. */
-    private BigDecimal resolverPrecioDesayunoWeb(Desayuno desayuno) {
-        if (desayuno.isDescuentoActivo() && desayuno.getPrecioDescuento() != null) {
-            return desayuno.getPrecioDescuento();
-        }
-        return desayuno.getPrecioMedia();
     }
 
     public void agregarBasicos(Pedido pedido, List<BasicoPedidoDTO> lineas, PedidoCreadoDesde canal) {
@@ -285,12 +305,28 @@ public class CatalogoPedidoService {
             Basico basico = basicoRepository.findByIdWithComplementos(linea.getIdBasico())
                     .orElseThrow(() -> new BusinessException(
                             "Básico no encontrado con id: " + linea.getIdBasico(), HttpStatus.BAD_REQUEST));
-            BigDecimal precio = canal == PedidoCreadoDesde.WEB
-                    ? resolverPrecioBasicoWeb(basico)
-                    : linea.getPrecioUnitario();
+            boolean descuento;
+            BigDecimal precioUnitario;
+            BigDecimal precioDescuento;
+
+            if (canal == PedidoCreadoDesde.WEB) {
+                precioUnitario = basico.getPrecioBasico();
+                descuento = basico.isDescuentoActivo() && basico.getPrecioDescuento() != null;
+                precioDescuento = descuento ? basico.getPrecioDescuento() : null;
+            } else {
+                precioUnitario = linea.getPrecioUnitario();
+                descuento = linea.isDescuento();
+                precioDescuento = linea.getPrecioDescuento();
+                if (descuento) {
+                    validarPrecioDescuento(precioDescuento, precioUnitario, "básico");
+                }
+            }
+
             BasicoPedido item = BasicoPedido.builder()
                     .basico(basico)
-                    .precioUnitario(precio)
+                    .precioUnitario(precioUnitario)
+                    .descuento(descuento)
+                    .precioDescuento(precioDescuento)
                     .build();
             for (BasicoPedidoExtraDTO extraDto : linea.getExtras()) {
                 Complemento c = complementoService.findById(extraDto.getIdComplemento());
@@ -304,37 +340,36 @@ public class CatalogoPedidoService {
         }
     }
 
-    /** WEB: respeta descuento activo; si no, usa precioBasico del catálogo. */
-    private BigDecimal resolverPrecioBasicoWeb(Basico basico) {
-        if (basico.isDescuentoActivo() && basico.getPrecioDescuento() != null) {
-            return basico.getPrecioDescuento();
-        }
-        return basico.getPrecioBasico();
-    }
-
     public void agregarProductosCocina(Pedido pedido, List<ProductoCocinaPedidoDTO> lineas, PedidoCreadoDesde canal) {
         for (ProductoCocinaPedidoDTO linea : lineas) {
             ProductoCocina producto = productoCocinaService.findEntityById(linea.getIdProductoCocina());
-            BigDecimal precio = canal == PedidoCreadoDesde.WEB
-                    ? resolverPrecioProductoCocinaWeb(producto, pedido.getTipoPedido())
-                    : linea.getPrecioUnitario();
+            boolean descuento;
+            BigDecimal precioUnitario;
+            BigDecimal precioDescuento;
+
+            if (canal == PedidoCreadoDesde.WEB) {
+                // Precio original según tipo de pedido (sin aplicar el descuento de catálogo en precioUnitario)
+                precioUnitario = pedido.getTipoPedido() == TipoPedido.DOMICILIO
+                        ? producto.getPrecioDomicilio() : producto.getPrecioNormal();
+                descuento = producto.isDescuentoActivo() && producto.getPrecioDescuento() != null;
+                precioDescuento = descuento ? producto.getPrecioDescuento() : null;
+            } else {
+                precioUnitario = linea.getPrecioUnitario();
+                descuento = linea.isDescuento();
+                precioDescuento = linea.getPrecioDescuento();
+                if (descuento) {
+                    validarPrecioDescuento(precioDescuento, precioUnitario, "producto de cocina");
+                }
+            }
+
             pedido.addProductoCocinaPedido(ProductoCocinaPedido.builder()
                     .productoCocina(producto)
-                    .precioUnitario(precio)
+                    .precioUnitario(precioUnitario)
+                    .descuento(descuento)
+                    .precioDescuento(precioDescuento)
                     .cantidad(linea.getCantidad().byteValue())
                     .build());
         }
-    }
-
-    /**
-     * WEB: respeta descuento activo; si no, usa precioDomicilio para pedidos DOMICILIO
-     * y precioNormal para PICK_UP/MOSTRADOR.
-     */
-    private BigDecimal resolverPrecioProductoCocinaWeb(ProductoCocina producto, TipoPedido tipoPedido) {
-        if (producto.isDescuentoActivo() && producto.getPrecioDescuento() != null) {
-            return producto.getPrecioDescuento();
-        }
-        return tipoPedido == TipoPedido.DOMICILIO ? producto.getPrecioDomicilio() : producto.getPrecioNormal();
     }
 
     /**
@@ -349,23 +384,45 @@ public class CatalogoPedidoService {
                         "El combo #" + combo.getIdCombo() + " no está disponible",
                         HttpStatus.BAD_REQUEST);
             }
-            BigDecimal precio = canal == PedidoCreadoDesde.WEB
-                    ? resolverPrecioComboWeb(combo)
-                    : linea.getPrecioUnitario();
+            boolean descuento;
+            BigDecimal precioUnitario;
+            BigDecimal precioDescuento;
+
+            if (canal == PedidoCreadoDesde.WEB) {
+                precioUnitario = combo.getPrecio();
+                descuento = combo.isDescuentoActivo() && combo.getPrecioDescuento() != null;
+                precioDescuento = descuento ? combo.getPrecioDescuento() : null;
+            } else {
+                precioUnitario = linea.getPrecioUnitario();
+                descuento = linea.isDescuento();
+                precioDescuento = linea.getPrecioDescuento();
+                if (descuento) {
+                    validarPrecioDescuento(precioDescuento, precioUnitario, "combo");
+                }
+            }
+
             pedido.addComboPedido(ComboPedido.builder()
                     .combo(combo)
-                    .precioUnitario(precio)
+                    .precioUnitario(precioUnitario)
+                    .descuento(descuento)
+                    .precioDescuento(precioDescuento)
                     .cantidad(linea.getCantidad())
                     .build());
         }
     }
 
-    /** WEB: respeta descuento activo; si no, usa el precio de catálogo del combo. */
-    private BigDecimal resolverPrecioComboWeb(Combo combo) {
-        if (combo.isDescuentoActivo() && combo.getPrecioDescuento() != null) {
-            return combo.getPrecioDescuento();
+    /** Valida que precioDescuento sea válido cuando descuento=true en canal COCINA. */
+    private void validarPrecioDescuento(BigDecimal precioDescuento, BigDecimal precioUnitario, String tipo) {
+        if (precioDescuento == null || precioDescuento.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException(
+                    "Al aplicar descuento en " + tipo + ", precioDescuento debe ser mayor a cero.",
+                    HttpStatus.BAD_REQUEST);
         }
-        return combo.getPrecio();
+        if (precioUnitario != null && precioDescuento.compareTo(precioUnitario) >= 0) {
+            throw new BusinessException(
+                    "Al aplicar descuento en " + tipo + ", precioDescuento debe ser menor al precioUnitario.",
+                    HttpStatus.BAD_REQUEST);
+        }
     }
 
     private static final BigDecimal DESCUENTO_COMIDAS_DIEZ = BigDecimal.TEN;
@@ -376,7 +433,7 @@ public class CatalogoPedidoService {
      * Quedan excluidas del conteo y del descuento:
      * <ul>
      *   <li>Líneas en {@code excluidas} (consumidas por una oferta) — evita double-discount oferta/volumen.</li>
-     *   <li>Líneas con {@code precioEspecial=true} (precio del catálogo ya rebajado) — evita double-discount catálogo/volumen.</li>
+     *   <li>Líneas con {@code descuento=true} (ya tienen descuento de catálogo o manual) — evita acumulación.</li>
      * </ul>
      *
      * @param excluidas comidas ya consumidas por una oferta aplicada; vacío si no hay ofertas
@@ -386,14 +443,17 @@ public class CatalogoPedidoService {
 
         List<ComidaPedido> calificadas = pedido.getComidasPedido().stream()
                 .filter(cp -> !excluidas.contains(cp)
-                        && !cp.isPrecioEspecial()
+                        && !cp.isDescuento()
                         && cp.getTamanoPorcion() == TamanoPorcion.MEDIA
                         && cp.getComida() != null
                         && cp.getComida().getTipoComida() == TipoComida.FIJA)
                 .toList();
 
         if (calificadas.size() >= MINIMO_COMIDAS_DESCUENTO) {
-            calificadas.forEach(cp -> cp.setDescuentoAplicado(DESCUENTO_COMIDAS_DIEZ));
+            calificadas.forEach(cp -> {
+                cp.setDescuento(true);
+                cp.setPrecioDescuento(cp.getPrecioUnitario().subtract(DESCUENTO_COMIDAS_DIEZ));
+            });
             pedido.setTipoDescuento(TipoDescuento.COMIDAS_DIEZ);
         }
     }
@@ -406,26 +466,31 @@ public class CatalogoPedidoService {
     public BigDecimal calcularTotal(Pedido pedido) {
         BigDecimal total = BigDecimal.ZERO;
         for (ComidaPedido cp : pedido.getComidasPedido()) {
-            // descuentoAplicado es $10 por línea cuando aplica el descuento de volumen; cero en caso contrario
-            total = total.add(cp.getPrecioUnitario().subtract(cp.getDescuentoAplicado()));
+            // Precio efectivo: precioDescuento si hay descuento, precioUnitario en caso contrario
+            BigDecimal precioComida = cp.isDescuento() ? cp.getPrecioDescuento() : cp.getPrecioUnitario();
+            total = total.add(precioComida);
             for (ComplementoComidaPedido ccp : cp.getComplementos()) {
                 total = total.add(ccp.getPrecioUnitario());
             }
         }
         for (DesayunoPedido dp : pedido.getDesayunosPedido()) {
-            total = total.add(dp.getPrecio());
+            BigDecimal precioDesayuno = dp.isDescuento() ? dp.getPrecioDescuento() : dp.getPrecio();
+            total = total.add(precioDesayuno);
         }
         for (BasicoPedido bp : pedido.getBasicosPedido()) {
-            total = total.add(bp.getPrecioUnitario());
+            BigDecimal precioBasico = bp.isDescuento() ? bp.getPrecioDescuento() : bp.getPrecioUnitario();
+            total = total.add(precioBasico);
             for (BasicoPedidoExtra extra : bp.getExtras()) {
                 total = total.add(extra.getPrecio().multiply(BigDecimal.valueOf(extra.getCantidad())));
             }
         }
         for (ProductoCocinaPedido pcp : pedido.getProductosCocina()) {
-            total = total.add(pcp.getPrecioUnitario().multiply(BigDecimal.valueOf(pcp.getCantidad())));
+            BigDecimal precioProducto = pcp.isDescuento() ? pcp.getPrecioDescuento() : pcp.getPrecioUnitario();
+            total = total.add(precioProducto.multiply(BigDecimal.valueOf(pcp.getCantidad())));
         }
         for (ComboPedido cp : pedido.getCombosPedido()) {
-            total = total.add(cp.getPrecioUnitario().multiply(BigDecimal.valueOf(cp.getCantidad())));
+            BigDecimal precioCombo = cp.isDescuento() ? cp.getPrecioDescuento() : cp.getPrecioUnitario();
+            total = total.add(precioCombo.multiply(BigDecimal.valueOf(cp.getCantidad())));
         }
         if (pedido.getPedidoDomicilio() != null) {
             // Usa el snapshot de tarifa guardado en PedidoDomicilio: refleja la tarifaEspecial

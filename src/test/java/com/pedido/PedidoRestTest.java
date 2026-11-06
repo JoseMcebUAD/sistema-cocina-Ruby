@@ -40,6 +40,7 @@ public class PedidoRestTest {
     private int createdCocinaDomicilioId;
     private int createdSinMetodoPagoId;
     private int createdComidaLimiteId;
+    private int createdDescuentoId;
 
     private static final int LIMITE_COMPLEMENTO = 2;
     private static final int COMPLEMENTOS_CON_COBRAR = 2;
@@ -194,6 +195,9 @@ public class PedidoRestTest {
         }
         if (createdComidaLimiteId > 0) {
             restTemplate.exchange("/pedido/" + createdComidaLimiteId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
+        }
+        if (createdDescuentoId > 0) {
+            restTemplate.exchange("/pedido/" + createdDescuentoId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
         }
         for (Integer idComplemento : testComplementosSinCobrarIds) {
             restTemplate.exchange("/complemento/" + idComplemento, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
@@ -783,5 +787,152 @@ public class PedidoRestTest {
                 + " + " + LIMITE_COMPLEMENTO + " sin_cobrar + " + COMPLEMENTOS_CON_COBRAR
                 + " cobrar_siempre → 201 id=" + createdComidaLimiteId
                 + " total=" + data.get("precioFinalOrden").asDouble());
+    }
+
+    // ── Sistema: descuentos manuales en canal COCINA ──────────────────────────
+
+    @Test
+    @Order(30)
+    @DisplayName("ST-HU6: POST /pedido COCINA - 3 comidas con descuento → total usa precioDescuento de cada una")
+    public void save_cocina_tresComidas_conDescuento_totalUsaPrecioDescuento() throws Exception {
+        // Comida 1: precioUnitario=55, precioDescuento=45  → efectivo=45
+        // Comida 2: precioUnitario=55, precioDescuento=40  → efectivo=40
+        // Comida 3: precioUnitario=55, precioDescuento=35  → efectivo=35
+        // Total esperado = 45+40+35 = 120 (no 55×3=165)
+        String json = String.format(Locale.US, """
+                {
+                  "metodoPagoPrincipal": "EFECTIVO",
+                  "tipoPedido": "MOSTRADOR",
+                  "pedidoCreadoDesde": "COCINA",
+                  "nombreCliente": "Test Descuento",
+                  "comidas": [
+                    {"idComida":%d,"precioUnitario":55.00,"tamanoPorcion":"MEDIA","complementos":[],"descuento":true,"precioDescuento":45.00},
+                    {"idComida":%d,"precioUnitario":55.00,"tamanoPorcion":"MEDIA","complementos":[],"descuento":true,"precioDescuento":40.00},
+                    {"idComida":%d,"precioUnitario":55.00,"tamanoPorcion":"MEDIA","complementos":[],"descuento":true,"precioDescuento":35.00}
+                  ],
+                  "desayunos": [], "basicos": [], "productosCocina": [],
+                  "saltarConfirmacion": true
+                }
+                """, testComidaLimiteId, testComidaLimiteId, testComidaLimiteId);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/pedido", HttpMethod.POST, new HttpEntity<>(json, authHeaders), String.class);
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode(),
+                "Se esperaba 201 pero fue " + response.getStatusCode() + " body=" + response.getBody());
+        JsonNode data = mapper.readTree(response.getBody()).get("data");
+        createdDescuentoId = data.get("idPedido").asInt();
+        assertTrue(createdDescuentoId > 0);
+
+        assertEquals(120.00, data.get("precioFinalOrden").asDouble(),
+                "Total debe ser 45+40+35=120, no 55×3=165");
+
+        // Verificar que el response incluye descuento y precioDescuento por línea
+        JsonNode comidas = data.get("comidas");
+        assertEquals(3, comidas.size());
+        assertTrue(comidas.get(0).get("descuento").asBoolean(), "comida[0] debe tener descuento=true");
+        assertEquals(45.00, comidas.get(0).get("precioDescuento").asDouble());
+        assertTrue(comidas.get(1).get("descuento").asBoolean(), "comida[1] debe tener descuento=true");
+        assertEquals(40.00, comidas.get(1).get("precioDescuento").asDouble());
+        assertTrue(comidas.get(2).get("descuento").asBoolean(), "comida[2] debe tener descuento=true");
+        assertEquals(35.00, comidas.get(2).get("precioDescuento").asDouble());
+
+        System.out.println("[OK] ST-HU6 3 comidas con descuento → total=" + data.get("precioFinalOrden").asDouble()
+                + " id=" + createdDescuentoId);
+    }
+
+    @Test
+    @Order(31)
+    @DisplayName("ST-HU11: PUT /pedido - quitar descuento de las 3 comidas → total usa precioUnitario")
+    public void update_cocina_quitarDescuento_totalUsaPrecioUnitario() throws Exception {
+        // Edición: las mismas 3 comidas pero sin descuento → total = 55×3 = 165
+        String json = String.format(Locale.US, """
+                {
+                  "metodoPagoPrincipal": "EFECTIVO",
+                  "tipoPedido": "MOSTRADOR",
+                  "pedidoCreadoDesde": "COCINA",
+                  "nombreCliente": "Test Descuento",
+                  "comidas": [
+                    {"idComida":%d,"precioUnitario":55.00,"tamanoPorcion":"MEDIA","complementos":[]},
+                    {"idComida":%d,"precioUnitario":55.00,"tamanoPorcion":"MEDIA","complementos":[]},
+                    {"idComida":%d,"precioUnitario":55.00,"tamanoPorcion":"MEDIA","complementos":[]}
+                  ],
+                  "desayunos": [], "basicos": [], "productosCocina": [],
+                  "saltarConfirmacion": true
+                }
+                """, testComidaLimiteId, testComidaLimiteId, testComidaLimiteId);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/pedido/" + createdDescuentoId, HttpMethod.PUT,
+                new HttpEntity<>(json, authHeaders), String.class);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode(),
+                "body=" + response.getBody());
+        JsonNode data = mapper.readTree(response.getBody()).get("data");
+
+        assertEquals(165.00, data.get("precioFinalOrden").asDouble(),
+                "Total debe ser 55×3=165 sin descuento");
+
+        JsonNode comidas = data.get("comidas");
+        assertFalse(comidas.get(0).get("descuento").asBoolean(), "comida[0] debe tener descuento=false");
+        assertTrue(comidas.get(0).get("precioDescuento").isNull(), "precioDescuento debe ser null");
+
+        System.out.println("[OK] ST-HU11 edición sin descuento → total=" + data.get("precioFinalOrden").asDouble());
+    }
+
+    @Test
+    @Order(32)
+    @DisplayName("ST-HU5: POST /pedido COCINA - precioDescuento>=precioUnitario debe retornar 400")
+    public void save_cocina_precioDescuentoIgualAlOriginal_retorna400() throws Exception {
+        String json = String.format(Locale.US, """
+                {
+                  "metodoPagoPrincipal": "EFECTIVO",
+                  "tipoPedido": "MOSTRADOR",
+                  "pedidoCreadoDesde": "COCINA",
+                  "nombreCliente": "Test Descuento Invalido",
+                  "comidas": [
+                    {"idComida":%d,"precioUnitario":55.00,"tamanoPorcion":"MEDIA","complementos":[],"descuento":true,"precioDescuento":55.00}
+                  ],
+                  "desayunos": [], "basicos": [], "productosCocina": [],
+                  "saltarConfirmacion": true
+                }
+                """, testComidaLimiteId);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/pedido", HttpMethod.POST, new HttpEntity<>(json, authHeaders), String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        JsonNode body = mapper.readTree(response.getBody());
+        assertTrue(body.get("message").asText().contains("menor al precioUnitario"),
+                "Mensaje esperado contiene 'menor al precioUnitario': " + body.get("message").asText());
+        System.out.println("[OK] ST-HU5 precioDescuento=precioUnitario → 400: " + body.get("message").asText());
+    }
+
+    @Test
+    @Order(33)
+    @DisplayName("ST-HU3: POST /pedido COCINA - descuento=true sin precioDescuento debe retornar 400")
+    public void save_cocina_descuentoSinPrecioDescuento_retorna400() throws Exception {
+        String json = String.format(Locale.US, """
+                {
+                  "metodoPagoPrincipal": "EFECTIVO",
+                  "tipoPedido": "MOSTRADOR",
+                  "pedidoCreadoDesde": "COCINA",
+                  "nombreCliente": "Test Descuento Invalido",
+                  "comidas": [
+                    {"idComida":%d,"precioUnitario":55.00,"tamanoPorcion":"MEDIA","complementos":[],"descuento":true}
+                  ],
+                  "desayunos": [], "basicos": [], "productosCocina": [],
+                  "saltarConfirmacion": true
+                }
+                """, testComidaLimiteId);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/pedido", HttpMethod.POST, new HttpEntity<>(json, authHeaders), String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        JsonNode body = mapper.readTree(response.getBody());
+        assertTrue(body.get("message").asText().contains("mayor a cero"),
+                "Mensaje esperado contiene 'mayor a cero': " + body.get("message").asText());
+        System.out.println("[OK] ST-HU3 descuento=true sin precioDescuento → 400: " + body.get("message").asText());
     }
 }
