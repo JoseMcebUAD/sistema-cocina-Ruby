@@ -29,4 +29,13 @@ public class DesayunoPedidoResponseDTO {
 
     public BigDecimal getPrecio() { return precio; }
     public void setPrecio(BigDecimal precio) { this.precio = precio; }
+
+    private boolean descuento;
+    private BigDecimal precioDescuento;
+
+    public boolean isDescuento() { return descuento; }
+    public void setDescuento(boolean descuento) { this.descuento = descuento; }
+
+    public BigDecimal getPrecioDescuento() { return precioDescuento; }
+    public void setPrecioDescuento(BigDecimal precioDescuento) { this.precioDescuento = precioDescuento; }
 }

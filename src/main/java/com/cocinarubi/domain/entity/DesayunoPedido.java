@@ -51,4 +51,10 @@ public class DesayunoPedido {
 
     @Column(name = "precio")
     private BigDecimal precio;
+
+    @Column(name = "descuento")
+    private boolean descuento;
+
+    @Column(name = "precio_descuento")
+    private BigDecimal precioDescuento;
 }

@@ -18,9 +18,9 @@ public class PedidoMetodoPagoDTO {
     @JsonAlias({"metodo_pago_secundario"})
     private MetodoPago metodoPagoSecundario;
 
-    @JsonProperty("pagoCliente")
-    @JsonAlias({"pago_cliente", "pagoClientePrincipal", "pago_cliente_principal"})
-    private BigDecimal pagoCliente;
+    @JsonProperty("pagoClientePrincipal")
+    @JsonAlias({"pagoCliente", "pago_cliente", "pago_cliente_principal"})
+    private BigDecimal pagoClientePrincipal;
 
     @JsonProperty("pagado")
     @JsonAlias({"marcarPagado", "marcar_pagado"})
@@ -49,12 +49,12 @@ public class PedidoMetodoPagoDTO {
         this.metodoPagoSecundario = metodoPagoSecundario;
     }
 
-    public BigDecimal getPagoCliente() {
-        return pagoCliente;
+    public BigDecimal getPagoClientePrincipal() {
+        return pagoClientePrincipal;
     }
 
-    public void setPagoCliente(BigDecimal pagoCliente) {
-        this.pagoCliente = pagoCliente;
+    public void setPagoClientePrincipal(BigDecimal pagoClientePrincipal) {
+        this.pagoClientePrincipal = pagoClientePrincipal;
     }
 
     public Boolean getPagado() {

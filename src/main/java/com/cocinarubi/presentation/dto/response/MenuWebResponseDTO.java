@@ -12,21 +12,30 @@ public class MenuWebResponseDTO {
     private List<ComidaMenuItemDTO> comidas;
     private List<BasicoResponseDTO> basicos;
     private List<DesayunoMenuItemDTO> desayunos;
-    private List<PaqueteResponseDTO> paquetes;
+    private List<ComboResponseDTO> combos;
     private List<CategoriaMenuDTO> categorias;
+    private List<ComplementoResponseDTO> complementos;
+    private List<AnuncioResponseDTO> anuncios;
+    private List<OfertaMenuDTO> ofertas;
 
     public MenuWebResponseDTO() {}
 
     public MenuWebResponseDTO(List<ComidaMenuItemDTO> comidas,
                                List<BasicoResponseDTO> basicos,
                                List<DesayunoMenuItemDTO> desayunos,
-                               List<PaqueteResponseDTO> paquetes,
-                               List<CategoriaMenuDTO> categorias) {
+                               List<ComboResponseDTO> combos,
+                               List<CategoriaMenuDTO> categorias,
+                               List<ComplementoResponseDTO> complementos,
+                               List<AnuncioResponseDTO> anuncios,
+                               List<OfertaMenuDTO> ofertas) {
         this.comidas = comidas;
         this.basicos = basicos;
         this.desayunos = desayunos;
-        this.paquetes = paquetes;
+        this.combos = combos;
         this.categorias = categorias;
+        this.complementos = complementos;
+        this.anuncios = anuncios;
+        this.ofertas = ofertas;
     }
 
     public List<ComidaMenuItemDTO> getComidas() { return comidas; }
@@ -38,9 +47,18 @@ public class MenuWebResponseDTO {
     public List<DesayunoMenuItemDTO> getDesayunos() { return desayunos; }
     public void setDesayunos(List<DesayunoMenuItemDTO> desayunos) { this.desayunos = desayunos; }
 
-    public List<PaqueteResponseDTO> getPaquetes() { return paquetes; }
-    public void setPaquetes(List<PaqueteResponseDTO> paquetes) { this.paquetes = paquetes; }
+    public List<ComboResponseDTO> getCombos() { return combos; }
+    public void setCombos(List<ComboResponseDTO> combos) { this.combos = combos; }
 
     public List<CategoriaMenuDTO> getCategorias() { return categorias; }
     public void setCategorias(List<CategoriaMenuDTO> categorias) { this.categorias = categorias; }
+
+    public List<ComplementoResponseDTO> getComplementos() { return complementos; }
+    public void setComplementos(List<ComplementoResponseDTO> complementos) { this.complementos = complementos; }
+
+    public List<AnuncioResponseDTO> getAnuncios() { return anuncios; }
+    public void setAnuncios(List<AnuncioResponseDTO> anuncios) { this.anuncios = anuncios; }
+
+    public List<OfertaMenuDTO> getOfertas() { return ofertas; }
+    public void setOfertas(List<OfertaMenuDTO> ofertas) { this.ofertas = ofertas; }
 }

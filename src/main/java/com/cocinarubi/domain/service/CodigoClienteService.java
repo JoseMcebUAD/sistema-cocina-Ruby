@@ -41,6 +41,13 @@ public class CodigoClienteService {
         return toResponseDTO(findEntityById(id));
     }
 
+    @Transactional(readOnly = true)
+    public CodigoClienteResponseDTO findByCodigoCliente(String codigo) {
+        return toResponseDTO(codigoClienteRepository.findByCodigoCliente(codigo)
+                .orElseThrow(() -> new BusinessException(
+                        "Código de cliente no encontrado: " + codigo, HttpStatus.NOT_FOUND)));
+    }
+
     @Transactional
     public CodigoClienteResponseDTO save(CodigoClienteRequestDTO dto) {
         if (codigoClienteRepository.existsByCodigoCliente(dto.getCodigoCliente())) {

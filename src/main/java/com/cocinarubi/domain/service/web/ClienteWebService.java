@@ -5,12 +5,15 @@ import com.cocinarubi.dao.PedidoRepository;
 import com.cocinarubi.dao.RutaRepository;
 import com.cocinarubi.domain.entity.Cliente;
 import com.cocinarubi.domain.interfaces.web.IClienteWebService;
+import com.cocinarubi.domain.interfaces.web.SesionWebResult;
 import com.cocinarubi.domain.mapper.PedidoMapper;
 import com.cocinarubi.domain.service.RutaService;
 import com.cocinarubi.presentation.dto.response.PedidoResponseDTO;
 import com.cocinarubi.presentation.dto.web.ClienteWebRequestDTO;
 import com.cocinarubi.presentation.dto.web.ClienteWebResponseDTO;
 import com.cocinarubi.presentation.dto.web.RutaWebResponseDTO;
+import com.cocinarubi.util.HashUtils;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,36 +46,59 @@ public class ClienteWebService implements IClienteWebService {
         this.pedidoMapper = pedidoMapper;
     }
 
+    /**
+     * Crea o renueva la sesión de un visitante anónimo identificado por su {@code uuidCliente}.
+     * Sin @Transactional en el método completo: cada llamada al repositorio corre en su
+     * propia transacción, lo que permite capturar DataIntegrityViolationException del INSERT
+     * sin marcar para rollback ninguna transacción externa.
+     */
     @Override
-    @Transactional
-    public ClienteWebResponseDTO sesion(ClienteWebRequestDTO dto) {
+    public SesionWebResult sesion(ClienteWebRequestDTO dto) {
         String huella = computarHuella(dto);
+        LocalDateTime now = LocalDateTime.now();
         Optional<Cliente> existing = clienteRepository.findByUuidCliente(dto.getUuidCliente());
 
-        Cliente cliente;
-        LocalDateTime now = LocalDateTime.now();
+        // tokenPlano: se emite al cliente solo por cookie HttpOnly; en BD se guarda su hash.
+        String tokenPlano;
 
         if (existing.isEmpty()) {
-            cliente = Cliente.builder()
+            tokenPlano = UUID.randomUUID().toString();
+            Cliente nuevo = Cliente.builder()
                     .uuidCliente(dto.getUuidCliente())
-                    .sessionToken(UUID.randomUUID().toString())
+                    .sessionTokenHash(HashUtils.sha256Hex(tokenPlano))
                     .tokenExpiracion(now.plusDays(7))
                     .huella(huella)
                     .userAgent(dto.getUserAgent())
                     .ipAddress(dto.getIpAddress())
                     .build();
-        } else {
-            cliente = existing.get();
-            if (cliente.getTokenExpiracion() == null || cliente.getTokenExpiracion().isBefore(now)) {
-                cliente.setSessionToken(UUID.randomUUID().toString());
-                cliente.setTokenExpiracion(now.plusDays(7));
+            try {
+                return new SesionWebResult(toResponseDTO(clienteRepository.save(nuevo)), tokenPlano);
+            } catch (DataIntegrityViolationException e) {
+                // Condición de carrera: una request concurrente ya insertó este UUID.
+                // Re-consultamos y continuamos con la lógica de actualización.
+                existing = clienteRepository.findByUuidCliente(dto.getUuidCliente());
             }
-            cliente.setHuella(huella);
-            cliente.setUserAgent(dto.getUserAgent());
-            cliente.setIpAddress(dto.getIpAddress());
         }
 
-        return toResponseDTO(clienteRepository.save(cliente));
+        Cliente cliente = existing.orElseThrow(() ->
+                new RuntimeException("No se pudo crear ni recuperar cliente uuid=" + dto.getUuidCliente()));
+
+        boolean expirado = cliente.getTokenExpiracion() == null
+                || cliente.getTokenExpiracion().isBefore(now);
+        if (expirado) {
+            tokenPlano = UUID.randomUUID().toString();
+            cliente.setSessionTokenHash(HashUtils.sha256Hex(tokenPlano));
+            cliente.setTokenExpiracion(now.plusDays(7));
+        } else {
+            // Token vigente: no podemos re-emitirlo (no lo tenemos en claro);
+            // enviamos null para que el controller no sobrescriba la cookie existente.
+            tokenPlano = null;
+        }
+        cliente.setHuella(huella);
+        cliente.setUserAgent(dto.getUserAgent());
+        cliente.setIpAddress(dto.getIpAddress());
+
+        return new SesionWebResult(toResponseDTO(clienteRepository.save(cliente)), tokenPlano);
     }
 
     @Override
@@ -87,6 +113,9 @@ public class ClienteWebService implements IClienteWebService {
                         .active(r.isActive())
                         .tarifaEnvio(r.getTarifaEnvio())
                         .idOrdenRuta(r.getOrdenRuta() != null ? r.getOrdenRuta().getIdOrdenRuta() : null)
+                        // OrdenRuta: ventana horaria de reparto del grupo
+                        .horaLlegadaDesde(r.getOrdenRuta() != null ? r.getOrdenRuta().getHoraLlegadaDesde() : null)
+                        .horaLlegadaHasta(r.getOrdenRuta() != null ? r.getOrdenRuta().getHoraLlegadaHasta() : null)
                         .build())
                 .toList();
     }
@@ -102,6 +131,9 @@ public class ClienteWebService implements IClienteWebService {
                         .active(r.isActive())
                         .tarifaEnvio(r.getTarifaEnvio())
                         .idOrdenRuta(r.getOrdenRuta() != null ? r.getOrdenRuta().getIdOrdenRuta() : null)
+                        // OrdenRuta: ventana horaria de reparto del grupo
+                        .horaLlegadaDesde(r.getOrdenRuta() != null ? r.getOrdenRuta().getHoraLlegadaDesde() : null)
+                        .horaLlegadaHasta(r.getOrdenRuta() != null ? r.getOrdenRuta().getHoraLlegadaHasta() : null)
                         .build())
                 .toList();
     }
@@ -120,12 +152,8 @@ public class ClienteWebService implements IClienteWebService {
         return ClienteWebResponseDTO.builder()
                 .idCliente(c.getIdCliente())
                 .uuidCliente(c.getUuidCliente())
-                .sessionToken(c.getSessionToken())
                 .tokenExpiracion(c.getTokenExpiracion())
-                .huella(c.getHuella())
                 .codigoCliente(c.getCodigoCliente())
-                .userAgent(c.getUserAgent())
-                .ipAddress(c.getIpAddress())
                 .ubicacionLatitud(c.getUbicacionLatitud())
                 .ubicacionLongitud(c.getUbicacionLongitud())
                 .nombre(c.getNombre())

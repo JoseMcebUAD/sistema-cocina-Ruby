@@ -16,7 +16,6 @@ public class ComidaPedidoDTO {
     @JsonProperty("idComida")
     private Integer idComida;
 
-    @NotNull(message = "El precio unitario no puede ser nulo")
     @Positive(message = "El precio unitario debe ser mayor a cero")
     @JsonProperty("precioUnitario")
     private BigDecimal precioUnitario;
@@ -27,6 +26,13 @@ public class ComidaPedidoDTO {
 
     @JsonProperty("complementos")
     private List<ComplementoPedidoDTO> complementos = new ArrayList<>();
+
+    @JsonProperty("descuento")
+    private boolean descuento;
+
+    @Positive(message = "El precio de descuento debe ser mayor a cero")
+    @JsonProperty("precioDescuento")
+    private BigDecimal precioDescuento;
 
     public ComidaPedidoDTO() {}
 
@@ -49,4 +55,10 @@ public class ComidaPedidoDTO {
 
     public List<ComplementoPedidoDTO> getComplementos() { return complementos; }
     public void setComplementos(List<ComplementoPedidoDTO> complementos) { this.complementos = complementos; }
+
+    public boolean isDescuento() { return descuento; }
+    public void setDescuento(boolean descuento) { this.descuento = descuento; }
+
+    public BigDecimal getPrecioDescuento() { return precioDescuento; }
+    public void setPrecioDescuento(BigDecimal precioDescuento) { this.precioDescuento = precioDescuento; }
 }

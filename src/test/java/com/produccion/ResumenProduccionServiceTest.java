@@ -224,7 +224,7 @@ public class ResumenProduccionServiceTest {
     @DisplayName("detalleProduccion - categoría dinámica arbitraria (HELADO) delega en findByNombreIgnoreCase")
     public void detalleProduccion_categoriaDinamica_resuelvePorCategoriaRepo() {
         Categoria helado = Categoria.builder().idCategoria(5).nombre("HELADO").build();
-        when(categoriaRepository.findByNombreIgnoreCase("helado")).thenReturn(Optional.of(helado));
+        when(categoriaRepository.findByNombreIgnoreCase("HELADO")).thenReturn(Optional.of(helado));
         when(resumenProduccionRepository.findDetalleProductosCocinaPorCategoria(
                 eq(5), any(), any(), any(), any(), anyBoolean(), anyList()))
                 .thenReturn(List.<Object[]>of(new Object[]{"Cono", 3L}));

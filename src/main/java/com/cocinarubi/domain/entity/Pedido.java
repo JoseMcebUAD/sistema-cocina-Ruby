@@ -3,6 +3,7 @@ package com.cocinarubi.domain.entity;
 import com.cocinarubi.DBConstants.MetodoPago;
 import com.cocinarubi.DBConstants.PedidoCreadoDesde;
 import com.cocinarubi.DBConstants.TipoPedido;
+import com.cocinarubi.DBConstants.TipoDescuento;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -35,10 +36,15 @@ import java.util.List;
  *   <li>{@link DesayunoPedido} — líneas de platillos de desayuno.</li>
  *   <li>{@link ProductoCocinaPedido} — líneas de snacks, charolas y bebidas.</li>
  *   <li>{@link BasicoPedido} — líneas de paquetes básicos.</li>
- *   <li>{@link PaquetePedido} — líneas de paquetes (promociones).</li>
+ *   <li>{@link ComboPedido} — líneas de combos (promociones).</li>
  *   <li>{@link PedidoTarifaEspecial} — tarifas especiales aplicadas al momento de creación (solo DOMICILIO).</li>
  * </ul>
  * </p>
+ *
+ * <p>{@code tipoDescuento} registra qué regla de descuento automático se aplicó al pedido
+ * ({@code null} = sin descuento). El valor {@code COMIDAS_DIEZ} indica que ≥ 12 comidas
+ * MEDIA + FIJA recibieron $10 de descuento cada una; el monto por línea queda en
+ * {@link ComidaPedido#getDescuentoAplicado()}.</p>
  */
 @Entity
 @Table(name = "pedido")
@@ -78,8 +84,12 @@ public class Pedido {
     @Column(name = "precio_final_orden")
     private BigDecimal precioFinalOrden;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_descuento")
+    private TipoDescuento tipoDescuento;
+
     @Column(name = "pago_cliente_principal")
-    private BigDecimal pagoCliente;
+    private BigDecimal pagoClientePrincipal;
 
     @Column(name = "uuid_cliente", length = 45)
     private String uuidCliente;
@@ -124,11 +134,15 @@ public class Pedido {
 
     @Builder.Default
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<PaquetePedido> paquetesPedido = new ArrayList<>();
+    private List<ComboPedido> combosPedido = new ArrayList<>();
 
     @Builder.Default
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PedidoTarifaEspecial> tarifasEspeciales = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<OfertaPedido> ofertasPedido = new ArrayList<>();
 
     // -------------------------------------------------------------------------
     // Métodos helper para sincronización bidireccional
@@ -154,8 +168,13 @@ public class Pedido {
         this.basicosPedido.add(item);
     }
 
-    public void addPaquetePedido(PaquetePedido item) {
+    public void addComboPedido(ComboPedido item) {
         item.setPedido(this);
-        this.paquetesPedido.add(item);
+        this.combosPedido.add(item);
+    }
+
+    public void addOfertaPedido(OfertaPedido item) {
+        item.setPedido(this);
+        this.ofertasPedido.add(item);
     }
 }

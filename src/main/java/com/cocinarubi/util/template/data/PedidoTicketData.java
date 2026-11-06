@@ -1,11 +1,12 @@
 package com.cocinarubi.util.template.data;
 
 import com.cocinarubi.DBConstants.MetodoPago;
+import com.cocinarubi.DBConstants.TipoDescuento;
 import com.cocinarubi.DBConstants.TipoPedido;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.DesayunoPedidoResponseDTO;
-import com.cocinarubi.presentation.dto.response.PaquetePedidoResponseDTO;
+import com.cocinarubi.presentation.dto.response.ComboPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioCocinaResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioResponseDTO;
 import com.cocinarubi.presentation.dto.response.ProductoCocinaPedidoResponseDTO;
@@ -28,18 +29,19 @@ public class PedidoTicketData {
     private TipoPedido tipoPedido;
     private LocalDateTime fechaExpedicionPedido;
     private BigDecimal precioFinalOrden;
-    private BigDecimal pagoCliente;
+    private BigDecimal pagoClientePrincipal;
     private BigDecimal cambio;
     private List<ComidaPedidoResponseDTO> comidas;
     private List<DesayunoPedidoResponseDTO> desayunos;
     private List<BasicoPedidoResponseDTO> basicos;
     private List<ProductoCocinaPedidoResponseDTO> productosCocina;
-    private List<PaquetePedidoResponseDTO> paquetes;
+    private List<ComboPedidoResponseDTO> combos;
     private PedidoDomicilioResponseDTO domicilio;
     private PedidoDomicilioCocinaResponseDTO domicilioCocina;
     private String nombreCliente;
     private String comentario;
     private List<TarifaEspecialAplicadaResponseDTO> tarifasEspeciales;
+    private TipoDescuento tipoDescuento;
 
     public PedidoTicketData() {}
 
@@ -61,8 +63,8 @@ public class PedidoTicketData {
     public BigDecimal getPrecioFinalOrden() { return precioFinalOrden; }
     public void setPrecioFinalOrden(BigDecimal precioFinalOrden) { this.precioFinalOrden = precioFinalOrden; }
 
-    public BigDecimal getPagoCliente() { return pagoCliente; }
-    public void setPagoCliente(BigDecimal pagoCliente) { this.pagoCliente = pagoCliente; }
+    public BigDecimal getPagoClientePrincipal() { return pagoClientePrincipal; }
+    public void setPagoClientePrincipal(BigDecimal pagoClientePrincipal) { this.pagoClientePrincipal = pagoClientePrincipal; }
 
     public BigDecimal getCambio() { return cambio; }
     public void setCambio(BigDecimal cambio) { this.cambio = cambio; }
@@ -79,8 +81,8 @@ public class PedidoTicketData {
     public List<ProductoCocinaPedidoResponseDTO> getProductosCocina() { return productosCocina; }
     public void setProductosCocina(List<ProductoCocinaPedidoResponseDTO> productosCocina) { this.productosCocina = productosCocina; }
 
-    public List<PaquetePedidoResponseDTO> getPaquetes() { return paquetes; }
-    public void setPaquetes(List<PaquetePedidoResponseDTO> paquetes) { this.paquetes = paquetes; }
+    public List<ComboPedidoResponseDTO> getCombos() { return combos; }
+    public void setCombos(List<ComboPedidoResponseDTO> combos) { this.combos = combos; }
 
     public PedidoDomicilioResponseDTO getDomicilio() { return domicilio; }
     public void setDomicilio(PedidoDomicilioResponseDTO domicilio) { this.domicilio = domicilio; }
@@ -96,4 +98,7 @@ public class PedidoTicketData {
 
     public List<TarifaEspecialAplicadaResponseDTO> getTarifasEspeciales() { return tarifasEspeciales; }
     public void setTarifasEspeciales(List<TarifaEspecialAplicadaResponseDTO> tarifasEspeciales) { this.tarifasEspeciales = tarifasEspeciales; }
+
+    public TipoDescuento getTipoDescuento() { return tipoDescuento; }
+    public void setTipoDescuento(TipoDescuento tipoDescuento) { this.tipoDescuento = tipoDescuento; }
 }

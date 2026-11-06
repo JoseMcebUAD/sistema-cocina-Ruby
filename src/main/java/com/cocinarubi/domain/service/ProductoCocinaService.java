@@ -98,6 +98,9 @@ public class ProductoCocinaService {
                 .precioNormal(dto.getPrecioNormal())
                 .estatus(dto.getEstatus())
                 .destacado(dto.isDestacado())
+                .descuentoActivo(dto.isDescuentoActivo())
+                .descripcionDescuento(dto.getDescripcionDescuento())
+                .precioDescuento(dto.getPrecioDescuento())
                 .categoria(categoria)
                 .subcategorias(subcategorias)
                 .build();
@@ -121,6 +124,9 @@ public class ProductoCocinaService {
         existente.setPrecioNormal(dto.getPrecioNormal());
         existente.setEstatus(dto.getEstatus());
         existente.setDestacado(dto.isDestacado());
+        existente.setDescuentoActivo(dto.isDescuentoActivo());
+        existente.setDescripcionDescuento(dto.getDescripcionDescuento());
+        existente.setPrecioDescuento(dto.getPrecioDescuento());
         existente.setCategoria(categoria);
         existente.setSubcategorias(subcategorias);
         return toResponseDTO(productoCocinaRepository.save(existente));
@@ -196,7 +202,7 @@ public class ProductoCocinaService {
         List<SubcategoriaResponseDTO> subDtos = entidad.getSubcategorias().stream()
                 .map(this::toSubResponseDTO)
                 .collect(Collectors.toList());
-        return new ProductoCocinaResponseDTO(
+        ProductoCocinaResponseDTO dto = new ProductoCocinaResponseDTO(
                 entidad.getIdProductoCocina(),
                 entidad.getNombreProducto(),
                 entidad.getDescripcion(),
@@ -208,6 +214,10 @@ public class ProductoCocinaService {
                 cat != null ? cat.getNombre() : null,
                 subDtos
         );
+        dto.setDescuentoActivo(entidad.isDescuentoActivo());
+        dto.setDescripcionDescuento(entidad.getDescripcionDescuento());
+        dto.setPrecioDescuento(entidad.getPrecioDescuento());
+        return dto;
     }
 
     private SubcategoriaResponseDTO toSubResponseDTO(Subcategoria s) {

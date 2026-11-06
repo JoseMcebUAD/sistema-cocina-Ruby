@@ -16,7 +16,6 @@ public class BasicoPedidoDTO {
     @JsonProperty("idBasico")
     private Integer idBasico;
 
-    @NotNull(message = "El precio unitario no puede ser nulo")
     @Positive(message = "El precio unitario debe ser mayor a cero")
     @JsonProperty("precioUnitario")
     private BigDecimal precioUnitario;
@@ -24,6 +23,13 @@ public class BasicoPedidoDTO {
     @Valid
     @JsonProperty("extras")
     private List<BasicoPedidoExtraDTO> extras = new ArrayList<>();
+
+    @JsonProperty("descuento")
+    private boolean descuento;
+
+    @Positive(message = "El precio de descuento debe ser mayor a cero")
+    @JsonProperty("precioDescuento")
+    private BigDecimal precioDescuento;
 
     public BasicoPedidoDTO() {}
 
@@ -40,4 +46,10 @@ public class BasicoPedidoDTO {
 
     public List<BasicoPedidoExtraDTO> getExtras() { return extras; }
     public void setExtras(List<BasicoPedidoExtraDTO> extras) { this.extras = extras != null ? extras : new ArrayList<>(); }
+
+    public boolean isDescuento() { return descuento; }
+    public void setDescuento(boolean descuento) { this.descuento = descuento; }
+
+    public BigDecimal getPrecioDescuento() { return precioDescuento; }
+    public void setPrecioDescuento(BigDecimal precioDescuento) { this.precioDescuento = precioDescuento; }
 }

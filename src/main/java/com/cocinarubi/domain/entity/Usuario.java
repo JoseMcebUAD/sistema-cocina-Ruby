@@ -61,6 +61,11 @@ public class Usuario implements UserDetails {
     @Column(name = "bloqueado_hasta")
     private LocalDateTime bloqueadoHasta;
 
+    /** Version del token: incrementar para revocar todos los JWT vivos del usuario. */
+    @Column(name = "token_version", nullable = false)
+    @Builder.Default
+    private int tokenVersion = 0;
+
     // -------------------------------------------------------------------------
     // UserDetails
     // -------------------------------------------------------------------------

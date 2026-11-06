@@ -95,4 +95,16 @@ public interface ArchivoRepository extends JpaRepository<Archivo, Integer> {
             @Param("idEntidad") Integer idEntidad,
             @Param("from") Integer from,
             @Param("to") Integer to);
+
+    // ── Portadas de ProductoCocina (módulos dinámicos, sin discriminar por categoría) ──────
+
+    /**
+     * Devuelve todos los archivos cuyo módulo es dinámico (categoria IS NOT NULL) para los
+     * IDs de entidad dados, ordenados por id_entidad y orden ASC.
+     * Usado en el menú web para obtener portadas de ProductoCocina en una sola query,
+     * sin necesitar el idCategoria de cada producto.
+     */
+    @Query("SELECT a FROM Archivo a WHERE a.categoria IS NOT NULL AND a.idEntidad IN :ids " +
+            "ORDER BY a.idEntidad ASC, a.orden ASC")
+    List<Archivo> findByCategoriaNotNullAndIdEntidadIn(@Param("ids") List<Integer> ids);
 }

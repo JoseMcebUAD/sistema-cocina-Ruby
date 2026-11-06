@@ -9,18 +9,24 @@ import java.math.BigDecimal;
  */
 public class ProductoCocinaMenuItemDTO {
 
+    private Integer idProductoCocina;
     private String uuidProductoCocina;
     private String nombreProducto;
     private String descripcion;
     private BigDecimal precioDomicilio;
     private BigDecimal precioNormal;
     private boolean destacado;
+    private String urlImagen;
+    private boolean descuentoActivo;
+    private String descripcionDescuento;
+    private BigDecimal precioDescuento;
 
     public ProductoCocinaMenuItemDTO() {}
 
-    public ProductoCocinaMenuItemDTO(String uuidProductoCocina, String nombreProducto,
+    public ProductoCocinaMenuItemDTO(Integer idProductoCocina, String uuidProductoCocina, String nombreProducto,
                                       String descripcion, BigDecimal precioDomicilio,
                                       BigDecimal precioNormal, boolean destacado) {
+        this.idProductoCocina = idProductoCocina;
         this.uuidProductoCocina = uuidProductoCocina;
         this.nombreProducto = nombreProducto;
         this.descripcion = descripcion;
@@ -28,6 +34,9 @@ public class ProductoCocinaMenuItemDTO {
         this.precioNormal = precioNormal;
         this.destacado = destacado;
     }
+
+    public Integer getIdProductoCocina() { return idProductoCocina; }
+    public void setIdProductoCocina(Integer idProductoCocina) { this.idProductoCocina = idProductoCocina; }
 
     public String getUuidProductoCocina() { return uuidProductoCocina; }
     public void setUuidProductoCocina(String uuidProductoCocina) { this.uuidProductoCocina = uuidProductoCocina; }
@@ -46,4 +55,16 @@ public class ProductoCocinaMenuItemDTO {
 
     public boolean isDestacado() { return destacado; }
     public void setDestacado(boolean destacado) { this.destacado = destacado; }
+
+    public String getUrlImagen() { return urlImagen; }
+    public void setUrlImagen(String urlImagen) { this.urlImagen = urlImagen; }
+
+    public boolean isDescuentoActivo() { return descuentoActivo; }
+    public void setDescuentoActivo(boolean descuentoActivo) { this.descuentoActivo = descuentoActivo; }
+
+    public String getDescripcionDescuento() { return descripcionDescuento; }
+    public void setDescripcionDescuento(String descripcionDescuento) { this.descripcionDescuento = descripcionDescuento; }
+
+    public BigDecimal getPrecioDescuento() { return precioDescuento; }
+    public void setPrecioDescuento(BigDecimal precioDescuento) { this.precioDescuento = precioDescuento; }
 }

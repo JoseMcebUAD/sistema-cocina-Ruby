@@ -20,6 +20,13 @@ import java.util.List;
  * <p>El cliente puede agregar {@link ComplementoComidaPedido}s específicos para
  * esta línea, independientemente de los complementos de otras líneas del mismo pedido.</p>
  *
+ * <p>{@code descuento=true} indica que se aplicó algún descuento a esta línea
+ * (catálogo WEB, volumen automático o manual COCINA). En ese caso {@code precioDescuento}
+ * es el precio efectivo que paga el cliente. Las líneas con {@code descuento=true} quedan
+ * excluidas del descuento de volumen para evitar la acumulación de beneficios.</p>
+ *
+ * <p>Precio efectivo: {@code descuento ? precioDescuento : precioUnitario}.</p>
+ *
  * <p>Relaciones:
  * <ul>
  *   <li>{@code @ManyToOne} LAZY a {@link Pedido} — orden a la que pertenece.</li>
@@ -54,6 +61,12 @@ public class ComidaPedido {
 
     @Column(name = "precio_unitario", precision = 5, scale = 2)
     private BigDecimal precioUnitario;
+
+    @Column(name = "descuento")
+    private boolean descuento;
+
+    @Column(name = "precio_descuento", precision = 7, scale = 2)
+    private BigDecimal precioDescuento;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tamano_porcion")

@@ -27,8 +27,8 @@ public class PedidoRequestDTO {
     @JsonProperty("pedidoCreadoDesde")
     private PedidoCreadoDesde pedidoCreadoDesde;
 
-    @JsonProperty("pagoCliente")
-    private BigDecimal pagoCliente;
+    @JsonProperty("pagoClientePrincipal")
+    private BigDecimal pagoClientePrincipal;
 
     @JsonProperty("uuidCliente")
     private String uuidCliente;
@@ -57,8 +57,13 @@ public class PedidoRequestDTO {
     private List<ProductoCocinaPedidoDTO> productosCocina = new ArrayList<>();
 
     @Valid
-    @JsonProperty("paquetes")
-    private List<PaquetePedidoDTO> paquetes = new ArrayList<>();
+    @JsonProperty("combos")
+    private List<ComboPedidoDTO> combos = new ArrayList<>();
+
+    /** Solo canal COCINA: permite indicar explícitamente las ofertas a aplicar. WEB las detecta automáticamente. */
+    @Valid
+    @JsonProperty("ofertas")
+    private List<OfertaCocinaPedidoDTO> ofertas = new ArrayList<>();
 
     @Valid
     @JsonProperty("domicilio")
@@ -85,8 +90,8 @@ public class PedidoRequestDTO {
     public PedidoCreadoDesde getPedidoCreadoDesde() { return pedidoCreadoDesde; }
     public void setPedidoCreadoDesde(PedidoCreadoDesde pedidoCreadoDesde) { this.pedidoCreadoDesde = pedidoCreadoDesde; }
 
-    public BigDecimal getPagoCliente() { return pagoCliente; }
-    public void setPagoCliente(BigDecimal pagoCliente) { this.pagoCliente = pagoCliente; }
+    public BigDecimal getPagoClientePrincipal() { return pagoClientePrincipal; }
+    public void setPagoClientePrincipal(BigDecimal pagoClientePrincipal) { this.pagoClientePrincipal = pagoClientePrincipal; }
 
     public String getUuidCliente() { return uuidCliente; }
     public void setUuidCliente(String uuidCliente) { this.uuidCliente = uuidCliente; }
@@ -117,9 +122,14 @@ public class PedidoRequestDTO {
         this.productosCocina = productosCocina != null ? productosCocina : new ArrayList<>();
     }
 
-    public List<PaquetePedidoDTO> getPaquetes() { return paquetes; }
-    public void setPaquetes(List<PaquetePedidoDTO> paquetes) {
-        this.paquetes = paquetes != null ? paquetes : new ArrayList<>();
+    public List<ComboPedidoDTO> getCombos() { return combos; }
+    public void setCombos(List<ComboPedidoDTO> combos) {
+        this.combos = combos != null ? combos : new ArrayList<>();
+    }
+
+    public List<OfertaCocinaPedidoDTO> getOfertas() { return ofertas; }
+    public void setOfertas(List<OfertaCocinaPedidoDTO> ofertas) {
+        this.ofertas = ofertas != null ? ofertas : new ArrayList<>();
     }
 
     public PedidoDomicilioDTO getDomicilio() { return domicilio; }

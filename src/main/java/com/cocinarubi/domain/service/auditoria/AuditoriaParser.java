@@ -60,24 +60,27 @@ public class AuditoriaParser {
             case "horario_atencion"   -> describirHorarioAtencion(accion, despues, antes, id, fecha);
             case "categoria"          -> describirCategoria(accion, despues, antes, id, fecha);
             case "subcategoria"       -> describirSubcategoria(accion, despues, antes, id, fecha);
-            case "paquete"            -> describirPaquete(accion, despues, antes, id, fecha);
-            default                   -> accion + " en " + tabla + (id != null ? " #" + id : "");
+            case "combo"              -> describirCombo(accion, despues, antes, id, fecha);
+            case "anuncio_producto"   -> describirAnuncioProducto(accion, id);
+            case "tarjeta_transferencia"  -> describirTarjetaTransferencia(accion, despues, antes, id);
+            case "suscripcion_semanal"    -> describirSuscripcionSemanal(accion, despues, antes, id);
+            default                       -> accion + " en " + tabla + (id != null ? " #" + id : "");
         };
     }
 
-    private String describirPaquete(TipoOperacion accion, JsonNode despues, JsonNode antes, Integer id, LocalDateTime fecha) {
+    private String describirCombo(TipoOperacion accion, JsonNode despues, JsonNode antes, Integer id, LocalDateTime fecha) {
         return switch (accion) {
             case POST -> {
                 String desc = textOrElse(despues, "descripcion", "sin descripción");
-                yield "Se creó el paquete '" + desc + "'";
+                yield "Se creó el combo '" + desc + "'";
             }
             case PUT -> {
                 String descDespues = textOrElse(despues, "descripcion", null);
                 String descAntes = textOrElse(antes, "descripcion", null);
                 String desc = descDespues != null ? descDespues : (descAntes != null ? descAntes : "#" + id);
-                yield "Se actualizó el paquete '" + desc + "'";
+                yield "Se actualizó el combo '" + desc + "'";
             }
-            case DELETE -> "Se eliminó el paquete #" + id;
+            case DELETE -> "Se eliminó el combo #" + id;
         };
     }
 
@@ -228,6 +231,14 @@ public class AuditoriaParser {
         };
     }
 
+    private String describirAnuncioProducto(TipoOperacion accion, Integer id) {
+        return switch (accion) {
+            case POST   -> "Se asoció un producto al anuncio";
+            case PUT    -> "Se actualizó la asociación de producto #" + id;
+            case DELETE -> "Se eliminó la asociación de producto #" + id;
+        };
+    }
+
     private String describirRuta(TipoOperacion accion, JsonNode despues, JsonNode antes, Integer id, LocalDateTime fecha) {
         return switch (accion) {
             case POST -> {
@@ -303,6 +314,24 @@ public class AuditoriaParser {
         };
     }
 
+    private String describirTarjetaTransferencia(TipoOperacion accion, JsonNode despues, JsonNode antes, Integer id) {
+        return switch (accion) {
+            case POST -> {
+                String dest = textOrElse(despues, "nombreDestinatario", "sin nombre");
+                String banco = textOrElse(despues, "banco", "");
+                String sufijo = banco.isBlank() ? "" : " (" + banco + ")";
+                yield "Se registró la tarjeta de transferencia de '" + dest + "'" + sufijo;
+            }
+            case PUT -> {
+                String destDespues = textOrElse(despues, "nombreDestinatario", null);
+                String destAntes = textOrElse(antes, "nombreDestinatario", null);
+                String dest = destDespues != null ? destDespues : (destAntes != null ? destAntes : "#" + id);
+                yield "Se actualizó la tarjeta de transferencia '" + dest + "'";
+            }
+            case DELETE -> "Se eliminó la tarjeta de transferencia #" + id;
+        };
+    }
+
     private String describirSubcategoria(TipoOperacion accion, JsonNode despues, JsonNode antes, Integer id, LocalDateTime fecha) {
         return switch (accion) {
             case POST -> {
@@ -318,6 +347,22 @@ public class AuditoriaParser {
                 yield "Se actualizó la subcategoría '" + nombre + "'";
             }
             case DELETE -> "Se eliminó la subcategoría #" + id;
+        };
+    }
+
+    private String describirSuscripcionSemanal(TipoOperacion accion, JsonNode despues, JsonNode antes, Integer id) {
+        return switch (accion) {
+            case POST -> {
+                String cliente = textOrElse(despues, "identificadorCliente", "sin identificador");
+                yield "Se creó la suscripción semanal para '" + cliente + "'";
+            }
+            case PUT -> {
+                String clienteDespues = textOrElse(despues, "identificadorCliente", null);
+                String clienteAntes = textOrElse(antes, "identificadorCliente", null);
+                String cliente = clienteDespues != null ? clienteDespues : (clienteAntes != null ? clienteAntes : "#" + id);
+                yield "Se actualizó la suscripción semanal de '" + cliente + "'";
+            }
+            case DELETE -> "Se eliminó la suscripción semanal #" + id;
         };
     }
 

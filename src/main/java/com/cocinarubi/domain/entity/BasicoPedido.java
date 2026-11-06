@@ -50,6 +50,12 @@ public class BasicoPedido {
     @Column(name = "precio_unitario")
     private BigDecimal precioUnitario;
 
+    @Column(name = "descuento")
+    private boolean descuento;
+
+    @Column(name = "precio_descuento")
+    private BigDecimal precioDescuento;
+
     @Builder.Default
     @OneToMany(mappedBy = "basicoPedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<BasicoPedidoExtra> extras = new ArrayList<>();

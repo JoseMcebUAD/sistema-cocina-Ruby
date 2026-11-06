@@ -9,13 +9,17 @@ import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComplementoPredeterminadoComidaResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComplementoResponseDTO;
-import com.cocinarubi.presentation.dto.response.PaquetePedidoResponseDTO;
+import com.cocinarubi.presentation.dto.response.ComboPedidoResponseDTO;
 
 public class FormatearReciboPedidoService extends FormatearReciboService {
 
     public List<String> formatProductBlock(ComidaPedidoResponseDTO comida, String precio, int anchoEfectivo) {
         List<String> lineas = new ArrayList<>();
-        String lineaComida = comida.getTamanoPorcion() + " " + comida.getNombreComida();
+
+        boolean esOferta = comida.isDescuento();
+
+        String lineaComida = (esOferta ? "[DESCUENTO] " : "")
+                + comida.getTamanoPorcion() + " " + comida.getNombreComida();
 
         List<ComplementoResponseDTO> complementos = comida.getComplementos();
         List<ComplementoPredeterminadoComidaResponseDTO> predeterminados = comida.getComplementosPredeterminados();
@@ -23,7 +27,20 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
         boolean hayComplementos = complementos != null && !complementos.isEmpty();
         boolean hayPredeterminados = predeterminados != null && !predeterminados.isEmpty();
 
-        lineas.addAll(formatearItemConPrecio(lineaComida, precio, anchoEfectivo));
+        List<String> lineasComida = formatearItemConPrecio(lineaComida, precio, anchoEfectivo);
+        if (esOferta) {
+            // Intenta agregar el descuento al final de la última línea ya formateada.
+            // Si no cabe, lo alinea a la derecha en una línea nueva.
+            String sufDescuento = " -" + FORMATO_PRECIO.format(comida.getPrecioUnitario().subtract(comida.getPrecioDescuento()))
+                    + " = " + FORMATO_PRECIO.format(comida.getPrecioDescuento());
+            String ultimaLinea = lineasComida.get(lineasComida.size() - 1);
+            if (ultimaLinea.length() + sufDescuento.length() <= anchoEfectivo) {
+                lineasComida.set(lineasComida.size() - 1, ultimaLinea + sufDescuento);
+            } else {
+                lineasComida.add(alinearDerechaCompleto(sufDescuento.trim(), anchoEfectivo));
+            }
+        }
+        lineas.addAll(lineasComida);
 
         if (hayComplementos || hayPredeterminados) {
             lineas.add("");
@@ -96,17 +113,17 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
     }
 
     /**
-     * Formato del bloque Paquete para el ticket:
+     * Formato del bloque Combo para el ticket:
      * <pre>
-     * PAQUETE nombrePaquete   $precio
+     * COMBO descripcionCombo   $precio
      *   - producto1
      *   - producto2
      * </pre>
      */
-    public List<String> formatPaqueteBlock(PaquetePedidoResponseDTO paquete, String precio, int anchoEfectivo) {
+    public List<String> formatComboBlock(ComboPedidoResponseDTO combo, String precio, int anchoEfectivo) {
         List<String> lineas = new ArrayList<>();
-        String encabezado = "PAQUETE " + (paquete.getDescripcion() != null ? paquete.getDescripcion() : "");
-        List<String> nombres = paquete.getNombresProductos();
+        String encabezado = "COMBO " + (combo.getDescripcion() != null ? combo.getDescripcion() : "");
+        List<String> nombres = combo.getNombresProductos();
         boolean hayProductos = nombres != null && !nombres.isEmpty();
 
         lineas.addAll(formatearItemConPrecio(encabezado, precio, anchoEfectivo));
@@ -120,3 +137,4 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
         return lineas;
     }
 }
+

@@ -17,6 +17,10 @@ public class BasicoResponseDTO {
     private Estatus estatus;
     private List<ComplementoResponseDTO> complementos;
     private int totalComplementos;
+    private String urlImagen;
+    private boolean descuentoActivo;
+    private String descripcionDescuento;
+    private BigDecimal precioDescuento;
 
     public BasicoResponseDTO() {}
 
@@ -68,4 +72,16 @@ public class BasicoResponseDTO {
 
     public int getTotalComplementos() { return totalComplementos; }
     public void setTotalComplementos(int totalComplementos) { this.totalComplementos = totalComplementos; }
+
+    public String getUrlImagen() { return urlImagen; }
+    public void setUrlImagen(String urlImagen) { this.urlImagen = urlImagen; }
+
+    public boolean isDescuentoActivo() { return descuentoActivo; }
+    public void setDescuentoActivo(boolean descuentoActivo) { this.descuentoActivo = descuentoActivo; }
+
+    public String getDescripcionDescuento() { return descripcionDescuento; }
+    public void setDescripcionDescuento(String descripcionDescuento) { this.descripcionDescuento = descripcionDescuento; }
+
+    public BigDecimal getPrecioDescuento() { return precioDescuento; }
+    public void setPrecioDescuento(BigDecimal precioDescuento) { this.precioDescuento = precioDescuento; }
 }

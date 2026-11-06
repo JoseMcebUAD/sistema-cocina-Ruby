@@ -44,7 +44,8 @@ public class BasicoRestTest {
                   "precioMedia": 45.00,
                   "precioEntera": 80.00,
                   "estatus": "DISPONIBLE",
-                  "destacado": false
+                  "destacado": false,
+                  "tipoComida": "FIJA"
                 }
                 """.formatted(testUuid);
         ResponseEntity<String> res = restTemplate.exchange(
@@ -160,18 +161,15 @@ public class BasicoRestTest {
         ResponseEntity<String> deleteResponse = this.restTemplate.exchange(
                 "/basico/" + createdId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class
         );
-        assertEquals(HttpStatus.OK, deleteResponse.getStatusCode(),
+        assertEquals(HttpStatus.NO_CONTENT, deleteResponse.getStatusCode(),
                 "DELETE /basico/" + createdId + " falló. Body: " + deleteResponse.getBody());
-        JsonNode deleteData = mapper.readTree(deleteResponse.getBody());
-        assertEquals(200, deleteData.get("status").asInt(),
-                "Se esperaba status=200 en body de DELETE. Body: " + deleteResponse.getBody());
 
         ResponseEntity<String> getResponse = this.restTemplate.exchange(
                 "/basico/" + createdId, HttpMethod.GET, new HttpEntity<>(authHeaders), String.class
         );
         assertEquals(HttpStatus.NOT_FOUND, getResponse.getStatusCode(),
                 "Se esperaba 404 tras eliminar básico id=" + createdId + ". Body: " + getResponse.getBody());
-        System.out.println("[OK] DELETE 200 → GET 404 para basico id=" + createdId);
+        System.out.println("[OK] DELETE 204 → GET 404 para basico id=" + createdId);
     }
 
     @Test

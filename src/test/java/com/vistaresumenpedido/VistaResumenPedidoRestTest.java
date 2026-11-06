@@ -61,7 +61,7 @@ public class VistaResumenPedidoRestTest {
                 }
                 """, testRutaId);
         ResponseEntity<String> clienteResp = restTemplate.exchange(
-                "/registroCliente", HttpMethod.POST, new HttpEntity<>(clienteJson, authHeaders), String.class);
+                "/registro-cliente", HttpMethod.POST, new HttpEntity<>(clienteJson, authHeaders), String.class);
         testRegistroClienteId = mapper.readTree(clienteResp.getBody()).get("data").get("idRegistroCliente").asInt();
 
         // idCategoria=1 → BEBIDA en el seeder de V23
@@ -87,7 +87,7 @@ public class VistaResumenPedidoRestTest {
                   "metodoPagoPrincipal": "EFECTIVO",
                   "tipoPedido": "MOSTRADOR",
                   "pedidoCreadoDesde": "COCINA",
-                  "pagoCliente": 50.00,
+                  "pagoClientePrincipal": 50.00,
                   "nombreCliente": "Ana Mostrador",
                   "comidas": [], "desayunos": [], "basicos": [],
                   "productosCocina": [
@@ -107,7 +107,7 @@ public class VistaResumenPedidoRestTest {
                   "metodoPagoSecundario": "TARJETA",
                   "tipoPedido": "DOMICILIO",
                   "pedidoCreadoDesde": "COCINA",
-                  "pagoCliente": 60.00,
+                  "pagoClientePrincipal": 60.00,
                   "pedidoDomicilioCocina": {
                     "idRegistroCliente": %d,
                     "tarifa": 40.00,
@@ -144,11 +144,9 @@ public class VistaResumenPedidoRestTest {
             restTemplate.exchange("/producto-cocina/" + testProductoId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
         }
         if (testRegistroClienteId > 0) {
-            restTemplate.exchange("/registroCliente/" + testRegistroClienteId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
+            restTemplate.exchange("/registro-cliente/" + testRegistroClienteId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
         }
-        if (testRutaId > 0) {
-            restTemplate.exchange("/ruta/" + testRutaId, HttpMethod.DELETE, new HttpEntity<>(authHeaders), String.class);
-        }
+        // RutaController no expone DELETE /{id} — la ruta de test queda en BD (limpieza manual si es necesario)
         System.out.println("[TEARDOWN] datos de prueba eliminados");
     }
 

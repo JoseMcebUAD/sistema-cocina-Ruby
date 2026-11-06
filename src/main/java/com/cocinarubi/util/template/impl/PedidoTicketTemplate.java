@@ -6,10 +6,11 @@ import java.util.List;
 import java.util.Map;
 
 import com.cocinarubi.Constants;
+import com.cocinarubi.DBConstants.TipoDescuento;
 import com.cocinarubi.presentation.dto.response.BasicoPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.ComidaPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.DesayunoPedidoResponseDTO;
-import com.cocinarubi.presentation.dto.response.PaquetePedidoResponseDTO;
+import com.cocinarubi.presentation.dto.response.ComboPedidoResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioCocinaResponseDTO;
 import com.cocinarubi.presentation.dto.response.PedidoDomicilioResponseDTO;
 import com.cocinarubi.presentation.dto.response.ProductoCocinaPedidoResponseDTO;
@@ -42,7 +43,9 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         if (data.getFechaExpedicionPedido() != null) {
             escpos.writeLF(FORMATO_FECHA.format(data.getFechaExpedicionPedido()));
         }
-        escpos.writeLF("Tipo: " + ETIQUETA_TIPO_PEDIDO.getOrDefault(data.getTipoPedido().name(), data.getTipoPedido().name()));
+        escpos.writeLF("Tipo: " + ETIQUETA_TIPO_PEDIDO.getOrDefault(
+            data.getTipoPedido().name(), data.getTipoPedido().name()));
+
         if (data.getNombreCliente() != null && !data.getNombreCliente().isBlank()) {
             escpos.writeLF("Cliente: " + data.getNombreCliente());
         }
@@ -57,6 +60,10 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         // Método de pago y totales
         escpos.writeLF(subtitleStyle, formatter.formatearLineaTotal("TOTAL", FORMATO_PRECIO.format(data.getPrecioFinalOrden()), anchoEfectivo));
 
+        if (data.getTipoDescuento() == TipoDescuento.COMIDAS_DIEZ) {
+            escpos.writeLF("* Se aplico descuento de $10 por las 12 comidas");
+        }
+
         // Sección de entrega a domicilio (WEB usa PedidoDomicilioResponseDTO,
         // COCINA usa PedidoDomicilioCocinaResponseDTO)
         renderDomicilio(escpos, data.getDomicilio(), data.getTarifasEspeciales());
@@ -68,7 +75,7 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         renderDesayunos(escpos, data.getDesayunos());
         renderBasicos(escpos, data.getBasicos());
         renderProductosCocina(escpos, data.getProductosCocina());
-        renderPaquetes(escpos, data.getPaquetes());
+        renderCombos(escpos, data.getCombos());
 
         // Nota libre del operador (comentario del pedido)
         renderComentario(escpos, data.getComentario());
@@ -85,8 +92,10 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         if (comidas == null || comidas.isEmpty()) return;
 
         for (int i = 0; i < comidas.size(); i++) {
-            String precio = FORMATO_PRECIO.format(comidas.get(i).getPrecioUnitario());
-            for (String linea : formatter.formatProductBlock(comidas.get(i), precio, anchoEfectivo)) {
+            ComidaPedidoResponseDTO comida = comidas.get(i);
+            BigDecimal precioEfectivo = comida.getPrecioUnitario();
+            String precio = FORMATO_PRECIO.format(precioEfectivo);
+            for (String linea : formatter.formatProductBlock(comida, precio, anchoEfectivo)) {
                 if (linea.isEmpty()) escpos.feed(1);
                 else escpos.writeLF(subtitleStyle, linea);
             }
@@ -100,7 +109,8 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
     private void renderDesayunos(EscPos escpos, List<DesayunoPedidoResponseDTO> desayunos) throws IOException {
         if (desayunos == null || desayunos.isEmpty()) return;
         for (DesayunoPedidoResponseDTO d : desayunos) {
-            String precio = FORMATO_PRECIO.format(d.getPrecio());
+            BigDecimal precioEfectivo = d.isDescuento() ? d.getPrecioDescuento() : d.getPrecio();
+            String precio = FORMATO_PRECIO.format(precioEfectivo);
             for (String linea : formatter.formatearDetalleOrden(d.getNombreDesayuno(), precio, anchoEfectivo)) {
                 escpos.writeLF(subtitleStyle, linea);
             }
@@ -110,7 +120,8 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
     private void renderBasicos(EscPos escpos, List<BasicoPedidoResponseDTO> basicos) throws IOException {
         if (basicos == null || basicos.isEmpty()) return;
         for (BasicoPedidoResponseDTO b : basicos) {
-            String precio = FORMATO_PRECIO.format(b.getPrecioUnitario());
+            BigDecimal precioEfectivo = b.isDescuento() ? b.getPrecioDescuento() : b.getPrecioUnitario();
+            String precio = FORMATO_PRECIO.format(precioEfectivo);
             for (String linea : formatter.formatBasicoBlock(b, precio, anchoEfectivo)) {
                 if (linea.isEmpty()) escpos.feed(1);
                 else escpos.writeLF(subtitleStyle,linea);
@@ -122,22 +133,24 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
         if (productos == null || productos.isEmpty()) return;
         for (ProductoCocinaPedidoResponseDTO p : productos) {
             String descripcion = p.getCantidad() + "x " + p.getNombreProducto();
+            BigDecimal precioEfectivo = p.isDescuento() ? p.getPrecioDescuento() : p.getPrecioUnitario();
             String precio = FORMATO_PRECIO.format(
-                    p.getPrecioUnitario().multiply(java.math.BigDecimal.valueOf(p.getCantidad())));
+                    precioEfectivo.multiply(java.math.BigDecimal.valueOf(p.getCantidad())));
             for (String linea : formatter.formatearDetalleOrden(descripcion, precio, anchoEfectivo)) {
                 escpos.writeLF(subtitleStyle, linea);
             }
         }
     }
 
-    // Renderiza cada paquete como un bloque tipo comida: encabezado "PAQUETE <nombre>",
+    // Renderiza cada combo como un bloque tipo comida: encabezado "COMBO <descripcion>",
     // sublíneas "  - producto" por cada producto incluido, y precio (unitario × cantidad) alineado a la derecha.
-    private void renderPaquetes(EscPos escpos, List<PaquetePedidoResponseDTO> paquetes) throws IOException {
-        if (paquetes == null || paquetes.isEmpty()) return;
-        for (PaquetePedidoResponseDTO p : paquetes) {
+    private void renderCombos(EscPos escpos, List<ComboPedidoResponseDTO> combos) throws IOException {
+        if (combos == null || combos.isEmpty()) return;
+        for (ComboPedidoResponseDTO p : combos) {
+            BigDecimal precioEfectivo = p.isDescuento() ? p.getPrecioDescuento() : p.getPrecioUnitario();
             String precio = FORMATO_PRECIO.format(
-                    p.getPrecioUnitario().multiply(java.math.BigDecimal.valueOf(p.getCantidad())));
-            for (String linea : formatter.formatPaqueteBlock(p, precio, anchoEfectivo)) {
+                    precioEfectivo.multiply(java.math.BigDecimal.valueOf(p.getCantidad())));
+            for (String linea : formatter.formatComboBlock(p, precio, anchoEfectivo)) {
                 if (linea.isEmpty()) escpos.feed(1);
                 else escpos.writeLF(subtitleStyle, linea);
             }
@@ -198,9 +211,9 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
 
     private void printDobleMetodoPago(EscPos escpos, PedidoTicketData data) throws IOException {
         BigDecimal pagoSecundario = data.getPrecioFinalOrden()
-                .subtract(data.getPagoCliente() != null ? data.getPagoCliente() : BigDecimal.ZERO);
+                .subtract(data.getPagoClientePrincipal() != null ? data.getPagoClientePrincipal() : BigDecimal.ZERO);
         escpos.write("Pago en " + data.getMetodoPagoPrincipal().name() + ": ")
-              .writeLF(subtitleStyle, FORMATO_PRECIO.format(data.getPagoCliente()));
+              .writeLF(subtitleStyle, FORMATO_PRECIO.format(data.getPagoClientePrincipal()));
         escpos.write("Pago en " + data.getMetodoPagoSecundario().name() + ": ")
               .writeLF(subtitleStyle, FORMATO_PRECIO.format(pagoSecundario));
     }

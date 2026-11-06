@@ -13,7 +13,7 @@ public class EstadisticaHelper {
 
     /** Tipo de categoría de catálogo para el endpoint /estadisticas/catalogo/productos. */
     public enum TipoCategoriaCatalogo {
-        COMIDA, BASICO, COMPLEMENTO, PAQUETE, DESAYUNO, PRODUCTO_COCINA
+        COMIDA, BASICO, COMPLEMENTO, COMBO, DESAYUNO, PRODUCTO_COCINA
     }
 
     /**

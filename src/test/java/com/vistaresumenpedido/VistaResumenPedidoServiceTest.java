@@ -26,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -135,7 +136,8 @@ public class VistaResumenPedidoServiceTest {
                 BigDecimal.ZERO, BigDecimal.valueOf(150));
 
         when(pedidoRepository.findByFiltros(null, null, null, null, null, PAGEABLE)).thenReturn(pedidosPaged);
-        when(pedidoMapper.toResponseDTO(any(Pedido.class))).thenReturn(dto);
+        when(pedidoMapper.precargarNombresCliente(anyList())).thenReturn(Map.of());
+        when(pedidoMapper.toResponseDTO(any(Pedido.class), anyMap())).thenReturn(dto);
         when(repository.findMetricasConFiltros(null, null, null, null, null)).thenReturn(metricas);
         when(repository.countConFiltrosSinPagado(null, null, null, null)).thenReturn(2L);
 
@@ -199,7 +201,8 @@ public class VistaResumenPedidoServiceTest {
                 BigDecimal.valueOf(90), BigDecimal.valueOf(90), BigDecimal.ZERO, BigDecimal.ZERO);
 
         when(pedidoRepository.findByFiltros(null, null, null, null, false, PAGEABLE)).thenReturn(pedidosNoPagados);
-        when(pedidoMapper.toResponseDTO(any(Pedido.class))).thenReturn(dto);
+        when(pedidoMapper.precargarNombresCliente(anyList())).thenReturn(Map.of());
+        when(pedidoMapper.toResponseDTO(any(Pedido.class), anyMap())).thenReturn(dto);
         when(repository.findMetricasConFiltros(null, null, null, null, false)).thenReturn(metricasNoPagados);
         when(repository.countConFiltrosSinPagado(null, null, null, null)).thenReturn(5L);
 
@@ -231,7 +234,8 @@ public class VistaResumenPedidoServiceTest {
                 BigDecimal.valueOf(200), BigDecimal.ZERO, BigDecimal.ZERO);
 
         when(pedidoRepository.findByFiltros(null, null, null, null, null, PAGEABLE)).thenReturn(todosPedidos);
-        when(pedidoMapper.toResponseDTO(any(Pedido.class))).thenReturn(dto);
+        when(pedidoMapper.precargarNombresCliente(anyList())).thenReturn(Map.of());
+        when(pedidoMapper.toResponseDTO(any(Pedido.class), anyMap())).thenReturn(dto);
         when(repository.findMetricasConFiltros(null, null, null, null, null)).thenReturn(metricas);
         when(repository.countConFiltrosSinPagado(null, null, null, null)).thenReturn(2L);
 
