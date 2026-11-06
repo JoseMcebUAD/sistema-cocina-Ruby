@@ -93,7 +93,7 @@ public class PedidoTicketTemplate extends AbstractOrderTemplate<PedidoTicketData
 
         for (int i = 0; i < comidas.size(); i++) {
             ComidaPedidoResponseDTO comida = comidas.get(i);
-            BigDecimal precioEfectivo = comida.isDescuento() ? comida.getPrecioDescuento() : comida.getPrecioUnitario();
+            BigDecimal precioEfectivo = comida.getPrecioUnitario();
             String precio = FORMATO_PRECIO.format(precioEfectivo);
             for (String linea : formatter.formatProductBlock(comida, precio, anchoEfectivo)) {
                 if (linea.isEmpty()) escpos.feed(1);

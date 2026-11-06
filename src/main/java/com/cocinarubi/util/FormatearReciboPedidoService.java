@@ -31,7 +31,8 @@ public class FormatearReciboPedidoService extends FormatearReciboService {
         if (esOferta) {
             // Intenta agregar el descuento al final de la última línea ya formateada.
             // Si no cabe, lo alinea a la derecha en una línea nueva.
-            String sufDescuento = " -" + FORMATO_PRECIO.format(comida.getPrecioUnitario().subtract(comida.getPrecioDescuento()));
+            String sufDescuento = " -" + FORMATO_PRECIO.format(comida.getPrecioUnitario().subtract(comida.getPrecioDescuento()))
+                    + " = " + FORMATO_PRECIO.format(comida.getPrecioDescuento());
             String ultimaLinea = lineasComida.get(lineasComida.size() - 1);
             if (ultimaLinea.length() + sufDescuento.length() <= anchoEfectivo) {
                 lineasComida.set(lineasComida.size() - 1, ultimaLinea + sufDescuento);
