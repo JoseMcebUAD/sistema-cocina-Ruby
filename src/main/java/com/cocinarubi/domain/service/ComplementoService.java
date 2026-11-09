@@ -44,6 +44,11 @@ public class ComplementoService {
     }
 
     public Complemento save(Complemento complemento) {
+        // Si es un update y el cliente no envió uuidComplemento, recuperarlo del registro existente
+        if (complemento.getIdComplemento() != null && complemento.getUuidComplemento() == null) {
+            complementoRepository.findById(complemento.getIdComplemento())
+                    .ifPresent(existente -> complemento.setUuidComplemento(existente.getUuidComplemento()));
+        }
         return complementoRepository.save(complemento);
     }
 
