@@ -59,6 +59,11 @@ public class ComidaService {
         if (comida.getLimiteComplemento() == null) {
             comida.setLimiteComplemento(0);
         }
+        // Si es un update y el cliente no envió uuidComida, recuperarlo del registro existente
+        if (comida.getIdComida() != null && comida.getUuidComida() == null) {
+            comidaRepository.findById(comida.getIdComida())
+                    .ifPresent(existente -> comida.setUuidComida(existente.getUuidComida()));
+        }
         adjuntarComplementosPredeterminados(comida);
         return comidaRepository.save(comida);
     }
