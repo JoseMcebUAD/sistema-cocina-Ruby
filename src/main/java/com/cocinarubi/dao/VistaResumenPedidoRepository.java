@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface VistaResumenPedidoRepository extends JpaRepository<VistaResumenPedido, Integer> {
 
@@ -120,4 +121,21 @@ public interface VistaResumenPedidoRepository extends JpaRepository<VistaResumen
         BigDecimal getIngresoTransferencia();
         BigDecimal getIngresoTarjeta();
     }
+
+    /**
+     * Retorna todos los pedidos de los tipos indicados en el rango de fechas dado,
+     * sin paginación, para su uso en el cálculo del corte de caja.
+     */
+    @Query("""
+            FROM VistaResumenPedido v
+            WHERE v.tipoPedido IN :tipos
+              AND v.fechaExpedicionPedido >= :inicio
+              AND v.fechaExpedicionPedido < :fin
+            ORDER BY v.fechaExpedicionPedido ASC
+            """)
+    List<VistaResumenPedido> findAllForCorte(
+            @Param("tipos") List<DBConstants.TipoPedido> tipos,
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fin") LocalDateTime fin
+    );
 }
