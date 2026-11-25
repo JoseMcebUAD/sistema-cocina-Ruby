@@ -169,13 +169,17 @@ public class SecurityConfig {
                     .requestMatchers(
                             "/usuario/**",
                             "/auditoria/**",
-                            "/estadisticas/**"
+                            "/estadisticas/**",
+                            "/corte-caja/**"
                     ).hasRole("JEFA_COCINA")
 
                     // ── Ambos roles ───────────────────────────────────────
                     .requestMatchers(
                             "/anuncio/**",
                             "/basico/**",
+                            "/auditoria/**",
+                            "/estadisticas/**",
+                            "/corte-caja/**",
                             "/busqueda-catalogo/**",
                             "/categoria/**",
                             "/cliente/**",
@@ -240,7 +244,8 @@ public class SecurityConfig {
                 "https://api.cocinarubi.com",
                 "https://api-test.cocinarubi.com",
                 "https://carrito.cocinarubi.com",
-                "https://carrito-test.cocinarubi.com"
+                "https://carrito-test.cocinarubi.com",
+                "https://cocinarubi.com"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-API-Key",
