@@ -92,14 +92,15 @@ public class OfertaPreviewServiceTest {
     @Test
     @DisplayName("preview - con oferta vigente → matcher se invoca con esa oferta")
     void preview_conOfertaVigente_matcherInvocado() {
+        Oferta esperada = ofertaVigente();
         when(ofertaService.findActivasEntidades(any(LocalDate.class)))
-                .thenReturn(List.of(ofertaVigente()));
+                .thenReturn(List.of(esperada));
         when(ofertaMatcher.detectar(any(), any(), any(), any(), any()))
                 .thenReturn(List.of());
 
         buildService().preview(emptyDto());
 
-        verify(ofertaMatcher).detectar(any(), any(), any(), any(), eq(List.of(ofertaVigente())));
+        verify(ofertaMatcher).detectar(any(), any(), any(), any(), eq(List.of(esperada)));
         System.out.println("[OK] preview con oferta vigente → matcher invocado");
     }
 

@@ -69,6 +69,9 @@ public class PedidoImpresionStrategy implements ImpresionStrategy {
             data.setNombreCliente(dto.getPedidoCocina().getNombreCliente());
         } else if (dto.getDomicilioCocina() != null) {
             data.setNombreCliente(dto.getDomicilioCocina().getNombreCliente());
+        } else {
+            // Pedidos web PICK_UP: el nombre viene directo del DTO mapeado
+            data.setNombreCliente(dto.getNombreCliente());
         }
 
         data.setComentario(dto.getComentario());

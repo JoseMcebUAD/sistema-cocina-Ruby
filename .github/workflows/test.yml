@@ -18,12 +18,22 @@ jobs:
         image: mysql:8.0
         env:
           MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-          MYSQL_DATABASE: sistema_cocina_ricky_test
+          MYSQL_DATABASE: cocina_rubi_test
         ports:
           - 3306:3306
         options: >-
           --tmpfs /var/lib/mysql
           --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=5s
+          --health-timeout=2s
+          --health-retries=3
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
           --health-interval=5s
           --health-timeout=2s
           --health-retries=3
